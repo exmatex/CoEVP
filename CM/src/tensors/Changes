@@ -1,0 +1,13 @@
+Change log for tensor classes
+
+From 0.2 to 0.3:
+
+- added Tensor2Sym square(Tensor2Sym) function
+
+- added void findroots(const Tensor2Sym&, Tensor2Sym*, Tensor2Sym*) function
+
+- polarRight() and polarLeft() do not supply eigen values and vectors
+  any longer, use eigen() instead. The RU and VR calculation are now
+  performed with the Franca algorithm, not iteratively.
+
+- added specialization for Tensor2Sym::invariants(...) for efficiency

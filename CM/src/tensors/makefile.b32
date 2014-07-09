@@ -1,0 +1,66 @@
+# Borland makefile for tensor classes
+
+#directories of the compiler
+BCROOT= C:\borland\bcc55
+BCCBIN= $(BCROOT)\bin
+BCCLIB= $(BCROOT)\lib
+BCCINC= $(BCROOT)\include
+
+CC=	bcc32
+CXX=	bcc32
+CFLAGS=	-w -O2
+CXXFLAGS=	-w -w-inl -a1 -O2 -WC -c -I$(BCCINC)
+LDFLAGS=	-v -c -ap -Tpe -x -L$(BCCLIB)
+
+.autodepend
+
+.cpp.obj:
+	$(CXX) $(CXXFLAGS) $*.cpp
+
+
+OBJS=	tensor.obj \
+	xtensor.obj \
+	tutils.obj \
+	basetest.obj \
+	xtest.obj
+
+default:	tensor.obj
+
+all:	$(OBJS)
+
+basetest.exe:	tensor.obj basetest.obj
+	ilink32 $(LDFLAGS) @&&!
+c0x32.obj tensor.obj basetest.obj
+basetest.exe
+nul
+import32.lib cw32.lib
+!
+	
+xtest.exe:	tensor.obj xtensor.obj tutils.obj xtest.obj
+	ilink32 $(LDFLAGS) @&&!
+c0x32.obj tensor.obj xtensor.obj tutils.obj xtest.obj
+xtest.exe
+nul
+import32.lib cw32.lib
+!
+
+test: basetest.exe xtest.exe testdiff.exe
+	basetest > basetest.out
+	testdiff basetest.ref basetest.out
+	xtest > xtest.out
+	testdiff xtest.ref xtest.out
+
+testdiff.exe:	testdiff.c
+	$(CC) $(CFLAGS) testdiff.c
+
+clean:	
+	del *.obj
+	del *.exe
+	del *.out
+
+cleanall: clean
+	del *.ilc
+	del *.ild
+	del *.ilf
+	del *.ils
+	del *.tds
