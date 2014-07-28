@@ -24,12 +24,6 @@ class Plasticity
       void evaluate( const vector<double>& a_point,
                      vector<double>&       a_value ) const;
 
-      double tensorFunctionEntryDerivative( const int i,
-                                            const int j,
-                                            const int k,
-                                            const int l,
-                                            const Tensor2Sym& in ) const;
-
       virtual Tensor4LSym tensorFunctionDerivative( const Tensor2Sym& in ) const;
 
       virtual void getScalingsForSampling( vector<double>& input_scaling,

@@ -366,14 +366,15 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
       Vbar_prime_new = proposed_solution;
 
 
-      double new_residual_norm = norm(residual);
+      double new_residual_norm ;
 
-      relative_residual = norm(residual) * 2. / (norm(Dprime_new) + norm(Dbar_prime_new));
+      relative_residual = (new_residual_norm = norm(residual)) * 2. /
+                          (norm(Dprime_new) + norm(Dbar_prime_new));
+
+      saved_residual[m_num_iters] = relative_residual ;
 
       // Test convergence
       converged = relative_residual <= tol;
-
-      saved_residual[m_num_iters] = norm(residual) * 2. / (norm(Dprime_new) + norm(Dbar_prime_new));
 
       m_num_iters++;
       old_residual_norm = new_residual_norm;

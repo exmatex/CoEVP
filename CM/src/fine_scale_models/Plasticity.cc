@@ -92,39 +92,32 @@ Plasticity::evaluate( const vector<double>& point,
 }
 
 
-double
-Plasticity::tensorFunctionEntryDerivative( const int i,
-                                           const int j,
-                                           const int k,
-                                           const int l,
-                                           const Tensor2Sym& in ) const
-{
-   Tensor2Sym difference(0);
-   double delta = 1.e-6 * norm(in);
-
-   if (delta > 0.) {
-      Tensor2Sym increment(Tensor2Sym(0));
-      increment(k,l) = delta;
-      difference = (tensorFunction(in + increment) - tensorFunction(in)) / delta;
-   }
-
-   return difference(i, j);
-}
-
-
 Tensor4LSym
 Plasticity::tensorFunctionDerivative( const Tensor2Sym& in ) const
 {
    double matrix[36];
-   int index1[] = {1, 2, 3, 2, 3, 3};
-   int index2[] = {1, 2, 3, 1, 2, 1};
+   double delta = 1.e-6 * norm(in);
+   Tensor2Sym tensor_function_in(tensorFunction(in)) ;
 
-   int entry = 0;
-   for (int column=0; column<6; ++column) {
-      for (int row=0; row<6; ++row) {
-         matrix[entry++] = tensorFunctionEntryDerivative( index1[row],    index2[row],
-                                                          index1[column], index2[column],
-                                                          in );
+   if (delta > 0.) {
+      static const int index1[] = {1, 2, 3, 2, 3, 3};
+      static const int index2[] = {1, 2, 3, 1, 2, 1};
+      Tensor2Sym difference;
+      Tensor2Sym increment(0);
+      for (int column=0; column<6; ++column) {
+         increment(index1[column],index2[column]) = delta;
+         difference = (tensorFunction(in + increment) - tensor_function_in) / delta;
+
+         for (int row=0; row<6; ++row) {
+            matrix[column*6+row] = difference(index1[row], index2[row]);
+         }
+
+         increment(index1[column],index2[column]) = 0,0;
+      }
+   }
+   else {
+      for (int entry=0; entry<36; ++entry) {
+         matrix[entry] = 0.0 ;
       }
    }
 
