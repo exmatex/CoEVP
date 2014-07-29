@@ -2801,8 +2801,10 @@ void UpdateStressForElems()
 {
 #define MAX_NEWTON_ITER 10
    int max_newton_iters = 0;
+   int numElem = domain.numElem() ;
 
-   for (Index_t k=0; k<domain.numElem(); ++k) {
+#pragma omp parallel for
+   for (Index_t k=0; k<numElem; ++k) {
 
       // advance constitutive model
       domain.cm(k)->advance(domain.deltatime());
