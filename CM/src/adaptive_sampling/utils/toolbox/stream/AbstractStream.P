@@ -1,7 +1,0 @@
-../src/utils/toolbox/stream/AbstractStream.o:  \
- ../src/utils/toolbox/stream/AbstractStream.cc \
-  ../src/utils/toolbox/stream/AbstractStream.h \
-  ../src/utils/toolbox/stream/AbstractStream.I
- ../src/utils/toolbox/stream/AbstractStream.cc :
-  ../src/utils/toolbox/stream/AbstractStream.h :
-  ../src/utils/toolbox/stream/AbstractStream.I :
