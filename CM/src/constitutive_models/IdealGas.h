@@ -26,9 +26,8 @@ class IdealGas
    virtual Tensor2Sym stressDeviator() const;
 
    virtual double pressure( const double compression,
-                            const double reference_density,
                             const double internal_energy ) const
-                {m_eos.evaluate( compression, internal_energy );}
+                {return m_eos.evaluate( compression, internal_energy );}
 
    virtual double soundSpeedSquared( const double reference_density,
                                      const double relativeVolume,

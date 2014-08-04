@@ -83,6 +83,8 @@ Additional BSD Notice
 #include "MTreeEntry.I"
 #endif
 
+#include <assert.h>
+
 namespace mtreedb {
 
 /*

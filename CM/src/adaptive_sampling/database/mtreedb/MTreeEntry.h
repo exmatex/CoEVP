@@ -16,10 +16,10 @@
 using namespace std;
 #endif
 
-#ifndef included_boost_shared_ptr
-#define included_boost_shared_ptr
-#include <boost/shared_ptr.hpp>
-#endif
+//#ifndef included_boost_shared_ptr
+//#define included_boost_shared_ptr
+//#include <boost/shared_ptr.hpp>
+//#endif
 
 #ifndef included_mtreedb_MTreeKey
 #include "MTreeKey.h"
@@ -31,12 +31,14 @@ using namespace std;
 namespace mtreedb {
 
 class MTreeEntry;
-typedef boost::shared_ptr<MTreeEntry> MTreeEntryPtr;
+//typedef boost::shared_ptr<MTreeEntry> MTreeEntryPtr;
+typedef std::shared_ptr<MTreeEntry> MTreeEntryPtr;
 
 // This forward declaration is kinda gross, but it eliminates a
 // circular dependency.
 class MTreeNode;
-typedef boost::shared_ptr<MTreeNode> MTreeNodePtr;
+//typedef boost::shared_ptr<MTreeNode> MTreeNodePtr;
+typedef std::shared_ptr<MTreeNode> MTreeNodePtr;
 
 /*!
  * @brief MTreeEntry represents an MTree entry as a key-object pair stored 

@@ -18,10 +18,10 @@
 #if !defined(included_krigalg_DerivativeRegressionModel)
 #define included_krigalg_DerivativeRegressionModel
 
-#ifndef included_boost_shared_ptr
-#define included_boost_shared_ptr
-#include <boost/shared_ptr.hpp>
-#endif
+//#ifndef included_boost_shared_ptr
+//#define included_boost_shared_ptr
+//#include <boost/shared_ptr.hpp>
+//#endif
 
 #ifndef included_krigalg_RegressionModel
 #include "RegressionModel.h"
@@ -48,7 +48,8 @@
   //
 
   class DerivativeRegressionModel;
-  typedef boost::shared_ptr<DerivativeRegressionModel> DerivativeRegressionModelPointer;
+  //  typedef boost::shared_ptr<DerivativeRegressionModel> DerivativeRegressionModelPointer;
+  typedef std::shared_ptr<DerivativeRegressionModel> DerivativeRegressionModelPointer;
 
   //
   // class definition

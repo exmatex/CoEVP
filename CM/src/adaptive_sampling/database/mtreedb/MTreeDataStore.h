@@ -53,9 +53,11 @@ namespace mtreedb {
 
 class MTree;
 class MTreeNode;
-typedef boost::shared_ptr<MTreeNode> MTreeNodePtr;
+//typedef boost::shared_ptr<MTreeNode> MTreeNodePtr;
+typedef std::shared_ptr<MTreeNode> MTreeNodePtr;
 class MTreeEntry;
-typedef boost::shared_ptr<MTreeEntry> MTreeEntryPtr;
+//typedef boost::shared_ptr<MTreeEntry> MTreeEntryPtr;
+typedef std::shared_ptr<MTreeEntry> MTreeEntryPtr;
 
 /*!
  * @brief MTreeDataStore maintains data objects and nodes for an MTree 

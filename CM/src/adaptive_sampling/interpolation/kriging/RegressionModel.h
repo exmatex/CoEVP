@@ -29,10 +29,11 @@
 #include <base/Point.h>
 #endif
 
-#ifndef included_boost_shared_ptr
-#define included_boost_shared_ptr
-#include <boost/shared_ptr.hpp>
-#endif
+//#ifndef included_boost_shared_ptr
+//#define included_boost_shared_ptr
+//#include <boost/shared_ptr.hpp>
+//#endif
+#include <memory>
 
   //
   // forward declarations
@@ -51,7 +52,8 @@
   //
 
   class RegressionModel;
-  typedef boost::shared_ptr<RegressionModel> RegressionModelPointer;  
+  //  typedef boost::shared_ptr<RegressionModel> RegressionModelPointer;  
+  typedef std::shared_ptr<RegressionModel> RegressionModelPointer;  
 
   //
   // class definition

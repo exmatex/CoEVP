@@ -39,10 +39,10 @@
 #include <base/Matrix.h>
 #endif // included_krigalg_Matrix
 
-#ifndef included_boost_shared_ptr
-#define included_boost_shared_ptr
-#include <boost/shared_ptr.hpp>
-#endif
+//#ifndef included_boost_shared_ptr
+//#define included_boost_shared_ptr
+//#include <boost/shared_ptr.hpp>
+//#endif
 
 #ifndef included_vector
 #define included_vector
@@ -76,8 +76,8 @@
     // local types
     //
 
-    typedef boost::shared_ptr<MultivariateDerivativeKrigingModel> 
-      MultivariateDerivativeKrigingModelPtr;
+    //    typedef boost::shared_ptr<MultivariateDerivativeKrigingModel> MultivariateDerivativeKrigingModelPtr;
+    typedef std::shared_ptr<MultivariateDerivativeKrigingModel> MultivariateDerivativeKrigingModelPtr;
 
     //
     // class definition

@@ -1,10 +1,10 @@
 #ifndef included_mtreedb_MTreePoint
 #define included_mtreedb_MTreePoint
 
-#ifndef included_boost_shared_ptr
-#define included_boost_shared_ptr
-#include <boost/shared_ptr.hpp>
-#endif
+//#ifndef included_boost_shared_ptr
+//#define included_boost_shared_ptr
+//#include <boost/shared_ptr.hpp>
+//#endif
 
 #ifndef included_iostream
 #define included_iostream
@@ -19,7 +19,8 @@ using namespace std;
 namespace mtreedb {
 
 class MTreePoint;
-typedef boost::shared_ptr<MTreePoint> MTreePointPtr;
+//typedef boost::shared_ptr<MTreePoint> MTreePointPtr;
+typedef std::shared_ptr<MTreePoint> MTreePointPtr;
 
 /*!
  * @brief MTreePoint is an abstract base class declaring the interface for 

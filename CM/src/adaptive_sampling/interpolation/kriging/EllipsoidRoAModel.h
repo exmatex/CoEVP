@@ -26,10 +26,11 @@
 #include <base/Matrix.h>
 #endif // included_krigalg_Matrix
 
-#ifndef included_boost_shared_ptr
-#define included_boost_shared_ptr
-#include <boost/shared_ptr.hpp>
-#endif
+//#ifndef included_boost_shared_ptr
+//#define included_boost_shared_ptr
+//#include <boost/shared_ptr.hpp>
+//#endif
+#include <memory>
 
 #ifndef included_vector
 #define included_vector
@@ -67,8 +68,8 @@
     // local types
     //
 
-    typedef boost::shared_ptr<EllipsoidRoAModel> 
-      EllipsoidRoAModelPtr;
+    //    typedef boost::shared_ptr<EllipsoidRoAModel> EllipsoidRoAModelPtr;
+    typedef std::shared_ptr<EllipsoidRoAModel> EllipsoidRoAModelPtr;
 
     //
     // class definition
