@@ -157,7 +157,7 @@ Constitutive::printNewInterpStats()
 int
 Constitutive::getNumSamples() const
 {
-   int samples = -1;
+   int samples = 0;
 
    if ( adaptiveSamplingEnabled() ) {
       samples = m_sampler->getNumSamples();
@@ -173,7 +173,7 @@ Constitutive::getNumSamples() const
 int
 Constitutive::getNumSuccessfulInterpolations() const
 {
-   int interps = -1;
+   int interps = 0;
 
    if ( adaptiveSamplingEnabled() ) {
       interps = m_sampler->getNumSuccessfulInterpolations();

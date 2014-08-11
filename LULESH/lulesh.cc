@@ -3007,6 +3007,35 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
                       NULL);
    delete [] zd ;
 
+#ifdef USE_ADAPTIVE_SAMPLING
+   Real_t *num_as_models = new double[domain.numElem()] ;
+   Int_t numModels, numPairs;
+   for (int ei=0; ei < domain.numElem(); ++ei) {
+      domain.cm(ei)->getModelInfo(numModels, numPairs);
+      num_as_models[ei] = Real_t(numModels) ;
+   }
+   ok += DBPutUcdvar1(db, "num_as_models", "mesh", (float*) num_as_models,
+                      domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                      NULL);
+   delete [] num_as_models ;
+
+   Real_t *as_efficiency = new double[domain.numElem()] ;
+   for (int ei=0; ei < domain.numElem(); ++ei) {
+      Int_t numSuccessful = domain.cm(ei)->getNumSuccessfulInterpolations() ;
+      Int_t numSamples = domain.cm(ei)->getNumSamples() ;
+      if ( numSamples > 0 ) {
+         as_efficiency[ei] = Real_t(numSuccessful) / Real_t(numSamples) ;
+      }
+      else {
+         as_efficiency[ei] = Real_t(1.) ;
+      }
+   }
+   ok += DBPutUcdvar1(db, "as_efficiency", "mesh", (float*) as_efficiency,
+                      domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                      NULL);
+
+   delete [] as_efficiency;
+#endif
 
    if (ok != 0) {
       printf("Error writing out viz file - rank %d\n", myRank);
@@ -3023,7 +3052,11 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
   int *varTypes;
   int ok = 0;
   // Make sure this list matches what's written out above
+#ifdef USE_ADAPTIVE_SAMPLING
+  char vars[][14] = {"p","e","v","volo","q","speed","xd","yd","zd","num_as_models","as_efficiency"};
+#else
   char vars[][10] = {"p","e","v","volo","q","speed","xd","yd","zd"};
+#endif
   int numvars = sizeof(vars)/sizeof(vars[0]);
 
   // Reset to the root directory of the silo file
