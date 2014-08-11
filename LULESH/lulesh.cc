@@ -2803,24 +2803,42 @@ void UpdateStressForElems()
    int max_newton_iters = 0;
    int numElem = domain.numElem() ;
 
-#pragma omp parallel for
-   for (Index_t k=0; k<numElem; ++k) {
+#ifdef _OPENMP
+#pragma omp parallel
+#endif
+   {
+      int max_local_newton_iters = 0;
 
-      // advance constitutive model
-      domain.cm(k)->advance(domain.deltatime());
+#ifdef _OPENMP
+#pragma omp for
+#endif
+      for (Index_t k=0; k<numElem; ++k) {
 
-      const ElastoViscoPlasticity* cm = (ElastoViscoPlasticity*)domain.cm(k);
+         // advance constitutive model
+         domain.cm(k)->advance(domain.deltatime());
 
-      int num_iters = cm->numNewtonIterations();
-      if (num_iters > max_newton_iters) max_newton_iters = num_iters;
+         const ElastoViscoPlasticity* cm = (ElastoViscoPlasticity*)domain.cm(k);
 
-      Tensor2Sym sigma_prime = domain.cm(k)->stressDeviator();
+         int num_iters = cm->numNewtonIterations();
+         if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
 
-      domain.sx(k) = sigma_prime(1,1);
-      domain.sy(k) = sigma_prime(2,2);
-      domain.txy(k) = sigma_prime(2,1);
-      domain.txz(k) = sigma_prime(3,1);
-      domain.tyz(k) = sigma_prime(3,2);
+         Tensor2Sym sigma_prime = domain.cm(k)->stressDeviator();
+
+         domain.sx(k) = sigma_prime(1,1);
+         domain.sy(k) = sigma_prime(2,2);
+         domain.txy(k) = sigma_prime(2,1);
+         domain.txz(k) = sigma_prime(3,1);
+         domain.tyz(k) = sigma_prime(3,2);
+      }
+
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+      {
+         if (max_local_newton_iters > max_newton_iters) {
+            max_newton_iters = max_local_newton_iters;
+         }
+      }
    }
 
    // The maximum number of Newton iterations required is an indicaton of
