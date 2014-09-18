@@ -95,35 +95,36 @@ Plasticity::evaluate( const vector<double>& point,
 Tensor4LSym
 Plasticity::tensorFunctionDerivative( const Tensor2Sym& in ) const
 {
-   double matrix[36];
-   double delta = 1.e-6 * norm(in);
    Tensor2Sym tensor_function_in(tensorFunction(in)) ;
 
-   if (delta > 0.) {
-      static const int index1[] = {1, 2, 3, 2, 3, 3};
-      static const int index2[] = {1, 2, 3, 1, 2, 1};
-      Tensor2Sym difference;
-      Tensor2Sym increment(0);
-      for (int column=0; column<6; ++column) {
-         increment(index1[column],index2[column]) = delta;
-         difference = (tensorFunction(in + increment) - tensor_function_in) / delta;
-
-         for (int row=0; row<6; ++row) {
-            matrix[column*6+row] = difference(index1[row], index2[row]);
-         }
-
-         increment(index1[column],index2[column]) = 0,0;
-      }
-   }
-   else {
-      for (int entry=0; entry<36; ++entry) {
-         matrix[entry] = 0.0 ;
-      }
-   }
+   double eps = 1.e-3;
+   double delta = eps * norm(in);
+   if (delta == 0.) delta = eps;  // Use an absolute delta since there's no way to
+                                  // determine the scale of the argument in this case
 
    Tensor4LSym out;
-   out.putFortranMatrix( matrix );
 
+   for (int k=1; k<=3; ++k) {
+      for (int l=1; l<=k; ++l) {
+         Tensor2Sym increment(0);
+         increment(k,l) = delta; 
+
+         // This factor accounts for the fact that we are differentiating a
+         // symmetric tensor with respect to a symmetric argument
+         double symmetry_factor = k==l? 1.: 0.5;
+
+         Tensor2Sym difference = (tensorFunction(in + increment) - tensor_function_in) / delta;
+
+         // Account for the fact that we're differentiating a symmetric tensor with
+         // respect to a symmetric tensor argument
+         for (int i=1; i<=3; ++i) {
+            for (int j=1; j<=i; ++j) {
+               out(i,j,k,l) = symmetry_factor * difference(i,j);
+            }
+         }
+      }
+   }
+   
    return out;
 }
 

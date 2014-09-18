@@ -118,7 +118,6 @@ Taylor::getScalingsForSampling( vector<double>& input_scaling,
 
    for (int i=0; i<m_valueDimension; ++i) {
       output_scaling[i] = m_D_0;
-      //      output_scaling[i] = 1.;
    }
 }
 
