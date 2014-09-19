@@ -66,12 +66,13 @@ class Constitutive
 
    double getAverageValueNorm() const;
 
+   mutable int m_hint;
+
+   mutable double m_error_estimate;
+
  private:
 
    AdaptiveSampler* m_sampler;
-
-   mutable int m_hint;
-
 };
 
 #endif

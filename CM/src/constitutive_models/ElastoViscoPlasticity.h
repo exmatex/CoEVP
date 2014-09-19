@@ -118,6 +118,10 @@ class ElastoViscoPlasticity
                                    Tensor2Sym&       Dbar_prime,
                                    Tensor4LSym&      Dbar_prime_deriv ) const;
 
+      double findTheta( const double old_norm,
+                        const double new_norm,
+                        const double old_norm_derivative ) const;
+
       Tensor2Sym m_D_old;    // Velocity gradient symmetric part (coarse-scale strain rate) at old time
       Tensor2Gen m_W_old;    // Velocity gradient skew part (coarse-scale spin) at old time
       Tensor2Sym m_D_new;    // Velocity gradient symmetric part (coarse-scale strain rate) at new time

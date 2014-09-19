@@ -65,6 +65,9 @@ Additional BSD Notice
 #include "ElastoViscoPlasticity.h"
 #include "xtensor.h"
 
+#define BACKTRACKING
+#undef BACKTRACKING_DIAGNOSTICS
+#undef IGNORE_NEWTON_FAILURES
 
 ElastoViscoPlasticity::ElastoViscoPlasticity( const Tensor2Gen&      L,
                                               const double           bulk_modulus,
@@ -93,11 +96,11 @@ ElastoViscoPlasticity::ElastoViscoPlasticity( const Tensor2Gen&      L,
       int pointDimension           = m_plasticity_model->pointDimension();
       int valueDimension           = m_plasticity_model->valueDimension();
       int maxKrigingModelSize      = 6;
-      int maxNumberSearchModels    = 1;
+      int maxNumberSearchModels    = 4;
       double theta                 = 5.e3;
       double meanErrorFactor       = 1.;
       double tolerance             = 3.e-3;
-      double maxQueryPointModelDistance = 0.2;
+      double maxQueryPointModelDistance = 1.;
 
       std::vector<double> pointScaling( pointDimension );
       std::vector<double> valueScaling( valueDimension );
@@ -193,11 +196,10 @@ ElastoViscoPlasticity::advance( const double delta_t )
    double J;
    updateJ( m_J, m_D_old, delta_t, J);
 
-   // Use the current value of the stretch deviator and its
-   // approximate derivative to estimate the new time value
    Tensor2Sym Vbar_prime;
-   Vbar_prime = delta_t * m_Vbar_prime_dot;
-   Vbar_prime += m_Vbar_prime;
+   // Use the current value of the stretch deviator to 
+   // estimate the new time value
+   Vbar_prime = m_Vbar_prime;
 
    // Update the stretch deviator per equation (30)
    Tensor2Sym Dbar_prime;
@@ -299,102 +301,267 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
      of the specification.  It is assumed that an initial guess is being passed in.
    */
 
-   double tol = 1.e-4;        // Read from input if we find some reason to later
-   int max_iter = 15;
-   double saved_residual[max_iter];
+   double tol = 1.e-6;        // Read from input if we find some reason to later
+   int max_iter = 40;
+   double saved_residual_norm[max_iter+1];
+   double saved_solution[6][max_iter+1];
+   double saved_residual[6][max_iter+1];
+   int saved_hint[max_iter+1];
+   double saved_error_estimate[max_iter+1];
+   Wbar = 0.;
 
    Tensor2Sym residual;
 
    Tensor4LSym Dbar_prime_deriv;
    evaluateFineScaleModel( tauBarPrime(a_new, Vbar_prime_new), Dbar_prime_new, Dbar_prime_deriv );
-   Wbar = 0.;
 
    computeResidual( Vbar_prime_new, Vbar_prime_old, Dprime_new, Dbar_prime_new,
                     R_new, a_new * delta_t, residual );
+   double new_residual_norm = norm(residual);
 
-   double relative_residual;
-   double residual_scale = 0.5 * (norm(Dprime_new) + norm(Dbar_prime_new));
-
-   if (residual_scale > 0.) {
-      relative_residual = norm(residual) / residual_scale;
+   double residual_scale = norm(Dprime_new);
+   if ( residual_scale == 0. ) {
+      residual_scale = 1.;
    }
    else {
-      relative_residual = 0.;
+      residual_scale = 1. / residual_scale;
+   }
+
+   double relative_residual = new_residual_norm * residual_scale;
+
+   {
+      int k = 0;
+      for (int i=1; i<=3; ++i) {
+         for (int j=1; j<=i; ++j) {
+            saved_residual[k][0] = residual(i,j);
+            saved_solution[k][0] = Vbar_prime_new(i,j);
+            k++;
+         }
+      }
+      saved_residual_norm[0] = relative_residual;
    }
 
    bool converged = relative_residual < tol;
    m_num_iters = 0;
 
-   double theta = 0.1;
+   double eta_max = 0.01;
    double t = 1.e-4;
-   double old_residual_norm = norm(residual);
+   double old_residual_norm = new_residual_norm;
 
-   while ( !converged && m_num_iters < max_iter) {
+   while ( !converged && m_num_iters < max_iter ) {
 
-      // Compute the Jacobian to get the update
+      double eta = eta_max;
+
       Tensor4LSym jacobian;
       computeJacobian( Dbar_prime_deriv, a_new, delta_t, jacobian );
 
       Tensor2Sym delta;
       solveJacobianSystem( jacobian, residual, delta );
+      double norm_delta = norm(delta);
 
-      double eta = 0.;
+      Tensor2Sym linear_residual = residual + jacobian * delta;
+      double eta_loc = norm(linear_residual) / new_residual_norm;
+      if (eta_loc > eta) {
+         cout << "Jacobian system was not solved accurately enough" << endl;
+         exit(1);
+      }
+      assert(eta < 1.);
+
       Tensor2Sym proposed_solution = Vbar_prime_new + delta;
 
       evaluateFineScaleModel( tauBarPrime(a_new, proposed_solution), Dbar_prime_new, Dbar_prime_deriv );
-      Wbar = 0.;
 
       computeResidual( proposed_solution, Vbar_prime_old, Dprime_new, Dbar_prime_new,
                        R_new, a_new * delta_t, residual );
+      new_residual_norm = norm(residual);
 
-#if 0
-      while ( norm(residual) > (1. - t*(1. - eta)) * old_residual_norm ) {
+      {
+         int k = 0;
+         for (int i=1; i<=3; ++i) {
+            for (int j=1; j<=i; ++j) {
+               saved_residual[k][m_num_iters+1] = residual(i,j);
+               saved_solution[k][m_num_iters+1] = proposed_solution(i,j);
+               k++;
+            }
+         }
+      }
 
+      relative_residual = new_residual_norm * residual_scale;
+      converged = relative_residual <= tol;
+
+#ifdef BACKTRACKING
+      double theta;
+      bool back_tracked = false;
+      int num_back_tracks = 0;
+
+      int last_model = m_hint;
+
+      while ( !converged && new_residual_norm > (1. - t*(1. - eta)) * old_residual_norm ) {
+
+#ifdef BACKTRACKING_DIAGNOSTICS
+         cout.precision(20);
+         cout << "iter = " << m_num_iters << ", bt = " << num_back_tracks << ", old residual = " << old_residual_norm << ", new residual = " << new_residual_norm
+              << ", eta = " << eta << ", accept = " << (1. - t*(1. - eta)) << ", theta = " << theta << ", norm delta = " << norm_delta << endl;
+         cout.precision();
+#endif
+
+         back_tracked = true;
+
+#ifdef BACKTRACKING_DIAGNOSTICS
+         cout << "   hint = " << m_hint << ", error estimate = " << m_error_estimate << endl;
+#endif
+
+         {
+            // Use a finite difference to estimate the derivative of the residual norm at the current
+            // Newton iterate.  This is needed for the subsequent step reduction calculation.
+            double eps = 1.e-3;
+
+            Tensor2Sym Dbar_prime_new_tmp;
+            Tensor4LSym Dbar_prime_deriv_tmp;
+            Tensor2Sym incremented_point = Vbar_prime_new + eps * delta;
+            evaluateFineScaleModel( tauBarPrime(a_new, incremented_point), Dbar_prime_new_tmp, Dbar_prime_deriv_tmp );
+
+            Tensor2Sym incremented_residual;
+            computeResidual( incremented_point, Vbar_prime_old, Dprime_new, Dbar_prime_new_tmp,
+                             R_new, a_new * delta_t, incremented_residual );
+
+            double old_norm = 0.5 * pow(old_residual_norm,2);
+            double new_norm = 0.5 * pow(new_residual_norm,2);
+            double old_norm_derivative = (0.5 * pow(norm(incremented_residual),2) - old_norm) / eps;
+
+            theta = findTheta(old_norm, new_norm, old_norm_derivative);
+         }
+
+         // Cut the step
          delta *= theta;
+         norm_delta *= theta;
+
          proposed_solution = Vbar_prime_new + delta;
          eta = 1. - theta * (1. - eta);
 
          evaluateFineScaleModel( tauBarPrime(a_new, proposed_solution), Dbar_prime_new, Dbar_prime_deriv );
-         Wbar = 0.;
+
+         if (m_hint != last_model) break;
 
          computeResidual(proposed_solution, Vbar_prime_old, Dprime_new, Dbar_prime_new,
                          R_new, a_new * delta_t, residual );
+         new_residual_norm = norm(residual);
+
+         relative_residual = new_residual_norm * residual_scale;
+         converged = relative_residual <= tol;
+
+         if ( norm_delta <= 1.e-8 * norm(Vbar_prime_new) ) {
+            cout << "Backtracking failed in Newton solver" << endl;
+            exit(1);
+
+            m_plasticity_model->evaluateNative( tauBarPrime(a_new, proposed_solution), Dbar_prime_new, Dbar_prime_deriv );
+            break;
+         }
+
+         num_back_tracks++;
+      }
+
+#ifdef BACKTRACKING_DIAGNOSTICS
+      if (back_tracked) {
+         cout.precision(20);
+         cout << "iter = " << m_num_iters << ", bt = " << num_back_tracks << ", old residual = " << old_residual_norm << ", new residual = " << new_residual_norm
+              << ", eta = " << eta << ", accept = " << (1. - t*(1. - eta)) << ", theta = " << theta << ", norm delta = " << norm_delta << endl;
+         cout.precision();
+         cout << "   hint = " << m_hint << ", error estimate = " << m_error_estimate << endl;
       }
 #endif
 
+#endif
       // Update solution
       Vbar_prime_new = proposed_solution;
 
+      relative_residual = new_residual_norm * residual_scale;
 
-      double new_residual_norm ;
-
-      relative_residual = (new_residual_norm = norm(residual)) * 2. /
-                          (norm(Dprime_new) + norm(Dbar_prime_new));
-
-      saved_residual[m_num_iters] = relative_residual ;
-
-      // Test convergence
-      converged = relative_residual <= tol;
+      {
+         saved_residual_norm[m_num_iters+1] = relative_residual ;
+         saved_hint[m_num_iters+1] = m_hint ;
+         saved_error_estimate[m_num_iters+1] = m_error_estimate ;
+         {
+            int k = 0;
+            for (int i=1; i<=3; ++i) {
+               for (int j=1; j<=i; ++j) {
+                  saved_solution[k++][m_num_iters+1] = proposed_solution(i,j);
+               }
+            }
+         }
+      }
 
       m_num_iters++;
       old_residual_norm = new_residual_norm;
+
+      //      cout << "Newton iteration = " << m_num_iters << ", residual = " << new_residual_norm << endl;
+
    }
 
-#if 0
+#ifndef IGNORE_NEWTON_FAILURES
    if ( !converged && m_num_iters >= max_iter ) {
       std::cout << "Newton solve did not converge, num_iters = " << m_num_iters << ", relative residual = " << relative_residual << std::endl;
       std::cout << std::endl;
 
       for (int i=0; i<m_num_iters; ++i) {
-         cout << i << " " << saved_residual[i] << endl;
+         cout << i << " " << saved_residual_norm[i] << ", hint = " << saved_hint[i] << ", error estimate = " << saved_error_estimate[i] << ", residual = ";
+         for (int k=0; k<6; ++k) cout << saved_residual[k][i] << " ";
+         cout << endl;
       }
-      exit(1);
 
-   }
-   else {
-      //      cout << "   Number of Newton iterations = " << m_num_iters << ", relative residual = " << relative_residual << endl;
+      exit(1);
    }
 #endif
+}
+
+
+double
+ElastoViscoPlasticity::findTheta( const double old_norm,
+                                  const double new_norm,
+                                  const double old_norm_derivative ) const
+{
+   // Assuming that the quadratic to be minimized on the unit interval is
+   // p(x) = a + b*x + c*x^2, the coefficients are
+
+   double a = old_norm;
+   double b = old_norm_derivative;
+   double c = new_norm - a - b;
+
+   double theta_min = 0.1;
+   double theta_max = 0.5;
+   double theta_mid = 0.5 * (theta_min + theta_max);
+   double min_theta;
+
+   if ( c == 0. ) {  // rather unlikely
+      min_theta = (b <= 0.)? theta_max: theta_min;
+   }
+   else {
+
+      double global_critical_point = -b / (2*c);
+
+      if ( c > 0. ) {  // Parabola opens up
+         if ( theta_min <= global_critical_point &&
+              global_critical_point <= theta_max ) {
+            min_theta = global_critical_point;
+         }
+         else if ( global_critical_point < theta_min ) {
+            min_theta = theta_min;
+         }
+         else {
+            min_theta = theta_max;
+         }
+      }
+      else {   // Parabola opens down
+         if ( global_critical_point < theta_mid ) {
+            min_theta = theta_max;
+         }
+         else {
+            min_theta = theta_min;
+         }
+      }
+   }
+
+   return min_theta;
 }
 
 

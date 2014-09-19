@@ -3852,9 +3852,15 @@ int main(int argc, char *argv[])
 
       // Construct the fine-scale plasticity model
       double D_0 = 1.e-2;
+#if 1
+      // Tantalum
       double m = 1./20.;
       double g = 2.e-3; // (Mbar)
-      //      double g = 2.e-4; // (Mbar) Gives a reasonable looking result for m = 1.
+#else
+      // easier alternative
+      double m = 1./2.;
+      double g = 1.e-4; // (Mbar)
+#endif
       Plasticity* plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
 
       // Construct the equation of state
