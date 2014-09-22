@@ -3,13 +3,13 @@
 # Silo (www.hdfgroup.org/HDF5) and HDF5 (www.hdfgroup.org/HDF5) library
 # locations.  These macros can be left undefined if visualization is not required.
 
-SILO_LOC = /usr/local/tools/silo-4.8
-#SILO_LOC = 
+#SILO_LOC = /usr/local/tools/silo-4.8
+SILO_LOC = 
 
 # HDF5 library location (www.hdfgroup.org/HDF5).  This macro can
 # be undefined if visualization is not required.
-HDF5_LOC = /usr/local/tools/hdf5-intel-serial-1.8.8
-#HDF5_LOC = 
+#HDF5_LOC = /usr/local/tools/hdf5-intel-serial-1.8.8
+HDF5_LOC = 
 
 # BLAS and LAPACK library locations.  It may not be necessary
 # to specify these depending upon the linker defaults
