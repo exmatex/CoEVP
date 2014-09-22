@@ -43,27 +43,6 @@ class ElastoViscoPlasticity
    
       int numNewtonIterations() const {return m_num_iters;}
 
-      void testSolve( const Tensor2Sym& Vbar_prime_old,
-                      const Tensor2Sym& Dprime_new,
-                      const Tensor2Gen& R_new,
-                      const double      a_new,
-                      const double      delta_t,
-                      Tensor2Sym&       Vbar_prime_new,
-                      Tensor2Sym&       Dbar_prime,
-                      Tensor2Gen&       Wbar );
-
-      double findTheta(const Tensor2Sym& Vbar_prime_new,
-                       const Tensor2Sym& Vbar_prime_old,
-                       const Tensor2Sym& Dprime_new,
-                       const Tensor2Gen& R_new,
-                       const Tensor2Sym& delta,
-                       const double&     a_new,
-                       const double&     delta_t) const;
-
-      double findTheta( const double old_norm,
-                        const double new_norm,
-                        const double old_norm_derivative ) const;
-
    private:
 
       inline Tensor2Sym tauBarPrime( const double      a,
@@ -143,6 +122,10 @@ class ElastoViscoPlasticity
                                   const Tensor2Sym& tau_bar_prime,
                                   Tensor2Sym&       Dbar_prime,
                                   Tensor4LSym&      Dbar_prime_deriv ) const;
+
+      double findTheta( const double old_norm,
+                        const double new_norm,
+                        const double old_norm_derivative ) const;
 
       void printTensor2Sym( const Tensor2Sym& tensor ) const;
       void printTensor4LSym( const Tensor4LSym& tensor ) const;

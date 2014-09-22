@@ -66,9 +66,9 @@ Additional BSD Notice
 #include <stdio.h>
 #include <stdlib.h>
 
-#define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
-#undef USE_ADAPTIVE_SAMPLING
-#undef PRINT_PERFORMANCE_DIAGNOSTICS
+#define VISIT_DATA_INTERVAL 20  // Set this to 0 to disable VisIt data writing
+#define USE_ADAPTIVE_SAMPLING
+#define PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 
 // EOS options
@@ -2799,7 +2799,7 @@ void LagrangeLeapFrog()
 static inline
 void UpdateStressForElems()
 {
-#define MAX_NEWTON_ITER 10
+#define MAX_NEWTON_ITER 100
    int max_newton_iters = 0;
    int numElem = domain.numElem() ;
 
@@ -3860,10 +3860,12 @@ int main(int argc, char *argv[])
 
       // Construct the fine-scale plasticity model
       double D_0 = 1.e-2;
-      double m = 1./20.;  // appropriate for tantalum
-      double g = 2.e-3; // (Mbar)
+      double m = 1./2.;
+      //      double m = 1./2.;
+      //      double m = 1.;
+      //      double g = 2.e-3; // (Mbar)
       //      double g = 1.e-4; // (Mbar) Gives a reasonable looking result for m = 1./2.
-      //      double g = 2.e-6; // (Mbar) Gives a reasonable looking result for m = 1.
+      double g = 2.e-6; // (Mbar) Gives a reasonable looking result for m = 1.
       Plasticity* plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
 
       // Construct the equation of state

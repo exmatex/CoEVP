@@ -408,8 +408,6 @@ Tensor4LSym& Tensor4LSym::operator=( short index )
    assert( index==0 || index==1 );  // 0: zero tensor, 1: unit tensor
 
    switch ( index ){
-      //     case 0: for ( int j=0; j<21; j++ ) a[j]=0;
-      //             break;
      case 0: for ( int j=0; j<36; j++ ) a[j]=0;
              break;
      case 1: // 0.5*( delta_ik delta_jl + delta_jk delta_il )

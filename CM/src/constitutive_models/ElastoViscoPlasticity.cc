@@ -67,7 +67,6 @@ Additional BSD Notice
 #include "ElastoViscoPlasticity.h"
 #include "xtensor.h"
 
-
 ElastoViscoPlasticity::ElastoViscoPlasticity( const Tensor2Gen&      L,
                                               const double           bulk_modulus,
                                               const double           shear_modulus,
@@ -320,19 +319,14 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
    Tensor4LSym Dbar_prime_deriv;
    evaluateFineScaleModel( tauBarPrime(a_new, Vbar_prime_new), Dbar_prime_new, Dbar_prime_deriv );
 
-   Tensor2Sym saved_Dbar_prime_new = Dbar_prime_new;
-
    int current_model = m_hint;
 
    Tensor2Sym residual;
    computeResidual( Vbar_prime_new, Vbar_prime_old, Dprime_new, Dbar_prime_new,
                     R_new, a_new * delta_t, residual );
    double new_residual_norm = norm(residual);
-
    double relative_residual = new_residual_norm * residual_scale;
-   bool converged = relative_residual < tol;
-
-   Tensor2Sym initial_Vbar_prime = Vbar_prime_new;  // saving for diagnostics
+   bool converged = relative_residual <= tol;
 
    {
       int k = 0;
@@ -379,6 +373,7 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
       computeResidual( proposed_solution, Vbar_prime_old, Dprime_new, Dbar_prime_new,
                        R_new, a_new * delta_t, residual );
       new_residual_norm = norm(residual);
+
       relative_residual = new_residual_norm * residual_scale;
       converged = relative_residual <= tol;
 
@@ -404,8 +399,9 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
 #ifdef BACKTRACKING_DIAGNOSTICS
          if ( num_backtracks == 0 ) {
             cout.precision(20);
-            cout << "iter = " << m_num_iters << ", bt = " << num_backtracks << ", old residual = " << old_residual_norm << ", new residual = " << new_residual_norm
-                 << ", eta = " << eta << ", accept = " << (1. - t*(1. - eta)) << ", theta = " << theta << ", norm delta = " << norm_delta << endl;
+            cout << "iter = " << m_num_iters << ", bt = " << num_backtracks << ", old residual = " << old_residual_norm
+                 << ", new residual = " << new_residual_norm << ", eta = " << eta << ", accept = " << (1. - t*(1. - eta))
+                 << ", theta = " << theta << ", norm delta = " << norm_delta << endl;
             cout.precision();
             cout << "   model = " << current_model << ", error estimate = " << m_error_estimate << endl;
          }
@@ -453,8 +449,9 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
 
 #ifdef BACKTRACKING_DIAGNOSTICS
          cout.precision(20);
-         cout << "iter = " << m_num_iters << ", bt = " << num_backtracks << ", old residual = " << old_residual_norm << ", new residual = " << new_residual_norm
-              << ", eta = " << eta << ", accept = " << (1. - t*(1. - eta)) << ", theta = " << theta << ", norm delta = " << norm_delta << endl;
+         cout << "iter = " << m_num_iters << ", bt = " << num_backtracks << ", old residual = " << old_residual_norm
+              << ", new residual = " << new_residual_norm << ", eta = " << eta << ", accept = " << (1. - t*(1. - eta))
+              << ", theta = " << theta << ", norm delta = " << norm_delta << endl;
          cout.precision();
          cout << "   model = " << current_model << ", error estimate = " << m_error_estimate << endl;
 #endif
@@ -464,7 +461,6 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
             exit(1);
          }
       }
-
 #endif
 
       // Update the solution
@@ -487,17 +483,18 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
       }
 
       old_residual_norm = new_residual_norm;
-   }
 
-   if ( !converged && m_num_iters >= max_iter ) {
-      std::cout << "Newton solve did not converge, num_iters = " << m_num_iters << ", relative residual = " << relative_residual << std::endl;
-      for (int i=0; i<m_num_iters; ++i) {
-         cout << i << " " << saved_residual_norm[i] << ", hint = " << saved_hint[i] << ", error estimate = " << saved_error_estimate[i] << ", residual = ";
-         for (int k=0; k<6; ++k) cout << saved_residual[k][i] << " ";
-         cout << endl;
+      //      cout << "Newton iteration = " << m_num_iters << ", residual = " << new_residual_norm << endl;
+
+      if ( !converged && m_num_iters >= max_iter ) {
+         std::cout << "Newton solve did not converge, num_iters = " << m_num_iters << ", relative residual = " << relative_residual << std::endl;
+         for (int i=0; i<m_num_iters; ++i) {
+            cout << i << " " << saved_residual_norm[i] << ", hint = " << saved_hint[i] << ", error estimate = " << saved_error_estimate[i] << ", residual = ";
+            for (int k=0; k<6; ++k) cout << saved_residual[k][i] << " ";
+            cout << endl;
+         }
+         exit(1);
       }
-
-      exit(1);
    }
 }
 

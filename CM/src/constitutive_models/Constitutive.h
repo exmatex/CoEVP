@@ -75,15 +75,16 @@ class Constitutive
 
    double getValueNormMax() const;
 
- protected:
-
-   AdaptiveSampler* m_sampler;
-
    mutable int m_hint;
 
    mutable double m_error_estimate;
 
+ private:
+
    mutable bool m_finescale_verbose;
+
+   AdaptiveSampler* m_sampler;
+
 };
 
 #endif
