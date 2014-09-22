@@ -106,6 +106,9 @@ Constitutive::enableAdaptiveSampling( const int                  pointDimension,
 
    // This variable remembers the index of the most recently used interpolation model
    m_hint = -1;
+
+   // This variable remembers the error estimate of the most recently used interpolation
+   m_error_estimate = 0.;
 }
 
 
@@ -116,11 +119,28 @@ Constitutive::sample( const FineScale&           fine_scale_model,
 {
    std::vector<bool> interpolateFlags(InterpolationDataBase::NUMBER_FLAGS);
 
+   m_sampler->setVerbose(true);
+
    m_sampler->sample( value,
                       point,
                       m_hint,
                       interpolateFlags,
-                      fine_scale_model );
+                      fine_scale_model,
+                      m_error_estimate );
+}
+
+
+void
+Constitutive::evaluateSpecificModel( const int                  model,
+                                     const FineScale&           fine_scale_model,
+                                     const std::vector<double>& point,
+                                     std::vector<double>&       value ) const
+{
+   m_sampler->evaluateSpecificModel( value,
+                                     point,
+                                     model,
+                                     fine_scale_model,
+                                     m_error_estimate );
 }
 
 
@@ -211,4 +231,29 @@ Constitutive::getAverageValueNorm() const
    return average;
 }
 
+
+double
+Constitutive::getPointNormMax() const
+{
+   double max = 0.;
+
+   if ( adaptiveSamplingEnabled() ) {
+      max = m_sampler->getPointNormMax();
+   }
+
+   return max;
+}
+
+
+double
+Constitutive::getValueNormMax() const
+{
+   double max = 0.;
+
+   if ( adaptiveSamplingEnabled() ) {
+      max = m_sampler->getValueNormMax();
+   }
+
+   return max;
+}
 

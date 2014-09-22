@@ -1217,7 +1217,8 @@ namespace krigcpl {
 			       const ResponsePoint  & queryPoint,
 			       int                    valueDimension,
 			       double                _tolerance,
-			       double                _meanErrorFactor)
+			       double                _meanErrorFactor,
+                               double               & errorEstimate)
       {
 
 	//
@@ -1226,6 +1227,8 @@ namespace krigcpl {
 
 	const double toleranceSqr = _tolerance*_tolerance;
 	
+        errorEstimate = 0.;
+
 	for (int iValue = 0; iValue < valueDimension; ++iValue) {
 	  
 	  //
@@ -1239,12 +1242,15 @@ namespace krigcpl {
 	  
 #endif // HAVE_PKG_libprof
 	  
-	  const double errorEstimate = 
+	  const double iErrorEstimate = 
 	    compKrigingError(*krigingModel, 
 			     queryPoint,
 			     iValue,
 			     _meanErrorFactor);
 	  
+          errorEstimate = std::max(errorEstimate, sqrt(iErrorEstimate));
+
+
 #ifdef HAVE_PKG_libprof
 	  
 	  ProfileEnd("errEst");
@@ -1256,8 +1262,8 @@ namespace krigcpl {
 	  // estimate is greater than tolerance simpoy return failure
 	  //
 	  
-          //	  if ( errorEstimate > toleranceSqr) {
-	  if ( fabs(errorEstimate) > toleranceSqr) {
+          //	  if ( iErrorEstimate > toleranceSqr) {
+	  if ( fabs(iErrorEstimate) > toleranceSqr) {
 
 	    return false;
 	    
@@ -1287,7 +1293,7 @@ namespace krigcpl {
 	  value[iValue] = valueEstimate[0];
 	  
 	  // 	std::cout << "value id: " << iValue 
-	  // 		  << " error estimate: " << sqrt(errorEstimate) 
+	  // 		  << " error estimate: " << sqrt(iErrorEstimate) 
 	  // 		  << std::endl;
           //          std::cout << "value id: " << iValue 
           //                    << " value estimate: " << valueEstimate[0]
@@ -1317,7 +1323,8 @@ namespace krigcpl {
 			       int                    pointDimension,
 			       int                    valueDimension,
 			       double                _tolerance,
-			       double                _meanErrorFactor)
+			       double                _meanErrorFactor,
+                               double               & errorEstimate )
       {
 
 	//
@@ -1332,6 +1339,8 @@ namespace krigcpl {
 
 	const double toleranceSqr = _tolerance*_tolerance;
 
+        errorEstimate = 0.;
+
 	for (int iValue = 0; iValue < valueDimension; ++iValue) {
 
 #ifdef HAVE_PKG_libprof
@@ -1344,11 +1353,13 @@ namespace krigcpl {
 	  // compute the error estimate
 	  //
 	
-	  const double errorEstimate = 
+	  const double iErrorEstimate = 
 	    compKrigingError(*krigingModel, 
 			     queryPoint,
 			     iValue,
 			     _meanErrorFactor);
+
+          errorEstimate = std::max(errorEstimate, sqrt(iErrorEstimate));
 
 #ifdef HAVE_PKG_libprof
 
@@ -1361,8 +1372,8 @@ namespace krigcpl {
 	  // estimate is greater than tolerance simpoy return failure
 	  //
 
-          //	  if ( errorEstimate > toleranceSqr) {
-	  if ( fabs(errorEstimate) > toleranceSqr) {
+          //	  if ( iErrorEstimate > toleranceSqr) {
+	  if ( fabs(iErrorEstimate) > toleranceSqr) {
 
 	    return false;
 
@@ -2290,7 +2301,8 @@ namespace krigcpl {
     KrigingInterpolationDataBase::interpolate(double            * value,
 					      int               & hint,
 					      const double      * point,
-					      std::vector<bool> & flags )
+					      std::vector<bool> & flags,
+                                              double            & error_estimate)
     {
 
       //
@@ -2367,7 +2379,8 @@ namespace krigcpl {
   	      			       queryPoint,
   	      			       valueDimension,
   	      			       _tolerance,
-  	      			       _meanErrorFactor);
+                                       _meanErrorFactor,
+                                       error_estimate );
   	      
   	      if (hintModelSuccess == true) {
   	        flags[USED_HINT_FLAG] = true;
@@ -2433,7 +2446,8 @@ namespace krigcpl {
 				   queryPoint,
 				   valueDimension,
 				   _tolerance,
-				   _meanErrorFactor);
+				   _meanErrorFactor,
+                                   error_estimate);
 
 #ifdef HAVE_PKG_libprof
 
@@ -2506,7 +2520,8 @@ namespace krigcpl {
  					queryPoint,
  					valueDimension,
  					_tolerance,
- 					_meanErrorFactor);
+ 					_meanErrorFactor,
+                                        error_estimate);
 #endif
 
 #ifdef HAVE_PKG_libprof
@@ -2534,7 +2549,8 @@ namespace krigcpl {
 					      double            * gradient,
 					      int               & hint,
 					      const double      * point,
-					      std::vector<bool> & flags)
+					      std::vector<bool> & flags,
+                                              double            & error_estimate)
     {
 
       //
@@ -2606,7 +2622,8 @@ namespace krigcpl {
 	    			     pointDimension,
 	    			     valueDimension,
 	    			     _tolerance,
-	    			     _meanErrorFactor);
+                                     _meanErrorFactor,
+                                     error_estimate);
 	    
 // 	    if (hintModelSuccess == true)
 // 	      std::cout << "hint success" << std::endl;
@@ -2671,7 +2688,8 @@ namespace krigcpl {
 				   pointDimension,
 				   valueDimension,
 				   _tolerance,
-				   _meanErrorFactor);
+				   _meanErrorFactor,
+                                   error_estimate);
 
 #ifdef HAVE_PKG_libprof
 
@@ -2733,21 +2751,21 @@ namespace krigcpl {
 	// interpolate using the best kriging model available
 	//
 
-	krigcpl::interpolate(value,
-					 gradient,
-					 bestKrigingModel,
-					 queryPoint,
-					 pointDimension,
-					 valueDimension);
+        krigcpl::interpolate(value,
+                             gradient,
+                             bestKrigingModel,
+                             queryPoint,
+                             pointDimension,
+                             valueDimension);
 
-// 	return checkErrorAndInterpolate(value,
-// 					gradient,
-// 					bestKrigingModel,
-// 					queryPoint,
-// 					pointDimension,
-// 					valueDimension,
-// 					_tolerance,
-// 					_meanErrorFactor);
+        // 	return checkErrorAndInterpolate(value,
+        // 					gradient,
+        // 					bestKrigingModel,
+        // 					queryPoint,
+        // 					pointDimension,
+        // 					valueDimension,
+        // 					_tolerance,
+        // 					_meanErrorFactor);
 
 #ifdef HAVE_PKG_libprof
 
@@ -2780,7 +2798,8 @@ namespace krigcpl {
 					      int                 oVIndexForMin, 
 					      int                & hintUsed,
 					      const double       * point,
-					      std::vector<bool>  & flags)
+					      std::vector<bool>  & flags,
+                                              double             & error_estimate)
     {
 #if DEBUG
        std::cout << "foobar" << std::endl;
@@ -2852,7 +2871,8 @@ namespace krigcpl {
 				       queryPoint,
 				       valueDimension,
 				       _tolerance,
-				       _meanErrorFactor);
+				       _meanErrorFactor,
+                                       error_estimate);
 
 	    if (hintModelSuccess == true) {
 
@@ -2953,7 +2973,8 @@ namespace krigcpl {
 				   queryPoint,
 				   valueDimension,
 				   _tolerance,
-				   _meanErrorFactor);
+				   _meanErrorFactor,
+                                   error_estimate);
 
 	if (interpolationSuccess == true)
 	  flags[NEW_HINT_FLAG] = true;
@@ -3074,7 +3095,8 @@ namespace krigcpl {
 					      int                 oVIndexForMin, 
 					      int                & hintUsed,
 					      const double       * point,
-					      std::vector<bool>  & flags)
+					      std::vector<bool>  & flags,
+                                              double             & error_estimate )
     {
 #if DEBUG
       std::cout << "foobar" << std::endl;
@@ -3150,7 +3172,7 @@ namespace krigcpl {
 				       pointDimension,
 				       valueDimension,
 				       _tolerance,
-				       _meanErrorFactor);
+				       _meanErrorFactor, error_estimate);
 
 	    if (hintModelSuccess == true) {
 
@@ -3261,7 +3283,8 @@ namespace krigcpl {
 				   pointDimension,
 				   valueDimension,
 				   _tolerance,
-				   _meanErrorFactor);
+				   _meanErrorFactor,
+                                   error_estimate);
 
 	if (interpolationSuccess == true)
 	  flags[NEW_HINT_FLAG] = true;
@@ -3372,6 +3395,106 @@ namespace krigcpl {
 
       return false;
 
+    }
+
+    double
+    KrigingInterpolationDataBase::interpolateSpecificModel(double            * value,
+                                                           double            * gradient,
+                                                           int               & model,
+                                                           const double      * point,
+                                                           std::vector<bool> & flags)
+    {
+       double errorEstimate;
+
+       //
+       // make sure there is enough space in flags 
+       //
+
+       assert(flags.size() >= NUMBER_FLAGS);
+
+       //
+       // initialize flags container
+       //
+
+       std::fill(flags.begin(),
+                 flags.end(),
+                 false);
+       //
+       // shortcuts to frequently accesses data
+       //
+
+       const int pointDimension = getPointDimension();
+       const int valueDimension = getValueDimension();
+
+       //
+       // instatiate point object from point data
+       //
+
+       const ResponsePoint queryPoint(pointDimension,
+                                      point);
+
+       if (model == MTreeObject::getUndefinedId()) {
+          cout << "Undefined model passed to adaptive sampler" << endl;
+          exit(1);
+       }
+
+       const mtreedb::MTreeObjectPtr mTreeObjectPtr = 
+          _krigingModelDB.getObject(model); 
+
+       double error_estimate;
+
+       if (mTreeObjectPtr == NULL) {
+
+          cout << "Couldn't find model in kriging interpolation database " << endl;
+          exit(1);
+
+          //          flags[LOST_HINT_FLAG] = true;
+
+       } else {
+    
+          const MTreeKrigingModelObject & mTreeObject = 
+             dynamic_cast<const MTreeKrigingModelObject &>(*mTreeObjectPtr);
+          const InterpolationModelPtr hintKrigingModel = 
+             mTreeObject.getModel();
+	  
+          flags[USED_HINT_FLAG] = true;
+
+          for (int iValue = 0; iValue < valueDimension; ++iValue) {
+
+             const double iErrorEstimate = 
+                compKrigingError(*hintKrigingModel, 
+                                 queryPoint,
+                                 iValue,
+                                 _meanErrorFactor);
+	  
+             errorEstimate = std::max(errorEstimate, sqrt(iErrorEstimate));
+
+             //
+             // compute the value
+             //
+
+             const Value valueEstimate = 
+                hintKrigingModel->interpolate(iValue,
+                                          queryPoint);
+
+             //
+             // put the value of the function into value (valueEstimate
+             // contains the value of the function follwed by the gradient;
+             //
+
+             value[iValue] = valueEstimate[0];
+
+             //
+             // store gradient data
+             //
+	  
+             for (int i = 0; i < pointDimension; ++i)
+                gradient[i*valueDimension + iValue] = valueEstimate[1 + i];
+
+          }
+       }
+
+       return errorEstimate;
     }
 
     //

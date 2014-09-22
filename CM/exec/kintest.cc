@@ -83,7 +83,7 @@ main( int   argc,
       char *argv[] )
 {
    // Fine-scale plasticity model
-   double m = 1./5.;
+   double m = 1./20.;
    double g = 2.e-3;
    double D_0 = 1.e-2;
    Taylor plasticity_model(D_0, m, g);
@@ -111,7 +111,7 @@ main( int   argc,
    bool use_adaptive_sampling = false;
    ElastoViscoPlasticity constitutive_model(L_init, K, G, eos_model, &plasticity_model, use_adaptive_sampling);
 
-   double end_time = 100.;
+   double end_time = 2.e-3;
    int num_steps = 100;
    double delta_t = end_time / num_steps;
    double time = 0.;
@@ -133,7 +133,7 @@ main( int   argc,
 
       int num_iters = constitutive_model.numNewtonIterations();
 
-      cout << "Number of Newton iterations = " << num_iters << endl;
+      //      cout << "Number of Newton iterations = " << num_iters << endl;
 
       // Print some interpolation statistics if adaptive sampling is being used
       constitutive_model.printNewInterpStats();
@@ -141,14 +141,16 @@ main( int   argc,
       // Get the new Cauchy stress and update hydro
       Tensor2Sym sigma_bar_new(constitutive_model.stressDeviator());
 
-      //      cout << "sigma_bar_new(3,1) = " << sigma_bar_new(3,1) << endl;
-      //      cout << (1./(2.*G))*sigma_bar_new(3,1) << endl;
-      //      cout << (1./(2.*G))*((sigma_bar_new(3,1) - old_val)) / delta_t << endl;
-      old_val = sigma_bar_new(3,1);
+      //      cout << "sigma_bar_new(3,3) = " << sigma_bar_new(3,1) << endl;
+      //      cout << sigma_bar_new(3,3) << endl;
+      //      cout << (1./(2.*G))*sigma_bar_new(3,3) << endl;
+      //      cout << (1./(2.*G))*((sigma_bar_new(3,3) - old_val)) / delta_t << endl;
+
+      old_val = sigma_bar_new(3,3);
 
       time += delta_t;
 
-      cout << "Step " << step << " completed, simulation time is " << time << endl;  
+      //      cout << "Step " << step << " completed, simulation time is " << time << endl;  
    }
 }
 

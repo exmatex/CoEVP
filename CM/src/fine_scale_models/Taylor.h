@@ -18,7 +18,7 @@ class Taylor
    
       virtual Tensor2Sym tensorFunction( const Tensor2Sym& in ) const;
 
-      virtual Tensor4LSym tensorFunctionDerivative( const Tensor2Sym& in ) const;
+      //      virtual Tensor4LSym tensorFunctionDerivative( const Tensor2Sym& in ) const;
 
       virtual void getScalingsForSampling( vector<double>& input_scaling,
                                            vector<double>& output_scaling ) const;

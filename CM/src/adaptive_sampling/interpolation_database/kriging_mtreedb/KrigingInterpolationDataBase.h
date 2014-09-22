@@ -144,13 +144,15 @@ namespace krigcpl {
        *              of at least _pointDimension.
        * @param flags Handle to a container for storing flags related
        *              to the inner workings of the interpolation database.
+       * @param error_estimate Error estimate
        *
        * @return true if the interpolation successful; false otherwise. 
        */
       virtual bool interpolate(double            * value,
 			       int               & hint,
 			       const double      * point,
-			       std::vector<bool> & flags);
+			       std::vector<bool> & flags,
+                               double            & error_estimate);
 
       /*!
        * Compute interpolated value at a point.
@@ -171,6 +173,7 @@ namespace krigcpl {
        *              of at least _pointDimension.
        * @param flags Handle to a container for storing flags related
        *              to the inner workings of the interpolation database.
+       * @param error_estimate Error estimate
        *
        * @return true if the interpolation successful; false otherwise. 
        */      
@@ -180,7 +183,8 @@ namespace krigcpl {
 			       int                 oVIndexForMin, 
 			       int                & hintUsed,
 			       const double       * point,
-			       std::vector<bool>  & flags);
+			       std::vector<bool>  & flags,
+                               double             & error_estimate);
 
       /*!
        * Compute interpolated value at a point.
@@ -198,6 +202,7 @@ namespace krigcpl {
        *              of at least _pointDimension.
        * @param flags Handle to a container for storing flags related
        *              to the inner workings of the interpolation database.
+       * @param error_estimate Error estimate
        *
        * @return true if the interpolation successful; false otherwise. 
        */
@@ -205,7 +210,8 @@ namespace krigcpl {
 			       double            * gradient,
 			       int               & hint,
 			       const double      * point,
-			       std::vector<bool> & flags);	
+			       std::vector<bool> & flags,
+                               double            & error_estimate);	
 
       /*!
        * Compute interpolated value at a point.
@@ -228,6 +234,7 @@ namespace krigcpl {
        *              of at least _pointDimension.
        * @param flags Handle to a container for storing flags related
        *              to the inner workings of the interpolation database.
+       * @param error_estimate Error estimate
        *
        * @return true if the interpolation successful; false otherwise. 
        */      
@@ -238,7 +245,14 @@ namespace krigcpl {
 			       int                 oVIndexForMin, 
 			       int                & hintUsed,
 			       const double       * point,
-			       std::vector<bool>  & flags);
+			       std::vector<bool>  & flags,
+                               double             & error_estimate);
+
+      virtual double interpolateSpecificModel(double            * value,
+                                              double            * gradient,
+                                              int               & model,
+                                              const double      * point,
+                                              std::vector<bool> & flags);
 
       /*!
        * Insert the point-value pair into the database.

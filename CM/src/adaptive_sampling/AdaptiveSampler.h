@@ -31,7 +31,20 @@ class AdaptiveSampler
                 const std::vector<double>& queryPoint,
                 int&                       hint,
                 std::vector<bool> &        flags,
-                const FineScale&           fineScaleModel );
+                const FineScale&           fineScaleModel,
+                double &                   error_estimate );
+
+   void evaluateSpecificModel( std::vector<double>&       value,
+                               const std::vector<double>& point,
+                               int                        model,
+                               const FineScale&           fineScaleModel,
+                               double&                    error_estimate );
+
+   void interpolateSpecificModel( std::vector<double>&       value,
+                                  const std::vector<double>& point,
+                                  int                        model,
+                                  std::vector<bool>&         flags,
+                                  double&                    error_estimate );
 
    void getModelInfo( int& numModels,
                       int& numPairs ) const;
@@ -47,6 +60,12 @@ class AdaptiveSampler
    double getAveragePointNorm() const {return m_point_norm_sum / m_num_samples;}
 
    double getAverageValueNorm() const {return m_value_norm_sum / m_num_samples;}
+
+   double getPointNormMax() const {return m_point_norm_max;}
+
+   double getValueNormMax() const {return m_value_norm_max;}
+
+   void setVerbose(const bool verbose) const {m_verbose = verbose;}
 
  private:
 
@@ -90,7 +109,10 @@ class AdaptiveSampler
    double m_point_norm_sum;
    double m_value_norm_sum;
 
-   bool m_verbose;
+   double m_point_norm_max;
+   double m_value_norm_max;
+
+   mutable bool m_verbose;
 };
 
 #endif

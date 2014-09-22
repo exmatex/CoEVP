@@ -96,6 +96,8 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
      m_num_fine_scale_evaluations(0),
      m_point_norm_sum(0.),
      m_value_norm_sum(0.),
+     m_point_norm_max(0.),
+     m_value_norm_max(0.),
      m_verbose(false)
 {
 
@@ -150,7 +152,8 @@ AdaptiveSampler::sample( std::vector<double>&       value,
                          const std::vector<double>& point,
                          int&                       hint,
                          std::vector<bool>&         flags,
-                         const FineScale&           fineScaleModel )
+                         const FineScale&           fineScaleModel,
+                         double&                    error_estimate)
 {
    // The interpolation database takes pointers to doubles rather
    // than stl vectors, so we need to make temporaries for the
@@ -163,7 +166,11 @@ AdaptiveSampler::sample( std::vector<double>&       value,
       local_point[i] = point[i] / m_pointScaling[i];
    }
 
-   m_point_norm_sum += pointL2Norm(local_point);
+   double local_point_norm = pointL2Norm(local_point);
+   if ( local_point_norm > m_point_norm_max ) {
+      m_point_norm_max = local_point_norm;
+   }
+   m_point_norm_sum += local_point_norm;
 
    int value_length = value.size();
    double* local_value = new double[value_length];
@@ -172,13 +179,15 @@ AdaptiveSampler::sample( std::vector<double>&       value,
       m_db->interpolate(local_value,
                         hint,
                         local_point,
-                        flags);
+                        flags,
+                        error_estimate);
 
    if (interpolationSuccess == false) {
 
       fineScaleModel.evaluate(point, value);
 
       if (m_verbose) {
+#if 0
          std::cout << "   Adding key : (" << local_point[0];
          for (int i=1; i<m_pointDimension; ++i) {
             std::cout << ", " << local_point[i];
@@ -190,6 +199,8 @@ AdaptiveSampler::sample( std::vector<double>&       value,
             std::cout << ", " << value[i] / m_valueScaling[i];
          }
          std::cout << ")" << std::endl;
+#endif
+         //         cout << "Interpolation failed: Adding key" << endl;
       }
 
       for (int i=0; i<value_length; ++i) {
@@ -203,19 +214,46 @@ AdaptiveSampler::sample( std::vector<double>&       value,
                    flags);
 
       m_num_fine_scale_evaluations++;
+
+      hint = -1;
+      error_estimate = 0.;
+
    }
    else {
+
+      if (m_verbose) {
+         //         cout << "Interpolation succeeded" << endl;
+      }
 
       interpolationSuccess = 
       m_db->interpolate(local_value,
                         local_value + point_length,
                         hint,
                         local_point,
-                        flags);
+                        flags,
+                        error_estimate);
 
       for (int i=0; i<value_length; ++i) {
          value[i] = local_value[i] * m_valueScaling[i];
       }
+
+#if 0
+      // For debugging: override the interpolant with the true fine-scale
+      // model value and/or derivative
+
+      std::vector<double> tmp_point;
+      tmp_point.resize(m_pointDimension);
+      for (int i=0; i<point_length; ++i) tmp_point[i] = point[i];
+
+      std::vector<double> tmp_value;
+      tmp_value.resize(value_length);
+
+      fineScaleModel.evaluate(tmp_point, tmp_value);
+
+      //      for (int i=0; i<m_valueDimension; ++i) value[i] = tmp_value[i];
+      for (int i=m_valueDimension; i<value_length; ++i) value[i] = tmp_value[i];
+
+#endif
 
       //      verifyInterpolationAccuracy(point, value, fineScaleModel);
 
@@ -226,10 +264,64 @@ AdaptiveSampler::sample( std::vector<double>&       value,
 
    assert(m_num_samples = m_num_fine_scale_evaluations + m_num_successful_interpolations);
 
-   m_value_norm_sum += valueL2Norm(local_value);
+   double local_value_norm = valueL2Norm(local_value);
+   if ( local_value_norm > m_value_norm_max ) {
+      m_value_norm_max = local_value_norm;
+   }
+   m_value_norm_sum += local_value_norm;
 
    delete [] local_value;
    delete [] local_point;
+}
+
+
+void
+AdaptiveSampler::evaluateSpecificModel( std::vector<double>&       value,
+                                        const std::vector<double>& point,
+                                        int                        model,
+                                        const FineScale&           fineScaleModel,
+                                        double&                    error_estimate )
+{
+   if ( model < 0 ) {
+      fineScaleModel.evaluate(point, value);
+
+      m_num_fine_scale_evaluations++;
+   }
+   else {
+
+      // The interpolation database takes pointers to doubles rather
+      // than stl vectors, so we need to make temporaries for the
+      // query point and returned value.
+
+      int point_length = point.size();
+
+      double* local_point = new double[point_length];
+      for (int i=0; i<point_length; ++i) {
+         local_point[i] = point[i] / m_pointScaling[i];
+      }
+
+      int value_length = value.size();
+      double* local_value = new double[value_length];
+
+      std::vector<bool> interpolateFlags(InterpolationDataBase::NUMBER_FLAGS);
+
+      error_estimate = m_db->interpolateSpecificModel(local_value,
+                                                      local_value + point_length,
+                                                      model,
+                                                      local_point,
+                                                      interpolateFlags);
+
+      for (int i=0; i<value_length; ++i) {
+         value[i] = local_value[i] * m_valueScaling[i];
+      }
+
+      delete [] local_value;
+      delete [] local_point;
+
+      // Since a specific model is being used, the interpolation is deemed successful
+      // by definition.
+      m_num_successful_interpolations++;
+   }
 }
 
 

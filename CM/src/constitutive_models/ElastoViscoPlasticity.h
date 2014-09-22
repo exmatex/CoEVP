@@ -43,6 +43,27 @@ class ElastoViscoPlasticity
    
       int numNewtonIterations() const {return m_num_iters;}
 
+      void testSolve( const Tensor2Sym& Vbar_prime_old,
+                      const Tensor2Sym& Dprime_new,
+                      const Tensor2Gen& R_new,
+                      const double      a_new,
+                      const double      delta_t,
+                      Tensor2Sym&       Vbar_prime_new,
+                      Tensor2Sym&       Dbar_prime,
+                      Tensor2Gen&       Wbar );
+
+      double findTheta(const Tensor2Sym& Vbar_prime_new,
+                       const Tensor2Sym& Vbar_prime_old,
+                       const Tensor2Sym& Dprime_new,
+                       const Tensor2Gen& R_new,
+                       const Tensor2Sym& delta,
+                       const double&     a_new,
+                       const double&     delta_t) const;
+
+      double findTheta( const double old_norm,
+                        const double new_norm,
+                        const double old_norm_derivative ) const;
+
    private:
 
       inline Tensor2Sym tauBarPrime( const double      a,
@@ -51,6 +72,15 @@ class ElastoViscoPlasticity
       inline double a(double J) const {return pow(J,1./3.);}
 
       inline double J(const Tensor2Sym& V) const {return det(V);}
+
+      void updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
+                             const Tensor2Sym& Dprime_new,
+                             const Tensor2Gen& R_new,
+                             const double      a_new,
+                             const double      delta_t,
+                             Tensor2Sym&       Vbar_prime_new,
+                             Tensor2Sym&       Dbar_prime,
+                             Tensor2Gen&       Wbar );
 
       void convertToFine( const Tensor2Sym& in,
                           const Tensor2Gen& R,
@@ -68,15 +98,6 @@ class ElastoViscoPlasticity
                                const Tensor2Sym& Dbar_prime,
                                const Tensor2Gen& R,
                                Tensor2Sym&       rhs ) const;
-
-      void updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
-                             const Tensor2Sym& Dprime_new,
-                             const Tensor2Gen& R_new,
-                             const double      a_new,
-                             const double      delta_t,
-                             Tensor2Sym&       Vbar_prime_new,
-                             Tensor2Sym&       Dbar_prime,
-                             Tensor2Gen&       Wbar );
 
       void computeResidual( const Tensor2Sym& Vbar_prime_new,
                             const Tensor2Sym& Vbar_prime_old,
@@ -118,6 +139,14 @@ class ElastoViscoPlasticity
                                    Tensor2Sym&       Dbar_prime,
                                    Tensor4LSym&      Dbar_prime_deriv ) const;
 
+      void evaluateSpecificModel( const int         model,
+                                  const Tensor2Sym& tau_bar_prime,
+                                  Tensor2Sym&       Dbar_prime,
+                                  Tensor4LSym&      Dbar_prime_deriv ) const;
+
+      void printTensor2Sym( const Tensor2Sym& tensor ) const;
+      void printTensor4LSym( const Tensor4LSym& tensor ) const;
+
       Tensor2Sym m_D_old;    // Velocity gradient symmetric part (coarse-scale strain rate) at old time
       Tensor2Gen m_W_old;    // Velocity gradient skew part (coarse-scale spin) at old time
       Tensor2Sym m_D_new;    // Velocity gradient symmetric part (coarse-scale strain rate) at new time
@@ -132,6 +161,8 @@ class ElastoViscoPlasticity
       Tensor2Sym m_Dbar_prime;       // Deviator of the fine-scale strain rate
       Tensor2Gen m_Wbar;             // Fine-scale spin
       double m_volume_change;        // Ratio of new to old volume;
+
+      double m_tol;
 
       double m_K;         // Bulk modulus
       double m_G;         // Shear modulus

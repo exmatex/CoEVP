@@ -88,7 +88,7 @@ Taylor::tensorFunction( const Tensor2Sym& tau_prime ) const
    return val;
 }
 
-
+#if 0
 Tensor4LSym
 Taylor::tensorFunctionDerivative( const Tensor2Sym& in ) const
 {
@@ -98,11 +98,35 @@ Taylor::tensorFunctionDerivative( const Tensor2Sym& in ) const
       val = m_D_0 * Tensor4LSym(1) / m_g;
    }
    else {
-      val = Plasticity::tensorFunctionDerivative(in);
+      double in_norm = norm(in);
+
+      if (in_norm > 0.) {
+
+         for (int i=1; i<=3; ++i) {
+            for (int j=1; j<=i; ++j) {
+               for (int k=1; k<=3; ++k) {
+                  for (int l=1; l<=k; ++l) {
+                     val(i,j,k,l) = in(i,j) * in(k,l);
+                  }
+               }
+            }
+         }
+
+         val *= (1. - m_m) / (m_m * in_norm * in_norm);
+
+         val += Tensor4LSym(1);
+
+         val *= pow(in_norm, (1. - m_m)/m_m ) * m_D_0 * pow(m_g, -1./m_m);
+      }
+      else {
+         val = 0.;
+      }
    }
 
    return val;
 }
+#endif
+
 
 
 void
@@ -112,13 +136,30 @@ Taylor::getScalingsForSampling( vector<double>& input_scaling,
    assert(input_scaling.size() == m_pointDimension);
    assert(output_scaling.size() == m_valueDimension);
 
-   for (int i=0; i<m_pointDimension; ++i) {
-      input_scaling[i] = m_g;
+   if ( m_m == 1. ) {
+      for (int i=0; i<m_pointDimension; ++i) {
+         input_scaling[i] = 1.e-1;
+      }
+      for (int i=0; i<m_valueDimension; ++i) {
+         output_scaling[i] = 1.e3;
+      }
    }
-
-   for (int i=0; i<m_valueDimension; ++i) {
-      output_scaling[i] = m_D_0;
-      //      output_scaling[i] = 1.;
+   else if ( m_m == 1./2. ) {
+      for (int i=0; i<m_pointDimension; ++i) {
+         //         input_scaling[i] = 1.e-2;
+         input_scaling[i] = 1.e-4;
+      }
+      for (int i=0; i<m_valueDimension; ++i) {
+         output_scaling[i] = 1.e1;
+      }
+   }
+   else {
+      for (int i=0; i<m_pointDimension; ++i) {
+         input_scaling[i] = m_g;
+      }
+      for (int i=0; i<m_valueDimension; ++i) {
+         output_scaling[i] = m_D_0;
+      }
    }
 }
 

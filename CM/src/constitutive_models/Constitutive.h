@@ -11,7 +11,7 @@ class Constitutive
  public:
 
    Constitutive()
-      : m_sampler(NULL) {;}
+      : m_sampler(NULL), m_finescale_verbose(false) {;}
 
    ~Constitutive();
 
@@ -49,6 +49,11 @@ class Constitutive
                 const std::vector<double>& point,
                 std::vector<double>&       value ) const;
 
+   void evaluateSpecificModel( const int                  model,
+                               const FineScale&           fine_scale_model,
+                               const std::vector<double>& point,
+                               std::vector<double>&       value ) const;
+
    bool adaptiveSamplingEnabled() const;
 
    void getModelInfo( int& numModels,
@@ -66,12 +71,19 @@ class Constitutive
 
    double getAverageValueNorm() const;
 
- private:
+   double getPointNormMax() const;
+
+   double getValueNormMax() const;
+
+ protected:
 
    AdaptiveSampler* m_sampler;
 
    mutable int m_hint;
 
+   mutable double m_error_estimate;
+
+   mutable bool m_finescale_verbose;
 };
 
 #endif

@@ -2822,6 +2822,14 @@ void UpdateStressForElems()
          int num_iters = cm->numNewtonIterations();
          if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
 
+#if 0
+         if (num_iters > MAX_NEWTON_ITER) {
+            Int_t numModels, numPairs;
+            domain.cm(k)->getModelInfo(numModels, numPairs);
+            cout << "numModels = " << numModels << ", numPairs = " << numPairs << endl;
+         }
+#endif
+
          Tensor2Sym sigma_prime = domain.cm(k)->stressDeviator();
 
          domain.sx(k) = sigma_prime(1,1);
@@ -3852,9 +3860,10 @@ int main(int argc, char *argv[])
 
       // Construct the fine-scale plasticity model
       double D_0 = 1.e-2;
-      double m = 1./20.;
+      double m = 1./20.;  // appropriate for tantalum
       double g = 2.e-3; // (Mbar)
-      //      double g = 2.e-4; // (Mbar) Gives a reasonable looking result for m = 1.
+      //      double g = 1.e-4; // (Mbar) Gives a reasonable looking result for m = 1./2.
+      //      double g = 2.e-6; // (Mbar) Gives a reasonable looking result for m = 1.
       Plasticity* plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
 
       // Construct the equation of state
@@ -4000,6 +4009,8 @@ int main(int argc, char *argv[])
       Int_t averageNumPairs = 0;
       Real_t point_average = Real_t(0.);
       Real_t value_average = Real_t(0.);
+      Real_t point_max = Real_t(0.);
+      Real_t value_max = Real_t(0.);
       for (Index_t i=0; i<domElems; ++i) {
 
          Int_t numModels, numPairs;
@@ -4017,11 +4028,20 @@ int main(int argc, char *argv[])
 
          Real_t point_norm = domain.cm(i)->getAveragePointNorm();
          Real_t value_norm = domain.cm(i)->getAverageValueNorm();
+         Real_t point_norm_max = domain.cm(i)->getPointNormMax();
+         Real_t value_norm_max = domain.cm(i)->getValueNormMax();
 
          //         cout << i << ", point_norm = " << point_norm << ", value_norm = " << value_norm << endl;
 
          point_average += point_norm;
          value_average += value_norm;
+
+         if ( point_norm_max > point_max ) {
+            point_max = point_norm_max;
+         }
+         if ( value_norm_max > value_max ) {
+            value_max = value_norm_max;
+         }
       }
       averageNumModels /= domElems;
       averageNumPairs /= domElems;
@@ -4031,7 +4051,8 @@ int main(int argc, char *argv[])
       cout << "Number of Kriging models: " << averageNumModels << " (average), " << minNumModels << " (min), " << maxNumModels << " (max)" << endl;
       cout << "Number of (query,value) pairs: " << averageNumPairs << " (average), " << minNumPairs << " (min), " << maxNumPairs << " (max)" << endl;
 
-      cout << "Scaled query average = " << point_average << ", scaled value average = " << value_average << endl; 
+      cout << "Scaled query average = " << point_average << ", max = " << point_max << endl;
+      cout << "Scaled value average = " << value_average << ", max = " << value_max << endl; 
    }
 
 #if VISIT_DATA_INTERVAL!=0
