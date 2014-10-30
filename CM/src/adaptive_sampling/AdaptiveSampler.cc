@@ -320,6 +320,7 @@ AdaptiveSampler::evaluateSpecificModel( std::vector<double>&       value,
 
       // Since a specific model is being used, the interpolation is deemed successful
       // by definition.
+      m_num_samples++;
       m_num_successful_interpolations++;
    }
 }
