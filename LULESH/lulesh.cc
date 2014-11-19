@@ -2801,8 +2801,8 @@ void LagrangeLeapFrog()
 static inline
 void UpdateStressForElems()
 {
-#define MAX_NEWTON_ITER 100
-   int max_newton_iters = 0;
+#define MAX_NONLINEAR_ITER 5
+   int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
 
 #ifdef _OPENMP
@@ -2825,7 +2825,7 @@ void UpdateStressForElems()
          if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
 
 #if 0
-         if (num_iters > MAX_NEWTON_ITER) {
+         if (num_iters > MAX_NONLINEAR_ITER) {
             Int_t numModels, numPairs;
             domain.cm(k)->getModelInfo(numModels, numPairs);
             cout << "numModels = " << numModels << ", numPairs = " << numPairs << endl;
@@ -2845,8 +2845,8 @@ void UpdateStressForElems()
 #pragma omp critical
 #endif
       {
-         if (max_local_newton_iters > max_newton_iters) {
-            max_newton_iters = max_local_newton_iters;
+         if (max_local_newton_iters > max_nonlinear_iters) {
+            max_nonlinear_iters = max_local_newton_iters;
          }
       }
    }
@@ -2855,17 +2855,17 @@ void UpdateStressForElems()
    // fast time scales in the fine-scale model.  If the number of iterations
    // becomes large, we need to reduce the timestep.  It it becomes small,
    // we try to increase the time step.
-   if (max_newton_iters > MAX_NEWTON_ITER) {
+   if (max_nonlinear_iters > MAX_NONLINEAR_ITER) {
       finescale_dt_modifier *= Real_t(0.95);
    }
-   else if(max_newton_iters < 0.5 * MAX_NEWTON_ITER) {
+   else if(max_nonlinear_iters < 0.5 * MAX_NONLINEAR_ITER) {
       finescale_dt_modifier *= Real_t(1.05);
       if (finescale_dt_modifier > 1.) finescale_dt_modifier = 1.;
    }
 
 #if defined(PRINT_PERFORMANCE_DIAGNOSTICS) && defined(LULESH_SHOW_PROGRESS)
    cout << "   finescale_dt_modifier = " << finescale_dt_modifier << endl;
-   cout << "   Max Newton iterations = " << max_newton_iters << endl;
+   cout << "   Max nonlinear iterations = " << max_nonlinear_iters << endl;
 #endif
 }
 
@@ -3862,10 +3862,11 @@ int main(int argc, char *argv[])
 
       // Construct the fine-scale plasticity model
       double D_0 = 1.e-2;
-      //      double m = 1./20.;
-      double m = 1./2.;
-      //      double g = 2.e-3; // (Mbar)
-      double g = 1.e-4; // (Mbar) Gives a reasonable looking result for m = 1./2.
+      double m = 1./20.;
+      double g = 2.e-3; // (Mbar)
+      //      double m = 1./2.;
+      //      double g = 1.e-4; // (Mbar) Gives a reasonable looking result for m = 1./2.
+      //      double m = 1.;
       //      double g = 2.e-6; // (Mbar) Gives a reasonable looking result for m = 1.
       Plasticity* plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
 

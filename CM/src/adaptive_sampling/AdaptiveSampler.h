@@ -79,11 +79,19 @@ class AdaptiveSampler
 
    double pointL2Norm( const double* point ) const;
 
+   double pointMaxNorm( const double* point ) const;
+
    double pointL2Norm( const std::vector<double>& point ) const;
+
+   double pointMaxNorm( const std::vector<double>& point ) const;
 
    double valueL2Norm( const double* value ) const;
 
+   double valueMaxNorm( const double* value ) const;
+
    double valueL2Norm( const std::vector<double>& value ) const;
+
+   double valueMaxNorm( const std::vector<double>& value ) const;
 
    KrigingInterpolationDataBase* m_db;
 

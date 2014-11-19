@@ -61,6 +61,11 @@ class ElastoViscoPlasticity
                              Tensor2Sym&       Dbar_prime,
                              Tensor2Gen&       Wbar );
 
+      void getDoglegStep( const Tensor2Sym&  r,
+                          const Tensor4LSym& J,
+                          const double       Delta,
+                          Tensor2Sym&        p ) const;
+
       void convertToFine( const Tensor2Sym& in,
                           const Tensor2Gen& R,
                           Tensor2Sym&       out ) const;
@@ -123,12 +128,14 @@ class ElastoViscoPlasticity
                                   Tensor2Sym&       Dbar_prime,
                                   Tensor4LSym&      Dbar_prime_deriv ) const;
 
-      double findTheta( const double old_norm,
-                        const double new_norm,
-                        const double old_norm_derivative ) const;
-
+      double dot( const Tensor2Sym& tensor1,
+                  const Tensor2Sym& tensor2 ) const;
+      double norm2( const Tensor2Sym& tensor ) const {return dot(tensor,tensor);}
       void printTensor2Sym( const Tensor2Sym& tensor ) const;
       void printTensor4LSym( const Tensor4LSym& tensor ) const;
+
+      double m_Delta_max;
+      double m_Delta;
 
       Tensor2Sym m_D_old;    // Velocity gradient symmetric part (coarse-scale strain rate) at old time
       Tensor2Gen m_W_old;    // Velocity gradient skew part (coarse-scale spin) at old time

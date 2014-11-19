@@ -2381,7 +2381,7 @@ namespace krigcpl {
   	      			       _tolerance,
                                        _meanErrorFactor,
                                        error_estimate );
-  	      
+
   	      if (hintModelSuccess == true) {
   	        flags[USED_HINT_FLAG] = true;
   	        return true;
@@ -3441,8 +3441,6 @@ namespace krigcpl {
        const mtreedb::MTreeObjectPtr mTreeObjectPtr = 
           _krigingModelDB.getObject(model); 
 
-       double error_estimate;
-
        if (mTreeObjectPtr == NULL) {
 
           cout << "Couldn't find model in kriging interpolation database " << endl;
@@ -3457,7 +3455,11 @@ namespace krigcpl {
           const InterpolationModelPtr hintKrigingModel = 
              mTreeObject.getModel();
 	  
+          assert(hintKrigingModel->hasGradient() == true);
+
           flags[USED_HINT_FLAG] = true;
+
+          errorEstimate = 0.;
 
           for (int iValue = 0; iValue < valueDimension; ++iValue) {
 
