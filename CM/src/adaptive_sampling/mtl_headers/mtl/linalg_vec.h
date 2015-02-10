@@ -116,6 +116,7 @@ public:
   typedef difference_type Vec_difference_type;
   typedef iterator Vec_iterator;
   typedef const_iterator Vec_const_iterator;
+  typedef value_type Vec_value_type;
 
   class IndexArray {
   public:
