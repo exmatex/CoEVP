@@ -249,10 +249,7 @@ AdaptiveSampler::sample( std::vector<double>&       value,
       tmp_value.resize(value_length);
 
       fineScaleModel.evaluate(tmp_point, tmp_value);
-
-      //      for (int i=0; i<m_valueDimension; ++i) value[i] = tmp_value[i];
-      for (int i=m_valueDimension; i<value_length; ++i) value[i] = tmp_value[i];
-
+      for (int i=0; i<value_length; ++i) value[i] = tmp_value[i];
 #endif
 
       //      verifyInterpolationAccuracy(point, value, fineScaleModel);
@@ -284,6 +281,8 @@ AdaptiveSampler::evaluateSpecificModel( std::vector<double>&       value,
 {
    if ( model < 0 ) {
       fineScaleModel.evaluate(point, value);
+
+      error_estimate = 0.;
 
       m_num_fine_scale_evaluations++;
    }
@@ -320,6 +319,7 @@ AdaptiveSampler::evaluateSpecificModel( std::vector<double>&       value,
 
       // Since a specific model is being used, the interpolation is deemed successful
       // by definition.
+      m_num_samples++;
       m_num_successful_interpolations++;
    }
 }
@@ -341,8 +341,8 @@ AdaptiveSampler::verifyInterpolationAccuracy( const std::vector<double>& point,
    std::vector<double> exact_value(m_valueAllocated);
    fineScaleModel.evaluate(point, exact_value);
 
-   double exact_norm = valueL2Norm(exact_value);
-   double eps = 1.e-12;
+   double exact_norm = valueMaxNorm(exact_value);
+   double eps = 1.e-11;
 
    if (exact_norm > eps) {
 
@@ -350,20 +350,23 @@ AdaptiveSampler::verifyInterpolationAccuracy( const std::vector<double>& point,
       for (int i=0; i<m_valueDimension; ++i) {
          error[i] = value[i] - exact_value[i];
       }
-      double error_norm = valueL2Norm(error) / exact_norm;
+      double error_norm = valueMaxNorm(error) / exact_norm;
 
       if (error_norm > m_tolerance) {
-         printInterpolationFailure(point, value, exact_value);
-         exit(1);
+         cout << "error norm = " << error_norm << endl;
+         //         printInterpolationFailure(point, value, exact_value);
+         //         exit(1);
       }
    }
    else {  // Perform an absolute comparison if exact norm is small
 
-      double value_norm = valueL2Norm(value);
+      double value_norm = valueMaxNorm(value);
 
-      if (value_norm > (1. + m_tolerance)*eps) {
-         printInterpolationFailure(point, value, exact_value);
-         exit(1);
+      //      if (value_norm > (1. + m_tolerance)*eps) {
+      if (value_norm > m_tolerance) {
+         cout << "value norm = " << value_norm << endl;
+         //         printInterpolationFailure(point, value, exact_value);
+         //         exit(1);
       }
    }
 }
@@ -455,6 +458,19 @@ AdaptiveSampler::pointL2Norm( const double* point ) const
 
 
 inline double
+AdaptiveSampler::pointMaxNorm( const double* point ) const
+{
+   double norm = 0.;
+   for (int i=0; i<m_pointDimension; ++i) {
+      double local_norm = fabs(point[i]);
+      if (local_norm > norm) norm = local_norm;
+   }
+
+   return norm;
+}
+
+
+inline double
 AdaptiveSampler::pointL2Norm( const std::vector<double>& point ) const
 {
    assert(m_pointDimension <= point.size());
@@ -465,6 +481,21 @@ AdaptiveSampler::pointL2Norm( const std::vector<double>& point ) const
    }
 
    return sqrt(norm);
+}
+
+
+inline double
+AdaptiveSampler::pointMaxNorm( const std::vector<double>& point ) const
+{
+   assert(m_pointDimension <= point.size());
+
+   double norm = 0.;
+   for (int i=0; i<m_pointDimension; ++i) {
+      double local_norm = fabs(point[i]);
+      if (local_norm > norm) norm = local_norm;
+   }
+
+   return norm;
 }
 
 
@@ -481,6 +512,19 @@ AdaptiveSampler::valueL2Norm( const double* value ) const
 
 
 inline double
+AdaptiveSampler::valueMaxNorm( const double* value ) const
+{
+   double norm = 0.;
+   for (int i=0; i<m_valueDimension; ++i) {
+      double local_norm = fabs(value[i]);
+      if (local_norm > norm) norm = local_norm;
+   }
+
+   return norm;
+}
+
+
+inline double
 AdaptiveSampler::valueL2Norm( const std::vector<double>& value ) const
 {
    assert(m_valueDimension <= value.size());
@@ -491,5 +535,20 @@ AdaptiveSampler::valueL2Norm( const std::vector<double>& value ) const
    }
 
    return sqrt(norm);
+}
+
+
+inline double
+AdaptiveSampler::valueMaxNorm( const std::vector<double>& value ) const
+{
+   assert(m_valueDimension <= value.size());
+
+   double norm = 0.;
+   for (int i=0; i<m_valueDimension; ++i) {
+      double local_norm = fabs(value[i]);
+      if (local_norm > norm) norm = local_norm;
+   }
+
+   return norm;
 }
 

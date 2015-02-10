@@ -65,11 +65,13 @@ Additional BSD Notice
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sstream>
 
 #define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
 #undef USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
+#undef WRITE_FSM_EVAL_COUNT
 
 // EOS options
 #include "BulkPressure.h"
@@ -2799,8 +2801,8 @@ void LagrangeLeapFrog()
 static inline
 void UpdateStressForElems()
 {
-#define MAX_NEWTON_ITER 100
-   int max_newton_iters = 0;
+#define MAX_NONLINEAR_ITER 5
+   int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
 
 #ifdef _OPENMP
@@ -2823,7 +2825,7 @@ void UpdateStressForElems()
          if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
 
 #if 0
-         if (num_iters > MAX_NEWTON_ITER) {
+         if (num_iters > MAX_NONLINEAR_ITER) {
             Int_t numModels, numPairs;
             domain.cm(k)->getModelInfo(numModels, numPairs);
             cout << "numModels = " << numModels << ", numPairs = " << numPairs << endl;
@@ -2843,8 +2845,8 @@ void UpdateStressForElems()
 #pragma omp critical
 #endif
       {
-         if (max_local_newton_iters > max_newton_iters) {
-            max_newton_iters = max_local_newton_iters;
+         if (max_local_newton_iters > max_nonlinear_iters) {
+            max_nonlinear_iters = max_local_newton_iters;
          }
       }
    }
@@ -2853,17 +2855,17 @@ void UpdateStressForElems()
    // fast time scales in the fine-scale model.  If the number of iterations
    // becomes large, we need to reduce the timestep.  It it becomes small,
    // we try to increase the time step.
-   if (max_newton_iters > MAX_NEWTON_ITER) {
+   if (max_nonlinear_iters > MAX_NONLINEAR_ITER) {
       finescale_dt_modifier *= Real_t(0.95);
    }
-   else if(max_newton_iters < 0.5 * MAX_NEWTON_ITER) {
+   else if(max_nonlinear_iters < 0.5 * MAX_NONLINEAR_ITER) {
       finescale_dt_modifier *= Real_t(1.05);
       if (finescale_dt_modifier > 1.) finescale_dt_modifier = 1.;
    }
 
 #if defined(PRINT_PERFORMANCE_DIAGNOSTICS) && defined(LULESH_SHOW_PROGRESS)
    cout << "   finescale_dt_modifier = " << finescale_dt_modifier << endl;
-   cout << "   Max Newton iterations = " << max_newton_iters << endl;
+   cout << "   Max nonlinear iterations = " << max_nonlinear_iters << endl;
 #endif
 }
 
@@ -3323,9 +3325,9 @@ int main(int argc, char *argv[])
 
    /* ... */
 
-   /****************************/
-   /*   Initialize Sedov Mesh  */
-   /****************************/
+   /**************************************/
+   /*   Initialize Taylor cylinder mesh  */
+   /**************************************/
 
    double domain_length[3];
    //   domain_length[0] = Real_t(3.81e-2);
@@ -3862,7 +3864,9 @@ int main(int argc, char *argv[])
       double D_0 = 1.e-2;
       double m = 1./20.;
       double g = 2.e-3; // (Mbar)
+      //      double m = 1./2.;
       //      double g = 1.e-4; // (Mbar) Gives a reasonable looking result for m = 1./2.
+      //      double m = 1.;
       //      double g = 2.e-6; // (Mbar) Gives a reasonable looking result for m = 1.
       Plasticity* plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
 
@@ -3961,6 +3965,37 @@ int main(int argc, char *argv[])
       }
    }
 
+#ifdef WRITE_FSM_EVAL_COUNT
+   // Set the element number at which the fine-scale model evaluation count is recorded
+   Index_t fsm_count_elem = 0;
+
+   ostringstream fsm_count_filename;
+   fsm_count_filename << "fsm_count_" << fsm_count_elem;
+   ofstream fsm_count_file(fsm_count_filename.str().c_str());
+
+   {
+      // Print the location of the element center at which the fine-scale model evaluation 
+      // count is being recorded
+
+      Index_t *localNode = domain.nodelist(fsm_count_elem) ;
+      Real_t xav, yav, zav;
+      xav = yav = zav = Real_t(0.) ;
+      for (Int_t i=0; i<8; ++i) {
+         xav += domain.x(localNode[i]) ;
+         yav += domain.y(localNode[i]) ;
+         zav += domain.z(localNode[i]) ;
+      }
+      xav /= Real_t(8.) ;
+      yav /= Real_t(8.) ;
+      zav /= Real_t(8.) ;
+
+      cout << "Plotting fine-scale model evaluations in element " << fsm_count_elem
+           << " at (" << xav << "," << yav << "," << zav << ")" << endl;
+   }
+
+   Int_t cumulative_fsm_count = 0;
+#endif   
+
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
 #if VISIT_DATA_INTERVAL!=0
@@ -3997,7 +4032,20 @@ int main(int argc, char *argv[])
       }
 #endif
 #endif
+
+#ifdef WRITE_FSM_EVAL_COUNT
+      if ( use_adaptive_sampling ) {
+         Int_t num_fsm_evals = domain.cm(fsm_count_elem)->getNumSamples()
+            - domain.cm(fsm_count_elem)->getNumSuccessfulInterpolations() ;
+         fsm_count_file << domain.time() << "  " << num_fsm_evals - cumulative_fsm_count << endl;
+         cumulative_fsm_count = num_fsm_evals;
+      }
+#endif
    }
+
+#ifdef WRITE_FSM_EVAL_COUNT
+   fsm_count_file.close();
+#endif   
 
    if ( use_adaptive_sampling ) {
 
@@ -4053,6 +4101,7 @@ int main(int argc, char *argv[])
 
       cout << "Scaled query average = " << point_average << ", max = " << point_max << endl;
       cout << "Scaled value average = " << value_average << ", max = " << value_max << endl; 
+
    }
 
 #if VISIT_DATA_INTERVAL!=0

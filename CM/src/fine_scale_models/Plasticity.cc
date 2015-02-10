@@ -116,8 +116,6 @@ Plasticity::tensorFunctionDerivative( const Tensor2Sym& in ) const
 
          Tensor2Sym difference = (tensorFunction(in + increment) - tensor_function_in) / delta;
 
-         // Account for the fact that we're differentiating a symmetric tensor with
-         // respect to a symmetric tensor argument
          for (int i=1; i<=3; ++i) {
             for (int j=1; j<=i; ++j) {
                out(i,j,k,l) = symmetry_factor * difference(i,j);
@@ -128,27 +126,6 @@ Plasticity::tensorFunctionDerivative( const Tensor2Sym& in ) const
    
    //   cout << setiosflags(ios::fixed | ios::showpoint) << setw(12) << out << endl;
 
-   for (int k=1; k<=3; ++k) {
-      for (int l=1; l<=k; ++l) {
-         Tensor2Sym increment(0);
-         increment(k,l) = delta; 
-
-         // This factor accounts for the fact that we are differentiating a
-         // symmetric tensor with respect to a symmetric argument
-         double symmetry_factor = k==l? 1.: 0.5;
-
-         Tensor2Sym difference = (tensorFunction(in + increment) - tensor_function_in) / delta;
-
-         // Account for the fact that we're differentiating a symmetric tensor with
-         // respect to a symmetric tensor argument
-         for (int i=1; i<=3; ++i) {
-            for (int j=1; j<=i; ++j) {
-               out(i,j,k,l) = symmetry_factor * difference(i,j);
-            }
-         }
-      }
-   }
-   
    return out;
 }
 
@@ -185,7 +162,7 @@ Plasticity::unpackInputVector( const vector<double>& in,
    assert(index == pointDimension());
 }
 
-
+#if 0
 void
 Plasticity::packOutputVector( Tensor2Sym&     value,
                               Tensor4LSym&    derivative,
@@ -216,8 +193,38 @@ Plasticity::packOutputVector( Tensor2Sym&     value,
 
    assert(index == valueAndDerivativeDimension());
 }
+#else
+void
+Plasticity::packOutputVector( Tensor2Sym&     value,
+                              Tensor4LSym&    derivative,
+                              vector<double>& out ) const
+{
+   int index = 0;
 
+   for (int i=1; i<=3; ++i) {
+      for (int j=1; j<=i; ++j) {
+          out[index++] = value(i,j);
+      }
+   }
 
+   for (int k=1; k<=3; ++k) {
+      for (int l=1; l<=k; ++l) {
+
+         double symmetry_factor = (k==l)? 1.: 2.;
+
+         for (int i=1; i<=3; ++i) {
+            for (int j=1; j<=i; ++j) {
+               out[index++] = symmetry_factor * derivative(i,j,k,l);
+            }
+         }
+      }
+   }
+
+   assert(index == valueAndDerivativeDimension());
+}
+#endif
+
+#if 0
 void
 Plasticity::unpackOutputVector( const vector<double>& out,
                                 Tensor2Sym&           value,
@@ -248,3 +255,32 @@ Plasticity::unpackOutputVector( const vector<double>& out,
 
    assert(index == valueAndDerivativeDimension());
 }
+#else
+void
+Plasticity::unpackOutputVector( const vector<double>& out,
+                                Tensor2Sym&           value,
+                                Tensor4LSym&          derivative ) const
+{
+   int index = 0;
+
+   for (int i=1; i<=3; ++i) {
+      for (int j=1; j<=i; ++j) {
+         value(i,j) = out[index++];
+      }
+   }
+
+   for (int k=1; k<=3; ++k) {
+      for (int l=1; l<=k; ++l) {
+
+         double symmetry_factor = (k==l)? 1: 0.5;
+         for (int i=1; i<=3; ++i) {
+            for (int j=1; j<=i; ++j) {
+               derivative(i,j,k,l) = symmetry_factor * out[index++];
+            }
+         }
+      }
+   }
+
+   assert(index == valueAndDerivativeDimension());
+}
+#endif
