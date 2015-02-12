@@ -26,6 +26,13 @@ if(NOT HAVE_C0X)
 endif(NOT HAVE_C0X)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
+# Apple Clang needs to be directed to correct stdlib
+if (APPLE)
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
+    set(CMAKE_XCODE_ATTRIBUTE_CLANG_CXX_LIBRARY "libc++")
+  endif()
+endif()
 
 ########################################################################
 # User input options                                                   #
