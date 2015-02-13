@@ -97,6 +97,6 @@ add_definitions(-DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN)
 add_library(cm ${CM_SOURCES})
 
 file(GLOB LULESH_SOURCES LULESH/*.cc)
-#include_directories(COMD_lib/src-lib)
 add_executable(lulesh ${LULESH_SOURCES})
+set_target_properties(lulesh PROPERTIES RUNTIME_OUTPUT_DIRECTORY LULESH)
 target_link_libraries(lulesh cm ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
