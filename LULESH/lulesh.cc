@@ -70,7 +70,7 @@ Additional BSD Notice
 #define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
 #undef USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
-#undef LULESH_SHOW_PROGRESS
+#define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
 
 // EOS options
