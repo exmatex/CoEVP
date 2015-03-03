@@ -70,7 +70,7 @@ Additional BSD Notice
 #define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
 #undef USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
-#define LULESH_SHOW_PROGRESS
+#undef LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
 
 // EOS options
@@ -1823,20 +1823,23 @@ void CalcElemVelocityGradient( const Real_t* const xvel,
 static inline
 void CalcKinematicsForElems( Index_t numElem, Real_t dt )
 {
-  Real_t B[3][8] ; /** shape function derivatives */
-  Real_t D[6] ;
-  Real_t W[3] ;
-  Real_t x_local[8] ;
-  Real_t y_local[8] ;
-  Real_t z_local[8] ;
-  Real_t xd_local[8] ;
-  Real_t yd_local[8] ;
-  Real_t zd_local[8] ;
-  Real_t detJ = Real_t(0.0) ;
-
   // loop over all elements
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
   for( Index_t k=0 ; k<numElem ; ++k )
   {
+    Real_t B[3][8] ; /** shape function derivatives */
+    Real_t D[6] ;
+    Real_t W[3] ;
+    Real_t x_local[8] ;
+    Real_t y_local[8] ;
+    Real_t z_local[8] ;
+    Real_t xd_local[8] ;
+    Real_t yd_local[8] ;
+    Real_t zd_local[8] ;
+    Real_t detJ = Real_t(0.0) ;
+
     Real_t volume ;
     Real_t relativeVolume ;
     const Index_t* const elemToNode = domain.nodelist(k) ;
@@ -3858,6 +3861,9 @@ int main(int argc, char *argv[])
    bool use_adaptive_sampling = false;
 #endif
 
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
    for (Index_t i=0; i<domElems; ++i) {
 
       // Construct the fine-scale plasticity model
