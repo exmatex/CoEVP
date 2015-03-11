@@ -202,8 +202,8 @@ ElastoViscoPlasticity::advance( const double delta_t )
 
    // Update the stretch deviator per equation (30)
    Tensor2Sym Dbar_prime;
-   Tensor2Gen Wbar;
-   updateVbar_prime( m_Vbar_prime, Dprime_new, R, a(J), delta_t, Vbar_prime, Dbar_prime, Wbar );
+   Tensor2Gen Wbar_new;
+   updateVbar_prime( m_Vbar_prime, Dprime_new, R, a(J), delta_t, Vbar_prime, Dbar_prime, Wbar_new );
 
    // Update the internal state in preparation for the next call
 
@@ -214,7 +214,7 @@ ElastoViscoPlasticity::advance( const double delta_t )
    m_J = J;
    m_R = R;
    m_Dbar_prime = Dbar_prime;
-   m_Wbar = Wbar;
+   m_Wbar = Wbar_new;
    m_D_old = m_D_new;
    m_W_old = m_W_new;
 }
@@ -358,7 +358,7 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
                                          const double      delta_t,
                                          Tensor2Sym&       Vbar_prime_new,
                                          Tensor2Sym&       Dbar_prime_new,
-                                         Tensor2Gen&       Wbar )
+                                         Tensor2Gen&       Wbar_new )
 {
    /*
      This function solves the Vbar_prime equation using the Dogleg Newton algorithm
@@ -376,6 +376,10 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
                        // one-half the square of the residual norm
 
    // end of options (need to move this elsewhere)
+
+   // For now, we assume the fine scale model spin is always zero, but we nevertheless
+   // include an "update" stub here in case we want to add a non-zero spin in the future.
+   Wbar_new = Tensor2Gen(0);
 
    assert(eta < 0.25);
 
