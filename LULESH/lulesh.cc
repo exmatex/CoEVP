@@ -67,11 +67,12 @@ Additional BSD Notice
 #include <stdlib.h>
 #include <sstream>
 
-#define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
-#undef USE_ADAPTIVE_SAMPLING
-#undef PRINT_PERFORMANCE_DIAGNOSTICS
+#define VISIT_DATA_INTERVAL 20  // Set this to 0 to disable VisIt data writing
+#define USE_ADAPTIVE_SAMPLING
+#define PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
+#define WRITE_CHECKPOINT
 
 // EOS options
 #include "BulkPressure.h"
@@ -3593,7 +3594,8 @@ int main(int argc, char *argv[])
 
    domain.deltatimemultlb() = Real_t(1.1) ;
    domain.deltatimemultub() = Real_t(1.2) ;
-   domain.stoptime()  = Real_t(1.e-1) ;
+   //   domain.stoptime()  = Real_t(1.e-1) ;
+   domain.stoptime()  = Real_t(1.e-9) ;
    domain.dtcourant() = Real_t(1.0e+20) ;
    domain.dthydro()   = Real_t(1.0e+20) ;
    domain.dtmax()     = Real_t(1.0e-2) ;
@@ -4110,6 +4112,22 @@ int main(int argc, char *argv[])
       int numRanks = 1;
       DumpDomain(&domain, myRank, numRanks) ;
    }
+#endif
+
+#ifdef WRITE_CHECKPOINT
+
+   // Write a checkpoint file for testing
+
+   ofstream checkpoint_file("checkpoint");
+   checkpoint_file.setf(ios::scientific);
+   checkpoint_file.precision(13);
+
+   for (Index_t i=0; i<domain.numNode(); ++i) {
+      checkpoint_file << i << " " << domain.x(i) << " " << domain.y(i) << " " << domain.z(i)
+                      << " " << domain.xd(i) << " " << domain.yd(i) << " " << domain.zd(i) << endl;
+   }
+
+   checkpoint_file.close();
 #endif
 
    return 0 ;
