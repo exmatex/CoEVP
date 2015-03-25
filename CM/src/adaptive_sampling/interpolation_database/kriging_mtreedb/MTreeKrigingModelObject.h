@@ -10,7 +10,7 @@
 #ifndef included_krigcpl_MTreeKrigingModelObject_h
 #define included_krigcpl_MTreeKrigingModelObject_h
 
-#include "base/MTreeModelObject.h"
+#include "MTreeModelObject.h"
 
 #include <base/InterpolationModel.h>
 

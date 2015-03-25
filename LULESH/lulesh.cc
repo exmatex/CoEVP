@@ -3594,8 +3594,7 @@ int main(int argc, char *argv[])
 
    domain.deltatimemultlb() = Real_t(1.1) ;
    domain.deltatimemultub() = Real_t(1.2) ;
-   //   domain.stoptime()  = Real_t(1.e-1) ;
-   domain.stoptime()  = Real_t(1.e-9) ;
+   domain.stoptime()  = Real_t(1.e-1) ;
    domain.dtcourant() = Real_t(1.0e+20) ;
    domain.dthydro()   = Real_t(1.0e+20) ;
    domain.dtmax()     = Real_t(1.0e-2) ;
