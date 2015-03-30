@@ -67,12 +67,12 @@ Additional BSD Notice
 #include <stdlib.h>
 #include <sstream>
 
-#define VISIT_DATA_INTERVAL 20  // Set this to 0 to disable VisIt data writing
-#define USE_ADAPTIVE_SAMPLING
-#define PRINT_PERFORMANCE_DIAGNOSTICS
+#define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
+#undef USE_ADAPTIVE_SAMPLING
+#undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
-#define WRITE_CHECKPOINT
+#undef WRITE_CHECKPOINT
 
 // EOS options
 #include "BulkPressure.h"
