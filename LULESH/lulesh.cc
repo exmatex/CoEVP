@@ -80,6 +80,7 @@ Additional BSD Notice
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
+#undef WRITE_CHECKPOINT
 
 // EOS options
 #include "BulkPressure.h"
@@ -4802,6 +4803,22 @@ int main(int argc, char *argv[])
       int numRanks = 1;
       DumpDomain(&domain, myRank, numRanks) ;
    }
+#endif
+
+#ifdef WRITE_CHECKPOINT
+
+   // Write a checkpoint file for testing
+
+   ofstream checkpoint_file("checkpoint");
+   checkpoint_file.setf(ios::scientific);
+   checkpoint_file.precision(13);
+
+   for (Index_t i=0; i<domain.numNode(); ++i) {
+      checkpoint_file << i << " " << domain.x(i) << " " << domain.y(i) << " " << domain.z(i)
+                      << " " << domain.xd(i) << " " << domain.yd(i) << " " << domain.zd(i) << endl;
+   }
+
+   checkpoint_file.close();
 #endif
 
 #if defined(COEVP_MPI)

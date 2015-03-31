@@ -75,9 +75,9 @@ Additional BSD Notice
 
 #include <kriging/SecondMoment.h>
 
-#include <base/ResponsePoint.h>
+#include "ResponsePoint.h"
 #include <kriging_mtreedb/MTreeKrigingModelObject.h>
-#include <base/MTreeModelObjectFactory.h>
+#include "MTreeModelObjectFactory.h"
 
 #include <mtreedb/MTree.h>
 #include <mtreedb/MTreeNode.h>

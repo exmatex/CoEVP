@@ -94,7 +94,7 @@ ElastoViscoPlasticity::ElastoViscoPlasticity( const Tensor2Gen&      L,
       int valueDimension           = m_plasticity_model->valueDimension();
       int maxKrigingModelSize      = 6;
       int maxNumberSearchModels    = 4;
-      double theta                 = 5.e3;
+      double theta                 = 5.e2;
       double meanErrorFactor       = 1.;
       double tolerance             = 5.e-4;
       double maxQueryPointModelDistance = 5.e-2;
