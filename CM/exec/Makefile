@@ -12,7 +12,7 @@ CXX = g++
 # Specify compiler options (optimization level, debugging options, etc.)
 #
 
-CXXFLAGS = -O3
+CXXFLAGS = -g -O3
 
 #
 # Specify the location of the BLAS and LAPACK libraries.  Depending upon the

@@ -17,7 +17,7 @@ LAPACK_LOC =
 BLAS_LOC =
 
 CXX = g++
-CXXFLAGS = -O3
+CXXFLAGS = -g -O3 -fopenmp
 
 ###### CONFIGURATION END ############
 
