@@ -7,14 +7,12 @@
 // Description: Utility class used in MTree searches
 //
 
-#ifndef included_mtreedb_MTreeSearchNode
-#define included_mtreedb_MTreeSearchNode
+#ifndef included_MTreeSearchNode
+#define included_MTreeSearchNode
 
-#ifndef included_mtreedb_MTreeNode
+#ifndef included_MTreeNode
 #include "MTreeNode.h"
 #endif
-
-namespace mtreedb {
 
 /*!
  * @brief MTreeSearchNode keeps track of an MTreeNode to search 
@@ -77,7 +75,6 @@ private:
  
 };
 
-}
 #ifndef DEBUG_NO_INLINE
 #include "MTreeSearchNode.I"
 #endif

@@ -75,8 +75,6 @@ Additional BSD Notice
 #define inline
 #endif
 
-namespace mtreedb {
-
 /*
 *************************************************************************
 *                                                                       *
@@ -86,7 +84,7 @@ namespace mtreedb {
 */
 
 inline 
-MTreeQuery::MTreeQuery(MTreePointPtr query_point,
+MTreeQuery::MTreeQuery(MetricSpacePointPtr query_point,
                        double query_radius,
                        MTree* tree)
 :
@@ -108,7 +106,7 @@ MTreeQuery::MTreeQuery(const MTreeQuery& query)
 }
 
 inline
-MTreePointPtr MTreeQuery::getPoint() const
+MetricSpacePointPtr MTreeQuery::getPoint() const
 {
    return( d_query_point );
 }
@@ -137,8 +135,6 @@ void MTreeQuery::setRadius(double radius)
    d_radius = radius;
 }
 
-
-}
 
 #ifdef DEBUG_NO_INLINE
 #undef inline

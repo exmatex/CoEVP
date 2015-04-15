@@ -71,8 +71,8 @@ Additional BSD Notice
 // Description: Utility class used in MTree searches
 //
 
-#ifndef included_mtreedb_MTreeQuery_C
-#define included_mtreedb_MTreeQuery_C
+#ifndef included_MTreeQuery_C
+#define included_MTreeQuery_C
 
 #include "MTreeQuery.h"
 
@@ -82,8 +82,6 @@ Additional BSD Notice
 #ifdef DEBUG_NO_INLINE
 #include "MTreeQuery.I"
 #endif
-
-namespace mtreedb {
 
 /*
 *************************************************************************
@@ -115,7 +113,6 @@ bool MTreeQuery::isConsistent(MTreeEntryPtr entry)
    return( ret_val );
 }
 
-}
 #endif
 
 

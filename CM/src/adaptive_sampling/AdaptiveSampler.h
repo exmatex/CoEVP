@@ -1,7 +1,7 @@
 #ifndef ADAPTIVESAMPLER_INCLUDED
 #define ADAPTIVESAMPLER_INCLUDED
 
-#include <kriging_mtreedb/KrigingInterpolationDataBase.h>
+#include <kriging_db/KrigingInterpolationDBDataBase.h>
 #include <vector>
 
 #include "FineScale.h"
@@ -93,7 +93,9 @@ class AdaptiveSampler
 
    double valueMaxNorm( const std::vector<double>& value ) const;
 
-   KrigingInterpolationDataBase* m_db;
+   KrigingInterpolationDBDataBase* m_interp;
+
+   DB* m_db;
 
    std::vector<double> m_pointScaling;
    std::vector<double> m_valueScaling;

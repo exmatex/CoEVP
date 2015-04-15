@@ -63,57 +63,24 @@ Additional BSD Notice
 */
 /* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreeModelObjectFactory.I
-// Package:     kriging coupler
-// 
-// Revision:    $Revision$
-// Modified:    $Date$
-// Description: MTree model object factory
+// File:        DB.I
+// Description: DB structure class.
 //
 
-#include "kriging_mtreedb/MTreeKrigingModelObject.h"
+#ifdef DEBUG_NO_INLINE
+#define inline
+#endif
 
-namespace krigcpl {
-
-    //
-    // Constructor.
-    //
-
-    template <typename T>
-    MTreeModelObjectFactory<T>::MTreeModelObjectFactory()
-    {
-
-      return;
-      
-    }
-
-    //
-    // Destructor.
-    //
-
-    template <typename T>
-    MTreeModelObjectFactory<T>::~MTreeModelObjectFactory()
-    {
-
-      return;
-
-    }
-
-    //
-    // Allocate object.
-    //
-
-    template <typename T>
-    mtreedb::MTreeObjectPtr 
-    MTreeModelObjectFactory<T>::allocateObject(toolbox::Database& db) const
-    {
-
-      (void)db;
-      mtreedb::MTreeObjectPtr dummy;
-      return(dummy);
-      
-    }
-
+inline
+string DB::getName() const
+{
+   return(d_db_name);
 }
+
+#ifdef DEBUG_NO_INLINE
+#undef inline
+#endif
+
+
 
 

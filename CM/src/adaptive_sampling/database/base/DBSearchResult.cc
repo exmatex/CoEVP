@@ -63,52 +63,32 @@ Additional BSD Notice
 */
 // DO-NOT-DELETE revisionify.end() 
 //
-// File:        MTreeSearchQueue.cc
-// Package:     MTree database
+// File:        DBSearchResult.cc
 // 
 // 
 // 
-// Description: Utility class used in MTree searches
+// Description: Container for single data object resulting from DB search
 //
 
-#ifndef included_MTreeSearchQueue_C
-#define included_MTreeSearchQueue_C
+#ifndef included_DBSearchResult_C
+#define included_DBSearchResult_C
 
-#include "MTreeSearchQueue.h"
+#include "DBSearchResult.h"
 
 #ifdef DEBUG_NO_INLINE
-#include "MTreeSearchQueue.I"
+#include "DBSearchResult.I"
 #endif
 
 /*
 *************************************************************************
 *                                                                       *
-* Member functions for MTreeSearchQueue class.                          *
+* Dtor for DB search result.                                            *
 *                                                                       *
 *************************************************************************
 */
 
-MTreeSearchQueue::~MTreeSearchQueue()
+DBSearchResult::~DBSearchResult()
 {
-   d_queue.clear();
-}
-
-void MTreeSearchQueue::insert(MTreeSearchNode& node)
-{
-   if ( d_queue.empty() ) {
-      d_queue.push_front(node);
-   } else {
-      list<MTreeSearchNode>::iterator it(d_queue.begin());
-      while ( (it != d_queue.end()) && 
-              ((*it).d_bound < node.d_bound) ) {
-         ++it;
-      }
-      if ( it == d_queue.end() ) {
-         d_queue.push_back(node);
-      } else {
-         d_queue.insert(it, node); 
-      }
-   }  
 }
 
 #endif

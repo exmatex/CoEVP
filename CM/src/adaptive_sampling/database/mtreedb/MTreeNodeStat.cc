@@ -71,8 +71,8 @@ Additional BSD Notice
 // Description: Simple class for holding MTree statistic data for a node in tree
 //
 
-#ifndef included_mtreedb_MtreeNodeStat_C
-#define included_mtreedb_MTreeNodeStat_C
+#ifndef included_MtreeNodeStat_C
+#define included_MTreeNodeStat_C
 
 #include "MTreeNodeStat.h"
 
@@ -82,8 +82,6 @@ Additional BSD Notice
 #include <cassert>
 #endif
 #endif
-
-namespace mtreedb {
 
 /*
 *************************************************************************
@@ -196,9 +194,9 @@ double MTreeNodeStat::getCoveringRadius() const
    return( radius );
 }
 
-MTreePointPtr MTreeNodeStat::getCenterPoint() const
+MetricSpacePointPtr MTreeNodeStat::getCenterPoint() const
 {
-   MTreePointPtr point;
+   MetricSpacePointPtr point;
    if ( !d_node->isRoot() ) {
       point = d_node->getParentEntry()->getPoint();
    }
@@ -248,8 +246,6 @@ void MTreeNodeStat::setTotalNumberDataObjectsInSubtree(int n)
    d_total_objects_in_subtree = n;
 }
 
-
-}
 #endif
 
 

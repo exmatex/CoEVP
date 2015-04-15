@@ -1,4 +1,4 @@
-// DO-NOT-DELETE revisionify.begin() 
+/* DO-NOT-DELETE revisionify.begin() */
 /*
 
                             Copyright (c) 2014.
@@ -61,20 +61,14 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-// DO-NOT-DELETE revisionify.end() 
+/* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreePoint.cc
-// Package:     MTree database
+// File:        DBSearchResult.I
 // 
 // 
 // 
-// Description: Abstract base class for points that represent entries in an MTree.
+// Description: Container for single data object resulting from DB search
 //
-
-#ifndef included_mtreedb_MtreePoint_C
-#define included_mtreedb_MTreePoint_C
-
-#include "MTreePoint.h"
 
 #ifdef DEBUG_CHECK_ASSERTIONS
 #ifndef included_cassert
@@ -84,35 +78,96 @@ Additional BSD Notice
 #endif
 
 #ifdef DEBUG_NO_INLINE
-#include "MTreePoint.I"
+#define inline
 #endif
-
-namespace mtreedb {
 
 /*
 *************************************************************************
 *                                                                       *
-* Initialization, set/unset functions for static members.               *
+* Default ctor, copy ctor, and copy assignment operator.                *
 *                                                                       *
 *************************************************************************
 */
 
-double MTreePoint::s_max_distance = 999999.0;
-
-double MTreePoint::getMaxDistance() 
+inline
+DBSearchResult::DBSearchResult()
+   :
+   d_distance_to_query_point( -MetricSpacePoint::getMaxDistance() ),
+   d_data_object_id( DBObject::getUndefinedId() ),
+   d_data_object_radius( -MetricSpacePoint::getMaxDistance() ),
+   d_is_valid_result(false)
 {
-   return(s_max_distance);
 }
 
-void MTreePoint::setMaxDistance(double max_dist)
+inline
+DBSearchResult::DBSearchResult(const DBSearchResult& result)
+   :
+   d_query_point(result.d_query_point),
+   d_distance_to_query_point(result.d_distance_to_query_point),
+   d_data_object(result.d_data_object),
+   d_data_object_id(result.d_data_object_id),
+   d_data_object_point(result.d_data_object_point),
+   d_data_object_radius(result.d_data_object_radius),
+   d_is_valid_result(result.d_is_valid_result)
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(max_dist > 0.0);
-#endif
-   s_max_distance = max_dist;
 }
 
+inline 
+DBSearchResult& 
+DBSearchResult::operator=(const DBSearchResult& rhs)
+{
+   d_query_point = rhs.d_query_point;
+   d_distance_to_query_point = rhs.d_distance_to_query_point;
+   d_data_object = rhs.d_data_object;
+   d_data_object_id = rhs.d_data_object_id;
+   d_data_object_point = rhs.d_data_object_point;
+   d_data_object_radius = rhs.d_data_object_radius;
+   d_is_valid_result = rhs.d_is_valid_result;
+
+   return(*this);
 }
+
+/*
+*************************************************************************
+*                                                                       *
+* Accessory functions to get data members.                              * 
+*                                                                       *
+*************************************************************************
+*/
+
+inline
+const DBObject& DBSearchResult::getDataObject() const
+{
+   return( *(d_data_object.get()) );
+}
+
+inline 
+double DBSearchResult::getDistanceToQueryPoint() const
+{
+   return( d_distance_to_query_point );
+}
+
+inline
+const MetricSpacePoint& DBSearchResult::getDataObjectPoint() const
+{
+   return( *(d_data_object_point.get()) );
+}
+
+inline 
+double DBSearchResult::getDataObjectRadius() const
+{
+   return( d_data_object_radius );
+}
+
+inline
+const MetricSpacePoint& DBSearchResult::getQueryPoint() const
+{
+   return( *(d_query_point.get()) );
+}
+
+
+#ifdef DEBUG_NO_INLINE
+#undef inline
 #endif
 
 

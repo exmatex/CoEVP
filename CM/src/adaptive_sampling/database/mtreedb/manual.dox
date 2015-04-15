@@ -61,28 +61,24 @@ Additional BSD Notice
 
 */
 
-namespace mtreedb {
-
 /*!
   @page package_mtreedb The MTree Database Package
 
   The MTree Database package contains classes that provide routines for
   storage and retrieval of response information maintained in a metric tree
   indexing structure.  These classes are:
-  - mtreedb::MTree
-  - mtreedb::MTreePoint
-  - mtreedb::MTreeObject
-  - mtreedb::MTreeObjectFactory
-  - mtreedb::MTreeSearchResult
-  - mtreedb::MTreeNode
-  - mtreedb::MTreeEntry
-  - mtreedb::MTreeKey
-  - mtreedb::MTreeDataStore
-  - mtreedb::MTreeSearchNode
-  - mtreedb::MTreeSearchQueue
-  - mtreedb::MTreeQuery
-  - mtreedb::MTreeLevelStatistic
-  - mtreedb::MTreeNodeStat
+  - MTree
+  - MetricSpacePoint
+  - DBObject
+  - DBObjectFactory
+  - MTreeSearchResult
+  - MTreeNode
+  - MTreeEntry
+  - MTreeKey
+  - MTreeDataStore
+  - MTreeSearchNode
+  - MTreeSearchQueue
+  - MTreeQuery
+  - MTreeLevelStatistic
+  - MTreeNodeStat
 */
-
-}

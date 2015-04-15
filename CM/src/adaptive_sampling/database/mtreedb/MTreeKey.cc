@@ -71,16 +71,14 @@ Additional BSD Notice
 // Description: Description of metric space region associated with each MTree entry
 //
 
-#ifndef included_mtreedb_MtreeKey_C
-#define included_mtreedb_MTreeKey_C
+#ifndef included_MtreeKey_C
+#define included_MTreeKey_C
 
 #include "MTreeKey.h"
 
 #ifdef DEBUG_NO_INLINE
 #include "MTreeKey.I"
 #endif
-
-namespace mtreedb {
 
 /*
 *************************************************************************
@@ -120,7 +118,6 @@ void MTreeKey::printClassData(ostream& stream) const
    stream << "\n" << endl;
 }
 
-}
 #endif
 
 

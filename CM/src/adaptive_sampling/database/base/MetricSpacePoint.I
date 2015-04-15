@@ -63,98 +63,45 @@ Additional BSD Notice
 */
 /* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreeModelObject.cc
-// Package:     kriging coupler
+// File:        MetricSpacePoint.I
 // 
-// Revision:    $Revision$
-// Modified:    $Date$
-// Description: Implementation of the MTreeModelObject.
+// 
+// 
+// Description: Abstract base class for points that represent entries in a metric space.
 //
 
-#include <iostream>
+#ifdef DEBUG_NO_INLINE
+#define inline
+#endif
 
-namespace krigcpl {
-
-    //
-    // construction
-    //
-
-    template<typename T>
-    inline
-    MTreeModelObject<T>::MTreeModelObject(const T & modelObject)
-      : _modelObject(modelObject)
-    {
-
-      return;
-
-    }
-
-    //
-    // destruction
-    //
-
-    template <typename T>
-    MTreeModelObject<T>::~MTreeModelObject()
-    {
-
-      return;
-
-    }
-
-    //
-    // deep copy
-    //
-    
-    template <typename T>
-    mtreedb::MTreeObjectPtr 
-    MTreeModelObject<T>::makeCopy() const
-    {
-	
-      return mtreedb::MTreeObjectPtr(new MTreeModelObject(_modelObject));
-	
-    }
-    
-    //
-    // DB insertion
-    //
-    
-    template <typename T>
-    void 
-    MTreeModelObject<T>::putToDatabase(toolbox::Database& db) const
-    { 
-
-      _modelObject->putToDatabase(db);
-      return;
-      
-    }
-
-    //
-    // output
-    //
-    
-    template <typename T>
-    ostream & 
-    MTreeModelObject<T>::print(ostream & stream) const
-    {
-	
-      stream << "   object id = " << getObjectId() << std::endl;
-      stream << "   kriging model = " << *_modelObject << std::endl;
-
-      return stream;
-    }
-
-    //
-    // get object
-    //
-
-    template <typename T>
-    inline T
-    MTreeModelObject<T>::getModel() const
-    {
-	
-      return _modelObject;
-
-    }
+inline 
+MetricSpacePoint::MetricSpacePoint()
+{
 }
+
+inline 
+MetricSpacePoint::~MetricSpacePoint()
+{
+}
+
+inline
+double MetricSpacePoint::computeDistanceTo(MetricSpacePointPtr other) const
+{
+   return( computeDistanceTo( *(other.get()) ) );
+}
+
+inline
+ostream& MetricSpacePoint::print(ostream& stream) const
+{
+   stream << "No printClassData method supplied for MetricSpacePoint base class" << endl;
+   return(stream);
+}
+
+#ifdef DEBUG_NO_INLINE
+#undef inline
+#endif
+
+
+
 
 

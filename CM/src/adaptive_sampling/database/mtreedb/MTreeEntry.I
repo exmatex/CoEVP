@@ -82,8 +82,6 @@ Additional BSD Notice
 #define inline
 #endif
 
-namespace mtreedb {
-
 /*
 *************************************************************************
 *                                                                       *
@@ -214,13 +212,11 @@ double MTreeEntry::getRadius() const
 }
 
 inline
-MTreePointPtr MTreeEntry::getPoint() const
+MetricSpacePointPtr MTreeEntry::getPoint() const
 {
    return( d_key.getPoint() );
 }
 
-
-}
 
 #ifdef DEBUG_NO_INLINE
 #undef inline

@@ -1,4 +1,3 @@
-/* DO-NOT-DELETE revisionify.begin() */
 /*
 
                             Copyright (c) 2014.
@@ -61,83 +60,70 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-/* DO-NOT-DELETE revisionify.end() */
-//
-// File:        MTreeObject.I
-// Package:     MTree database
-// 
-// 
-// 
-// Description: Abstract base class for data objects indexed by an MTree.
-//
 
-#ifdef DEBUG_NO_INLINE
-#define inline
-#endif
+#include "DBModelObjectFactory.h"
 
-namespace mtreedb {
+#include "kriging/LinearDerivativeRegressionModel.h"
+#include "kriging/GaussianDerivativeCorrelationModel.h"
+#include "kriging/DerivativeCorrelationModelFactory.h"
+#include "kriging/DerivativeRegressionModelFactory.h"
+#include "kriging/MultivariateDerivativeKrigingModel.h"
 
-/*
-*************************************************************************
-*                                                                       *
-* Default ctor for MTree object base class.                             *
-*                                                                       *
-*************************************************************************
-*/
+namespace krigcpl {
 
-inline 
-MTreeObject::MTreeObject()
-:  d_object_id( MTreeObject::getUndefinedId() )
-{
-}
+    //
+    // Allocate MultivariateDerivativeKrigingModel
+    //
 
-/*
-*************************************************************************
-*                                                                       *
-* Default virtual print method.                                         *
-*                                                                       *
-*************************************************************************
-*/
+    template<>
+    DBObjectPtr 
+    DBModelObjectFactory<krigalg::MultivariateDerivativeKrigingModel>::allocateObject(toolbox::Database& db) const
+    {
+	
+      //
+      // instantiate dummy regression and correlation models
+      //
 
-inline
-ostream& MTreeObject::print(ostream& stream) const
-{
-   stream << "No printClassData method supplied for derived MTreeObject class." << endl;
-   stream << "d_object_id = " << d_object_id << endl;
-   return(stream);
-}
+      krigalg::DerivativeCorrelationModelPointer correlationModelPtr = 
+	krigalg::DerivativeCorrelationModelFactory().build("krigalg::GaussianDerivativeCorrelationModel");
+	
+      krigalg::DerivativeRegressionModelPointer regressionModelPtr = 
+	krigalg::DerivativeRegressionModelFactory().build("krigalg::LinearDerivativeRegressionModel"); 
+	
+      //
+      // instantiate new kriging model
+      //
 
-/*
-*************************************************************************
-*                                                                       *
-* Accessory functions to get and set object identifier.                 *
-*                                                                       *
-*************************************************************************
-*/
+      krigalg::MultivariateDerivativeKrigingModel *
+	krigingModel = 
+	new krigalg::MultivariateDerivativeKrigingModel(regressionModelPtr,
+							correlationModelPtr);
 
-inline
-int MTreeObject::getObjectId() const
-{
-   return( d_object_id );
-}
+      //
+      // read the contents of the kriging model from database
+      //
 
-inline
-void MTreeObject::setObjectId(int id)
-{
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(d_object_id == MTreeObject::getUndefinedId());
-   assert(id >= 0);
-#endif
-   d_object_id = id;
-}
+      krigingModel->getFromDatabase(db);
 
+      //
+      // instantiate MultivariateDerivativeKrigingModelPtr
+      //
+
+      krigalg::MultivariateDerivativeKrigingModelPtr krigingModelPtr = 
+	krigalg::MultivariateDerivativeKrigingModelPtr(krigingModel);
+
+      //
+      // instantiate DBKrigingModelObject
+      //
+
+      DBKrigingModelObject * krigingModelObjectPtr = 
+	new DBKrigingModelObject(krigingModelPtr);
+
+      //
+      // return DBObjectPtr
+      // 
+
+      return DBObjectPtr(krigingModelObjectPtr);
+    }
 
 }
-
-#ifdef DEBUG_NO_INLINE
-#undef inline
-#endif
-
-
-
-

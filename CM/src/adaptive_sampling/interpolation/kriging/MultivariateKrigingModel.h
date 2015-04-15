@@ -46,7 +46,6 @@
     // local types
     //
 
-    //    typedef boost::shared_ptr<MultivariateKrigingModel> MultivariateKrigingModelPtr;
     typedef std::shared_ptr<MultivariateKrigingModel> MultivariateKrigingModelPtr;
 
     //

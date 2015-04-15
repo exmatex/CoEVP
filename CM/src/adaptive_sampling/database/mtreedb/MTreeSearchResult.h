@@ -7,32 +7,34 @@
 // Description: Container for single data object resulting from MTree search
 //
 
-#ifndef included_mtreedb_MTreeSearchResult
-#define included_mtreedb_MTreeSearchResult
+#ifndef included_MTreeSearchResult
+#define included_MTreeSearchResult
 
-#ifndef included_mtreedb_MTreePoint
-#include "MTreePoint.h"
+#ifndef included_DBSearchResult
+#include <base/DBSearchResult.h>
 #endif
-#ifndef included_mtreedb_MTreeEntry
+#ifndef included_MetricSpacePoint
+#include <base/MetricSpacePoint.h>
+#endif
+#ifndef included_MTreeEntry
 #include "MTreeEntry.h"
 #endif
-#ifndef included_mtreedb_MTreeObjectFactory
-#include "MTreeObjectFactory.h"
+#ifndef included_DBObjectFactory
+#include <base/DBObjectFactory.h>
 #endif
-#ifndef included_mtreedb_MTreeDataStore
+#ifndef included_MTreeDataStore
 #include "MTreeDataStore.h"
 #endif
-
-namespace mtreedb {
 
 /*!
  * @brief MTreeSearchResult is a container for information about
  * a single data object retrieved from an MTree during a search. 
  * 
- * @see mtreedb::MTreePoint 
+ * @see MetricSpacePoint 
  */
 
 class MTreeSearchResult
+  : public DBSearchResult
 {
 public:
    friend class MTree;
@@ -46,7 +48,7 @@ public:
    /*!
     * Copy ctor for a MTree search result.
     */
-   MTreeSearchResult(const MTreeSearchResult& result);
+   //   MTreeSearchResult(const MTreeSearchResult& result);
  
    /*!
     * Dtor for MTree search result objects.
@@ -54,41 +56,11 @@ public:
    virtual ~MTreeSearchResult();
 
    /*!
-    * MTree search result copy assignment operator.
-    */
-   MTreeSearchResult& operator=(const MTreeSearchResult& rhs); 
-
-   /*!
-    * Return const reference to data object associated with search result.
-    */
-   const MTreeObject& getDataObject() const;
-
-   /*!
-    * Return distance of result to query point.
-    */
-   double getDistanceToQueryPoint() const;
-
-   /*!
-    * Return const reference to point representing data object.
-    */
-   const MTreePoint& getDataObjectPoint() const;
-
-   /*!
-    * Return radius of data object.
-    */
-   double getDataObjectRadius() const;
-
-   /*!
-    * Return const reference to query point associated with search result.
-    */
-   const MTreePoint& getQueryPoint() const;
-
-   /*!
     * Less than operator to compare search results based on 
     * distance to query point.  This is used by the STL list
     * function sort() for sorting results of range search.
     */
-   int operator< (const MTreeSearchResult& rhs) const;
+   virtual int operator< (const MTreeSearchResult& rhs) const;
    
 private:
    /*
@@ -102,13 +74,13 @@ private:
     * checking is on, an assertion is thrown if a null pointer 
     * is passed.
     */
-   MTreeSearchResult(MTreePointPtr query_point,
+   MTreeSearchResult(MetricSpacePointPtr query_point,
                      MTreeEntryPtr entry);
 
    /*!
     * Private function to set query point (called by MTree).
     */
-   void setQueryPoint(MTreePointPtr query_point);
+   void setQueryPoint(MetricSpacePointPtr query_point);
 
    /*
     * Private function to set distance of result to query point 
@@ -120,7 +92,7 @@ private:
     * Private function to determine whether result object
     * contains a valid data object description (called by MTree).
     */
-   bool isValidResult() const;
+   //   virtual bool isValidResult() const;
  
    /*
     * Private function to set object protection.
@@ -136,18 +108,9 @@ private:
    void finalizeSearchResult(MTreeDataStore& data_store,
                              bool make_safe);
 
-   MTreePointPtr   d_query_point;
-   double          d_distance_to_query_point;
 
-   MTreeObjectPtr  d_data_object;
-   int             d_data_object_id;
-   MTreePointPtr   d_data_object_point;
-   double          d_data_object_radius;
-
-   bool            d_is_valid_result;
 };
 
-}
 #ifndef DEBUG_NO_INLINE
 #include "MTreeSearchResult.I"
 #endif

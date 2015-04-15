@@ -1,4 +1,4 @@
-/* DO-NOT-DELETE revisionify.begin() */
+// DO-NOT-DELETE revisionify.begin() 
 /*
 
                             Copyright (c) 2014.
@@ -61,50 +61,61 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-/* DO-NOT-DELETE revisionify.end() */
+// DO-NOT-DELETE revisionify.end() 
 //
-// File:        MTreePoint.I
-// Package:     MTree database
-// 
-// 
-// 
-// Description: Abstract base class for points that represent entries in an MTree.
+// File:        DB.cc
+// Description: DB structure class.
 //
 
-#ifdef DEBUG_NO_INLINE
-#define inline
+#ifndef included_DB_C
+#define included_DB_C
+
+#include "DB.h"
+
+#ifdef DEBUG_CHECK_ASSERTIONS
+#ifndef included_cassert
+#define included_cassert
+#include <cassert>
+#endif
 #endif
 
-namespace mtreedb {
+#include "toolbox/base/Utilities.h"
+#include "toolbox/base/MathUtilities.h"
 
-inline 
-MTreePoint::MTreePoint()
-{
-}
-
-inline 
-MTreePoint::~MTreePoint()
-{
-}
-
-inline
-double MTreePoint::computeDistanceTo(MTreePointPtr other) const
-{
-   return( computeDistanceTo( *(other.get()) ) );
-}
-
-inline
-ostream& MTreePoint::print(ostream& stream) const
-{
-   stream << "No printClassData method supplied for MTreePoint base class" << endl;
-   return(stream);
-}
-
-}
 
 #ifdef DEBUG_NO_INLINE
-#undef inline
+#include "DB.I"
 #endif
+
+/*
+*************************************************************************
+*                                                                       *
+* DB ctor and dtor.                                                     *
+*                                                                       *
+*************************************************************************
+*/
+
+DB::DB(const string& db_name,
+       ostream* error_log_stream,
+       bool do_error_checking)
+   : d_db_name(db_name),
+     d_error_log_stream(error_log_stream),
+     d_do_error_checking(do_error_checking)
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+   assert(!db_name.empty());
+   if (do_error_checking) {
+      assert(error_log_stream != (ostream*)NULL);
+   }
+#endif
+}
+
+DB::~DB()
+{
+}
+
+#endif
+
 
 
 

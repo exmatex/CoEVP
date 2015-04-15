@@ -66,7 +66,11 @@ Additional BSD Notice
 #include <kriging/LinearDerivativeRegressionModel.h>
 #include <kriging/GaussianDerivativeCorrelationModel.h>
 #include <kriging/MultivariateDerivativeKrigingModelFactory.h>
+#include <kriging_db/KrigingInterpolationDBDataBase.h>
 
+#include <mtreedb/MTree.h>
+
+#include "interpolation_database/kriging_db/DBModelObjectFactory.h"
 
 AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
                                   const int                  valueDimension,
@@ -111,17 +115,57 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
       modelFactory(new MultivariateDerivativeKrigingModelFactory(regressionModel,
                                                                  correlationModel));
 
-   m_db = new KrigingInterpolationDataBase( m_pointDimension,
-                                            m_valueDimension,
-                                            modelFactory,
-                                            m_maxKrigingModelSize,
-                                            m_maxNumberSearchModels,
-                                            true,
-                                            m_meanErrorFactor,
-                                            m_tolerance,
-                                            m_maxQueryPointModelDistance,
-                                            600000000,
-                                            "." );
+   //
+   // construct kriging model tree database
+   //
+
+   m_db = (DB*)(new MTree("kriging_model_database", &(std::cout), false));
+
+   std::string mtreeDirectoryName = ".";
+
+   m_db->initializeCreate(mtreeDirectoryName + "/" 
+                          "kriging_model_database",
+                          "krigcpl",
+                          *(new DBModelObjectFactory<InterpolationModel>));
+      
+   ((MTree*)m_db)->setMaxNodeEntries(12);
+     
+   bool db_from_file = false;  // FIX THIS (input from somewhere)
+
+   if ( db_from_file ) {
+
+#if 0
+      std::string fileName = "databaseFileName";  // FIX THIS ( Pass in from somewhere )
+
+      m_interp = new KrigingInterpolationMTreeDataBase( m_pointDimension,
+                                                        m_valueDimension,
+                                                        modelFactory,
+                                                        *m_db,
+                                                        m_maxKrigingModelSize,
+                                                        m_maxNumberSearchModels,
+                                                        true,
+                                                        m_meanErrorFactor,
+                                                        m_tolerance,
+                                                        m_maxQueryPointModelDistance,
+                                                        600000000,
+                                                        mtreeDirectoryName,
+                                                        fileName );
+#endif
+   }
+   else {
+
+      m_interp = new KrigingInterpolationDBDataBase( m_pointDimension,
+                                                     m_valueDimension,
+                                                     modelFactory,
+                                                     *m_db,
+                                                     m_maxKrigingModelSize,
+                                                     m_maxNumberSearchModels,
+                                                     true,
+                                                     m_meanErrorFactor,
+                                                     m_tolerance,
+                                                     m_maxQueryPointModelDistance,
+                                                     600000000 );
+   }
 
    // Add the gradient scaling from the point and value scaling
    m_valueScaling.resize(m_valueAllocated);
@@ -143,6 +187,7 @@ AdaptiveSampler::~AdaptiveSampler()
    m_pointScaling.resize(0);
    m_valueScaling.resize(0);
    
+   delete m_interp;
    delete m_db;
 }
 
@@ -176,11 +221,11 @@ AdaptiveSampler::sample( std::vector<double>&       value,
    double* local_value = new double[value_length];
 
    bool interpolationSuccess = 
-      m_db->interpolate(local_value,
-                        hint,
-                        local_point,
-                        flags,
-                        error_estimate);
+      m_interp->interpolate(local_value,
+                            hint,
+                            local_point,
+                            flags,
+                            error_estimate);
 
    if (interpolationSuccess == false) {
 
@@ -207,11 +252,11 @@ AdaptiveSampler::sample( std::vector<double>&       value,
          local_value[i] = value[i] / m_valueScaling[i];
       }
 
-      m_db->insert(hint,
-                   local_point,
-                   local_value,
-                   &(local_value[m_valueDimension]),
-                   flags);
+      m_interp->insert(hint,
+                       local_point,
+                       local_value,
+                       &(local_value[m_valueDimension]),
+                       flags);
 
       m_num_fine_scale_evaluations++;
 
@@ -226,12 +271,12 @@ AdaptiveSampler::sample( std::vector<double>&       value,
       }
 
       interpolationSuccess = 
-      m_db->interpolate(local_value,
-                        local_value + point_length,
-                        hint,
-                        local_point,
-                        flags,
-                        error_estimate);
+      m_interp->interpolate(local_value,
+                            local_value + point_length,
+                            hint,
+                            local_point,
+                            flags,
+                            error_estimate);
 
       for (int i=0; i<value_length; ++i) {
          value[i] = local_value[i] * m_valueScaling[i];
@@ -304,7 +349,7 @@ AdaptiveSampler::evaluateSpecificModel( std::vector<double>&       value,
 
       std::vector<bool> interpolateFlags(InterpolationDataBase::NUMBER_FLAGS);
 
-      error_estimate = m_db->interpolateSpecificModel(local_value,
+      error_estimate = m_interp->interpolateSpecificModel(local_value,
                                                       local_value + point_length,
                                                       model,
                                                       local_point,
@@ -377,7 +422,7 @@ AdaptiveSampler::getModelInfo( int& numModels,
                                int& numPairs ) const
 {
    double stats[2];
-   m_db->getStatistics(stats, 2);
+   m_interp->getStatistics(stats, 2);
 
    numModels = stats[0];
    numPairs = stats[1];
@@ -387,7 +432,7 @@ AdaptiveSampler::getModelInfo( int& numModels,
 void
 AdaptiveSampler::printStatistics( std::ostream & outputStream )
 {
-   m_db->printDBStats(outputStream);
+   m_interp->printDBStats(outputStream);
 }
 
 
@@ -396,7 +441,7 @@ void
 AdaptiveSampler::printNewInterpolationStatistics( std::ostream & outputStream )
 {
    double stats[2];
-   m_db->getStatistics(stats, 2);
+   m_interp->getStatistics(stats, 2);
 
    bool print_stats = false;
 
@@ -411,7 +456,7 @@ AdaptiveSampler::printNewInterpolationStatistics( std::ostream & outputStream )
    }
 
    if (print_stats) {
-      //      m_db->printDBStats(outputStream);
+      //      m_interp->printDBStats(outputStream);
       outputStream << "   # samples = " << m_num_samples
                    << ", # fine scale evaluations = " << m_num_fine_scale_evaluations
                    << ", successful interpolation ratio = "

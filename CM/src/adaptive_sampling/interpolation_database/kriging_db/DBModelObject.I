@@ -1,4 +1,4 @@
-// DO-NOT-DELETE revisionify.begin() 
+/* DO-NOT-DELETE revisionify.begin() */
 /*
 
                             Copyright (c) 2014.
@@ -61,50 +61,102 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-// DO-NOT-DELETE revisionify.end() 
+/* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreeObjectFactory.h
-// Package:     MTree database
+// File:        DBModelObject.cc
+// Package:     kriging coupler
 // 
-// 
-// 
-// Description: Abstract base class for MTree data object factory.
+// Revision:    $Revision$
+// Modified:    $Date$
+// Description: Implementation of the DBModelObject.
 //
 
-#ifndef included_mtreedb_MtreeObjectFactory_C
-#define included_mtreedb_MTreeObjectFactory_C
+#include <iostream>
 
-#include "MTreeObjectFactory.h"
+namespace krigcpl {
 
-namespace mtreedb {
+    //
+    // construction
+    //
 
-/*
-*************************************************************************
-*                                                                       *
-* Default ctor and dtor for MTreeObjectFactory class and default        *
-* implementation of clone method.                                       *  
-*                                                                       *
-*************************************************************************
-*/
+    template<typename T>
+    inline
+    DBModelObject<T>::DBModelObject(const T & modelObject)
+      : _modelObject(modelObject)
+    {
 
-MTreeObjectFactory::MTreeObjectFactory()
-{
+      return;
+
+    }
+
+    //
+    // destruction
+    //
+
+    template <typename T>
+    DBModelObject<T>::~DBModelObject()
+    {
+
+      return;
+
+    }
+
+    //
+    // deep copy
+    //
+    
+    template <typename T>
+    //    mtreedb::DBObjectPtr 
+    DBObjectPtr 
+    DBModelObject<T>::makeCopy() const
+    {
+	
+       //      return mtreedb::DBObjectPtr(new DBModelObject(_modelObject));
+      return DBObjectPtr(new DBModelObject(_modelObject));
+	
+    }
+    
+    //
+    // DB insertion
+    //
+    
+    template <typename T>
+    void 
+    DBModelObject<T>::putToDatabase(toolbox::Database& db) const
+    { 
+
+      _modelObject->putToDatabase(db);
+      return;
+      
+    }
+
+    //
+    // output
+    //
+    
+    template <typename T>
+    ostream & 
+    DBModelObject<T>::print(ostream & stream) const
+    {
+	
+      stream << "   object id = " << getObjectId() << std::endl;
+      stream << "   kriging model = " << *_modelObject << std::endl;
+
+      return stream;
+    }
+
+    //
+    // get object
+    //
+
+    template <typename T>
+    inline T
+    DBModelObject<T>::getModel() const
+    {
+	
+      return _modelObject;
+
+    }
 }
-
-MTreeObjectFactory::~MTreeObjectFactory()
-{
-}
-
-MTreeObjectPtr 
-MTreeObjectFactory::cloneObject(const MTreeObject& object) const
-{
-   return( object.makeCopy() );
-}
-
-
-}
-#endif
-
-
 
 

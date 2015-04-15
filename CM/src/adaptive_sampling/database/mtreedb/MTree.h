@@ -7,8 +7,8 @@
 // Description: Main Mtree index structure class.
 //
 
-#ifndef included_mtreedb_MTree
-#define included_mtreedb_MTree
+#ifndef included_MTree
+#define included_MTree
 
 #ifndef included_String
 #include <string>
@@ -28,39 +28,35 @@ using namespace std;
 using namespace std;
 #endif
 
-#ifndef included_mtreedb_MTreeDataStore
-#include <mtreedb/MTreeDataStore.h>
+#ifndef included_DB
+#include <base/DB.h>
 #endif
-#ifndef included_mtreedb_MTreeEntry
-#include <mtreedb/MTreeEntry.h>
+#ifndef included_MTreeDataStore
+#include "MTreeDataStore.h"
 #endif
-#ifndef included_mtreedb_MTreeNode
-#include <mtreedb/MTreeNode.h>
+#ifndef included_MTreeEntry
+#include "MTreeEntry.h"
 #endif
-#ifndef included_mtreedb_MTreeObject
-#include <mtreedb/MTreeObject.h>
+#ifndef included_MTreeNode
+#include "MTreeNode.h"
 #endif
-#ifndef included_mtreedb_MTreeObjectFactory
-#include <mtreedb/MTreeObjectFactory.h>
+#ifndef included_DBObject
+#include <base/DBObject.h>
 #endif
-#ifndef included_mtreedb_MTreePoint
-#include <mtreedb/MTreePoint.h>
+#ifndef included_MTreeSearchResult
+#include "MTreeSearchResult.h"
 #endif
-#ifndef included_mtreedb_MTreeSearchResult
-#include <mtreedb/MTreeSearchResult.h>
+#ifndef included_MTreeQuery
+#include "MTreeQuery.h"
 #endif
-#ifndef included_mtreedb_MTreeQuery
-#include <mtreedb/MTreeQuery.h>
-#endif
-#ifndef included_mtreedb_MTreeLevelStatistic
-#include <mtreedb/MTreeLevelStatistic.h>
+#ifndef included_MTreeLevelStatistic
+#include "MTreeLevelStatistic.h"
 #endif
 
 #ifndef NULL
 #define NULL (0)
 #endif
 
-namespace mtreedb {
 
 class MTreeLevelStatistic;
 class MTreeSearchResult;
@@ -102,13 +98,14 @@ class MTreeSearchResult;
  * -# Destroy the tree by calling the dtor explicitly or letting the
  *               tree go out of scope.
  * 
- * @see mtreedb::MTreeObject
- * @see mtreedb::MTreePoint
- * @see mtreedb::MTreeNode
- * @see mtreedb::MTreeDataStore
+ * @see DBObject
+ * @see MetricSpacePoint
+ * @see MTreeNode
+ * @see MTreeDataStore
  */
 
 class MTree
+   : public DB
 {
 public:
    friend class MTreeNode;
@@ -126,11 +123,6 @@ public:
     * Dtor for MTree objects.
     */
    virtual ~MTree();
-
-   /*!
-    * Return tree name string passed to MTree ctor.
-    */
-   string getName() const;
 
    //@{
    //! @name Methods for initializing/finalizing this MTree object.
@@ -154,9 +146,9 @@ public:
     * @param obj_factory  Const reference to factory that creates 
     *                     concrete data objects to be indexed by tree.
     */
-   void initializeCreate(const string& directory_name,
-                         const string& file_prefix,
-                         const MTreeObjectFactory& obj_factory);
+   virtual void initializeCreate(const string& directory_name,
+                                 const string& file_prefix,
+                                 const DBObjectFactory& obj_factory);
 
    /*!
     * Initialize MTree to state contained in existing data files.
@@ -177,9 +169,9 @@ public:
     * @param obj_factory  Const reference to factory that creates 
     *                     concrete data objects to be indexed by tree.
     */
-   void initializeOpen(const string& directory_name,
-                       const string& file_prefix,
-                       const MTreeObjectFactory& obj_factory);
+   virtual void initializeOpen(const string& directory_name,
+                               const string& file_prefix,
+                               const DBObjectFactory& obj_factory);
 
    /*!
     * Finalize MTree index structure.
@@ -188,7 +180,7 @@ public:
     * data object information to files for retrieval later (e.g.,
     * initialization of another tree object). 
     */
-   void finalize(); 
+   virtual void finalize(); 
 
    //@}
   
@@ -291,9 +283,9 @@ public:
     *                assertion checking is on, assertion will result if 
     *                value is less than 0.
     */
-   void insertObject(MTreeObject& object,
-                     const MTreePoint& point,
-                     double radius);
+   virtual void insertObject(DBObject& object,
+                             const MetricSpacePoint& point,
+                             double radius);
    
    /*!
     * Get copy of object indexed by tree given object identifier.
@@ -302,7 +294,7 @@ public:
     *                If this is not a valid id for an object indexed by
     *                the tree, the method will return a null pointer.
     */ 
-   MTreeObjectPtr getObject(int object_id) const;
+   virtual DBObjectPtr getObject(int object_id) const;
 
    /*!
     * Delete object from tree. 
@@ -320,7 +312,7 @@ public:
     *                If this is not a valid id for an object indexed by
     *                the tree, the method will do nothing. 
     */
-   void deleteObject(int object_id);
+   virtual void deleteObject(int object_id);
 
    //@}
   
@@ -351,10 +343,10 @@ public:
     *                any data object in a search result, future database
     *                operations may produce unexpected behavior.
     */
-   void searchKNN(vector<MTreeSearchResult>& results,
-                  const MTreePoint& query_point,
-                  int k_neighbors,
-                  bool make_safe = false);
+   virtual void searchKNN(vector<DBSearchResult>& results,
+                          const MetricSpacePoint& query_point,
+                          int k_neighbors,
+                          bool make_safe = false);
 
    /*!
     * Search tree for all data objects within given distance of given 
@@ -390,10 +382,10 @@ public:
     *                any data object in a search result, future database
     *                operations may produce unexpected behavior.
     */
-   void searchRange(list<MTreeSearchResult>& results,
-                    const MTreePoint& query_point,
-                    double radius,
-                    bool make_safe = false);
+   virtual void searchRange(list<DBSearchResult>& results,
+                            const MetricSpacePoint& query_point,
+                            double radius,
+                            bool make_safe = false);
 
    //@}
   
@@ -624,6 +616,8 @@ public:
       return( d_data_store.readAllDataObjects() );
    }
 
+   virtual void outputStats(std::ostream & outputStream);
+
    //@}
 
 private:
@@ -689,11 +683,6 @@ private:
    enum { DEFAULT_MAX_NODE_ENTRIES = 7 };
 
    /*
-    * String name of tree used mainly in printing and error reporting
-    */
-   string d_tree_name;
-
-   /*
     * Data store that holds nodes and data objects for tree
     */
    mutable MTreeDataStore  d_data_store;
@@ -710,14 +699,6 @@ private:
     *       only before first object is inserted.
     */
    int d_max_node_entries;
-
-   /*
-    * Error checking and reporing members; set in constructor
-    * but can be changed via member functions.
-    * Note: error checking is turned off by default.
-    */
-   bool     d_do_error_checking;
-   ostream* d_error_log_stream;
 
    /*
     * Root node and non-root node promotion and partition methods 
@@ -766,7 +747,6 @@ private:
 
 };
 
-}
 #ifndef DEBUG_NO_INLINE
 #include "MTree.I"
 #endif

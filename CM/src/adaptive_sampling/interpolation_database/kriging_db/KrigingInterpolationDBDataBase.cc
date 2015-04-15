@@ -63,7 +63,7 @@ Additional BSD Notice
 */
 // DO-NOT-DELETE revisionify.end() 
 //
-// File:        KrigingInterpolationDataBase.cc
+// File:        KrigingInterpolationDBDataBase.cc
 // Package:     kriging coupler
 // 
 // Revision:    $Revision$
@@ -71,18 +71,19 @@ Additional BSD Notice
 // Description: Interpolation database using kriging interpolation.
 //
 
-#include "KrigingInterpolationDataBase.h"
+#include "KrigingInterpolationDBDataBase.h"
 
 #include <kriging/SecondMoment.h>
 
 #include "ResponsePoint.h"
-#include <kriging_mtreedb/MTreeKrigingModelObject.h>
-#include "MTreeModelObjectFactory.h"
+#include <kriging_db/DBKrigingModelObject.h>
+
+#include <toolbox/base/Utilities.h>
 
 #include <mtreedb/MTree.h>
-#include <mtreedb/MTreeNode.h>
-#include <mtreedb/MTreeObject.h>
-#include <mtreedb/MTreeObjectFactory.h>
+
+#include <base/DBObject.h>
+#include <base/DBObjectFactory.h>
 
 #include <toolbox/database/HDFDatabase.h>
 
@@ -111,16 +112,7 @@ Additional BSD Notice
 #  define DEBUG 0
 #endif
 
-//
-//
-//
-
 using namespace krigalg;
-using namespace mtreedb;
-
-//
-//
-//
 
 namespace krigcpl {
 
@@ -129,10 +121,9 @@ namespace krigcpl {
       //
       // local data-types
       //
-      typedef MTreeModelObjectFactory<InterpolationModel> MTreeKrigingModelObjectFactory;
 
       struct KrigingModelChooser : 
-	std::unary_function<mtreedb::MTreeObjectPtr, bool> {
+	std::unary_function<DBObjectPtr, bool> {
 	
 	KrigingModelChooser(int diffThreshold) 
 	  : _diffThreshold(diffThreshold)
@@ -140,23 +131,23 @@ namespace krigcpl {
 	  return;
 	}
 
-	bool operator()(mtreedb::MTreeObjectPtr objectPtr) const
+	bool operator()(DBObjectPtr objectPtr) const
 	{
 	
 	  //
 	  // get handle to the located object
 	  //
 	  
-	  const MTreeKrigingModelObject & mTreeObject = 
-	    dynamic_cast<const MTreeKrigingModelObject &>(*objectPtr);
+	  const DBKrigingModelObject & dbObject = 
+	    dynamic_cast<const DBKrigingModelObject &>(*objectPtr);
 
 	  //
 	  // get pointer to kriging model
 	  //
 
 	  InterpolationModelPtr krigingModelPointer = 
-	    mTreeObject.getModel();
-	  const int krigingModelId = mTreeObject.getObjectId();
+	    dbObject.getModel();
+	  const int krigingModelId = dbObject.getObjectId();
 
 	  //
 	  // get kriging model time
@@ -188,10 +179,6 @@ namespace krigcpl {
 	  if (timeDiff > _diffThreshold)
 	    return true;
 
-	  //
-	  //
-	  //
-
 	  return false;
 	  
 	}
@@ -200,101 +187,13 @@ namespace krigcpl {
 
       };
 
-#if 0
-      class MTreeKrigingModelObjectFactory : public MTreeObjectFactory
-      {
-      public:
-	//
-	// construction/destruction
-	//
-	MTreeKrigingModelObjectFactory();
-	virtual ~MTreeKrigingModelObjectFactory();
-
-	mtreedb::MTreeObjectPtr allocateObject(toolbox::Database& db) const;
-	
-      private:
-	// The following are not implemented
-	MTreeKrigingModelObjectFactory(const MTreeKrigingModelObjectFactory&);
-	void operator=(const MTreeKrigingModelObjectFactory&);
-	
-      };
-
-      //
-      // MTreeKrigingModelObjectFactory implementation
-      //
-
-      MTreeKrigingModelObjectFactory::MTreeKrigingModelObjectFactory()
-      {
-
-	return;
-
-      }
-
-      MTreeKrigingModelObjectFactory::~MTreeKrigingModelObjectFactory()
-      {
-	
-	return;
-
-      }
-      
-      mtreedb::MTreeObjectPtr 
-      MTreeKrigingModelObjectFactory::allocateObject(toolbox::Database& db) const
-      {
-	
-	//
-	// instantiate dummy regression and correlation models
-	//
-
-	krigalg::DerivativeCorrelationModelPointer correlationModelPtr = 
-	  krigalg::DerivativeCorrelationModelFactory().build("krigalg::GaussianDerivativeCorrelationModel");
-	
-	krigalg::DerivativeRegressionModelPointer regressionModelPtr = 
-	  krigalg::DerivativeRegressionModelFactory().build("krigalg::LinearDerivativeRegressionModel"); 
-	
-	//
-	// instantiate new kriging model
-	//
-
-	krigalg::MultivariateDerivativeKrigingModel *
-	  krigingModel = 
-	  new krigalg::MultivariateDerivativeKrigingModel(regressionModelPtr,
-							  correlationModelPtr);
-
-	//
-	// read the contents of the kriging model from database
-	//
-
-	krigingModel->getFromDatabase(db);
-
-	//
-	// instantiate MultivariateDerivativeKrigingModelPtr
-	//
-
-	krigalg::InterpolationModelPtr krigingModelPtr = 
-	  krigalg::MultivariateDerivativeKrigingModelPtr(krigingModel);
-
-	//
-	// instantiate MTreeKrigingModelObject
-	//
-
-	MTreeKrigingModelObject * krigingModelObjectPtr = 
-	  new MTreeKrigingModelObject(krigingModelPtr);
-
-	//
-	// return MTreeObjectPtr
-	// 
-
-	  return mtreedb::MTreeObjectPtr(krigingModelObjectPtr);
-      }
-#endif 
-
       //
       // given a point find closest CoKrigingModel 
       //
 
       std::pair<int, InterpolationModelPtr>
       findClosestCoKrigingModel(const ResponsePoint & point,
-				MTree               & krigingModels,
+				DB                  & krigingModels,
 				double                maxQueryPointModelDistance)
       {
 
@@ -308,19 +207,14 @@ namespace krigcpl {
 	// query tree for the closest model
 	//
 
-	std::vector<MTreeSearchResult> searchResults;
+	std::vector<DBSearchResult> searchResults;
 	
 	krigingModels.searchKNN(searchResults,
 				point,
 				1);
 
-
-	//
-	//
-	//
-
 	InterpolationModelPtr closestKrigingModel;
-	int closestKrigingModelId = MTreeObject::getUndefinedId();
+	int closestKrigingModelId = DBObject::getUndefinedId();
 
 	//
 	// short-circuit if an empty kriging models list encountered
@@ -356,7 +250,7 @@ namespace krigcpl {
 	  
 #endif // HAVE_PKG_libprof
 
-	  return std::make_pair(MTreeObject::getUndefinedId(),
+	  return std::make_pair(DBObject::getUndefinedId(),
 				closestKrigingModel);
 
 	}
@@ -365,22 +259,17 @@ namespace krigcpl {
 	// get handle to the located object
 	//
 
-	const MTreeKrigingModelObject & mTreeObject = 
-	  dynamic_cast<const MTreeKrigingModelObject &>(searchResults[0].getDataObject()); 
+	const DBKrigingModelObject & dbObject = 
+	  dynamic_cast<const DBKrigingModelObject &>(searchResults[0].getDataObject()); 
 
-	closestKrigingModel   = mTreeObject.getModel();
-	closestKrigingModelId = mTreeObject.getObjectId();
+	closestKrigingModel   = dbObject.getModel();
+	closestKrigingModelId = dbObject.getObjectId();
 
 #ifdef HAVE_PKG_libprof
 
 	ProfileEnd("findClosest");
 
 #endif // HAVE_PKG_libprof
-
-
-	//
-	// 
-	//
 
 	return std::make_pair(closestKrigingModelId,
 			      closestKrigingModel);
@@ -452,8 +341,6 @@ namespace krigcpl {
 	  // queryPoint and origin point
 	  //
 
-          //          cout << valueId << " " << queryValue[0] << " " << originValue[0] << " " << (queryValue[0] - originValue[0])*(queryValue[0] - originValue[0]) << endl;
-
 	  return (queryValue[0] - originValue[0])*
 	    (queryValue[0] - originValue[0]);
 
@@ -510,10 +397,6 @@ namespace krigcpl {
 
 	}
 
-	//
-	//
-	//
-
 	return maxError;
 
       }
@@ -551,10 +434,6 @@ namespace krigcpl {
 
 	}
 
-	//
-	//
-	//
-
 	return maxError/valueDimension;
 
       }
@@ -578,14 +457,14 @@ namespace krigcpl {
       // Given a point find the "best" kriging model. Here, best means
       // that its use results in the smallest possible interpolation
       // error. This function returns a handle to the best model that
-      // satisfies given tolerance or MTreeObject::getUndefinedId() if
+      // satisfies given tolerance or DBObject::getUndefinedId() if
       // no model can be found.
       //
 
       std::pair<int, InterpolationModelPtr>
       findBestCoKrigingModel(bool                & canInterpolateFlag,
 			     const ResponsePoint & point,
-			     MTree               & krigingModels,
+			     DB                  & krigingModels,
 			     double                tolerance,
 			     double                meanErrorFactor,
 			     double                maxQueryPointModelDistance,
@@ -599,7 +478,7 @@ namespace krigcpl {
 	// query the tree for the maxNumberSearchModels closest models
 	//
 
-	std::vector<MTreeSearchResult> searchResults;
+	std::vector<DBSearchResult> searchResults;
 	
 	krigingModels.searchKNN(searchResults,
 				point,
@@ -611,7 +490,7 @@ namespace krigcpl {
 
 	if (searchResults.empty() == true) {
 
-	  return std::make_pair(MTreeObject::getUndefinedId(),
+	  return std::make_pair(DBObject::getUndefinedId(),
 				InterpolationModelPtr());
 
 	}
@@ -623,8 +502,8 @@ namespace krigcpl {
 	double minError = std::numeric_limits<double>::max();
 	std::pair<int, InterpolationModelPtr> bestCoKrigingModel;
 
-	std::vector<MTreeSearchResult>::const_iterator searchResultsIter;
-	const std::vector<MTreeSearchResult>::const_iterator 
+	std::vector<DBSearchResult>::const_iterator searchResultsIter;
+	const std::vector<DBSearchResult>::const_iterator 
 	  searchResultsEnd = searchResults.end();
 
 	for (searchResultsIter  = searchResults.begin();
@@ -635,20 +514,16 @@ namespace krigcpl {
 	  // get handle to search result
 	  //
 
-	  const MTreeSearchResult & searchResult = *searchResultsIter;
+	  const DBSearchResult & searchResult = *searchResultsIter;
 
 	  //
 	  // get handle to object
 	  //
 
-	  const MTreeKrigingModelObject & mTreeObject = 
-	    dynamic_cast<const MTreeKrigingModelObject &>(searchResult.getDataObject()); 
-	  
-	  //
-	  // 
-	  //
+	  const DBKrigingModelObject & dbObject = 
+	    dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
 
-	  InterpolationModelPtr krigingModel = mTreeObject.getModel();
+	  InterpolationModelPtr krigingModel = dbObject.getModel();
 
 	  //
 	  // skip invalid models
@@ -658,7 +533,7 @@ namespace krigcpl {
 	    continue;
 
 	  //
-	  // compute error predicted by mTreeObject
+	  // compute error predicted by dbObject
 	  //
 
 	  const double errorEstimate = checkError(krigingModel,
@@ -672,7 +547,7 @@ namespace krigcpl {
 
 	  if (errorEstimate < minError) {
 
-	    bestCoKrigingModel = std::make_pair(mTreeObject.getObjectId(),
+	    bestCoKrigingModel = std::make_pair(dbObject.getObjectId(),
 						krigingModel);
 
 	    minError = errorEstimate;
@@ -688,10 +563,6 @@ namespace krigcpl {
 	if (minError <= tolerance*tolerance)
 	  canInterpolateFlag = true;
 
-	//
-	// 
-	//
-	
 	return bestCoKrigingModel;
 
       }
@@ -699,7 +570,7 @@ namespace krigcpl {
       std::pair<int, InterpolationModelPtr>
       findBestCoKrigingModelv1(bool                & canInterpolateFlag,
 			       const ResponsePoint & point,
-			       MTree               & krigingModels,
+			       DB                  & krigingModels,
 			       double                tolerance,
 			       const InterpolationModelFactoryPointer & _modelFactory,
 			       double                meanErrorFactor,
@@ -715,7 +586,7 @@ namespace krigcpl {
 	// query the tree for the maxNumberSearchModels closest models
 	//
 
-	std::vector<MTreeSearchResult> searchResults;
+	std::vector<DBSearchResult> searchResults;
 	
 	krigingModels.searchKNN(searchResults,
 				point,
@@ -727,7 +598,7 @@ namespace krigcpl {
 
 	if (searchResults.empty() == true) {
 
-	  return std::make_pair(MTreeObject::getUndefinedId(),
+	  return std::make_pair(DBObject::getUndefinedId(),
 				_modelFactory->build());
 
 	}
@@ -739,8 +610,8 @@ namespace krigcpl {
 	std::map<double, std::pair<int, InterpolationModelPtr> >
 	  krigingModelRanking;
 
-	std::vector<MTreeSearchResult>::const_iterator searchResultsIter;
-	const std::vector<MTreeSearchResult>::const_iterator 
+	std::vector<DBSearchResult>::const_iterator searchResultsIter;
+	const std::vector<DBSearchResult>::const_iterator 
 	  searchResultsEnd = searchResults.end();
 
 	for (searchResultsIter  = searchResults.begin();
@@ -751,20 +622,16 @@ namespace krigcpl {
 	  // get handle to search result
 	  //
 
-	  const MTreeSearchResult & searchResult = *searchResultsIter;
+	  const DBSearchResult & searchResult = *searchResultsIter;
 
 	  //
 	  // get handle to object
 	  //
 
-	  const MTreeKrigingModelObject & mTreeObject = 
-	    dynamic_cast<const MTreeKrigingModelObject &>(searchResult.getDataObject()); 
+	  const DBKrigingModelObject & dbObject = 
+	    dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
 	  
-	  //
-	  // 
-	  //
-
-	  InterpolationModelPtr krigingModel = mTreeObject.getModel();
+	  InterpolationModelPtr krigingModel = dbObject.getModel();
 
 	  //
 	  // skip invalid model
@@ -774,7 +641,7 @@ namespace krigcpl {
 	    continue;
 
 	  //
-	  // compute error predicted by mTreeObject
+	  // compute error predicted by dbObject
 	  //
 
 	  const double errorEstimate = checkError(krigingModel,
@@ -787,7 +654,7 @@ namespace krigcpl {
 	  //
 
 	  const std::pair<int, InterpolationModelPtr>
-	    krigingModelPair = std::make_pair(mTreeObject.getObjectId(),
+	    krigingModelPair = std::make_pair(dbObject.getObjectId(),
 					      krigingModel);
 
 	  krigingModelRanking.insert(std::make_pair(errorEstimate,
@@ -855,7 +722,7 @@ namespace krigcpl {
 	// return an empty model
 	//
 
-	return std::make_pair(MTreeObject::getUndefinedId(),
+	return std::make_pair(DBObject::getUndefinedId(),
 			      InterpolationModelPtr());
 
       }
@@ -863,7 +730,7 @@ namespace krigcpl {
       std::pair<int, InterpolationModelPtr>
       findBestCoKrigingModelv2(bool                & canInterpolateFlag,
 			       const ResponsePoint & point,
-			       MTree               & krigingModels,
+			       DB                  & krigingModels,
 			       const InterpolationModelFactoryPointer & _modelFactory,
 			       double                tolerance,
 			       double                meanErrorFactor,
@@ -879,7 +746,7 @@ namespace krigcpl {
 	// query the tree for the maxNumberSearchModels closest models
 	//
 
-	std::vector<MTreeSearchResult> searchResults;
+	std::vector<DBSearchResult> searchResults;
 	
 	krigingModels.searchKNN(searchResults,
 				point,
@@ -891,7 +758,7 @@ namespace krigcpl {
 
 	if (searchResults.empty() == true) {
 
-	  return std::make_pair(MTreeObject::getUndefinedId(),
+	  return std::make_pair(DBObject::getUndefinedId(),
 				_modelFactory->build());
 
 	}
@@ -903,8 +770,8 @@ namespace krigcpl {
 	std::map<double, std::pair<int, InterpolationModelPtr> >
 	  krigingModelRanking;
 
-	std::vector<MTreeSearchResult>::const_iterator searchResultsIter;
-	const std::vector<MTreeSearchResult>::const_iterator 
+	std::vector<DBSearchResult>::const_iterator searchResultsIter;
+	const std::vector<DBSearchResult>::const_iterator 
 	  searchResultsEnd = searchResults.end();
 
 	for (searchResultsIter  = searchResults.begin();
@@ -915,20 +782,16 @@ namespace krigcpl {
 	  // get handle to search result
 	  //
 
-	  const MTreeSearchResult & searchResult = *searchResultsIter;
+	  const DBSearchResult & searchResult = *searchResultsIter;
 
 	  //
 	  // get handle to object
 	  //
 
-	  const MTreeKrigingModelObject & mTreeObject = 
-	    dynamic_cast<const MTreeKrigingModelObject &>(searchResult.getDataObject()); 
+	  const DBKrigingModelObject & dbObject = 
+	    dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
 	  
-	  //
-	  // 
-	  //
-
-	  InterpolationModelPtr krigingModel = mTreeObject.getModel();
+	  InterpolationModelPtr krigingModel = dbObject.getModel();
 
 	  //
 	  // skip invalid model
@@ -938,7 +801,7 @@ namespace krigcpl {
 	    continue;
 
 	  //
-	  // compute error predicted by mTreeObject
+	  // compute error predicted by dbObject
 	  //
 
 	  const double errorEstimate = checkError(krigingModel,
@@ -947,7 +810,7 @@ namespace krigcpl {
 						  meanErrorFactor);
 
 	  if (errorEstimate <= tolerance*tolerance)
-	    return std::make_pair(mTreeObject.getObjectId(),
+	    return std::make_pair(dbObject.getObjectId(),
 				  krigingModel);
 
 	  //
@@ -955,7 +818,7 @@ namespace krigcpl {
 	  //
 
 	  const std::pair<int, InterpolationModelPtr>
-	    krigingModelPair = std::make_pair(mTreeObject.getObjectId(),
+	    krigingModelPair = std::make_pair(dbObject.getObjectId(),
 					      krigingModel);
 
 	  krigingModelRanking.insert(std::make_pair(errorEstimate,
@@ -971,11 +834,11 @@ namespace krigcpl {
 	// (empty) model is returned
 	//
 
-	const MTreeKrigingModelObject & mTreeObject = 
-	  dynamic_cast<const MTreeKrigingModelObject &>(searchResults[0].getDataObject()); 
+	const DBKrigingModelObject & dbObject = 
+	  dynamic_cast<const DBKrigingModelObject &>(searchResults[0].getDataObject()); 
 
-	return std::make_pair(mTreeObject.getObjectId(),
-			      mTreeObject.getModel());
+	return std::make_pair(dbObject.getObjectId(),
+			      dbObject.getModel());
 
 
 	//	return (*krigingModelRanking.begin()).second;
@@ -1033,7 +896,7 @@ namespace krigcpl {
 	// return an empty model
 	//
 
-	return std::make_pair(MTreeObject::getUndefinedId(),
+	return std::make_pair(DBObject::getUndefinedId(),
 			      InterpolationModelPtr());
 
       }
@@ -1041,7 +904,7 @@ namespace krigcpl {
       std::pair<int, InterpolationModelPtr>
       findBestCoKrigingModel(bool                & canInterpolateFlag,
 			     const ResponsePoint & point,
-			     MTree               & krigingModels,
+			     DB                  & krigingModels,
 			     double                tolerance,
 			     double                meanErrorFactor,
 			     double                maxQueryPointModelDistance,
@@ -1050,15 +913,11 @@ namespace krigcpl {
 			     int                   valueDimension)
       {
 
-	typedef std::list<MTreeSearchResult> SearchResultContainer;
-	//typedef std::vector<MTreeSearchResult> SearchResultContainer;
-
 #ifdef HAVE_PKG_libprof
 
 	ProfileBegin("findBest");
 
 #endif // HAVE_PKG_libprof
-
 
 	canInterpolateFlag = false;
 
@@ -1066,7 +925,7 @@ namespace krigcpl {
 	// query the tree for the maxNumberSearchModels closest models
 	//
 
-	std::vector<MTreeSearchResult> searchResults; // SearchResultContainer searchResults;
+	std::vector<DBSearchResult> searchResults; // SearchResultContainer searchResults;
 
 	krigingModels.searchKNN(searchResults,
 				point,
@@ -1088,7 +947,7 @@ namespace krigcpl {
 	
 #endif // HAVE_PKG_libprof
 
-	  return std::make_pair(MTreeObject::getUndefinedId(),
+	  return std::make_pair(DBObject::getUndefinedId(),
 				InterpolationModelPtr());
 
 	}
@@ -1101,8 +960,8 @@ namespace krigcpl {
 	// std::map<double, std::pair<int, InterpolationModelPtr> >
 	//   krigingModelRanking;
 
-	std::vector<MTreeSearchResult>::const_iterator searchResultsIter;
-	const std::vector<MTreeSearchResult>::const_iterator 
+	std::vector<DBSearchResult>::const_iterator searchResultsIter;
+	const std::vector<DBSearchResult>::const_iterator 
 	  searchResultsEnd = searchResults.end();
 	// SearchResultContainer::const_iterator searchResultsIter;
 	// const SearchResultContainer::const_iterator searchResultsEnd =
@@ -1116,20 +975,16 @@ namespace krigcpl {
 	  // get handle to search result
 	  //
 
-	  const MTreeSearchResult & searchResult = *searchResultsIter;
+	  const DBSearchResult & searchResult = *searchResultsIter;
 
 	  //
 	  // get handle to object
 	  //
 
-	  const MTreeKrigingModelObject & mTreeObject = 
-	    dynamic_cast<const MTreeKrigingModelObject &>(searchResult.getDataObject()); 
+	  const DBKrigingModelObject & dbObject = 
+	    dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
 	  
-	  //
-	  // 
-	  //
-
-	  InterpolationModelPtr krigingModel = mTreeObject.getModel();
+	  InterpolationModelPtr krigingModel = dbObject.getModel();
 
 	  //
 	  // skip if invalid model
@@ -1148,7 +1003,7 @@ namespace krigcpl {
 	     break;
 
 	  //
-	  // compute error predicted by mTreeObject
+	  // compute error predicted by dbObject
 	  //
 
 	  const double errorEstimate = checkError(krigingModel,
@@ -1165,7 +1020,7 @@ namespace krigcpl {
 #endif // HAVE_PKG_libprof
 
 	    canInterpolateFlag = true;
-	    return std::make_pair(mTreeObject.getObjectId(),
+	    return std::make_pair(dbObject.getObjectId(),
 				  krigingModel);
 
 	  }
@@ -1175,7 +1030,7 @@ namespace krigcpl {
 	  // //
 	  // 
 	  // const std::pair<int, InterpolationModelPtr>
-	  //   krigingModelPair = std::make_pair(mTreeObject.getObjectId(),
+	  //   krigingModelPair = std::make_pair(dbObject.getObjectId(),
 	  // 				      krigingModel);
 	  // 
 	  // krigingModelRanking.insert(std::make_pair(errorEstimate,
@@ -1189,10 +1044,8 @@ namespace krigcpl {
 	// found-return the closest model
 	//
 
-	const MTreeKrigingModelObject & mTreeObject = 
-	  dynamic_cast<const MTreeKrigingModelObject &>(searchResults[0].getDataObject()); 
-	// const MTreeKrigingModelObject & mTreeObject = 
-	//   dynamic_cast<const MTreeKrigingModelObject &>(searchResults.front().getDataObject()); 
+	const DBKrigingModelObject & dbObject = 
+	  dynamic_cast<const DBKrigingModelObject &>(searchResults[0].getDataObject()); 
 
 #ifdef HAVE_PKG_libprof
 
@@ -1201,8 +1054,8 @@ namespace krigcpl {
 #endif // HAVE_PKG_libprof
 
 
-	return std::make_pair(mTreeObject.getObjectId(),
-			      mTreeObject.getModel());
+	return std::make_pair(dbObject.getObjectId(),
+			      dbObject.getModel());
 
       }
 
@@ -1220,11 +1073,6 @@ namespace krigcpl {
 			       double                _meanErrorFactor,
                                double               & errorEstimate)
       {
-
-	//
-	//
-	//
-
 	const double toleranceSqr = _tolerance*_tolerance;
 	
         errorEstimate = 0.;
@@ -1307,10 +1155,6 @@ namespace krigcpl {
 	  
 	}
 	
-	//
-	//
-	//
-
 	return true;
 
       }
@@ -1439,7 +1283,6 @@ namespace krigcpl {
 
 #endif // HAVE_PKG_libprof
 
-
 	for (int iValue = 0; iValue < valueDimension; ++iValue) {
 
 	  //
@@ -1458,7 +1301,6 @@ namespace krigcpl {
 	  //
 
 	  value[iValue] = valueEstimate[0];
-
 	  
 	}
 
@@ -1494,10 +1336,6 @@ namespace krigcpl {
 
 	assert(krigingModel->hasGradient() == true);
 
-	//
-	//
-	//
-
 	for (int iValue = 0; iValue < valueDimension; ++iValue) {
 
 	  //
@@ -1521,7 +1359,6 @@ namespace krigcpl {
 	  
 	  for (int i = 0; i < pointDimension; ++i)
 	    gradient[i*valueDimension + iValue] = valueEstimate[1 + i];
-
 
 	}
 
@@ -1635,7 +1472,7 @@ namespace krigcpl {
       //
 
       void
-      addNewModel(MTree                   & _krigingModelDB,
+      addNewModel(DB                   & _krigingModelDB,
 		  const InterpolationModelFactoryPointer & _modelFactory,
 		  int          & objectId,
 		  const double * pointData,
@@ -1683,19 +1520,19 @@ namespace krigcpl {
 	
 
 	//
-	// instantiate MTreeKrigingModelObject
+	// instantiate DBKrigingModelObject
 	//
 
-	MTreeKrigingModelObject mTreeObject(krigingModel);
+	DBKrigingModelObject dbObject(krigingModel);
 
 	//
 	// insert krigingModel
 	//
 
-	_krigingModelDB.insertObject(mTreeObject,
+	_krigingModelDB.insertObject(dbObject,
 				     point,
 				     0.0);
-	objectId = mTreeObject.getObjectId();
+	objectId = dbObject.getObjectId();
 	
 	//
 	//
@@ -1764,10 +1601,6 @@ namespace krigcpl {
 	mtl::scale(centerMass, 
 		   1.0/points.size());
 	
-	//
-	//
-	//
-    
 	return centerMass;
 
       }
@@ -1777,94 +1610,10 @@ namespace krigcpl {
       //
 
       inline void
-      outputKrigingModelStats(std::ostream          & outputStream,
-			      const mtreedb::MTree  & _krigingModelDB,
-			      int                     maxKrigingModelSize)
+      outputKrigingModelStats(std::ostream & outputStream,
+			      const DB  & _krigingModelDB,
+			      int          maxKrigingModelSize)
       {
-	
-	return;
-
-      }
-
-      //
-      // print mtree db stats
-      //
-
-      void
-      outputMTreeStats(std::ostream   & outputStream,
-		       mtreedb::MTree & _krigingModelDB)
-      {
-
-	//
-	// calculate statistics 
-	//
-
-	_krigingModelDB.calculateLevelStatistics();
-	
-	//
-	// print all tree statistics
-	//
-
-	//_krigingModelDB.printAllTreeStatistics(outputStream);
-
-	//
-	// get number of levels
-	//
-
-	const int numberLevels = _krigingModelDB.getNumberLevels();
-
-	//
-	// output levels
-	//
-
-	for (int i = 0; i < numberLevels; ++i) {
-
-	  //
-	  // output level number
-	  //
-
-	  outputStream << "Level " << i << std::endl;
-
-	  //
-	  // get level stats
-	  //
-
-	  const MTreeLevelStatistic * levelStats = 
-	    _krigingModelDB.getLevelStatistics(i);
-
-	  //
-	  // get number of nodes at this level
-	  //
-
-	  const int numberNodes = levelStats->getNumberNodesOnLevel();
-
-	  //
-	  // iterate over nodes on this level
-	  //
-
-	  outputStream << "Node   Number entries   Number data leaf nodes"
-		       << std::endl;
-
-	  for (int iNode = 0; iNode < numberNodes; ++iNode) {
-
-	    //
-	    // get node stat
-	    //
-
-	    const MTreeNodeStat & nodeStat = levelStats->getNodeStat(iNode);
-
-	    //
-	    // output 
-	    //
-	    
-	    outputStream << iNode << " "
-			 << nodeStat.getNumberEntries() << " "
-			 << nodeStat.getTotalNumberDataObjectsInSubtree() << " "
-			 << std::endl;
-	  
-	  }	  
-
-	}
 	
 	return;
 
@@ -1875,7 +1624,7 @@ namespace krigcpl {
       //
 
       std::pair<int, int>
-      initializeModelDBFromFile(mtreedb::MTree    & _krigingModelDB,
+      initializeModelDBFromFile(DB              & _krigingModelDB,
 				const InterpolationModelFactoryPointer & _modelFactory,
 				const std::string & directoryName,
 				const std::string & prefix)
@@ -2015,16 +1764,16 @@ namespace krigcpl {
 
 	    
 	    //
-	    // instantiate MTreeKrigingModelObject
+	    // instantiate DBKrigingModelObject
 	    //
 	    
-	    MTreeKrigingModelObject mTreeObject(krigingModelPtr);
+	    DBKrigingModelObject dbObject(krigingModelPtr);
 	    
 	    //
 	    // insert model
 	    //
 
-	    _krigingModelDB.insertObject(mTreeObject,
+	    _krigingModelDB.insertObject(dbObject,
 					 point,
 					 0.0);
 
@@ -2061,136 +1810,137 @@ namespace krigcpl {
 
       void
       outputKrigingModelPositionData(const std::string & fileName,
-				     mtreedb::MTree    & _krigingModelDB)
+				     DB                & _krigingModelDB)
       {
+         if (typeid(_krigingModelDB) == typeid(MTree)) {
 
-	//
-	// make sure that the tree has been properly intialized; at
-	// the moment the only way to do this is to check the number
-	// of levels
-	//
+            //
+            // make sure that the tree has been properly intialized; at
+            // the moment the only way to do this is to check the number
+            // of levels
+            //
 
-	if (_krigingModelDB.getNumberLevels() == 0)
- 	  return;
+            if (((MTree&)_krigingModelDB).getNumberLevels() == 0)
+               return;
 
-	//
-	// open output stream
-	//
+            //
+            // open output stream
+            //
 
-	std::ofstream outputStream(fileName.c_str());
+            std::ofstream outputStream(fileName.c_str());
 	
-	//
-	// we rely here on MTree stats
-	//
+            //
+            // we rely here on MTree stats
+            //
 
-	_krigingModelDB.calculateLevelStatistics();
+            ((MTree&)_krigingModelDB).calculateLevelStatistics();
 
-	//
-	// get stats for level 0 (leaf nodes)
-	//
+            //
+            // get stats for level 0 (leaf nodes)
+            //
 
-	const mtreedb::MTreeLevelStatistic * mtreeStats =
-	  _krigingModelDB.getLevelStatistics(0);
+            const MTreeLevelStatistic * mtreeStats =
+               ((MTree&)_krigingModelDB).getLevelStatistics(0);
 
-	//
-	// get number of leaf nodes
-	//
+            //
+            // get number of leaf nodes
+            //
 
-	const int numberLeafNodes = mtreeStats->getNumberNodesOnLevel();
+            const int numberLeafNodes = mtreeStats->getNumberNodesOnLevel();
 	
-	//
-	// iterate over leaf nodes
-	//
+            //
+            // iterate over leaf nodes
+            //
 
-	for (int iNode = 0; iNode < numberLeafNodes; ++iNode) {
+            for (int iNode = 0; iNode < numberLeafNodes; ++iNode) {
 	  
-	  //
-	  // get handle to node stat
-	  //
+               //
+               // get handle to node stat
+               //
 
-	  const MTreeNodeStat & leafNodeStat = mtreeStats->getNodeStat(iNode);
+               const MTreeNodeStat & leafNodeStat = mtreeStats->getNodeStat(iNode);
 	 
-	  //
-	  // get handle to data objects
-	  //
+               //
+               // get handle to data objects
+               //
 
-	  const std::vector<int> & krigingModelObjectIds = 
-	    leafNodeStat.getDataObjectIds();
+               const std::vector<int> & krigingModelObjectIds = 
+                  leafNodeStat.getDataObjectIds();
 
-	  //
-	  // iterate over data object Ids
-	  //
+               //
+               // iterate over data object Ids
+               //
 
-	  std::vector<int>::const_iterator krigingModelObjectIdsEnd = 
-	    krigingModelObjectIds.end();
-	  std::vector<int>::const_iterator krigingModelObjectIdsIter;
+               std::vector<int>::const_iterator krigingModelObjectIdsEnd = 
+                  krigingModelObjectIds.end();
+               std::vector<int>::const_iterator krigingModelObjectIdsIter;
 
-	  for (krigingModelObjectIdsIter  = krigingModelObjectIds.begin();
-	       krigingModelObjectIdsIter != krigingModelObjectIdsEnd;
-	       ++krigingModelObjectIdsIter) {
+               for (krigingModelObjectIdsIter  = krigingModelObjectIds.begin();
+                    krigingModelObjectIdsIter != krigingModelObjectIdsEnd;
+                    ++krigingModelObjectIdsIter) {
 
-	    //
-	    // get pointer to the MTreeObject
-	    //
+                  //
+                  // get pointer to the MTreeObject
+                  //
 
-	    const mtreedb::MTreeObjectPtr mTreeObjectPtr = 
-	      _krigingModelDB.getObject(*krigingModelObjectIdsIter);
+                  const DBObjectPtr dbObjectPtr = 
+                     ((MTree&)_krigingModelDB).getObject(*krigingModelObjectIdsIter);
 
-	    //
-	    // get handle to the underlying MTreeKrigingModelObject
-	    //
+                  //
+                  // get handle to the underlying DBKrigingModelObject
+                  //
 
-	    const MTreeKrigingModelObject & mTreeObject = 
-	      dynamic_cast<const MTreeKrigingModelObject &>(*mTreeObjectPtr);
+                  const DBKrigingModelObject & dbObject = 
+                     dynamic_cast<const DBKrigingModelObject &>(*dbObjectPtr);
 
-	    //
-	    // get pointer to the kriging model
-	    //
+                  //
+                  // get pointer to the kriging model
+                  //
 
-	    const InterpolationModelPtr krigingModel = mTreeObject.getModel();
+                  const InterpolationModelPtr krigingModel = dbObject.getModel();
 
-	    //
-	    // compute center of the kriging model
-	    //
+                  //
+                  // compute center of the kriging model
+                  //
 
-	    const Point modelCenter = getModelCenterMass(*krigingModel);
+                  const Point modelCenter = getModelCenterMass(*krigingModel);
 
-	    //
-	    // output model center
-	    //
+                  //
+                  // output model center
+                  //
 	    
-	    outputStream << modelCenter;
+                  outputStream << modelCenter;
+                  
+               }
+            }
+         }
+         else {
 
-	  }
+            // Need to figure out how to generalize this to work
+            // with databases other than MTree
 
+         }
 
-	}
-
-	//
-	//
-	//
-
-	return;
+         return;
 	
       }
-
     }
 
     //
     // construction/destruction
     //
 
-    KrigingInterpolationDataBase::KrigingInterpolationDataBase(int pointDimension,
-							       int valueDimension,
-							       const InterpolationModelFactoryPointer  & modelFactory,
-							       int    maxKrigingModelSize,
-							       int    maxNumberSearchModels,
-							       bool   useHint,
-							       double meanErrorFactor,
-							       double tolerance,
-							       double maxQueryPointModelDistance,
-							       int    agingThreshold,
-							       const std::string & mtreeDirectoryName)
+    KrigingInterpolationDBDataBase::KrigingInterpolationDBDataBase(int pointDimension,
+                                                                   int valueDimension,
+                                                                   const InterpolationModelFactoryPointer  & modelFactory,
+                                                                   DB&    db,
+                                                                   int    maxKrigingModelSize,
+                                                                   int    maxNumberSearchModels,
+                                                                   bool   useHint,
+                                                                   double meanErrorFactor,
+                                                                   double tolerance,
+                                                                   double maxQueryPointModelDistance,
+                                                                   int    agingThreshold )
       : InterpolationDataBase(pointDimension,
 			      valueDimension),
 	_modelFactory(modelFactory),
@@ -2200,93 +1950,63 @@ namespace krigcpl {
 	_meanErrorFactor(meanErrorFactor),
 	_tolerance(tolerance),
 	_maxQueryPointModelDistance(maxQueryPointModelDistance),
-	_krigingModelDB("kriging_model_database",
-			&(std::cout),
-			false),
+        _krigingModelDB(db),
 	_numberKrigingModels(0),
 	_numberPointValuePairs(0),
 	_agingThreshold(agingThreshold)
     {
 
-      //
-      // construct kriging model tree database
-      //
-
-      _krigingModelDB.initializeCreate(mtreeDirectoryName + "/" 
-				       "kriging_model_database",
-				       "krigcpl",
-				       *(new MTreeKrigingModelObjectFactory));
-      
-      _krigingModelDB.setMaxNodeEntries(12);
-     
       return;
       
     }
 
-    KrigingInterpolationDataBase::KrigingInterpolationDataBase(int pointDimension,
-							       int valueDimension,
-							       const InterpolationModelFactoryPointer  & modelFactory,
-							       int    maxKrigingModelSize,
-							       int    maxNumberSearchModels,
-							       bool   useHint,
-							       double meanErrorFactor,
-							       double tolerance,
-							       double maxQueryPointModelDistance,
-							       int    agingThreshold,
-							       const std::string & mtreeDirectoryName,
-							       const std::string & fileName)
-      : InterpolationDataBase(pointDimension,
-			      valueDimension,
-			      fileName),
-	_modelFactory(modelFactory),
-	_maxKrigingModelSize(maxKrigingModelSize),
-	_maxNumberSearchModels(maxNumberSearchModels),
-	_useHint(useHint),
-	_meanErrorFactor(meanErrorFactor),
-	_tolerance(tolerance),
-	_maxQueryPointModelDistance(maxQueryPointModelDistance),
-	_krigingModelDB("kriging_model_database",
-			&(std::cout),
-			false),
-	_numberKrigingModels(0),
-	_numberPointValuePairs(0),
-	_agingThreshold(agingThreshold)
+    KrigingInterpolationDBDataBase::KrigingInterpolationDBDataBase(int pointDimension,
+                                                                   int valueDimension,
+                                                                   const InterpolationModelFactoryPointer  & modelFactory,
+                                                                   DB&    db,
+                                                                   int    maxKrigingModelSize,
+                                                                   int    maxNumberSearchModels,
+                                                                   bool   useHint,
+                                                                   double meanErrorFactor,
+                                                                   double tolerance,
+                                                                   double maxQueryPointModelDistance,
+                                                                   int    agingThreshold,
+                                                                   const std::string & directoryName,
+                                                                   const std::string & fileName)
+       : InterpolationDataBase(pointDimension,
+                               valueDimension,
+                               fileName),
+         _modelFactory(modelFactory),
+         _maxKrigingModelSize(maxKrigingModelSize),
+         _maxNumberSearchModels(maxNumberSearchModels),
+         _useHint(useHint),
+         _meanErrorFactor(meanErrorFactor),
+         _tolerance(tolerance),
+         _maxQueryPointModelDistance(maxQueryPointModelDistance),
+         _krigingModelDB(db),
+         _numberKrigingModels(0),
+         _numberPointValuePairs(0),
+         _agingThreshold(agingThreshold)
     {
 
-      //
-      // construct kriging model tree database
-      //
+       const std::pair<int, int> kriginigModelsStats =
+          initializeModelDBFromFile(_krigingModelDB,
+                                    _modelFactory,
+                                    directoryName,
+                                    fileName);
 
-      _krigingModelDB.initializeCreate(mtreeDirectoryName + "/" 
-				       "kriging_model_database",
-				       "krigcpl",
-				       *(new MTreeKrigingModelObjectFactory));
+       _numberKrigingModels   += kriginigModelsStats.first;
+       _numberPointValuePairs += kriginigModelsStats.second;
 
-      _krigingModelDB.setMaxNodeEntries(12);
-
-
-      const std::pair<int, int> kriginigModelsStats =
-	initializeModelDBFromFile(_krigingModelDB,
-				  _modelFactory,
-				  mtreeDirectoryName,
-				  fileName);
-
-      _numberKrigingModels   += kriginigModelsStats.first;
-      _numberPointValuePairs += kriginigModelsStats.second;
-
-//       _krigingModelDB.initializeOpen(fileName,
-//  				     "krigcpl",
-//  				     *(new MTreeKrigingModelObjectFactory));
+       //       _krigingModelDB.initializeOpen(fileName,
+       //  				     "krigcpl",
+       //  				     *(new MTreeKrigingModelObjectFactory));
       
-      //
-      //
-      //
-     
-      return;
+       return;
       
     }
 
-    KrigingInterpolationDataBase::~KrigingInterpolationDataBase()
+    KrigingInterpolationDBDataBase::~KrigingInterpolationDBDataBase()
     {
 
       return;
@@ -2298,11 +2018,11 @@ namespace krigcpl {
     //
 
     bool
-    KrigingInterpolationDataBase::interpolate(double            * value,
-					      int               & hint,
-					      const double      * point,
-					      std::vector<bool> & flags,
-                                              double            & error_estimate)
+    KrigingInterpolationDBDataBase::interpolate(double            * value,
+                                                int               & hint,
+                                                const double      * point,
+                                                std::vector<bool> & flags,
+                                                double            & error_estimate)
     {
 
       //
@@ -2338,21 +2058,21 @@ namespace krigcpl {
       //
 
       if (_useHint &&
-	  hint != MTreeObject::getUndefinedId()) {
+	  hint != DBObject::getUndefinedId()) {
 	
-	const mtreedb::MTreeObjectPtr mTreeObjectPtr = 
+	const DBObjectPtr dbObjectPtr = 
 	  _krigingModelDB.getObject(hint);
 
-	if (mTreeObjectPtr == NULL) {
+	if (dbObjectPtr == NULL) {
 
 	  flags[LOST_HINT_FLAG] = true;
 
 	} else {
 
-	  const MTreeKrigingModelObject & mTreeObject = 
-	    dynamic_cast<const MTreeKrigingModelObject &>(*mTreeObjectPtr);
+	  const DBKrigingModelObject & dbObject = 
+	    dynamic_cast<const DBKrigingModelObject &>(*dbObjectPtr);
 	  const InterpolationModelPtr hintKrigingModel = 
-	    mTreeObject.getModel();
+	    dbObject.getModel();
 	
 	  //
 	  // check if can interpolate; need a valid model for this
@@ -2400,7 +2120,6 @@ namespace krigcpl {
       // Find closest kriging model.
       //
 
-
       if (_maxNumberSearchModels == 1) {
 
 #ifdef HAVE_PKG_libprof
@@ -2423,7 +2142,7 @@ namespace krigcpl {
 	// if no kriging model is available return
 	//
 
-	if (hint == MTreeObject::getUndefinedId() || 
+	if (hint == DBObject::getUndefinedId() || 
 	    closestKrigingModel->isValid() == false) {
 
 #ifdef HAVE_PKG_libprof
@@ -2502,7 +2221,7 @@ namespace krigcpl {
 
 	}
 
-// 	if (hint == MTreeObject::getUndefinedId())
+// 	if (hint == DBObject::getUndefinedId())
 // 	  return false;
 	
 	//
@@ -2511,9 +2230,9 @@ namespace krigcpl {
 
 #if 0
 	krigcpl::interpolate(value,
-					 bestKrigingModel,
-					 queryPoint,
-					 valueDimension);
+                             bestKrigingModel,
+                             queryPoint,
+                             valueDimension);
 #else
  	return checkErrorAndInterpolate(value,
  					bestKrigingModel,
@@ -2545,12 +2264,12 @@ namespace krigcpl {
     }
 
     bool 
-    KrigingInterpolationDataBase::interpolate(double            * value,
-					      double            * gradient,
-					      int               & hint,
-					      const double      * point,
-					      std::vector<bool> & flags,
-                                              double            & error_estimate)
+    KrigingInterpolationDBDataBase::interpolate(double            * value,
+                                                double            * gradient,
+                                                int               & hint,
+                                                const double      * point,
+                                                std::vector<bool> & flags,
+                                                double            & error_estimate)
     {
 
       //
@@ -2585,21 +2304,21 @@ namespace krigcpl {
       //
 
       if (_useHint &&
-	  hint != MTreeObject::getUndefinedId()) {
+	  hint != DBObject::getUndefinedId()) {
 	
-	const mtreedb::MTreeObjectPtr mTreeObjectPtr = 
+         const DBObjectPtr dbObjectPtr = 
 	  _krigingModelDB.getObject(hint); 
 
-	if (mTreeObjectPtr == NULL) {
+	if (dbObjectPtr == NULL) {
 
 	  flags[LOST_HINT_FLAG] = true;
 
 	} else {
     
-	  const MTreeKrigingModelObject & mTreeObject = 
-	    dynamic_cast<const MTreeKrigingModelObject &>(*mTreeObjectPtr);
+	  const DBKrigingModelObject & dbObject = 
+	    dynamic_cast<const DBKrigingModelObject &>(*dbObjectPtr);
 	  const InterpolationModelPtr hintKrigingModel = 
-	    mTreeObject.getModel();
+	    dbObject.getModel();
 	  
 	  //
 	  // check the distance between hintKrigingModel and point
@@ -2616,14 +2335,14 @@ namespace krigcpl {
 	  
 	    const bool hintModelSuccess = 
 	      checkErrorAndInterpolate(value,
-	    			     gradient,
-	    			     hintKrigingModel,
-	    			     queryPoint,
-	    			     pointDimension,
-	    			     valueDimension,
-	    			     _tolerance,
-                                     _meanErrorFactor,
-                                     error_estimate);
+                                       gradient,
+                                       hintKrigingModel,
+                                       queryPoint,
+                                       pointDimension,
+                                       valueDimension,
+                                       _tolerance,
+                                       _meanErrorFactor,
+                                       error_estimate);
 	    
 // 	    if (hintModelSuccess == true)
 // 	      std::cout << "hint success" << std::endl;
@@ -2664,7 +2383,7 @@ namespace krigcpl {
 	// if no kriging model is available return
 	//
 
-	if (hint == MTreeObject::getUndefinedId()) {
+	if (hint == DBObject::getUndefinedId()) {
 
 #ifdef HAVE_PKG_libprof
 
@@ -2744,7 +2463,7 @@ namespace krigcpl {
 
 	}
 
-// 	if (hint == MTreeObject::getUndefinedId())
+// 	if (hint == DBObject::getUndefinedId())
 // 	  return false;
 	
 	//
@@ -2792,14 +2511,14 @@ namespace krigcpl {
     //
 
     bool
-    KrigingInterpolationDataBase::interpolate(double            * value,
-					      const int         * hintList,
-					      int                 numberHints, 
-					      int                 oVIndexForMin, 
-					      int                & hintUsed,
-					      const double       * point,
-					      std::vector<bool>  & flags,
-                                              double             & error_estimate)
+    KrigingInterpolationDBDataBase::interpolate(double            * value,
+                                                const int         * hintList,
+                                                int                 numberHints, 
+                                                int                 oVIndexForMin, 
+                                                int                & hintUsed,
+                                                const double       * point,
+                                                std::vector<bool>  & flags,
+                                                double             & error_estimate)
     {
 #if DEBUG
        std::cout << "foobar" << std::endl;
@@ -2848,21 +2567,21 @@ namespace krigcpl {
 
       for (int iHint = 0; iHint < numberHints; ++iHint) {
 
-	if (hintList[iHint] != MTreeObject::getUndefinedId()) {
+	if (hintList[iHint] != DBObject::getUndefinedId()) {
 	
-	  const mtreedb::MTreeObjectPtr mTreeObjectPtr = 
+	  const DBObjectPtr dbObjectPtr = 
 	    _krigingModelDB.getObject(hintList[iHint]);
 	  
-	  if (mTreeObjectPtr == NULL) {
+	  if (dbObjectPtr == NULL) {
 
 	    flags[LOST_HINT_FLAG] = true;
 
 	  } else {
 
-	    const MTreeKrigingModelObject & mTreeObject = 
-	      dynamic_cast<const MTreeKrigingModelObject &>(*mTreeObjectPtr);
+	    const DBKrigingModelObject & dbObject = 
+	      dynamic_cast<const DBKrigingModelObject &>(*dbObjectPtr);
 	    const InterpolationModelPtr hintKrigingModel = 
-	      mTreeObject.getModel();
+	      dbObject.getModel();
 	
 	  
 	    const bool hintModelSuccess = 
@@ -2951,7 +2670,7 @@ namespace krigcpl {
 	// if no kriging model is available return
 	//
 
-	if (hintUsed == MTreeObject::getUndefinedId()) {
+	if (hintUsed == DBObject::getUndefinedId()) {
 
 #ifdef HAVE_PKG_libprof
 
@@ -3031,7 +2750,7 @@ namespace krigcpl {
 
 	}
 
-// 	if (hintUsed == MTreeObject::getUndefinedId())
+// 	if (hintUsed == DBObject::getUndefinedId())
 // 	  return false;
 	
 	//
@@ -3088,15 +2807,15 @@ namespace krigcpl {
     //
 
     bool 
-    KrigingInterpolationDataBase::interpolate(double            * value,
-					      double            * gradient,
-					      const int         * hintList,
-					      int                 numberHints, 
-					      int                 oVIndexForMin, 
-					      int                & hintUsed,
-					      const double       * point,
-					      std::vector<bool>  & flags,
-                                              double             & error_estimate )
+    KrigingInterpolationDBDataBase::interpolate(double            * value,
+                                                double            * gradient,
+                                                const int         * hintList,
+                                                int                 numberHints, 
+                                                int                 oVIndexForMin, 
+                                                int                & hintUsed,
+                                                const double       * point,
+                                                std::vector<bool>  & flags,
+                                                double             & error_estimate )
     {
 #if DEBUG
       std::cout << "foobar" << std::endl;
@@ -3147,21 +2866,21 @@ namespace krigcpl {
 
       for (int iHint = 0; iHint < numberHints; ++iHint) {
 
-	if (hintList[iHint] != MTreeObject::getUndefinedId()) {
+	if (hintList[iHint] != DBObject::getUndefinedId()) {
 	
-	  const mtreedb::MTreeObjectPtr mTreeObjectPtr = 
+	  const DBObjectPtr dbObjectPtr = 
 	    _krigingModelDB.getObject(hintList[iHint]);
 	  
-	  if (mTreeObjectPtr == NULL) {
+	  if (dbObjectPtr == NULL) {
 
 	    flags[LOST_HINT_FLAG] = true;
 
 	  } else {
 
-	    const MTreeKrigingModelObject & mTreeObject = 
-	      dynamic_cast<const MTreeKrigingModelObject &>(*mTreeObjectPtr);
+	    const DBKrigingModelObject & dbObject = 
+	      dynamic_cast<const DBKrigingModelObject &>(*dbObjectPtr);
 	    const InterpolationModelPtr hintKrigingModel = 
-	      mTreeObject.getModel();
+	      dbObject.getModel();
 	
 	  
 	    const bool hintModelSuccess = 
@@ -3259,7 +2978,7 @@ namespace krigcpl {
 	// if no kriging model is available return
 	//
 
-	if (hintUsed == MTreeObject::getUndefinedId()) {
+	if (hintUsed == DBObject::getUndefinedId()) {
 
 #ifdef HAVE_PKG_libprof
 
@@ -3342,7 +3061,7 @@ namespace krigcpl {
 
 	}
 
-// 	if (hintUsed == MTreeObject::getUndefinedId())
+// 	if (hintUsed == DBObject::getUndefinedId())
 // 	  return false;
 	
 	//
@@ -3350,11 +3069,11 @@ namespace krigcpl {
 	//
 	
 	krigcpl::interpolate(value,
-					 gradient,
-					 bestKrigingModel,
-					 queryPoint,
-					 pointDimension,
-					 valueDimension);
+                             gradient,
+                             bestKrigingModel,
+                             queryPoint,
+                             pointDimension,
+                             valueDimension);
 
 // 	const bool interpolationSuccess = 
 // 	  checkErrorAndInterpolate(value,
@@ -3398,11 +3117,11 @@ namespace krigcpl {
     }
 
     double
-    KrigingInterpolationDataBase::interpolateSpecificModel(double            * value,
-                                                           double            * gradient,
-                                                           int               & model,
-                                                           const double      * point,
-                                                           std::vector<bool> & flags)
+    KrigingInterpolationDBDataBase::interpolateSpecificModel(double            * value,
+                                                             double            * gradient,
+                                                             int               & model,
+                                                             const double      * point,
+                                                             std::vector<bool> & flags)
     {
        double errorEstimate;
 
@@ -3433,15 +3152,15 @@ namespace krigcpl {
        const ResponsePoint queryPoint(pointDimension,
                                       point);
 
-       if (model == MTreeObject::getUndefinedId()) {
+       if (model == DBObject::getUndefinedId()) {
           cout << "Undefined model passed to adaptive sampler" << endl;
           exit(1);
        }
 
-       const mtreedb::MTreeObjectPtr mTreeObjectPtr = 
+       const DBObjectPtr dbObjectPtr = 
           _krigingModelDB.getObject(model); 
 
-       if (mTreeObjectPtr == NULL) {
+       if (dbObjectPtr == NULL) {
 
           cout << "Couldn't find model in kriging interpolation database " << endl;
           exit(1);
@@ -3450,10 +3169,10 @@ namespace krigcpl {
 
        } else {
     
-          const MTreeKrigingModelObject & mTreeObject = 
-             dynamic_cast<const MTreeKrigingModelObject &>(*mTreeObjectPtr);
+          const DBKrigingModelObject & dbObject = 
+             dynamic_cast<const DBKrigingModelObject &>(*dbObjectPtr);
           const InterpolationModelPtr hintKrigingModel = 
-             mTreeObject.getModel();
+             dbObject.getModel();
 	  
           assert(hintKrigingModel->hasGradient() == true);
 
@@ -3504,11 +3223,11 @@ namespace krigcpl {
     //
 
     void 
-    KrigingInterpolationDataBase::insert(int               & hint,
-					 const double      * point,
-					 const double      * value,
-					 const double      * gradient,
-					 std::vector<bool> & flags)
+    KrigingInterpolationDBDataBase::insert(int               & hint,
+                                           const double      * point,
+                                           const double      * value,
+                                           const double      * gradient,
+                                           std::vector<bool> & flags)
     {
 
       //
@@ -3549,7 +3268,7 @@ namespace krigcpl {
       // check if the list of kriging models in non-empty
       //
 
-      if (hint == MTreeObject::getUndefinedId()) {
+      if (hint == DBObject::getUndefinedId()) {
 	
 	//
 	// create and add new model
@@ -3576,11 +3295,11 @@ namespace krigcpl {
 	// get a handle to the right kriging model
 	//
 
-	mtreedb::MTreeObjectPtr mTreeObjectPtr = 
+	DBObjectPtr dbObjectPtr = 
 	  _krigingModelDB.getObject(hint);
-	MTreeKrigingModelObject & mTreeObject = 
-	  dynamic_cast<MTreeKrigingModelObject &>(*mTreeObjectPtr);
-	InterpolationModelPtr krigingModel = mTreeObject.getModel();
+	DBKrigingModelObject & dbObject = 
+	  dynamic_cast<DBKrigingModelObject &>(*dbObjectPtr);
+	InterpolationModelPtr krigingModel = dbObject.getModel();
 
 	//
 	// check the size of the model; if the next point would put
@@ -3665,9 +3384,9 @@ namespace krigcpl {
 	    const ResponsePoint centerMassRP(pointDimension,
 					     &(centerMass[0]));
 	    
-	    MTreeKrigingModelObject mTreeObject(krigingModel);
+	    DBKrigingModelObject dbObject(krigingModel);
 	    
-	    _krigingModelDB.insertObject(mTreeObject,
+	    _krigingModelDB.insertObject(dbObject,
 					 centerMassRP,
 					 0.0);
 	  } else {
@@ -3709,27 +3428,19 @@ namespace krigcpl {
 
 #endif // HAVE_PKG_libprof      
       
-      //
-      // 
-      //
-
       return;
 
     }
 
-    //
-    //
-    //
-
     void 
-    KrigingInterpolationDataBase::insert(int               & hintUsed,
-					 const double      * point,
-					 const double      * value,
-					 const double      * gradient,
-					 const int         * hintList,
-					 int                 numberHints,
-					 bool                forceInsert,
-					 std::vector<bool> & flags)
+    KrigingInterpolationDBDataBase::insert(int               & hintUsed,
+                                           const double      * point,
+                                           const double      * value,
+                                           const double      * gradient,
+                                           const int         * hintList,
+                                           int                 numberHints,
+                                           bool                forceInsert,
+                                           std::vector<bool> & flags)
     {
 #if DEBUG
        std::cout << "foobar" << std::endl;
@@ -3753,7 +3464,7 @@ namespace krigcpl {
       // initialize hintUsed
       //
 
-      hintUsed = MTreeObject::getUndefinedId();
+      hintUsed = DBObject::getUndefinedId();
 
       //
       // update number of point/value pairs
@@ -3795,10 +3506,6 @@ namespace krigcpl {
 	
 	flags[MODEL_NEW_START_FLAG] = true;
 	
-	//
-	//
-	//
-
 	return;
 
       }
@@ -3815,17 +3522,17 @@ namespace krigcpl {
 	// make sure hint is valid
 	//
 
-	if (currentHint != MTreeObject::getUndefinedId()) {
+	if (currentHint != DBObject::getUndefinedId()) {
 
 	  //
 	  // get a handle to the right kriging model
 	  //
 
-	  mtreedb::MTreeObjectPtr mTreeObjectPtr = 
+	  DBObjectPtr dbObjectPtr = 
 	    _krigingModelDB.getObject(currentHint);
-	  MTreeKrigingModelObject & mTreeObject = 
-	    dynamic_cast<MTreeKrigingModelObject &>(*mTreeObjectPtr);
-	  InterpolationModelPtr krigingModel = mTreeObject.getModel();
+	  DBKrigingModelObject & dbObject = 
+	    dynamic_cast<DBKrigingModelObject &>(*dbObjectPtr);
+	  InterpolationModelPtr krigingModel = dbObject.getModel();
 
 	  //
 	  // check the size of the model; if the next point would put
@@ -3887,9 +3594,9 @@ namespace krigcpl {
 	      const ResponsePoint centerMassRP(pointDimension,
 					       &(centerMass[0]));
 	    
-	      MTreeKrigingModelObject mTreeObject(krigingModel);
+	      DBKrigingModelObject dbObject(krigingModel);
 	    
-	      _krigingModelDB.insertObject(mTreeObject,
+	      _krigingModelDB.insertObject(dbObject,
 					   centerMassRP,
 					   0.0);
 	      
@@ -3940,10 +3647,6 @@ namespace krigcpl {
       
       flags[MODEL_NEW_START_FLAG] = true;
 
-      //
-      //
-      //
-
       return;
 
     }
@@ -3953,7 +3656,7 @@ namespace krigcpl {
     //
 
     int
-    KrigingInterpolationDataBase::getNumberStatistics() const
+    KrigingInterpolationDBDataBase::getNumberStatistics() const
     {
 
       return 2;
@@ -3965,14 +3668,9 @@ namespace krigcpl {
     //
 
     void
-    KrigingInterpolationDataBase::getStatistics(double * stats,
-						int      size) const
+    KrigingInterpolationDBDataBase::getStatistics(double * stats,
+                                                  int      size) const
     {
-
-      //
-      //
-      //
-
       switch(size) {
 
       case 0:
@@ -3990,12 +3688,7 @@ namespace krigcpl {
 
       }
 
-      //
-      //
-      //
-
       return;
-
     }
 
     //
@@ -4003,7 +3696,7 @@ namespace krigcpl {
     //
 
     std::vector<std::string>
-    KrigingInterpolationDataBase::getStatisticsNames() const
+    KrigingInterpolationDBDataBase::getStatisticsNames() const
     {
 
       std::vector<std::string> names;
@@ -4020,9 +3713,8 @@ namespace krigcpl {
     //
 
     void
-    KrigingInterpolationDataBase::printDBStats(std::ostream & outputStream)
+    KrigingInterpolationDBDataBase::printDBStats(std::ostream & outputStream)
     {
-
       //
       // get number of statistics
       //
@@ -4062,11 +3754,10 @@ namespace krigcpl {
 			      _maxKrigingModelSize);
       
       //
-      // output mtree db stats
+      // output db stats
       //
 
-      outputMTreeStats(outputStream,
-		       _krigingModelDB);
+      _krigingModelDB.outputStats(outputStream);
 
       //
       // output positions of all kriging models
@@ -4080,7 +3771,6 @@ namespace krigcpl {
       //
 
       return;
-
     }
 
     //
@@ -4088,10 +3778,15 @@ namespace krigcpl {
     //
 
     void
-    KrigingInterpolationDataBase::swapOutObjects() const
+    KrigingInterpolationDBDataBase::swapOutObjects() const
     {
-
-      _krigingModelDB.writeObjects(KrigingModelChooser(_agingThreshold));
+       if (typeid(_krigingModelDB) == typeid(MTree)) {
+          ((MTree&)_krigingModelDB).writeObjects(KrigingModelChooser(_agingThreshold));
+       }
+       else {
+          // Need to figure out how to generalize this to work
+          // with databases other than MTree
+       }
 
       return;
 
@@ -4102,7 +3797,7 @@ namespace krigcpl {
     //
 
     std::vector<InterpolationModelPtr>
-    KrigingInterpolationDataBase::getKrigingModels(int            numberModels,
+    KrigingInterpolationDBDataBase::getKrigingModels(int            numberModels,
 						   const double * point)
     {
 
@@ -4123,7 +3818,7 @@ namespace krigcpl {
       // query the tree for the numberModels closest models
       //
       
-      std::vector<MTreeSearchResult> searchResults;
+      std::vector<DBSearchResult> searchResults;
       
       _krigingModelDB.searchKNN(searchResults,
 				queryPoint,
@@ -4139,8 +3834,8 @@ namespace krigcpl {
       // iterate over searchResults
       //
 
-      std::vector<MTreeSearchResult>::const_iterator searchResultsIter;
-      const std::vector<MTreeSearchResult>::const_iterator 
+      std::vector<DBSearchResult>::const_iterator searchResultsIter;
+      const std::vector<DBSearchResult>::const_iterator 
 	searchResultsEnd = searchResults.end();
       
       for (searchResultsIter  = searchResults.begin();
@@ -4151,20 +3846,16 @@ namespace krigcpl {
 	// get handle to search result
 	//
 
-	const MTreeSearchResult & searchResult = *searchResultsIter;
+	const DBSearchResult & searchResult = *searchResultsIter;
 	
 	//
 	// get handle to object
 	//
 	
-	const MTreeKrigingModelObject & mTreeObject = 
-	  dynamic_cast<const MTreeKrigingModelObject &>(searchResult.getDataObject()); 
+	const DBKrigingModelObject & dbObject = 
+	  dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
 	
-	//
-	// 
-	//
-	
-	InterpolationModelPtr krigingModelPtr = mTreeObject.getModel();
+	InterpolationModelPtr krigingModelPtr = dbObject.getModel();
 	
 	//
 	// store a copy of the model
@@ -4174,10 +3865,6 @@ namespace krigcpl {
 	
       }
 
-      //
-      //
-      //
-      
       return krigingModels;
 
     }
@@ -4187,7 +3874,7 @@ namespace krigcpl {
     //
     
     std::vector<krigalg::InterpolationModelPtr>
-    KrigingInterpolationDataBase::getKrigingModels(double         radius,
+    KrigingInterpolationDBDataBase::getKrigingModels(double         radius,
 						   const double * point)
     {
 
@@ -4208,7 +3895,7 @@ namespace krigcpl {
       // query the tree for the numberModels closest models
       //
       
-      std::list<MTreeSearchResult> searchResults;
+      std::list<DBSearchResult> searchResults;
       
       _krigingModelDB.searchRange(searchResults,
 				  queryPoint,
@@ -4224,8 +3911,8 @@ namespace krigcpl {
       // iterate over searchResults
       //
 
-      std::list<MTreeSearchResult>::const_iterator searchResultsIter;
-      const std::list<MTreeSearchResult>::const_iterator 
+      std::list<DBSearchResult>::const_iterator searchResultsIter;
+      const std::list<DBSearchResult>::const_iterator 
 	searchResultsEnd = searchResults.end();
       
       for (searchResultsIter  = searchResults.begin();
@@ -4236,20 +3923,16 @@ namespace krigcpl {
 	// get handle to search result
 	//
 
-	const MTreeSearchResult & searchResult = *searchResultsIter;
+	const DBSearchResult & searchResult = *searchResultsIter;
 	
 	//
 	// get handle to object
 	//
 	
-	const MTreeKrigingModelObject & mTreeObject = 
-	  dynamic_cast<const MTreeKrigingModelObject &>(searchResult.getDataObject()); 
+	const DBKrigingModelObject & dbObject = 
+	  dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
 	
-	//
-	// 
-	//
-	
-	InterpolationModelPtr krigingModelPtr = mTreeObject.getModel();
+	InterpolationModelPtr krigingModelPtr = dbObject.getModel();
 	
 	//
 	// store a copy of the model
@@ -4259,14 +3942,7 @@ namespace krigcpl {
 	
       }
 
-      //
-      //
-      //
-
       return krigingModels;
 
     }
-
 }
-
-

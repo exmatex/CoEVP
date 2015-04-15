@@ -1,4 +1,4 @@
-// DO-NOT-DELETE revisionify.begin() 
+/* DO-NOT-DELETE revisionify.begin() */
 /*
 
                             Copyright (c) 2014.
@@ -61,58 +61,123 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-// DO-NOT-DELETE revisionify.end() 
+/* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreeSearchQueue.cc
-// Package:     MTree database
+// File:        ResponsePoint.I
+// Package:     kriging coupler
 // 
 // 
 // 
-// Description: Utility class used in MTree searches
+// Description: Representation of point where response is calculated.
 //
 
-#ifndef included_MTreeSearchQueue_C
-#define included_MTreeSearchQueue_C
+#ifdef DEBUG_CHECK_ASSERTIONS
+#ifndef included_cassert
+#define included_cassert
+#include <cassert>
+#endif
+#endif
 
-#include "MTreeSearchQueue.h"
+#ifndef included_mtl_mtl
+#define included_mtl_mtl
+#include <mtl/mtl.h>
+#endif
 
 #ifdef DEBUG_NO_INLINE
-#include "MTreeSearchQueue.I"
+#define inline
 #endif
 
-/*
-*************************************************************************
-*                                                                       *
-* Member functions for MTreeSearchQueue class.                          *
-*                                                                       *
-*************************************************************************
-*/
+namespace krigcpl {
 
-MTreeSearchQueue::~MTreeSearchQueue()
+inline 
+ResponsePoint::ResponsePoint()
+: 
+MetricSpacePoint(), 
+krigalg::Point()
 {
-   d_queue.clear();
 }
 
-void MTreeSearchQueue::insert(MTreeSearchNode& node)
+inline 
+ResponsePoint::ResponsePoint(int dimension)
+: 
+MetricSpacePoint(), 
+krigalg::Point(dimension)
 {
-   if ( d_queue.empty() ) {
-      d_queue.push_front(node);
-   } else {
-      list<MTreeSearchNode>::iterator it(d_queue.begin());
-      while ( (it != d_queue.end()) && 
-              ((*it).d_bound < node.d_bound) ) {
-         ++it;
-      }
-      if ( it == d_queue.end() ) {
-         d_queue.push_back(node);
-      } else {
-         d_queue.insert(it, node); 
-      }
-   }  
 }
 
+inline
+ResponsePoint::ResponsePoint(int dimension, double value)
+:
+MetricSpacePoint(),
+krigalg::Point(dimension, value)
+{
+}
+
+inline
+ResponsePoint::ResponsePoint(int            dimension,
+                             const double * coordinates)
+  :
+  MetricSpacePoint(),
+  krigalg::Point(dimension, coordinates)
+{
+}
+
+inline
+ResponsePoint::ResponsePoint(const ResponsePoint& response_pt)
+:
+MetricSpacePoint(),
+krigalg::Point(response_pt.size())
+{
+   mtl::copy(response_pt, *this);
+}
+
+inline
+ResponsePoint::~ResponsePoint()
+{
+}
+
+inline
+MetricSpacePointPtr ResponsePoint::makeCopy() const
+{
+   return( MetricSpacePointPtr( new ResponsePoint(*this) ) );
+}
+
+inline
+double ResponsePoint::distance(const ResponsePoint& other_pt) const
+{
+   return( krigalg::distance( *this, other_pt ) );
+}
+
+inline
+double ResponsePoint::computeDistanceTo(
+   const MetricSpacePoint& other_pt) const
+{
+   const ResponsePoint* t_other = 
+      dynamic_cast< const ResponsePoint* >(&other_pt);
+#ifdef DEBUG_CHECK_ASSERTIONS
+   assert(t_other); 
+#endif
+   return( distance(*t_other) );
+}
+
+inline
+ostream& operator<< (ostream& stream, const ResponsePoint& point)
+{
+   stream << static_cast<krigalg::Point>(point);
+   return( stream );
+}
+
+inline
+ostream& ResponsePoint::print(ostream& stream) const
+{
+   stream << *this;
+   return( stream );
+}
+
+#ifdef DEBUG_NO_INLINE
+#undef inline
 #endif
 
-
+}
 
 

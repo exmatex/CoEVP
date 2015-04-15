@@ -1,4 +1,4 @@
-// DO-NOT-DELETE revisionify.begin() 
+/* DO-NOT-DELETE revisionify.begin() */
 /*
 
                             Copyright (c) 2014.
@@ -61,58 +61,61 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-// DO-NOT-DELETE revisionify.end() 
+/* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreeSearchQueue.cc
-// Package:     MTree database
+// File:        DBModelObjectFactory.I
+// Package:     kriging coupler
 // 
-// 
-// 
-// Description: Utility class used in MTree searches
+// Revision:    $Revision$
+// Modified:    $Date$
+// Description: DB model object factory
 //
 
-#ifndef included_MTreeSearchQueue_C
-#define included_MTreeSearchQueue_C
+#include "kriging_db/DBKrigingModelObject.h"
 
-#include "MTreeSearchQueue.h"
+namespace krigcpl {
 
-#ifdef DEBUG_NO_INLINE
-#include "MTreeSearchQueue.I"
-#endif
+    //
+    // Constructor.
+    //
 
-/*
-*************************************************************************
-*                                                                       *
-* Member functions for MTreeSearchQueue class.                          *
-*                                                                       *
-*************************************************************************
-*/
+    template <typename T>
+    DBModelObjectFactory<T>::DBModelObjectFactory()
+    {
 
-MTreeSearchQueue::~MTreeSearchQueue()
-{
-   d_queue.clear();
+      return;
+      
+    }
+
+    //
+    // Destructor.
+    //
+
+    template <typename T>
+    DBModelObjectFactory<T>::~DBModelObjectFactory()
+    {
+
+      return;
+
+    }
+
+    //
+    // Allocate object.
+    //
+
+    template <typename T>
+    //    mtreedb::DBObjectPtr 
+    DBObjectPtr 
+    DBModelObjectFactory<T>::allocateObject(toolbox::Database& db) const
+    {
+
+      (void)db;
+      //      mtreedb::DBObjectPtr dummy;
+      DBObjectPtr dummy;
+      return(dummy);
+      
+    }
+
 }
-
-void MTreeSearchQueue::insert(MTreeSearchNode& node)
-{
-   if ( d_queue.empty() ) {
-      d_queue.push_front(node);
-   } else {
-      list<MTreeSearchNode>::iterator it(d_queue.begin());
-      while ( (it != d_queue.end()) && 
-              ((*it).d_bound < node.d_bound) ) {
-         ++it;
-      }
-      if ( it == d_queue.end() ) {
-         d_queue.push_back(node);
-      } else {
-         d_queue.insert(it, node); 
-      }
-   }  
-}
-
-#endif
-
-
 
 

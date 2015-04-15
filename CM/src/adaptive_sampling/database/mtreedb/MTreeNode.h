@@ -7,8 +7,8 @@
 // Description: Representation of node in an MTree.
 //
 
-#ifndef included_mtreedb_MTreeNode
-#define included_mtreedb_MTreeNode
+#ifndef included_MTreeNode
+#define included_MTreeNode
 
 #ifndef included_iostream
 #define included_iostream
@@ -22,22 +22,15 @@ using namespace std;
 using namespace std;
 #endif
 
-//#ifndef included_boost_shared_ptr
-//#define included_boost_shared_ptr
-//#include <boost/shared_ptr.hpp>
-//#endif
-
-#ifndef included_mtreedb_MTreeEntry
+#ifndef included_MTreeEntry
 #include "MTreeEntry.h"
 #endif
 
-namespace mtreedb {
 
 class MTree;
 
 class MTreeNode;
-//typedef boost::shared_ptr<MTreeNode> MTreeNodePtr;
- typedef std::shared_ptr<MTreeNode> MTreeNodePtr;
+typedef std::shared_ptr<MTreeNode> MTreeNodePtr;
 
 /*!
  * @brief MTreeNode represents a node in an MTree.  Each node holds a 
@@ -50,7 +43,7 @@ class MTreeNode;
  * A node is set to be the root node of the MTree by calling the 
  * setRootNode() method with a true boolean value argument.  
  *
- * @see mtreedb::MTreeEntry
+ * @see MTreeEntry
  */
 
 class MTreeNode
@@ -533,7 +526,6 @@ private:
 
 };
 
-}
 #ifndef DEBUG_NO_INLINE
 #include "MTreeNode.I"
 #endif

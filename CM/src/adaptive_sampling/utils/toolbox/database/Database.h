@@ -33,16 +33,11 @@ using namespace std;
 using namespace std;
 #endif
  
-//#ifndef included_boost_shared_ptr
-//#define included_boost_shared_ptr
-//#include <boost/shared_ptr.hpp>
-//#endif
 #include <memory>
  
 namespace toolbox {
  
 class Database;
-//typedef boost::shared_ptr<Database> DatabasePtr;
 typedef std::shared_ptr<Database> DatabasePtr;
  
 /*!

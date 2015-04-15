@@ -63,24 +63,21 @@ Additional BSD Notice
 */
 // DO-NOT-DELETE revisionify.end() 
 //
-// File:        MTreeObject.cc
-// Package:     MTree database
+// File:        DBObject.cc
 // 
 // 
 // 
-// Description: Abstract base class for data objects indexed by an MTree.
+// Description: Abstract base class for database objects.
 //
 
-#ifndef included_mtreedb_MtreeObject_C
-#define included_mtreedb_MTreeObject_C
+#ifndef included_DBObject_C
+#define included_DBObject_C
 
-#include "MTreeObject.h"
+#include "DBObject.h"
 
 #ifdef DEBUG_NO_INLINE
-#include "MTreeObject.I"
+#include "DBObject.I"
 #endif
-
-namespace mtreedb {
 
 /*
 *************************************************************************
@@ -90,9 +87,9 @@ namespace mtreedb {
 *************************************************************************
 */
 
-int MTreeObject::s_undefined_object_id = -1;
+int DBObject::s_undefined_object_id = -1;
 
-int MTreeObject::getUndefinedId()
+int DBObject::getUndefinedId()
 {
    return( s_undefined_object_id );
 }
@@ -100,12 +97,12 @@ int MTreeObject::getUndefinedId()
 /*
 *************************************************************************
 *                                                                       *
-* Dtor for MTreeObject class.                                           * 
+* Dtor for DBObject class.                                           * 
 *                                                                       *
 *************************************************************************
 */
 
-MTreeObject::~MTreeObject()
+DBObject::~DBObject()
 {
 }
 
@@ -118,13 +115,12 @@ MTreeObject::~MTreeObject()
 *************************************************************************
 */
 
-void MTreeObject::writeToDatabase(toolbox::Database& db) const
+void DBObject::writeToDatabase(toolbox::Database& db) const
 {
    db.putInteger("d_object_id", d_object_id);
    putToDatabase(db);
 }
 
-}
 #endif
 
 

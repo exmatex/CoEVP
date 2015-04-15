@@ -82,15 +82,13 @@ Additional BSD Notice
 #include "toolbox/base/Utilities.h"
 #endif
 
-#ifndef included_mtreedb_MTree
+#ifndef included_MTree
 #include "MTree.h"
 #endif
 
 #ifdef DEBUG_NO_INLINE
 #define inline
 #endif
-
-namespace mtreedb {
 
 /*
 *************************************************************************
@@ -252,8 +250,6 @@ void MTreeNode::setLeafNodeId(int id)
    d_leaf_node_id = id;
 }
 
-
-}
 
 #ifdef DEBUG_NO_INLINE
 #undef inline

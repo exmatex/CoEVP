@@ -71,16 +71,14 @@ Additional BSD Notice
 // Description: Utility class used in MTree searches
 //
 
-#ifndef included_mtreedb_MTreeSearchNode_C
-#define included_mtreedb_MTreeSearchNode_C
+#ifndef included_MTreeSearchNode_C
+#define included_MTreeSearchNode_C
 
 #include "MTreeSearchNode.h"
 
 #ifdef DEBUG_NO_INLINE
 #include "MTreeSearchNode.I"
 #endif
-
-namespace mtreedb {
 
 /*
 *************************************************************************
@@ -95,7 +93,6 @@ MTreeSearchNode::~MTreeSearchNode()
 }
 
 
-}
 #endif
 
 

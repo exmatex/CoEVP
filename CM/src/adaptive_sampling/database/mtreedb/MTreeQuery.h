@@ -7,17 +7,15 @@
 // Description: Utility class used in MTree searches
 //
 
-#ifndef included_mtreedb_MTreeQuery
-#define included_mtreedb_MTreeQuery
+#ifndef included_MTreeQuery
+#define included_MTreeQuery
 
-#ifndef included_mtreedb_MTreePoint
-#include "MTreePoint.h"
+#ifndef included_MetricSpacePoint
+#include <base/MetricSpacePoint.h>
 #endif
-#ifndef included_mtreedb_MTreeEntry
+#ifndef included_MTreeEntry
 #include "MTreeEntry.h"
 #endif
-
-namespace mtreedb {
 
 class MTree;
 
@@ -37,7 +35,7 @@ public:
     * (no error checking), sets grade to zero, and caches
     * pointer to MTree (for statistics gathering).
     */
-   MTreeQuery(MTreePointPtr query_point,
+   MTreeQuery(MetricSpacePointPtr query_point,
               double query_radius,
               MTree* tree);
 
@@ -54,7 +52,7 @@ public:
    /*!
     * Return query point. 
     */
-   MTreePointPtr getPoint() const;
+   MetricSpacePointPtr getPoint() const;
 
    /*!
     * Return query grade. 
@@ -87,13 +85,12 @@ private:
    MTreeQuery();
    void operator=(const MTreeQuery&);
    
-   MTreePointPtr   d_query_point;
+   MetricSpacePointPtr   d_query_point;
    double          d_radius;
    double          d_grade;
    MTree*          d_tree;
 };
 
-}
 #ifndef DEBUG_NO_INLINE
 #include "MTreeQuery.I"
 #endif

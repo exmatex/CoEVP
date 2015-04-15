@@ -1,4 +1,4 @@
-/* DO-NOT-DELETE revisionify.begin() */
+// DO-NOT-DELETE revisionify.begin() 
 /*
 
                             Copyright (c) 2014.
@@ -61,15 +61,19 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-/* DO-NOT-DELETE revisionify.end() */
+// DO-NOT-DELETE revisionify.end() 
 //
-// File:        ResponsePoint.I
-// Package:     kriging coupler
+// File:        MetricSpacePoint.cc
 // 
 // 
 // 
-// Description: Representation of point where response is calculated.
+// Description: Abstract base class for points that represent entries in a metric space.
 //
+
+#ifndef included_MetricSpacePoint_C
+#define included_MetricSpacePoint_C
+
+#include "MetricSpacePoint.h"
 
 #ifdef DEBUG_CHECK_ASSERTIONS
 #ifndef included_cassert
@@ -78,106 +82,35 @@ Additional BSD Notice
 #endif
 #endif
 
-#ifndef included_mtl_mtl
-#define included_mtl_mtl
-#include <mtl/mtl.h>
-#endif
-
 #ifdef DEBUG_NO_INLINE
-#define inline
+#include "MetricSpacePoint.I"
 #endif
 
-namespace krigcpl {
+/*
+*************************************************************************
+*                                                                       *
+* Initialization, set/unset functions for static members.               *
+*                                                                       *
+*************************************************************************
+*/
 
-inline 
-ResponsePoint::ResponsePoint()
-: 
-mtreedb::MTreePoint(), 
-krigalg::Point()
+double MetricSpacePoint::s_max_distance = 999999.0;
+
+double MetricSpacePoint::getMaxDistance() 
 {
+   return(s_max_distance);
 }
 
-inline 
-ResponsePoint::ResponsePoint(int dimension)
-: 
-mtreedb::MTreePoint(), 
-krigalg::Point(dimension)
+void MetricSpacePoint::setMaxDistance(double max_dist)
 {
-}
-
-inline
-ResponsePoint::ResponsePoint(int dimension, double value)
-:
-mtreedb::MTreePoint(),
-krigalg::Point(dimension, value)
-{
-}
-
-inline
-ResponsePoint::ResponsePoint(int            dimension,
-                             const double * coordinates)
-  :
-  mtreedb::MTreePoint(),
-  krigalg::Point(dimension, coordinates)
-{
-}
-
-inline
-ResponsePoint::ResponsePoint(const ResponsePoint& response_pt)
-:
-mtreedb::MTreePoint(),
-krigalg::Point(response_pt.size())
-{
-   mtl::copy(response_pt, *this);
-}
-
-inline
-ResponsePoint::~ResponsePoint()
-{
-}
-
-inline
-mtreedb::MTreePointPtr ResponsePoint::makeCopy() const
-{
-   return( mtreedb::MTreePointPtr( new ResponsePoint(*this) ) );
-}
-
-inline
-double ResponsePoint::distance(const ResponsePoint& other_pt) const
-{
-   return( krigalg::distance( *this, other_pt ) );
-}
-
-inline
-double ResponsePoint::computeDistanceTo(
-   const mtreedb::MTreePoint& other_pt) const
-{
-   const ResponsePoint* t_other = 
-      dynamic_cast< const ResponsePoint* >(&other_pt);
 #ifdef DEBUG_CHECK_ASSERTIONS
-   assert(t_other); 
+   assert(max_dist > 0.0);
 #endif
-   return( distance(*t_other) );
+   s_max_distance = max_dist;
 }
 
-inline
-ostream& operator<< (ostream& stream, const ResponsePoint& point)
-{
-   stream << static_cast<krigalg::Point>(point);
-   return( stream );
-}
-
-inline
-ostream& ResponsePoint::print(ostream& stream) const
-{
-   stream << *this;
-   return( stream );
-}
-
-#ifdef DEBUG_NO_INLINE
-#undef inline
 #endif
 
-}
+
 
 

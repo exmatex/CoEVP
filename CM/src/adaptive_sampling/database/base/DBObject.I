@@ -63,17 +63,12 @@ Additional BSD Notice
 */
 /* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreeDataStore.I
-// Package:     MTree database
+// File:        DBObject.I
 // 
 // 
 // 
-// Description: Manager class for MTree node allocation and storage of data objects.
+// Description: Abstract base class for database objects
 //
-
-#ifndef included_MTreeNode
-#include "MTreeNode.h"
-#endif
 
 #ifdef DEBUG_NO_INLINE
 #define inline
@@ -82,231 +77,55 @@ Additional BSD Notice
 /*
 *************************************************************************
 *                                                                       *
-* Inline method to check initialization status of data store.           *
+* Default ctor for database object base class.                          *
 *                                                                       *
 *************************************************************************
 */
 
-inline
-bool MTreeDataStore::isInitialized() const
+inline 
+DBObject::DBObject()
+:  d_object_id( DBObject::getUndefinedId() )
 {
-   return( d_is_initialized );
 }
 
 /*
 *************************************************************************
 *                                                                       *
-* Inline methods for private leaf node info utility class.              *
+* Default virtual print method.                                         *
 *                                                                       *
 *************************************************************************
 */
 
 inline
-MTreeDataStore::LeafNodeInfo::LeafNodeInfo(MTreeNodePtr node) 
-:
-   d_node_ptr(node),
-   d_in_file(false),
-   d_in_memory(false)
+ostream& DBObject::print(ostream& stream) const
 {
-   d_object_ids.reserve( node->getMaxEntries() );
-}
-
-inline
-MTreeDataStore::LeafNodeInfo::~LeafNodeInfo()
-{
-   d_node_ptr.reset();
-   d_object_ids.clear();
-}
-
-inline
-MTreeNodePtr MTreeDataStore::LeafNodeInfo::getNode() const 
-{ 
-   return d_node_ptr; 
-}
-
-inline
-vector<int>& MTreeDataStore::LeafNodeInfo::getObjectIds() 
-{
-   return d_object_ids; 
-}
-
-inline 
-void MTreeDataStore::LeafNodeInfo::setInFile(bool value) 
-{ 
-   d_in_file = value; 
-}
-
-inline 
-bool MTreeDataStore::LeafNodeInfo::getInFile() const 
-{ 
-   return d_in_file; 
-}
-
-inline 
-void MTreeDataStore::LeafNodeInfo::setInMemory(bool value) 
-{ 
-   d_in_memory = value; 
-}
-
-inline 
-bool MTreeDataStore::LeafNodeInfo::getInMemory() const 
-{ 
-   return d_in_memory; 
-}
-
-
-/*
-*************************************************************************
-*                                                                       *
-* Inline methods for private data object info utility class.            *
-*                                                                       *
-*************************************************************************
-*/
-
-inline
-MTreeDataStore::ObjectInfo::ObjectInfo(DBObjectPtr object)
-:
-   d_object_ptr(object),
-   d_owner_leaf_node_id( MTreeNode::getUndefinedId() ),
-   d_owner_leaf_node_entry_position(-1),
-   d_in_file(false),
-   d_in_memory(false),
-   d_object_file_index(-1)
-{
-}
-
-inline
-MTreeDataStore::ObjectInfo::~ObjectInfo()
-{
-   d_object_ptr.reset();
-}
-
-inline
-DBObjectPtr MTreeDataStore::ObjectInfo::getObject() const 
-{ 
-   return d_object_ptr; 
-}
-
-inline 
-void MTreeDataStore::ObjectInfo::resetObjectPtr() 
-{ 
-   d_object_ptr.reset(); 
-}
-
-inline 
-void MTreeDataStore::ObjectInfo::setObjectPtr(DBObjectPtr obj) 
-{ 
-   d_object_ptr = obj; 
-}
-
-inline 
-void MTreeDataStore::ObjectInfo::setOwnerLeafNodeInfo(
-   int leaf_node_id,
-   int entry_position) 
-{ 
-   d_owner_leaf_node_id = leaf_node_id; 
-   d_owner_leaf_node_entry_position = entry_position; 
-}
-
-inline 
-int MTreeDataStore::ObjectInfo::getOwnerLeafNodeId() const 
-{ 
-   return d_owner_leaf_node_id; 
-}
-
-inline
-int MTreeDataStore::ObjectInfo::getOwnerLeafNodeEntryPosition() const
-{
-   return d_owner_leaf_node_entry_position;
-}
-
-inline 
-void MTreeDataStore::ObjectInfo::setInFile(bool value) 
-{ 
-   d_in_file = value; 
-}
-
-inline 
-bool MTreeDataStore::ObjectInfo::getInFile() const 
-{ 
-   return d_in_file; 
-}
-
-inline 
-void MTreeDataStore::ObjectInfo::setInMemory(bool value) 
-{ 
-   d_in_memory = value; 
-}
-
-inline 
-bool MTreeDataStore::ObjectInfo::getInMemory() const 
-{ 
-   return d_in_memory; 
-}
-
-inline 
-void MTreeDataStore::ObjectInfo::setFileIndex(int index) 
-{ 
-   d_object_file_index = index; 
-}
-
-inline 
-int MTreeDataStore::ObjectInfo::getFileIndex() const 
-{ 
-   return d_object_file_index; 
+   stream << "No printClassData method supplied for derived DBObject class." << endl;
+   stream << "d_object_id = " << d_object_id << endl;
+   return(stream);
 }
 
 /*
 *************************************************************************
 *                                                                       *
-* Inline methods for private object file info utility class.            *
+* Accessory functions to get and set object identifier.                 *
 *                                                                       *
 *************************************************************************
 */
 
 inline
-MTreeDataStore::ObjectFileInfo::ObjectFileInfo(const string& file_name) 
-:
-   d_file_name(file_name)
+int DBObject::getObjectId() const
 {
-   d_object_ids.reserve( MTREE_DATA_STORE_OBJECT_FILE_CAPACITY );
+   return( d_object_id );
 }
 
 inline
-MTreeDataStore::ObjectFileInfo::~ObjectFileInfo()
+void DBObject::setObjectId(int id)
 {
-   d_object_ids.clear();
-}
-
-inline
-void MTreeDataStore::ObjectFileInfo::addObjectId(int object_id)
-{
-   d_object_ids.push_back(object_id);
-}
-
-inline
-const string& MTreeDataStore::ObjectFileInfo::getFileName() const 
-{ 
-   return d_file_name; 
-}
-
-inline
-const vector<int>& 
-MTreeDataStore::ObjectFileInfo::getObjectIds() const 
-{ 
-   return d_object_ids;
-}
-
-inline 
-bool MTreeDataStore::ObjectFileInfo::fileIsEmpty() const
-{ 
-   return( d_object_ids.empty() );
-}
-
-inline 
-bool MTreeDataStore::ObjectFileInfo::fileIsFull() const
-{ 
-   return( d_object_ids.size() == d_object_ids.capacity() );
+#ifdef DEBUG_CHECK_ASSERTIONS
+   assert(d_object_id == DBObject::getUndefinedId());
+   assert(id >= 0);
+#endif
+   d_object_id = id;
 }
 
 
