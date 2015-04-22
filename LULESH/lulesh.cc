@@ -67,7 +67,8 @@ Additional BSD Notice
 #include <stdlib.h>
 #include <sstream>
 
-#if defined(COEVP_MPI)
+// #if defined(COEVP_MPI)
+#if 1
 #include <mpi.h>
 #endif
 
@@ -75,7 +76,7 @@ Additional BSD Notice
 #include <omp.h>
 #endif
 
-#define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
+#define VISIT_DATA_INTERVAL 100  // Set this to 0 to disable VisIt data writing
 #undef USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
@@ -600,10 +601,10 @@ void CommRecv(Domain *domain, int msgType, Index_t xferFields,
    /* assume communication to 6 neighbors by default */
    planeMin = planeMax = true ;
 
-   if (domain->planeLoc == 0) {
+   if (domain->sliceLoc == 0) {
       planeMin = false ;
    }
-   if (domain->planeLoc == (domain->tp-1)) {
+   if (domain->sliceLoc == (domain->numSlices-1)) {
       planeMax = false ;
    }
 
@@ -654,10 +655,10 @@ void CommSend(Domain *domain, int msgType,
    bool packable ;
    /* assume communication to 6 neighbors by default */
    planeMin = planeMax = true ;
-   if (domain->planeLoc == 0) {
+   if (domain->sliceLoc == 0) {
       planeMin = false ;
    }
-   if (domain->planeLoc == (domain->tp-1)) {
+   if (domain->sliceLoc == (domain->numSlices-1)) {
       planeMax = false ;
    }
 
@@ -763,10 +764,10 @@ void CommSBN(Domain *domain, int xferFields, Real_t **fieldData) {
    Index_t planeMin, planeMax ;
    /* assume communication to 6 neighbors by default */
    planeMin = planeMax = 1 ;
-   if (domain->planeLoc == 0) {
+   if (domain->sliceLoc == 0) {
       planeMin = 0 ;
    }
-   if (domain->planeLoc == (domain->tp-1)) {
+   if (domain->sliceLoc == (domain->numSlices-1)) {
       planeMax = 0 ;
    }
 
@@ -825,10 +826,10 @@ void CommSyncPosVel(Domain *domain) {
    bool planeMin, planeMax ;
    /* assume communication to 6 neighbors by default */
    planeMin = planeMax = true ;
-   if (domain->planeLoc == 0) {
+   if (domain->sliceLoc == 0) {
       planeMin = false ;
    }
-   if (domain->planeLoc == (domain->tp-1)) {
+   if (domain->sliceLoc == (domain->numSlices-1)) {
       planeMax = false ;
    }
 
@@ -892,10 +893,10 @@ void CommMonoQ(Domain *domain)
    bool planeMin, planeMax ;
    /* assume communication to 6 neighbors by default */
    planeMin = planeMax = true ;
-   if (domain->planeLoc == 0) {
+   if (domain->sliceLoc == 0) {
       planeMin = false ;
    }
-   if (domain->planeLoc == (domain->tp-1)) {
+   if (domain->sliceLoc == (domain->numSlices-1)) {
       planeMax = false ;
    }
 
@@ -3748,7 +3749,7 @@ void DumpSAMI(Domain *domain, char *name)
    double *nodeCoord ;
 
    if ((fp = DBCreate(name, DB_CLOBBER, DB_LOCAL,
-                  NULL, DB_PDB)) == NULL)
+                  NULL, DB_HDF5X)) == NULL)
    {
       printf("Couldn't create file %s\n", name) ;
       exit(-1) ;
@@ -3853,15 +3854,15 @@ int main(int argc, char *argv[])
    Index_t edgeElems = 16 ;
    Index_t edgeNodes = edgeElems+1 ;
 
-   Index_t zBegin, zEnd ;
+   Index_t xBegin, xEnd ;
    // Real_t ds = Real_t(1.125)/Real_t(edgeElems) ; /* may accumulate roundoff */
    Real_t tx, ty, tz ;
    Index_t nidx, zidx ;
    Index_t domElems ;
 
 
-#if defined(COEVP_MPI)
-
+// #if defined(COEVP_MPI)
+#if 1
    Index_t chunkSize ;
    Index_t remainder ;
 
@@ -3876,6 +3877,7 @@ int main(int argc, char *argv[])
       MPI_Abort(MPI_COMM_WORLD, -1) ;
    }
 
+#if 0
    if (MAX_FIELDS_PER_MPI_COMM > CACHE_COHERENCE_PAD_REAL) {
       printf("corner element comm buffers too small.  Fix code.\n") ;
       MPI_Abort(MPI_COMM_WORLD, -1) ;
@@ -3886,33 +3888,29 @@ int main(int argc, char *argv[])
       MPI_Abort(MPI_COMM_WORLD, -1) ;
    }
 
-   domain->planeLoc = myRank ;
-   domain->tp = numRanks ;
+   domain->sliceLoc = myRank ;
+   domain->numSlices = numRanks ;
+#endif
 
-   chunkSize = nx / numRanks ;
-   remainder = nx % numRanks ;
+   chunkSize = gheightElems / numRanks ;
+   remainder = gheightElems % numRanks ;
    if (myRank < remainder) {
-      zBegin = (chunkSize+1)*myRank ;
-      zEnd = zBegin + (chunkSize+1) ;
+      xBegin = (chunkSize+1)*myRank ;
+      xEnd = xBegin + (chunkSize+1) ;
    }
    else {
-      zBegin = (chunkSize+1)*remainder + (myRank - remainder)*chunkSize ;
-      zEnd = zBegin + chunkSize ;
+      xBegin = (chunkSize+1)*remainder + (myRank - remainder)*chunkSize ;
+      xEnd = xBegin + chunkSize ;
    }
-   domain->sizeX = edgeElems ;
-   domain->sizeY = edgeElems ;
-   domain->sizeZ = zEnd - zBegin ;
-   domain->numElem = domain->sizeX*domain->sizeY*domain->sizeZ ;
+// domain->sizeX = xEnd - xBegin ;
 
-   domain->numNode = (domain->sizeX+1)*(domain->sizeY+1)*(domain->sizeZ+1) ;
-
-   domElems = domain->numElem ;
-   Index_t domNodes = domain->numNode ;
-   int heightElems = domain->sizeZ ;
+   int heightElems = xEnd - xBegin ;
 
 #else
 
    int heightElems = gheightElems ;
+   xBegin = 0 ;
+   xEnd = heightElems ;
 
 #endif
 
@@ -4009,8 +4007,8 @@ int main(int argc, char *argv[])
    for (Index_t plane=0; plane<coreNodes; ++plane) {
       ty = Real_t(0.) ;
       for (Index_t row=0; row<coreNodes; ++row) {
-         tx = Real_t(0.) ;
-         for (Index_t col=0; col<heightNodes; ++col) {
+         tx = domain_length[0]*Real_t(xBegin)/Real_t(edgeNodes) ;
+         for (Index_t col=xBegin; col<(xEnd+1); ++col) {
             domain.x(nidx) = tx ;
             domain.y(nidx) = ty ;
             domain.z(nidx) = tz ;
@@ -4051,9 +4049,9 @@ int main(int argc, char *argv[])
                Real_t(row+1 - coreNodes)/Real_t(wingNodes) /* wing distance */
                );
 
-         tx = Real_t(0.) ;
+         tx = domain_length[0]*Real_t(xBegin)/Real_t(edgeNodes) ;
 
-         for (Index_t col=0; col<heightNodes; ++col) {
+         for (Index_t col=xBegin; col<(xEnd+1); ++col) {
             domain.x(nidx) = tx ;
             domain.y(nidx) = ty ;
             domain.z(nidx) = tz ;
@@ -4091,9 +4089,9 @@ int main(int argc, char *argv[])
                Real_t(plane+1-coreNodes)/Real_t(wingNodes)    /* wing dist */
               ) ;
 
-         tx = Real_t(0.) ;
+         tx = domain_length[0]*Real_t(xBegin)/Real_t(edgeNodes) ;
 
-         for (Index_t col=0; col<heightNodes; ++col) {
+         for (Index_t col=xBegin; col<(xEnd+1); ++col) {
             domain.x(nidx) = tx ;
             domain.y(nidx) = ty ;
             domain.z(nidx) = tz ;
@@ -4218,6 +4216,17 @@ int main(int argc, char *argv[])
    for (Index_t i=0; i<domElems; ++i) {
       domain.matElemlist(i) = i ;
    }
+
+   char name[100] ;
+// #if defined(COEVP_MPI)
+#if 1
+   sprintf(name, "checkConn%d.sami", myRank) ;
+#else
+   sprintf(name, "checkConn.sami") ;
+#endif
+
+   DumpSAMI(&domain, name) ;
+   exit(0) ;
    
    /* initialize material parameters */
    //   domain.dtfixed() = Real_t(-1.0e-7) ;
