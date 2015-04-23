@@ -65,6 +65,7 @@ Additional BSD Notice
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sstream>
 
 // #if defined(COEVP_MPI)
@@ -365,7 +366,15 @@ public:
    Index_t&  numElem()            { return m_numElem ; }
    Index_t&  numNode()            { return m_numNode ; }
 
-#if defined(COEVP_MPI)
+// #if defined(COEVP_MPI)
+#if 1
+
+   Index_t&  commElems()          { return m_commElems ; }
+   Index_t&  commNodes()          { return m_commNodes ; }
+   Index_t&  maxPlaneSize()       { return m_maxPlaneSize ; }
+
+   Index_t&  numSlices()          { return m_numSlices ; }
+   Index_t&  sliceLoc()           { return m_sliceLoc ; }
 
    /* Communication Work space */
 
@@ -509,6 +518,17 @@ private:
 
    Index_t   m_numElem ;         /* Elements/Nodes in this domain */
    Index_t   m_numNode ;
+
+// #if defined(COEVP_MPI)
+#if 1
+   Index_t   m_commElems ;       /* communicated elements per plane */
+   Index_t   m_commNodes ;       /* communicated nodes per plane */
+   Index_t   m_maxPlaneSize ;    /* maximum communicated bytes per plane */
+
+   Index_t   m_numSlices ;       /* number of MPI Ranks */
+   Index_t   m_sliceLoc ;        /* myRank */
+#endif
+
 } domain ;
 
 
@@ -556,7 +576,8 @@ void Release(T **ptr)
 #define ZETA_P_FREE 0x1000
 #define ZETA_P_COMM 0x2000
 
-#if defined(COEVP_MPI)
+// #if defined(COEVP_MPI)
+#if 1
 
 /* Assume 128 byte coherence */
 /* Assume Real_t is an "integral power of 2" bytes wide */
@@ -570,6 +591,8 @@ void Release(T **ptr)
 /* Comm Routines */
 
 #define MAX_FIELDS_PER_MPI_COMM 6
+
+#endif
 
 #define MSG_COMM_SBN      1024
 #define MSG_SYNC_POS_VEL  2048
@@ -587,24 +610,24 @@ void Release(T **ptr)
 
 /* doRecv flag only works with regular block structure */
 void CommRecv(Domain *domain, int msgType, Index_t xferFields,
-              Index_t dx, Index_t dy, Index_t dz, bool doRecv, bool planeOnly) {
+              Index_t size, bool doRecv) {
 
-   if (domain->numRanks == 1) return ;
+   if (domain->numSlices() == 1) return ;
 
    /* post recieve buffers for all incoming messages */
-   int myRank ;
-   Index_t maxPlaneComm = xferFields * domain->maxPlaneSize ;
+   int myRank = domain->sliceLoc() ;
+   Index_t maxPlaneComm = xferFields * domain->maxPlaneSize() ;
    Index_t pmsg = 0 ; /* plane comm msg */
    MPI_Datatype baseType = ((sizeof(Real_t) == 4) ? MPI_FLOAT : MPI_DOUBLE) ;
    bool planeMin, planeMax ;
 
-   /* assume communication to 6 neighbors by default */
+   /* assume communication to 2 neighbors by default */
    planeMin = planeMax = true ;
 
-   if (domain->sliceLoc == 0) {
+   if (domain->sliceLoc() == 0) {
       planeMin = false ;
    }
-   if (domain->sliceLoc == (domain->numSlices-1)) {
+   if (domain->sliceLoc() == (domain->numSlices()-1)) {
       planeMax = false ;
    }
 
@@ -612,15 +635,13 @@ void CommRecv(Domain *domain, int msgType, Index_t xferFields,
       domain->recvRequest[i] = MPI_REQUEST_NULL ;
    }
 
-   MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
-
    /* post receives */
 
    /* receive data from neighboring domain faces */
-   if (planeMin && doRecv) {
+   if (planeMin) {
       /* contiguous memory */
       int fromRank = myRank - 1 ;
-      int recvCount = dx * dy * xferFields ;
+      int recvCount = size * xferFields ;
       MPI_Irecv(&domain->commDataRecv[pmsg * maxPlaneComm],
                 recvCount, baseType, fromRank, msgType,
                 MPI_COMM_WORLD, &domain->recvRequest[pmsg]) ;
@@ -629,13 +650,15 @@ void CommRecv(Domain *domain, int msgType, Index_t xferFields,
    if (planeMax) {
       /* contiguous memory */
       int fromRank = myRank + 1 ;
-      int recvCount = dx * dy * xferFields ;
+      int recvCount = size * xferFields ;
       MPI_Irecv(&domain->commDataRecv[pmsg * maxPlaneComm],
                 recvCount, baseType, fromRank, msgType,
                 MPI_COMM_WORLD, &domain->recvRequest[pmsg]) ;
       ++pmsg ;
    }
 }
+
+#if defined(COEVP_MPI)
 
 void CommSend(Domain *domain, int msgType,
               Index_t xferFields, Real_t **fieldData,
@@ -646,7 +669,7 @@ void CommSend(Domain *domain, int msgType,
 
    /* post recieve buffers for all incoming messages */
    int myRank ;
-   Index_t maxPlaneComm = xferFields * domain->maxPlaneSize ;
+   Index_t maxPlaneComm = xferFields * domain.maxPlaneSize() ;
    Index_t pmsg = 0 ; /* plane comm msg */
    MPI_Datatype baseType = ((sizeof(Real_t) == 4) ? MPI_FLOAT : MPI_DOUBLE) ;
    MPI_Status status[2] ;
@@ -754,7 +777,7 @@ void CommSBN(Domain *domain, int xferFields, Real_t **fieldData) {
    /* or we could try out kahan summation! */
 
    int myRank ;
-   Index_t maxPlaneComm = xferFields * domain->maxPlaneSize ;
+   Index_t maxPlaneComm = xferFields * domain.maxPlaneSize() ;
    Index_t pmsg = 0 ; /* plane comm msg */
    Index_t dx = domain->sizeX + 1 ;
    Index_t dy = domain->sizeY + 1 ;
@@ -816,7 +839,7 @@ void CommSyncPosVel(Domain *domain) {
    bool doRecv = false ;
    Index_t xferFields = 6 ; /* x, y, z, xd, yd, zd */
    Real_t *fieldData[6] ;
-   Index_t maxPlaneComm = xferFields * domain->maxPlaneSize ;
+   Index_t maxPlaneComm = xferFields * domain.maxPlaneSize() ;
    Index_t pmsg = 0 ; /* plane comm msg */
    Index_t dx = domain->sizeX + 1 ;
    Index_t dy = domain->sizeY + 1 ;
@@ -883,7 +906,7 @@ void CommMonoQ(Domain *domain)
    int myRank ;
    Index_t xferFields = 3 ; /* delv_xi, delv_eta, delv_zeta */
    Real_t *fieldData[3] ;
-   Index_t maxPlaneComm = xferFields * domain->maxPlaneSize ;
+   Index_t maxPlaneComm = xferFields * domain.maxPlaneSize() ;
    Index_t pmsg = 0 ; /* plane comm msg */
    Index_t dx = domain->sizeX ;
    Index_t dy = domain->sizeY ;
@@ -1933,7 +1956,7 @@ static inline void CalcForceForNodes()
 
   CommRecv(domain, MSG_COMM_SBN, 3,
            domain->sizeX + 1, domain->sizeY + 1, domain->sizeZ + 1,
-           true, false) ;
+           true) ;
 #endif
 
   for (Index_t i=0; i<numNode; ++i) {
@@ -2038,7 +2061,7 @@ void LagrangeNodal()
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
   CommRecv(domain, MSG_SYNC_POS_VEL, 6,
            domain->sizeX + 1, domain->sizeY + 1, domain->sizeZ + 1,
-           false, false) ;
+           false) ;
 #endif
 
   CalcAccelerationForNodes();
@@ -2769,7 +2792,7 @@ void CalcQForElems()
 
    CommRecv(domain, MSG_MONOQ, 3,
             domain->sizeX, domain->sizeY, domain->sizeZ,
-            true, true) ;
+            true) ;
 #endif
 
    /* Calculate velocity gradients */
@@ -3313,7 +3336,7 @@ void LagrangeLeapFrog()
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_LATE)
    CommRecv(domain, MSG_SYNC_POS_VEL, 6,
             domain->sizeX + 1, domain->sizeY + 1, domain->sizeZ + 1,
-            false, false) ;
+            false) ;
 
    fieldData[0] = domain->x ;
    fieldData[1] = domain->y ;
@@ -3961,36 +3984,38 @@ int main(int argc, char *argv[])
    domain.AllocateNodesets(domain.numSymmNodesBoundary(),
                            domain.numSymmNodesImpact()) ;
 
-#if defined(COEVP_MPI)
+// #if defined(COEVP_MPI)
+#if 1
 
    /* allocate a buffer large enough for nodal ghost data */
    Index_t planeMin, planeMax ;
-   Index_t maxEdgeSize = MAX(domain->sizeX, MAX(domain->sizeY, domain->sizeZ))+1 ;
-   domain->maxPlaneSize = CACHE_ALIGN_REAL(maxEdgeSize*maxEdgeSize) ;
+   domain.commElems() = domain.numElem()/heightElems ;
+   domain.commNodes() = domain.numNode()/heightNodes ;
+   domain.maxPlaneSize() = CACHE_ALIGN_REAL(domain.numNode()/heightNodes) ;
 
-   /* assume communication to 6 neighbors by default */
+   /* assume communication to 2 neighbors by default */
    planeMin = planeMax = 1 ;
    if (myRank == 0) {
       planeMin = 0 ;
    }
-   if (myRank == totalRank-1) {
+   if (myRank == numRanks-1) {
       planeMax = 0 ;
    }
    /* account for face communication */
    Index_t comBufSize =
       (planeMin + planeMax) *
-       domain->maxPlaneSize * MAX_FIELDS_PER_MPI_COMM ;
+       domain.maxPlaneSize() * MAX_FIELDS_PER_MPI_COMM ;
 
    if (comBufSize != 0) {
-      domain->commDataSend = new Real_t[comBufSize] ;
-      domain->commDataRecv = new Real_t[comBufSize] ;
+      domain.commDataSend = new Real_t[comBufSize] ;
+      domain.commDataRecv = new Real_t[comBufSize] ;
       /* prevent floating point exceptions */
-      memset(domain->commDataSend, 0, comBufSize*sizeof(Real_t)) ;
-      memset(domain->commDataRecv, 0, comBufSize*sizeof(Real_t)) ;
+      memset(domain.commDataSend, 0, comBufSize*sizeof(Real_t)) ;
+      memset(domain.commDataRecv, 0, comBufSize*sizeof(Real_t)) ;
    }
    else {
-      domain->commDataSend = 0 ;
-      domain->commDataRecv = 0 ;
+      domain.commDataSend = 0 ;
+      domain.commDataRecv = 0 ;
    }
 
    /* SYMM_Z only needs to  be allocated on proc 0 */
@@ -4225,8 +4250,7 @@ int main(int argc, char *argv[])
    sprintf(name, "checkConn.sami") ;
 #endif
 
-   DumpSAMI(&domain, name) ;
-   exit(0) ;
+// DumpSAMI(&domain, name) ;
    
    /* initialize material parameters */
    //   domain.dtfixed() = Real_t(-1.0e-7) ;
@@ -4294,10 +4318,11 @@ int main(int argc, char *argv[])
       }
    }
 
+   DumpSAMI(&domain, name) ;
+   exit(0) ;
+
 #if defined(COEVP_MPI)
-   CommRecv(locDom, MSG_COMM_SBN, 1,
-            locDom->sizeX + 1, locDom->sizeY + 1, locDom->sizeZ + 1,
-            true, false) ;
+   CommRecv(locDom, MSG_COMM_SBN, 1, domain.commNodes(), true) ;
 #endif
 
    for (Index_t i=0; i<domElems; ++i) {
