@@ -942,15 +942,16 @@ void TimeIncrement()
          gnewdt = domain.dthydro() * Real_t(2.0) / Real_t(3.0) ;
       }
 
-#if defined(COEVP_MPI)
+      gnewdt *= finescale_dt_modifier;
+
+// #if defined(COEVP_MPI)
+#if 1
       MPI_Allreduce(&gnewdt, &newdt, 1,
                     ((sizeof(Real_t) == 4) ? MPI_FLOAT : MPI_DOUBLE),
                     MPI_MIN, MPI_COMM_WORLD) ;
 #else
       newdt = gnewdt ;
 #endif
-
-      newdt *= finescale_dt_modifier;
 
       ratio = newdt / olddt ;
       if (ratio >= Real_t(1.0)) {
