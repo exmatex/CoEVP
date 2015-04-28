@@ -77,7 +77,7 @@ Additional BSD Notice
 #include <omp.h>
 #endif
 
-#define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
+#define VISIT_DATA_INTERVAL 100  // Set this to 0 to disable VisIt data writing
 #undef USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
@@ -3524,11 +3524,13 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
    Real_t *yd    = new double[domain.numNode()];
    Real_t *xd    = new double[domain.numNode()];
    Real_t *speed = new double[domain.numNode()];
+   Real_t *nodalmass = new double[domain.numNode()];
    for(int ni=0 ; ni < domain.numNode() ; ++ni) {
       xd[ni]    = domain.xd(ni);
       yd[ni]    = domain.yd(ni);
       zd[ni]    = domain.zd(ni);
       speed[ni] = sqrt((xd[ni]*xd[ni])+(yd[ni]*yd[ni])+(zd[ni]*zd[ni]));
+      nodalmass[ni] = domain.nodalMass(ni) ;
    }
 
    ok += DBPutUcdvar1(db, "speed", "mesh", (float*)speed,
@@ -3551,6 +3553,11 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
                       domain.numNode(), NULL, 0, DB_DOUBLE, DB_NODECENT,
                       NULL);
    delete [] zd ;
+
+   ok += DBPutUcdvar1(db, "nodalmass", "mesh", (float*) nodalmass,
+                      domain.numNode(), NULL, 0, DB_DOUBLE, DB_NODECENT,
+                      NULL);
+   delete [] nodalmass ;
 
 #ifdef USE_ADAPTIVE_SAMPLING
    Real_t *num_as_models = new double[domain.numElem()] ;
@@ -3598,9 +3605,9 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
   int ok = 0;
   // Make sure this list matches what's written out above
 #ifdef USE_ADAPTIVE_SAMPLING
-  char vars[][14] = {"p","e","v","volo","q","speed","xd","yd","zd","num_as_models","as_efficiency"};
+  char vars[][14] = {"p","e","v","volo","q","speed","xd","yd","zd","nodalmass","num_as_models","as_efficiency"};
 #else
-  char vars[][10] = {"p","e","v","volo","q","speed","xd","yd","zd"};
+  char vars[][10] = {"p","e","v","volo","q","speed","xd","yd","zd", "nodalmass"};
 #endif
   int numvars = sizeof(vars)/sizeof(vars[0]);
 
@@ -3798,10 +3805,10 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
    char baseName[64] ;
    char meshName[64] ;
 
-   sprintf(baseName, "taylor_%d.sami", int(domain->cycle())) ;
+   sprintf(baseName, "taylor_%d.silo", int(domain->cycle())) ;
 
    if (myRank == 0) {
-      sprintf(meshName, "taylor_%d.sami", int(domain->cycle())) ;
+      sprintf(meshName, "%s", baseName) ;
    }
    else {
       sprintf(meshName, "%s.%d", baseName, myRank) ;
@@ -3810,6 +3817,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
    DumpToVisit(*domain, meshName, 0, 1) ;
    // DumpSAMI(domain, meshName) ;
 
+#if 0
    if ((myRank == 0) && (numProcs > 1)) {
       FILE *fp ;
       sprintf(meshName, "%s.visit", baseName) ;
@@ -3823,6 +3831,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
       }
       fclose(fp) ;
    }
+#endif
 }
 
 #endif
@@ -4741,9 +4750,7 @@ int main(int argc, char *argv[])
 #if VISIT_DATA_INTERVAL!=0
       char meshName[64] ;
       if (domain.cycle() % VISIT_DATA_INTERVAL == 0) {
-         int myRank = 0;
-         int numRanks = 1;
-         DumpDomain(&domain, myRank, numRanks) ;
+         DumpDomain(&domain, domain.sliceLoc(), domain.numSlices()) ;
       }
 #endif
       TimeIncrement() ;
@@ -4846,9 +4853,7 @@ int main(int argc, char *argv[])
 
 #if VISIT_DATA_INTERVAL!=0
    if (domain.cycle() % VISIT_DATA_INTERVAL != 0) {
-      int myRank = 0;
-      int numRanks = 1;
-      DumpDomain(&domain, myRank, numRanks) ;
+      DumpDomain(&domain, domain.sliceLoc(), domain.numSlices()) ;
    }
 #endif
 
