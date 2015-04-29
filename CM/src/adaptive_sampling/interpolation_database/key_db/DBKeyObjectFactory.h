@@ -1,16 +1,13 @@
 //
-// File:        DBModelObjectFactory.h
-// Package:     kriging coupler
+// File:        DBKeyObjectFactory.h
 // 
 // Revision:    $Revision$
 // Modified:    $Date$
 // Description: DB model object factory
 //
 
-#ifndef included_krigcpl_DBModelObjectFactory_h
-#define included_krigcpl_DBModelObjectFactory_h
-
-#include "kriging/MultivariateDerivativeKrigingModel.h"
+#ifndef included_krigcpl_DBKeyObjectFactory_h
+#define included_krigcpl_DBKeyObjectFactory_h
 
 #include <base/DBObject.h>
 #include <base/DBObjectFactory.h>
@@ -18,11 +15,11 @@
 namespace krigcpl {
 
     /*!
-     * @brief Abstraction of a model object factory fo the use with generic DB
+     * @brief Abstraction of a model object factory fo the use with a key DB
      */
 
     template <typename T>
-    class DBModelObjectFactory : public DBObjectFactory {
+    class DBKeyObjectFactory : public DBObjectFactory {
       
     public:
       
@@ -30,13 +27,13 @@ namespace krigcpl {
        * @brief Constructor.
        */
 
-      DBModelObjectFactory();
+      DBKeyObjectFactory();
       
       /*!
        * @brief Destructor
        */
 
-      virtual ~DBModelObjectFactory();
+      virtual ~DBKeyObjectFactory();
 
       /*!
        * @brief Allocate object and fill its contents from the database.
@@ -50,8 +47,8 @@ namespace krigcpl {
 
     private:
       // The following are not implemented
-      DBModelObjectFactory(const DBModelObjectFactory&);
-      void operator=(const DBModelObjectFactory&);
+      DBKeyObjectFactory(const DBKeyObjectFactory&);
+      void operator=(const DBKeyObjectFactory&);
 
     };
 
@@ -59,10 +56,10 @@ namespace krigcpl {
     // template specializations
     //
     template<> DBObjectPtr 
-      DBModelObjectFactory<krigalg::MultivariateDerivativeKrigingModel>::allocateObject(toolbox::Database& db) const;
+       DBKeyObjectFactory<std::string>::allocateObject(toolbox::Database& db) const;
 
 }
 
-#include "DBModelObjectFactory.I"
+#include "DBKeyObjectFactory.I"
 
-#endif // included_krigcpl_DBModelObjectFactory_h
+#endif // included_krigcpl_DBKeyObjectFactory_h

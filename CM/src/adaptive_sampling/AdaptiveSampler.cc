@@ -66,11 +66,10 @@ Additional BSD Notice
 #include <kriging/LinearDerivativeRegressionModel.h>
 #include <kriging/GaussianDerivativeCorrelationModel.h>
 #include <kriging/MultivariateDerivativeKrigingModelFactory.h>
-#include <kriging_db/KrigingInterpolationDBDataBase.h>
 
 #include <mtreedb/MTree.h>
 
-#include "interpolation_database/kriging_db/DBModelObjectFactory.h"
+#include "interpolation_database/kriging_db/DBKrigingModelObjectFactory.h"
 
 AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
                                   const int                  valueDimension,
@@ -115,56 +114,38 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
       modelFactory(new MultivariateDerivativeKrigingModelFactory(regressionModel,
                                                                  correlationModel));
 
-   //
-   // construct kriging model tree database
-   //
+   // Construct the key database
 
-   m_db = (DB*)(new MTree("kriging_model_database", &(std::cout), false));
+   m_keyDB = (DB*)(new MTree("kriging_model_database", &(std::cout), false));
 
    std::string mtreeDirectoryName = ".";
 
-   m_db->initializeCreate(mtreeDirectoryName + "/" 
+   m_keyDB->initializeCreate(mtreeDirectoryName + "/" 
                           "kriging_model_database",
                           "krigcpl",
-                          *(new DBModelObjectFactory<InterpolationModel>));
+                          *(new DBKrigingModelObjectFactory<InterpolationModel>));
       
-   ((MTree*)m_db)->setMaxNodeEntries(12);
+   ((MTree*)m_keyDB)->setMaxNodeEntries(12);
      
    bool db_from_file = false;  // FIX THIS (input from somewhere)
 
    if ( db_from_file ) {
-
-#if 0
-      std::string fileName = "databaseFileName";  // FIX THIS ( Pass in from somewhere )
-
-      m_interp = new KrigingInterpolationMTreeDataBase( m_pointDimension,
-                                                        m_valueDimension,
-                                                        modelFactory,
-                                                        *m_db,
-                                                        m_maxKrigingModelSize,
-                                                        m_maxNumberSearchModels,
-                                                        true,
-                                                        m_meanErrorFactor,
-                                                        m_tolerance,
-                                                        m_maxQueryPointModelDistance,
-                                                        600000000,
-                                                        mtreeDirectoryName,
-                                                        fileName );
-#endif
+      cout << "AdaptiveSampler.cc: Database read option not yet implemented" << endl;
    }
    else {
 
-      m_interp = new KrigingInterpolationDBDataBase( m_pointDimension,
-                                                     m_valueDimension,
-                                                     modelFactory,
-                                                     *m_db,
-                                                     m_maxKrigingModelSize,
-                                                     m_maxNumberSearchModels,
-                                                     true,
-                                                     m_meanErrorFactor,
-                                                     m_tolerance,
-                                                     m_maxQueryPointModelDistance,
-                                                     600000000 );
+      m_interp = new KrigingInterpolationKeyDB( m_pointDimension,
+                                                m_valueDimension,
+                                                modelFactory,
+                                                *m_keyDB,
+                                                m_modelDB,
+                                                m_maxKrigingModelSize,
+                                                m_maxNumberSearchModels,
+                                                true,
+                                                m_meanErrorFactor,
+                                                m_tolerance,
+                                                m_maxQueryPointModelDistance,
+                                                600000000 );
    }
 
    // Add the gradient scaling from the point and value scaling
@@ -188,7 +169,7 @@ AdaptiveSampler::~AdaptiveSampler()
    m_valueScaling.resize(0);
    
    delete m_interp;
-   delete m_db;
+   delete m_keyDB;
 }
 
 

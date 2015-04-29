@@ -63,12 +63,11 @@ Additional BSD Notice
 */
 /* DO-NOT-DELETE revisionify.end() */
 //
-// File:        DBModelObject.cc
-// Package:     kriging coupler
+// File:        DBKeyObject.cc
 // 
 // Revision:    $Revision$
 // Modified:    $Date$
-// Description: Implementation of the DBModelObject.
+// Description: Implementation of the DBKeyObject.
 //
 
 #include <iostream>
@@ -81,8 +80,8 @@ namespace krigcpl {
 
     template<typename T>
     inline
-    DBModelObject<T>::DBModelObject(const T & modelObject)
-      : _modelObject(modelObject)
+    DBKeyObject<T>::DBKeyObject(const T & keyObject)
+      : _keyObject(keyObject)
     {
 
       return;
@@ -94,7 +93,7 @@ namespace krigcpl {
     //
 
     template <typename T>
-    DBModelObject<T>::~DBModelObject()
+    DBKeyObject<T>::~DBKeyObject()
     {
 
       return;
@@ -107,10 +106,10 @@ namespace krigcpl {
     
     template <typename T>
     DBObjectPtr 
-    DBModelObject<T>::makeCopy() const
+    DBKeyObject<T>::makeCopy() const
     {
 	
-      return DBObjectPtr(new DBModelObject(_modelObject));
+      return DBObjectPtr(new DBKeyObject(_keyObject));
 	
     }
     
@@ -120,10 +119,10 @@ namespace krigcpl {
     
     template <typename T>
     void 
-    DBModelObject<T>::putToDatabase(toolbox::Database& db) const
+    DBKeyObject<T>::putToDatabase(toolbox::Database& db) const
     { 
 
-      _modelObject->putToDatabase(db);
+       //      _keyObject->putToDatabase(db);
       return;
       
     }
@@ -134,11 +133,11 @@ namespace krigcpl {
     
     template <typename T>
     ostream & 
-    DBModelObject<T>::print(ostream & stream) const
+    DBKeyObject<T>::print(ostream & stream) const
     {
 	
       stream << "   object id = " << getObjectId() << std::endl;
-      stream << "   kriging model = " << *_modelObject << std::endl;
+      //      stream << "   key = " << *_keyObject << std::endl;
 
       return stream;
     }
@@ -149,10 +148,10 @@ namespace krigcpl {
 
     template <typename T>
     inline T
-    DBModelObject<T>::getModel() const
+    DBKeyObject<T>::getKey() const
     {
 	
-      return _modelObject;
+      return _keyObject;
 
     }
 }

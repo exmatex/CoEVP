@@ -1,57 +1,38 @@
 //
-// File:        KrigingInterpolationDBDataBase.h
-// Package:     kriging coupler
+// File:        KrigingInterpolationKeyDB.h
 // 
 // Revision:    $Revision$
 // Modified:    $Date$
-// Description: Kriging interpolation database.
+// Description: Kriging interpolation using a keyed database.
 //
 
-#ifndef included_krigcpl_KrigingInterpolationDBDataBase_h
-#define included_krigcpl_KrigingInterpolationDBDataBase_h
+#ifndef included_krigcpl_KrigingInterpolationKeyDB_h
+#define included_krigcpl_KrigingInterpolationKeyDB_h
+
+#include <unordered_map>
 
 #ifndef included_krigcpl_InterpolationDataBase_h
 #include "base/InterpolationDataBase.h"
-#endif 
-
-#ifndef included_krigcpl_ResponsePoint_h
-#include "base/ResponsePoint.h"
-#endif 
-
-#ifndef included_krigalg_Point
-#include "base/Point.h"
-#endif
-
-#ifndef included_krigalg_Value
-#include "base/Value.h"
-#endif 
-
-#ifndef included_krigalg_MultivariateDerivativeKrigingModel
-#include "kriging/MultivariateDerivativeKrigingModel.h"
 #endif 
 
 #ifndef included_krigalg_InterpolationModelFactory_h
 #include <base/InterpolationModelFactory.h>
 #endif
 
-#ifndef included_DB
+#ifndef included_base_DB
 #include <base/DB.h>
-#endif // included_DB
-#ifndef included_DB
-#include <base/DB.h>
-#endif // included_DB
-
-#include <vector>
-#include <utility>
+#endif // included_base_DB
 
 namespace krigcpl {
+
+    typedef std::unordered_map<std::string, krigalg::InterpolationModelPtr> InterpolationModelDataBase;
 
     /*!
      * @brief Concrete implementation of the InterpolationDataBase class using
      * kriging as the interpolation model
      */
 
-    class KrigingInterpolationDBDataBase :
+    class KrigingInterpolationKeyDB :
       public InterpolationDataBase {
 
     public:
@@ -61,10 +42,9 @@ namespace krigcpl {
        * 
        * @param pointDimension The dimension of the point space.
        * @param valueDimension The dimension of the value space.
-       * @param regressionModel Handle to a DerivativeRegressionModel to be 
-       *                        used.
-       * @param correlationModel Handle to a DerivativeCorrelationModel to
-       *                         be used.
+       * @param modelFactory   Handle to a factory for creating interpolation models
+       * @param keyDB          Handle to a database for keys indexing the interpolation database
+       * @param modelDB        Handle to an interpolation model database
        * @param maxKrigingModelSize Maximum number of point/value pairs in
        *                            a single kriging model.
        * @param maxNumberSearchModels Maximum number of kriging models to be
@@ -78,29 +58,27 @@ namespace krigcpl {
        *                                   query point and the model for which
        *                                   interpolation is still attempted. 
        * @param agingThreshold Time threshold for object aging.
-       * @param directoryName Name of the directory to use for storage
-       *                           of disk DB data.
        */
-      KrigingInterpolationDBDataBase(int    pointDimension,
-				   int    valueDimension,
-				   const krigalg::InterpolationModelFactoryPointer  & modelFactory,
-                                   DB&    db,
-				   int    maxKrigingModelSize,
-				   int    maxNumberSearchModels,
-				   bool   useHint,
-				   double meanErrorFactor,
-				   double tolerance,
-				   double maxQueryPointModelDistance,
-				   int    agingThreshold);
+      KrigingInterpolationKeyDB(int    pointDimension,
+                                int    valueDimension,
+                                const krigalg::InterpolationModelFactoryPointer  & modelFactory,
+                                DB&    keyDB,
+                                InterpolationModelDataBase& modelDB,
+                                int    maxKrigingModelSize,
+                                int    maxNumberSearchModels,
+                                bool   useHint,
+                                double meanErrorFactor,
+                                double tolerance,
+                                double maxQueryPointModelDistance,
+                                int    agingThreshold);
       /*!
        * Construction.
        * 
        * @param pointDimension The dimension of the point space.
        * @param valueDimension The dimension of the value space.
-       * @param regressionModel Handle to a DerivativeRegressionModel to be 
-       *                        used.
-       * @param correlationModel Handle to a DerivativeCorrelationModel to
-       *                         be used.
+       * @param modelFactory   Handle to a factory for creating interpolation models
+       * @param keyDB          Handle to a database for keys indexing the interpolation database
+       * @param modelDB        Handle to an interpolation model database
        * @param maxKrigingModelSize Maximum number of point/value pairs in
        *                            a single kriging model.
        * @param maxNumberSearchModels Maximum number of kriging models to be
@@ -118,24 +96,25 @@ namespace krigcpl {
        *                           of disk DB data.
        * @param fileName File name to be used for seeding the database.
        */
-      KrigingInterpolationDBDataBase(int    pointDimension,
-				   int    valueDimension,
-				   const krigalg::InterpolationModelFactoryPointer  & modelFactory,
-                                   DB&   db,
-				   int    maxKrigingModelSize,
-				   int    maxNumberSearchModels,
-				   bool   useHint,
-				   double meanErrorFactor,
-				   double tolerance,
-				   double maxQueryPointModelDistance,
-				   int    agingThreshold,
-				   const std::string & directoryName,
-				   const std::string & fileName);
+      KrigingInterpolationKeyDB(int    pointDimension,
+                                int    valueDimension,
+                                const krigalg::InterpolationModelFactoryPointer  & modelFactory,
+                                DB&    keyDB,
+                                InterpolationModelDataBase& modelDB,
+                                int    maxKrigingModelSize,
+                                int    maxNumberSearchModels,
+                                bool   useHint,
+                                double meanErrorFactor,
+                                double tolerance,
+                                double maxQueryPointModelDistance,
+                                int    agingThreshold,
+                                const std::string & directoryName,
+                                const std::string & fileName);
       
       /*!
        * Destruction.
        */
-      ~KrigingInterpolationDBDataBase();
+      ~KrigingInterpolationKeyDB();
 
       /*!
        * Compute interpolated value at a point.
@@ -386,8 +365,8 @@ namespace krigcpl {
 
     private:
       // Not implemented
-      KrigingInterpolationDBDataBase(const KrigingInterpolationDBDataBase &);
-      const KrigingInterpolationDBDataBase & operator=(const KrigingInterpolationDBDataBase&);
+      KrigingInterpolationKeyDB(const KrigingInterpolationKeyDB &);
+      const KrigingInterpolationKeyDB & operator=(const KrigingInterpolationKeyDB&);
 
       //
       // data
@@ -398,7 +377,9 @@ namespace krigcpl {
     protected:
       
       krigalg::InterpolationModelFactoryPointer _modelFactory;
-      DB& _krigingModelDB;
+
+      DB&                         _keyDB;
+      InterpolationModelDataBase& _modelDB;
 
       int    _maxKrigingModelSize;
       int    _maxNumberSearchModels;
@@ -423,8 +404,9 @@ namespace krigcpl {
       int _agingThreshold;
 
     private:
+
     };
 
 }
 
-#endif // included_krigcpl_KrigingInterpolationDBDataBase_h
+#endif // included_krigcpl_KrigingInterpolationKeyDB_h

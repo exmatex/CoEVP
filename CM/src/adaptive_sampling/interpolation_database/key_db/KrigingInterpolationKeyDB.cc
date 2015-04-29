@@ -63,32 +63,12 @@ Additional BSD Notice
 */
 // DO-NOT-DELETE revisionify.end() 
 //
-// File:        KrigingInterpolationDBDataBase.cc
-// Package:     kriging coupler
+// File:        KrigingInterpolationKeyDB.cc
 // 
 // Revision:    $Revision$
 // Modified:    $Date$
 // Description: Interpolation database using kriging interpolation.
 //
-
-#include "KrigingInterpolationDBDataBase.h"
-
-#include <kriging/SecondMoment.h>
-
-#include <base/ResponsePoint.h>
-#include <kriging_db/DBKrigingModelObject.h>
-
-#include <toolbox/base/Utilities.h>
-
-#include <mtreedb/MTree.h>
-
-#include <base/DBObject.h>
-#include <base/DBObjectFactory.h>
-
-#include <toolbox/database/HDFDatabase.h>
-
-#include <mtl/mtl.h>
-#include <mtl/utils.h>
 
 #ifdef HAVE_PKG_libprof 
 #ifdef HAVE_PROFILE_H
@@ -96,17 +76,20 @@ Additional BSD Notice
 #endif // HAVE_PROFILE_H
 #endif // HAVE_PKG_libprof
 
-#include <cmath>
-#include <cstdlib>
-
-#include <algorithm>
-#include <limits>
 #include <fstream>
-#include <sstream>
-#include <iostream>
-#include <iomanip>
-#include <map>
-#include <functional>
+
+#include "KrigingInterpolationKeyDB.h"
+
+#include <kriging/SecondMoment.h>
+
+#include <base/ResponsePoint.h>
+#include <kriging_db/DBKrigingModelObject.h>
+
+#include <mtreedb/MTree.h>
+
+#include <toolbox/database/HDFDatabase.h>
+
+#include "DBKeyObject.h"
 
 #ifndef DEBUG
 #  define DEBUG 0
@@ -117,6 +100,38 @@ using namespace krigalg;
 namespace krigcpl {
 
     namespace {
+
+       void buildKey(string& key, double *data, int n, char * tag, int keyDigits)
+       {
+          //Build format
+          for (int i = 0; i < n; i++)
+             {
+                char format[32];
+                sprintf(format, "%%.%dlf:", keyDigits);
+                char fBuff[1024];
+                sprintf(fBuff, format, data[i]);
+                key += fBuff;
+             }
+          key += tag;
+       }
+
+       string
+       getKeyString(const ResponsePoint& point)
+       {
+          int point_size = point.size();
+          double * point_data = new double[point_size];
+          for (int i=0; i<point_size; ++i) {
+             point_data[i] = point[i];
+          }
+
+          string key_string;
+          char tag[] = "test";
+          int stringDigits = 10;
+
+          buildKey(key_string, point_data, point_size, tag, stringDigits);
+
+          return key_string;
+       }
 
       //
       // local data-types
@@ -462,14 +477,15 @@ namespace krigcpl {
       //
 
       std::pair<int, InterpolationModelPtr>
-      findBestCoKrigingModel(bool                & canInterpolateFlag,
-			     const ResponsePoint & point,
-			     DB                  & krigingModels,
-			     double                tolerance,
-			     double                meanErrorFactor,
-			     double                maxQueryPointModelDistance,
-			     int                   maxNumberSearchModels,
-			     int                   valueDimension)
+      findBestCoKrigingModel(bool &                       canInterpolateFlag,
+			     const ResponsePoint &        point,
+			     DB &                         krigingModels,
+                             InterpolationModelDataBase & modelDB,
+			     double                       tolerance,
+			     double                       meanErrorFactor,
+			     double                       maxQueryPointModelDistance,
+			     int                          maxNumberSearchModels,
+			     int                          valueDimension)
       {
 	
 	canInterpolateFlag = false;
@@ -520,10 +536,10 @@ namespace krigcpl {
 	  // get handle to object
 	  //
 
-	  const DBKrigingModelObject & dbObject = 
-	    dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
+	  const DBKeyObject<std::string> & dbObject = 
+             dynamic_cast<const DBKeyObject<std::string> &>(searchResult.getDataObject()); 
 
-	  InterpolationModelPtr krigingModel = dbObject.getModel();
+	  InterpolationModelPtr& krigingModel = modelDB[dbObject.getKey()];
 
 	  //
 	  // skip invalid models
@@ -568,349 +584,16 @@ namespace krigcpl {
       }
 
       std::pair<int, InterpolationModelPtr>
-      findBestCoKrigingModelv1(bool                & canInterpolateFlag,
-			       const ResponsePoint & point,
-			       DB                  & krigingModels,
-			       double                tolerance,
-			       const InterpolationModelFactoryPointer & _modelFactory,
-			       double                meanErrorFactor,
-			       double                maxQueryPointModelDistance,
-			       int                   maxNumberSearchModels,
-			       int                   maxKrigingModelSize,
-			       int                   valueDimension)
-      {
-	
-	canInterpolateFlag = false;
-
-	//
-	// query the tree for the maxNumberSearchModels closest models
-	//
-
-	std::vector<DBSearchResult> searchResults;
-	
-	krigingModels.searchKNN(searchResults,
-				point,
-				maxNumberSearchModels);
-
-	//
-	// short-circuit if an empty kriging models list encountered
-	//
-
-	if (searchResults.empty() == true) {
-
-	  return std::make_pair(DBObject::getUndefinedId(),
-				_modelFactory->build());
-
-	}
-
-	//
-	// iterate through the search results
-	//
-
-	std::map<double, std::pair<int, InterpolationModelPtr> >
-	  krigingModelRanking;
-
-	std::vector<DBSearchResult>::const_iterator searchResultsIter;
-	const std::vector<DBSearchResult>::const_iterator 
-	  searchResultsEnd = searchResults.end();
-
-	for (searchResultsIter  = searchResults.begin();
-	     searchResultsIter != searchResultsEnd;
-	     ++searchResultsIter) {
-
-	  //
-	  // get handle to search result
-	  //
-
-	  const DBSearchResult & searchResult = *searchResultsIter;
-
-	  //
-	  // get handle to object
-	  //
-
-	  const DBKrigingModelObject & dbObject = 
-	    dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
-	  
-	  InterpolationModelPtr krigingModel = dbObject.getModel();
-
-	  //
-	  // skip invalid model
-	  //
-
-	  if (krigingModel->isValid() == false)
-	    continue;
-
-	  //
-	  // compute error predicted by dbObject
-	  //
-
-	  const double errorEstimate = checkError(krigingModel,
-						  point,
-						  valueDimension,
-						  meanErrorFactor);
-
-	  //
-	  // insert model into the ranking
-	  //
-
-	  const std::pair<int, InterpolationModelPtr>
-	    krigingModelPair = std::make_pair(dbObject.getObjectId(),
-					      krigingModel);
-
-	  krigingModelRanking.insert(std::make_pair(errorEstimate,
-						    krigingModelPair));
-
-	}
-
-	//
-	// process krigingModelRanking to find a suitable kriging
-	// model. The suitable kriging model satisfies the tolerance
-	// requirement or has a slot available to insert a new point
-	// in it. If none of these two conditions is satisfied a dummy
-	// (empty) model is returned
-	//
-
-	//
-	// check if the first kriging model satisfies the tolerance
-	// requirement
-	//
-	
-	if ((*krigingModelRanking.begin()).first <= tolerance*tolerance) {
-
-	  canInterpolateFlag = true;
-	  return (*krigingModelRanking.begin()).second;
-
-	}
-
-	//
-	// there is no kriging model satisfying the tolerance
-	// requirement - find a model with the smallest error that has
-	// enough space to insert a new point/value pair
-	//
-	
-	std::map<double, std::pair<int, InterpolationModelPtr> >::const_iterator krigingModelRankingIter;
-	const std::map<double, std::pair<int, InterpolationModelPtr> >::const_iterator krigingModelRankingEnd = krigingModelRanking.end();
-	
-	for (krigingModelRankingIter  = krigingModelRanking.begin();
-	     krigingModelRankingIter != krigingModelRankingEnd;
-	     ++krigingModelRankingIter) {
-	  
-	  //
-	  // get a handle to the model pair
-	  //
-
-	  const std::pair<int, InterpolationModelPtr> & 
-	    krigingModelPair = (*krigingModelRankingIter).second;
-
-	  //
-	  // get a handle to the kriging model
-	  //
-
-	  const InterpolationModelPtr krigingModel = 
-	    krigingModelPair.second;
-
-	  //
-	  // check the size of the model
-	  //
-
-	  if (krigingModel->getNumberPoints() < maxKrigingModelSize) 
-	    return krigingModelPair;
-
-	}
-
-	//
-	// return an empty model
-	//
-
-	return std::make_pair(DBObject::getUndefinedId(),
-			      InterpolationModelPtr());
-
-      }
-
-      std::pair<int, InterpolationModelPtr>
-      findBestCoKrigingModelv2(bool                & canInterpolateFlag,
-			       const ResponsePoint & point,
-			       DB                  & krigingModels,
-			       const InterpolationModelFactoryPointer & _modelFactory,
-			       double                tolerance,
-			       double                meanErrorFactor,
-			       double                maxQueryPointModelDistance,
-			       int                   maxNumberSearchModels,
-			       int                   maxKrigingModelSize,
-			       int                   valueDimension)
-      {
-
-	canInterpolateFlag = false;
-
-	//
-	// query the tree for the maxNumberSearchModels closest models
-	//
-
-	std::vector<DBSearchResult> searchResults;
-	
-	krigingModels.searchKNN(searchResults,
-				point,
-				maxNumberSearchModels);
-
-	//
-	// short-circuit if an empty kriging models list encountered
-	//
-
-	if (searchResults.empty() == true) {
-
-	  return std::make_pair(DBObject::getUndefinedId(),
-				_modelFactory->build());
-
-	}
-
-	//
-	// iterate through the search results
-	//
-
-	std::map<double, std::pair<int, InterpolationModelPtr> >
-	  krigingModelRanking;
-
-	std::vector<DBSearchResult>::const_iterator searchResultsIter;
-	const std::vector<DBSearchResult>::const_iterator 
-	  searchResultsEnd = searchResults.end();
-
-	for (searchResultsIter  = searchResults.begin();
-	     searchResultsIter != searchResultsEnd;
-	     ++searchResultsIter) {
-
-	  //
-	  // get handle to search result
-	  //
-
-	  const DBSearchResult & searchResult = *searchResultsIter;
-
-	  //
-	  // get handle to object
-	  //
-
-	  const DBKrigingModelObject & dbObject = 
-	    dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
-	  
-	  InterpolationModelPtr krigingModel = dbObject.getModel();
-
-	  //
-	  // skip invalid model
-	  //
-
-	  if (krigingModel->isValid() == false)
-	    continue;
-
-	  //
-	  // compute error predicted by dbObject
-	  //
-
-	  const double errorEstimate = checkError(krigingModel,
-						  point,
-						  valueDimension,
-						  meanErrorFactor);
-
-	  if (errorEstimate <= tolerance*tolerance)
-	    return std::make_pair(dbObject.getObjectId(),
-				  krigingModel);
-
-	  //
-	  // insert model into the ranking
-	  //
-
-	  const std::pair<int, InterpolationModelPtr>
-	    krigingModelPair = std::make_pair(dbObject.getObjectId(),
-					      krigingModel);
-
-	  krigingModelRanking.insert(std::make_pair(errorEstimate,
-						    krigingModelPair));
-
-	}
-
-	//
-	// process krigingModelRanking to find a suitable kriging
-	// model. The suitable kriging model satisfies the tolerance
-	// requirement or has a slot available to insert a new point
-	// in it. If none of these two conditions is satisfied a dummy
-	// (empty) model is returned
-	//
-
-	const DBKrigingModelObject & dbObject = 
-	  dynamic_cast<const DBKrigingModelObject &>(searchResults[0].getDataObject()); 
-
-	return std::make_pair(dbObject.getObjectId(),
-			      dbObject.getModel());
-
-
-	//	return (*krigingModelRanking.begin()).second;
-
-	//
-	// check if the first kriging model satisfies the tolerance
-	// requirement
-	//
-	
-        if ((*krigingModelRanking.begin()).first <= tolerance*tolerance) {
-
-	  canInterpolateFlag = true;
-	  return (*krigingModelRanking.begin()).second;
-
-        }
-
-	//
-	// there is no kriging model satisfying the tolerance
-	// requirement - find a model with the smallest error that has
-	// enough space to insert a new point/value pair
-	//
-	
-	std::map<double, std::pair<int, InterpolationModelPtr> >::const_iterator krigingModelRankingIter;
-	const std::map<double, std::pair<int, InterpolationModelPtr> >::const_iterator krigingModelRankingEnd = 
-	  krigingModelRanking.end();
-	
-	for (krigingModelRankingIter  = krigingModelRanking.begin();
-	     krigingModelRankingIter != krigingModelRankingEnd;
-	     ++krigingModelRankingIter) {
-	  
-	  //
-	  // get a handle to the model pair
-	  //
-
-	  const std::pair<int, InterpolationModelPtr> & 
-	    krigingModelPair = (*krigingModelRankingIter).second;
-
-	  //
-	  // get a handle to the kriging model
-	  //
-
-	  const InterpolationModelPtr krigingModel = 
-	    krigingModelPair.second;
-
-	  //
-	  // check the size of the model
-	  //
-
-	  if (krigingModel->getNumberPoints() < maxKrigingModelSize) 
-	    return krigingModelPair;
-
-	}
-
-	//
-	// return an empty model
-	//
-
-	return std::make_pair(DBObject::getUndefinedId(),
-			      InterpolationModelPtr());
-
-      }
-
-      std::pair<int, InterpolationModelPtr>
-      findBestCoKrigingModel(bool                & canInterpolateFlag,
-			     const ResponsePoint & point,
-			     DB                  & krigingModels,
-			     double                tolerance,
-			     double                meanErrorFactor,
-			     double                maxQueryPointModelDistance,
-			     int                   maxNumberSearchModels,
-			     int                   maxKrigingModelSize,
-			     int                   valueDimension)
+      findBestCoKrigingModel(bool &                       canInterpolateFlag,
+			     const ResponsePoint &        point,
+			     DB &                         krigingModels,
+                             InterpolationModelDataBase & modelDB,
+			     double                       tolerance,
+			     double                       meanErrorFactor,
+			     double                       maxQueryPointModelDistance,
+			     int                          maxNumberSearchModels,
+			     int                          maxKrigingModelSize,
+			     int                          valueDimension)
       {
 
 #ifdef HAVE_PKG_libprof
@@ -981,10 +664,10 @@ namespace krigcpl {
 	  // get handle to object
 	  //
 
-	  const DBKrigingModelObject & dbObject = 
-	    dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
-	  
-	  InterpolationModelPtr krigingModel = dbObject.getModel();
+	  const DBKeyObject<std::string> & dbObject = 
+             dynamic_cast<const DBKeyObject<std::string> &>(searchResult.getDataObject()); 
+
+	  InterpolationModelPtr& krigingModel = modelDB[dbObject.getKey()];
 
 	  //
 	  // skip if invalid model
@@ -1020,6 +703,7 @@ namespace krigcpl {
 #endif // HAVE_PKG_libprof
 
 	    canInterpolateFlag = true;
+
 	    return std::make_pair(dbObject.getObjectId(),
 				  krigingModel);
 
@@ -1044,8 +728,10 @@ namespace krigcpl {
 	// found-return the closest model
 	//
 
-	const DBKrigingModelObject & dbObject = 
-	  dynamic_cast<const DBKrigingModelObject &>(searchResults[0].getDataObject()); 
+	const DBKeyObject<std::string> & dbObject = 
+           dynamic_cast<const DBKeyObject<std::string> &>(searchResults[0].getDataObject()); 
+
+        InterpolationModelPtr& krigingModel = modelDB[dbObject.getKey()];
 
 #ifdef HAVE_PKG_libprof
 
@@ -1053,10 +739,8 @@ namespace krigcpl {
 	
 #endif // HAVE_PKG_libprof
 
-
 	return std::make_pair(dbObject.getObjectId(),
-			      dbObject.getModel());
-
+			      krigingModel);
       }
 
 
@@ -1471,15 +1155,16 @@ namespace krigcpl {
       // instantiate, fill in and insert a new kriging model
       //
 
-      void
-      addNewModel(DB                   & _krigingModelDB,
-		  const InterpolationModelFactoryPointer & _modelFactory,
-		  int          & objectId,
-		  const double * pointData,
-		  const double * valueData,
-		  const double * gradientData,
-		  int            pointDimension,
-		  int            valueDimension)
+       void
+       addNewModel(InterpolationModelDataBase &             modelDB,
+                   DB &                                     keyDB,
+                   const InterpolationModelFactoryPointer & _modelFactory,
+                   int &                                    objectId,
+                   const double *                           pointData,
+                   const double *                           valueData,
+                   const double *                           gradientData,
+                   int                                      pointDimension,
+                   int                                      valueDimension)
       {
 	
 	//
@@ -1517,26 +1202,19 @@ namespace krigcpl {
 	
 	krigingModel->addPoint(point,
 			       pointValue);
-	
 
-	//
-	// instantiate DBKrigingModelObject
-	//
+        // Create a key string corresponding to the new point at
+        // which the new interpolation model is centered
 
-	DBKrigingModelObject dbObject(krigingModel);
+        DBKeyObject<std::string> dbObject(getKeyString(point));
 
-	//
-	// insert krigingModel
-	//
+        // Insert the key into the key database
 
-	_krigingModelDB.insertObject(dbObject,
-				     point,
-				     0.0);
-	objectId = dbObject.getObjectId();
-	
-	//
-	//
-	//
+	keyDB.insertObject(dbObject, point, 0.0);
+
+        // Insert the interpolation model into the interpolation model database
+
+        modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(dbObject.getKey(), krigingModel) );
 
 	return;
 	
@@ -1611,8 +1289,8 @@ namespace krigcpl {
 
       inline void
       outputKrigingModelStats(std::ostream & outputStream,
-			      const DB  & _krigingModelDB,
-			      int          maxKrigingModelSize)
+			      const DB  &    keyDB,
+			      int            maxKrigingModelSize)
       {
 	
 	return;
@@ -1624,10 +1302,11 @@ namespace krigcpl {
       //
 
       std::pair<int, int>
-      initializeModelDBFromFile(DB              & _krigingModelDB,
+      initializeModelDBFromFile(DB &                                     keyDB,
+                                InterpolationModelDataBase &             modelDB,
 				const InterpolationModelFactoryPointer & _modelFactory,
-				const std::string & directoryName,
-				const std::string & prefix)
+				const std::string &                      directoryName,
+				const std::string &                      prefix)
       {
 #ifdef HAVE_PKG_hdf5
 	//
@@ -1762,21 +1441,17 @@ namespace krigcpl {
 	    const ResponsePoint point(krigingModelCenter.size(),
 				      &(krigingModelCenter[0]));
 
-	    
-	    //
-	    // instantiate DBKrigingModelObject
-	    //
-	    
-	    DBKrigingModelObject dbObject(krigingModelPtr);
-	    
-	    //
-	    // insert model
-	    //
+            // Create a key string corresponding to interpolation model center
 
-	    _krigingModelDB.insertObject(dbObject,
-					 point,
-					 0.0);
+            DBKeyObject<std::string> dbObject(getKeyString(point));
 
+            // Insert the key into the key database
+
+	    keyDB.insertObject(dbObject, point, 0.0);
+
+            // Insert the interpolation model into the interpolation model database
+
+            modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(dbObject.getKey(), krigingModelPtr) );
 	  }
 
 	  //
@@ -1810,9 +1485,9 @@ namespace krigcpl {
 
       void
       outputKrigingModelPositionData(const std::string & fileName,
-				     DB                & _krigingModelDB)
+				     DB                & keyDB)
       {
-         if (typeid(_krigingModelDB) == typeid(MTree)) {
+         if (typeid(keyDB) == typeid(MTree)) {
 
             //
             // make sure that the tree has been properly intialized; at
@@ -1820,7 +1495,7 @@ namespace krigcpl {
             // of levels
             //
 
-            if (((MTree&)_krigingModelDB).getNumberLevels() == 0)
+            if (((MTree&)keyDB).getNumberLevels() == 0)
                return;
 
             //
@@ -1833,14 +1508,14 @@ namespace krigcpl {
             // we rely here on MTree stats
             //
 
-            ((MTree&)_krigingModelDB).calculateLevelStatistics();
+            ((MTree&)keyDB).calculateLevelStatistics();
 
             //
             // get stats for level 0 (leaf nodes)
             //
 
             const MTreeLevelStatistic * mtreeStats =
-               ((MTree&)_krigingModelDB).getLevelStatistics(0);
+               ((MTree&)keyDB).getLevelStatistics(0);
 
             //
             // get number of leaf nodes
@@ -1884,7 +1559,7 @@ namespace krigcpl {
                   //
 
                   const DBObjectPtr dbObjectPtr = 
-                     ((MTree&)_krigingModelDB).getObject(*krigingModelObjectIdsIter);
+                     ((MTree&)keyDB).getObject(*krigingModelObjectIdsIter);
 
                   //
                   // get handle to the underlying DBKrigingModelObject
@@ -1926,21 +1601,24 @@ namespace krigcpl {
       }
     }
 
+    // Object class member definitions start here
+
     //
     // construction/destruction
     //
 
-    KrigingInterpolationDBDataBase::KrigingInterpolationDBDataBase(int pointDimension,
-                                                                   int valueDimension,
-                                                                   const InterpolationModelFactoryPointer  & modelFactory,
-                                                                   DB&    db,
-                                                                   int    maxKrigingModelSize,
-                                                                   int    maxNumberSearchModels,
-                                                                   bool   useHint,
-                                                                   double meanErrorFactor,
-                                                                   double tolerance,
-                                                                   double maxQueryPointModelDistance,
-                                                                   int    agingThreshold )
+    KrigingInterpolationKeyDB::KrigingInterpolationKeyDB(int pointDimension,
+                                                         int valueDimension,
+                                                         const InterpolationModelFactoryPointer  & modelFactory,
+                                                         DB&    db,
+                                                         InterpolationModelDataBase& modelDB,
+                                                         int    maxKrigingModelSize,
+                                                         int    maxNumberSearchModels,
+                                                         bool   useHint,
+                                                         double meanErrorFactor,
+                                                         double tolerance,
+                                                         double maxQueryPointModelDistance,
+                                                         int    agingThreshold )
       : InterpolationDataBase(pointDimension,
 			      valueDimension),
 	_modelFactory(modelFactory),
@@ -1950,7 +1628,8 @@ namespace krigcpl {
 	_meanErrorFactor(meanErrorFactor),
 	_tolerance(tolerance),
 	_maxQueryPointModelDistance(maxQueryPointModelDistance),
-        _krigingModelDB(db),
+        _keyDB(db),
+        _modelDB(modelDB),
 	_numberKrigingModels(0),
 	_numberPointValuePairs(0),
 	_agingThreshold(agingThreshold)
@@ -1960,19 +1639,20 @@ namespace krigcpl {
       
     }
 
-    KrigingInterpolationDBDataBase::KrigingInterpolationDBDataBase(int pointDimension,
-                                                                   int valueDimension,
-                                                                   const InterpolationModelFactoryPointer  & modelFactory,
-                                                                   DB&    db,
-                                                                   int    maxKrigingModelSize,
-                                                                   int    maxNumberSearchModels,
-                                                                   bool   useHint,
-                                                                   double meanErrorFactor,
-                                                                   double tolerance,
-                                                                   double maxQueryPointModelDistance,
-                                                                   int    agingThreshold,
-                                                                   const std::string & directoryName,
-                                                                   const std::string & fileName)
+    KrigingInterpolationKeyDB::KrigingInterpolationKeyDB(int pointDimension,
+                                                         int valueDimension,
+                                                         const InterpolationModelFactoryPointer  & modelFactory,
+                                                         DB&    db,
+                                                         InterpolationModelDataBase& modelDB,
+                                                         int    maxKrigingModelSize,
+                                                         int    maxNumberSearchModels,
+                                                         bool   useHint,
+                                                         double meanErrorFactor,
+                                                         double tolerance,
+                                                         double maxQueryPointModelDistance,
+                                                         int    agingThreshold,
+                                                         const std::string & directoryName,
+                                                         const std::string & fileName)
        : InterpolationDataBase(pointDimension,
                                valueDimension,
                                fileName),
@@ -1983,14 +1663,16 @@ namespace krigcpl {
          _meanErrorFactor(meanErrorFactor),
          _tolerance(tolerance),
          _maxQueryPointModelDistance(maxQueryPointModelDistance),
-         _krigingModelDB(db),
+         _keyDB(db),
+         _modelDB(modelDB),
          _numberKrigingModels(0),
          _numberPointValuePairs(0),
          _agingThreshold(agingThreshold)
     {
 
        const std::pair<int, int> kriginigModelsStats =
-          initializeModelDBFromFile(_krigingModelDB,
+          initializeModelDBFromFile(_keyDB,
+                                    _modelDB,
                                     _modelFactory,
                                     directoryName,
                                     fileName);
@@ -1998,7 +1680,7 @@ namespace krigcpl {
        _numberKrigingModels   += kriginigModelsStats.first;
        _numberPointValuePairs += kriginigModelsStats.second;
 
-       //       _krigingModelDB.initializeOpen(fileName,
+       //       _keyDB.initializeOpen(fileName,
        //  				     "krigcpl",
        //  				     *(new MTreeKrigingModelObjectFactory));
       
@@ -2006,7 +1688,7 @@ namespace krigcpl {
       
     }
 
-    KrigingInterpolationDBDataBase::~KrigingInterpolationDBDataBase()
+    KrigingInterpolationKeyDB::~KrigingInterpolationKeyDB()
     {
 
       return;
@@ -2017,12 +1699,14 @@ namespace krigcpl {
     // Compute interpolated value at a point.
     //
 
+    // Version 1 (no derivatives)
+
     bool
-    KrigingInterpolationDBDataBase::interpolate(double            * value,
-                                                int               & hint,
-                                                const double      * point,
-                                                std::vector<bool> & flags,
-                                                double            & error_estimate)
+    KrigingInterpolationKeyDB::interpolate(double            * value,
+                                           int               & hint,
+                                           const double      * point,
+                                           std::vector<bool> & flags,
+                                           double            & error_estimate)
     {
 
       //
@@ -2060,8 +1744,7 @@ namespace krigcpl {
       if (_useHint &&
 	  hint != DBObject::getUndefinedId()) {
 	
-	const DBObjectPtr dbObjectPtr = 
-	  _krigingModelDB.getObject(hint);
+	const DBObjectPtr dbObjectPtr = _keyDB.getObject(hint);
 
 	if (dbObjectPtr == NULL) {
 
@@ -2069,10 +1752,8 @@ namespace krigcpl {
 
 	} else {
 
-	  const DBKrigingModelObject & dbObject = 
-	    dynamic_cast<const DBKrigingModelObject &>(*dbObjectPtr);
-	  const InterpolationModelPtr hintKrigingModel = 
-	    dbObject.getModel();
+           const DBKeyObject<std::string>& dbObject = dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+           const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
 	
 	  //
 	  // check if can interpolate; need a valid model for this
@@ -2095,12 +1776,12 @@ namespace krigcpl {
 
   	      const bool hintModelSuccess = 
   	        checkErrorAndInterpolate(value,
-  	      			       hintKrigingModel,
-  	      			       queryPoint,
-  	      			       valueDimension,
-  	      			       _tolerance,
-                                       _meanErrorFactor,
-                                       error_estimate );
+                                         hintKrigingModel,
+                                         queryPoint,
+                                         valueDimension,
+                                         _tolerance,
+                                         _meanErrorFactor,
+                                         error_estimate );
 
   	      if (hintModelSuccess == true) {
   	        flags[USED_HINT_FLAG] = true;
@@ -2131,7 +1812,7 @@ namespace krigcpl {
 
 	const std::pair<int, InterpolationModelPtr> 
 	  closestKrigingModelData = findClosestCoKrigingModel(queryPoint,
-							      _krigingModelDB,
+							      _keyDB,
 							      _maxQueryPointModelDistance);
       
 	InterpolationModelPtr closestKrigingModel = 
@@ -2193,7 +1874,8 @@ namespace krigcpl {
 	const std::pair<int, InterpolationModelPtr> 
 	  bestKrigingModelData = findBestCoKrigingModel(canInterpolateFlag,
 							queryPoint,
-							_krigingModelDB,
+							_keyDB,
+                                                        _modelDB,
 							_tolerance,
 							_meanErrorFactor,
 							_maxQueryPointModelDistance,
@@ -2263,13 +1945,15 @@ namespace krigcpl {
 
     }
 
+    // Version 2
+
     bool 
-    KrigingInterpolationDBDataBase::interpolate(double            * value,
-                                                double            * gradient,
-                                                int               & hint,
-                                                const double      * point,
-                                                std::vector<bool> & flags,
-                                                double            & error_estimate)
+    KrigingInterpolationKeyDB::interpolate(double            * value,
+                                           double            * gradient,
+                                           int               & hint,
+                                           const double      * point,
+                                           std::vector<bool> & flags,
+                                           double            & error_estimate)
     {
 
       //
@@ -2306,8 +1990,7 @@ namespace krigcpl {
       if (_useHint &&
 	  hint != DBObject::getUndefinedId()) {
 	
-         const DBObjectPtr dbObjectPtr = 
-	  _krigingModelDB.getObject(hint); 
+         const DBObjectPtr dbObjectPtr = _keyDB.getObject(hint); 
 
 	if (dbObjectPtr == NULL) {
 
@@ -2315,10 +1998,8 @@ namespace krigcpl {
 
 	} else {
     
-	  const DBKrigingModelObject & dbObject = 
-	    dynamic_cast<const DBKrigingModelObject &>(*dbObjectPtr);
-	  const InterpolationModelPtr hintKrigingModel = 
-	    dbObject.getModel();
+           const DBKeyObject<std::string>& dbObject = dynamic_cast<const DBKeyObject<std::string>&>(*dbObjectPtr);
+           const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
 	  
 	  //
 	  // check the distance between hintKrigingModel and point
@@ -2372,7 +2053,7 @@ namespace krigcpl {
 
 	const std::pair<int, InterpolationModelPtr> 
 	  closestKrigingModelData = findClosestCoKrigingModel(queryPoint,
-							      _krigingModelDB,
+							      _keyDB,
 							      _maxQueryPointModelDistance);
       
 	InterpolationModelPtr closestKrigingModel = 
@@ -2435,7 +2116,8 @@ namespace krigcpl {
 	const std::pair<int, InterpolationModelPtr> 
 	  bestKrigingModelData = findBestCoKrigingModel(canInterpolateFlag,
 							queryPoint,
-							_krigingModelDB,
+							_keyDB,
+                                                        _modelDB,
 							_tolerance,
 							_meanErrorFactor,
 							_maxQueryPointModelDistance,
@@ -2506,19 +2188,17 @@ namespace krigcpl {
 
     }
 
-    //
-    //
-    //
+    // Version 3
 
     bool
-    KrigingInterpolationDBDataBase::interpolate(double            * value,
-                                                const int         * hintList,
-                                                int                 numberHints, 
-                                                int                 oVIndexForMin, 
-                                                int                & hintUsed,
-                                                const double       * point,
-                                                std::vector<bool>  & flags,
-                                                double             & error_estimate)
+    KrigingInterpolationKeyDB::interpolate(double            * value,
+                                           const int         * hintList,
+                                           int                 numberHints, 
+                                           int                 oVIndexForMin, 
+                                           int                & hintUsed,
+                                           const double       * point,
+                                           std::vector<bool>  & flags,
+                                           double             & error_estimate)
     {
 #if DEBUG
        std::cout << "foobar" << std::endl;
@@ -2569,8 +2249,7 @@ namespace krigcpl {
 
 	if (hintList[iHint] != DBObject::getUndefinedId()) {
 	
-	  const DBObjectPtr dbObjectPtr = 
-	    _krigingModelDB.getObject(hintList[iHint]);
+	  const DBObjectPtr dbObjectPtr = _keyDB.getObject(hintList[iHint]);
 	  
 	  if (dbObjectPtr == NULL) {
 
@@ -2578,11 +2257,8 @@ namespace krigcpl {
 
 	  } else {
 
-	    const DBKrigingModelObject & dbObject = 
-	      dynamic_cast<const DBKrigingModelObject &>(*dbObjectPtr);
-	    const InterpolationModelPtr hintKrigingModel = 
-	      dbObject.getModel();
-	
+             const DBKeyObject<std::string>& dbObject = dynamic_cast<const DBKeyObject<std::string>&>(*dbObjectPtr);
+             const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
 	  
 	    const bool hintModelSuccess = 
 	      checkErrorAndInterpolate(&(interpolatedValue[0]),
@@ -2659,7 +2335,7 @@ namespace krigcpl {
 	const std::pair<int, InterpolationModelPtr> 
 	  closestKrigingModelData =
 	  findClosestCoKrigingModel(queryPoint,
-				    _krigingModelDB,
+				    _keyDB,
 				    _maxQueryPointModelDistance);
       
 	InterpolationModelPtr closestKrigingModel = 
@@ -2723,7 +2399,8 @@ namespace krigcpl {
 	const std::pair<int, InterpolationModelPtr> 
 	  bestKrigingModelData = findBestCoKrigingModel(canInterpolateFlag,
 							queryPoint,
-							_krigingModelDB,
+							_keyDB,
+                                                        _modelDB,
 							_tolerance,
 							_meanErrorFactor,
 							_maxQueryPointModelDistance,
@@ -2802,20 +2479,18 @@ namespace krigcpl {
 
     }
 
-    //
-    //
-    //
+    // Version 4
 
     bool 
-    KrigingInterpolationDBDataBase::interpolate(double            * value,
-                                                double            * gradient,
-                                                const int         * hintList,
-                                                int                 numberHints, 
-                                                int                 oVIndexForMin, 
-                                                int                & hintUsed,
-                                                const double       * point,
-                                                std::vector<bool>  & flags,
-                                                double             & error_estimate )
+    KrigingInterpolationKeyDB::interpolate(double            * value,
+                                           double            * gradient,
+                                           const int         * hintList,
+                                           int                 numberHints, 
+                                           int                 oVIndexForMin, 
+                                           int                & hintUsed,
+                                           const double       * point,
+                                           std::vector<bool>  & flags,
+                                           double             & error_estimate )
     {
 #if DEBUG
       std::cout << "foobar" << std::endl;
@@ -2868,8 +2543,7 @@ namespace krigcpl {
 
 	if (hintList[iHint] != DBObject::getUndefinedId()) {
 	
-	  const DBObjectPtr dbObjectPtr = 
-	    _krigingModelDB.getObject(hintList[iHint]);
+	  const DBObjectPtr dbObjectPtr = _keyDB.getObject(hintList[iHint]);
 	  
 	  if (dbObjectPtr == NULL) {
 
@@ -2877,12 +2551,9 @@ namespace krigcpl {
 
 	  } else {
 
-	    const DBKrigingModelObject & dbObject = 
-	      dynamic_cast<const DBKrigingModelObject &>(*dbObjectPtr);
-	    const InterpolationModelPtr hintKrigingModel = 
-	      dbObject.getModel();
-	
-	  
+           const DBKeyObject<std::string>& dbObject = dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+           const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
+
 	    const bool hintModelSuccess = 
 	      checkErrorAndInterpolate(&(interpolatedValue[0]),
 				       &(interpolatedGradient[0]),
@@ -2967,7 +2638,7 @@ namespace krigcpl {
 	const std::pair<int, InterpolationModelPtr> 
 	  closestKrigingModelData =
 	  findClosestCoKrigingModel(queryPoint,
-				    _krigingModelDB,
+				    _keyDB,
 				    _maxQueryPointModelDistance);
       
 	InterpolationModelPtr closestKrigingModel = 
@@ -3033,7 +2704,8 @@ namespace krigcpl {
 	const std::pair<int, InterpolationModelPtr>
 	  bestKrigingModelData = findBestCoKrigingModel(canInterpolateFlag,
 							queryPoint,
-							_krigingModelDB,
+							_keyDB,
+                                                        _modelDB,
 							_tolerance,
 							_meanErrorFactor,
 							_maxQueryPointModelDistance,
@@ -3117,11 +2789,11 @@ namespace krigcpl {
     }
 
     double
-    KrigingInterpolationDBDataBase::interpolateSpecificModel(double            * value,
-                                                             double            * gradient,
-                                                             int               & model,
-                                                             const double      * point,
-                                                             std::vector<bool> & flags)
+    KrigingInterpolationKeyDB::interpolateSpecificModel(double            * value,
+                                                        double            * gradient,
+                                                        int               & model,
+                                                        const double      * point,
+                                                        std::vector<bool> & flags)
     {
        double errorEstimate;
 
@@ -3157,8 +2829,7 @@ namespace krigcpl {
           exit(1);
        }
 
-       const DBObjectPtr dbObjectPtr = 
-          _krigingModelDB.getObject(model); 
+       const DBObjectPtr dbObjectPtr = _keyDB.getObject(model); 
 
        if (dbObjectPtr == NULL) {
 
@@ -3169,10 +2840,8 @@ namespace krigcpl {
 
        } else {
     
-          const DBKrigingModelObject & dbObject = 
-             dynamic_cast<const DBKrigingModelObject &>(*dbObjectPtr);
-          const InterpolationModelPtr hintKrigingModel = 
-             dbObject.getModel();
+           const DBKeyObject<std::string>& dbObject = dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+           const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
 	  
           assert(hintKrigingModel->hasGradient() == true);
 
@@ -3223,11 +2892,11 @@ namespace krigcpl {
     //
 
     void 
-    KrigingInterpolationDBDataBase::insert(int               & hint,
-                                           const double      * point,
-                                           const double      * value,
-                                           const double      * gradient,
-                                           std::vector<bool> & flags)
+    KrigingInterpolationKeyDB::insert(int               & hint,
+                                      const double      * point,
+                                      const double      * value,
+                                      const double      * gradient,
+                                      std::vector<bool> & flags)
     {
 
       //
@@ -3274,14 +2943,15 @@ namespace krigcpl {
 	// create and add new model
 	//
 
-	addNewModel(_krigingModelDB,
-		    _modelFactory,
-		    hint, 
-		    point,
-		    value,
-		    gradient,
-		    pointDimension,
-		    valueDimension);
+         addNewModel(_modelDB,
+                     _keyDB,
+                     _modelFactory,
+                     hint, 
+                     point,
+                     value,
+                     gradient,
+                     pointDimension,
+                     valueDimension);
 
 	//
 	// update number of kriging models
@@ -3295,11 +2965,12 @@ namespace krigcpl {
 	// get a handle to the right kriging model
 	//
 
-	DBObjectPtr dbObjectPtr = 
-	  _krigingModelDB.getObject(hint);
-	DBKrigingModelObject & dbObject = 
-	  dynamic_cast<DBKrigingModelObject &>(*dbObjectPtr);
-	InterpolationModelPtr krigingModel = dbObject.getModel();
+
+	DBObjectPtr dbObjectPtr = _keyDB.getObject(hint);
+	DBKeyObject<std::string> & dbObject = 
+	  dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+
+        InterpolationModelPtr krigingModel = _modelDB[dbObject.getKey()];
 
 	//
 	// check the size of the model; if the next point would put
@@ -3309,14 +2980,15 @@ namespace krigcpl {
 
 	if (krigingModel->getNumberPoints() == _maxKrigingModelSize) {
 
-	  addNewModel(_krigingModelDB,
-		      _modelFactory,
-		      hint, 
-		      point,
-		      value,
-		      gradient,
-		      pointDimension,
-		      valueDimension);
+           addNewModel(_modelDB,
+                       _keyDB,
+                       _modelFactory,
+                       hint, 
+                       point,
+                       value,
+                       gradient,
+                       pointDimension,
+                       valueDimension);
 
 	  //
 	  // update number of kriging models
@@ -3375,7 +3047,9 @@ namespace krigcpl {
 	    // remove old kriging model from the database
 	    //
 	    
-	    _krigingModelDB.deleteObject(hint);
+	    _keyDB.deleteObject(hint);
+
+            _modelDB.erase(dbObject.getKey());
 	    
 	    //
 	    // insert updated kriging model into database
@@ -3384,25 +3058,35 @@ namespace krigcpl {
 	    const ResponsePoint centerMassRP(pointDimension,
 					     &(centerMass[0]));
 	    
-	    DBKrigingModelObject dbObject(krigingModel);
-	    
-	    _krigingModelDB.insertObject(dbObject,
-					 centerMassRP,
-					 0.0);
+            // Create a key string corresponding to the center of mass point
+
+            DBKeyObject<std::string> dbObject(getKeyString(centerMassRP));
+
+            // Insert the key into the key database
+
+	    _keyDB.insertObject(dbObject, centerMassRP, 0.0);
+
+            // Insert the interpolation model into the interpolation model database
+
+            int objectId = dbObject.getObjectId();
+
+            _modelDB.insert( std::make_pair<std::string , InterpolationModelPtr>(dbObject.getKey(), krigingModel) );
+
 	  } else {
 
 	    //
 	    // point insertion failed-add new model
 	    //
 
-	    addNewModel(_krigingModelDB,
-			_modelFactory,
-			hint, 
-			point,
-			value,
-			gradient,
-			pointDimension,
-			valueDimension);
+             addNewModel(_modelDB,
+                         _keyDB,
+                         _modelFactory,
+                         hint, 
+                         point,
+                         value,
+                         gradient,
+                         pointDimension,
+                         valueDimension);
 
 	    //
 	    // update number of kriging models
@@ -3433,14 +3117,14 @@ namespace krigcpl {
     }
 
     void 
-    KrigingInterpolationDBDataBase::insert(int               & hintUsed,
-                                           const double      * point,
-                                           const double      * value,
-                                           const double      * gradient,
-                                           const int         * hintList,
-                                           int                 numberHints,
-                                           bool                forceInsert,
-                                           std::vector<bool> & flags)
+    KrigingInterpolationKeyDB::insert(int               & hintUsed,
+                                      const double      * point,
+                                      const double      * value,
+                                      const double      * gradient,
+                                      const int         * hintList,
+                                      int                 numberHints,
+                                      bool                forceInsert,
+                                      std::vector<bool> & flags)
     {
 #if DEBUG
        std::cout << "foobar" << std::endl;
@@ -3485,14 +3169,15 @@ namespace krigcpl {
 
       if (forceInsert == true) {
 
-	addNewModel(_krigingModelDB,
-		    _modelFactory,
-		    hintUsed, 
-		    point,
-		    value,
-		    gradient,
-		    pointDimension,
-		    valueDimension);
+         addNewModel(_modelDB,
+                     _keyDB,
+                     _modelFactory,
+                     hintUsed, 
+                     point,
+                     value,
+                     gradient,
+                     pointDimension,
+                     valueDimension);
 	
 	//
 	// update number of kriging models
@@ -3528,11 +3213,10 @@ namespace krigcpl {
 	  // get a handle to the right kriging model
 	  //
 
-	  DBObjectPtr dbObjectPtr = 
-	    _krigingModelDB.getObject(currentHint);
-	  DBKrigingModelObject & dbObject = 
-	    dynamic_cast<DBKrigingModelObject &>(*dbObjectPtr);
-	  InterpolationModelPtr krigingModel = dbObject.getModel();
+	  DBObjectPtr dbObjectPtr = _keyDB.getObject(currentHint);
+	  DBKeyObject<std::string> & dbObject = 
+             dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+	  InterpolationModelPtr krigingModel = _modelDB[dbObject.getKey()];
 
 	  //
 	  // check the size of the model; if the next point would put
@@ -3580,13 +3264,16 @@ namespace krigcpl {
 	      //
 	    
 	      const Point centerMass = getModelCenterMass(*krigingModel);
-	      // std::cout << "new center: " << centerMass << std::endl;
+
 	      //
-	      // remove old kriging model from the database
+	      // remove the old kriging model from the model database
+              // and its key from the key database
 	      //
 	    
-	      _krigingModelDB.deleteObject(currentHint);
-	    
+              _modelDB.erase(dbObject.getKey());
+
+	      _keyDB.deleteObject(currentHint);
+
 	      //
 	      // insert updated kriging model into database
 	      //
@@ -3594,11 +3281,17 @@ namespace krigcpl {
 	      const ResponsePoint centerMassRP(pointDimension,
 					       &(centerMass[0]));
 	    
-	      DBKrigingModelObject dbObject(krigingModel);
-	    
-	      _krigingModelDB.insertObject(dbObject,
-					   centerMassRP,
-					   0.0);
+              // Create a key string corresponding to the center of mass point
+
+              DBKeyObject<std::string> new_dbObject(getKeyString(centerMassRP));
+
+              // Insert the key into the key database
+
+              _keyDB.insertObject(new_dbObject, centerMassRP, 0.0);
+
+              // Insert the interpolation model into the model database
+
+              _modelDB.insert( std::make_pair<std::string , InterpolationModelPtr>(new_dbObject.getKey(), krigingModel) );
 	      
 	      //
 	      // record currentHint in hintUsed
@@ -3626,7 +3319,8 @@ namespace krigcpl {
       // point-value pair could be added-crate new model
       //
       
-      addNewModel(_krigingModelDB,
+      addNewModel(_modelDB,
+                  _keyDB,
 		  _modelFactory,
 		  hintUsed, 
 		  point,
@@ -3656,7 +3350,7 @@ namespace krigcpl {
     //
 
     int
-    KrigingInterpolationDBDataBase::getNumberStatistics() const
+    KrigingInterpolationKeyDB::getNumberStatistics() const
     {
 
       return 2;
@@ -3668,8 +3362,8 @@ namespace krigcpl {
     //
 
     void
-    KrigingInterpolationDBDataBase::getStatistics(double * stats,
-                                                  int      size) const
+    KrigingInterpolationKeyDB::getStatistics(double * stats,
+                                             int      size) const
     {
       switch(size) {
 
@@ -3696,7 +3390,7 @@ namespace krigcpl {
     //
 
     std::vector<std::string>
-    KrigingInterpolationDBDataBase::getStatisticsNames() const
+    KrigingInterpolationKeyDB::getStatisticsNames() const
     {
 
       std::vector<std::string> names;
@@ -3713,7 +3407,7 @@ namespace krigcpl {
     //
 
     void
-    KrigingInterpolationDBDataBase::printDBStats(std::ostream & outputStream)
+    KrigingInterpolationKeyDB::printDBStats(std::ostream & outputStream)
     {
       //
       // get number of statistics
@@ -3749,26 +3443,19 @@ namespace krigcpl {
       // output kriging model stats
       //
 
-      outputKrigingModelStats(outputStream,
-			      _krigingModelDB,
-			      _maxKrigingModelSize);
+      outputKrigingModelStats(outputStream, _keyDB, _maxKrigingModelSize);
       
       //
       // output db stats
       //
 
-      _krigingModelDB.outputStats(outputStream);
+      _keyDB.outputStats(outputStream);
 
       //
       // output positions of all kriging models
       //
 
-      outputKrigingModelPositionData("kriging_model_centers.txt",
-				     _krigingModelDB);
-
-      //
-      //
-      //
+      outputKrigingModelPositionData("kriging_model_centers.txt", _keyDB);
 
       return;
     }
@@ -3778,10 +3465,10 @@ namespace krigcpl {
     //
 
     void
-    KrigingInterpolationDBDataBase::swapOutObjects() const
+    KrigingInterpolationKeyDB::swapOutObjects() const
     {
-       if (typeid(_krigingModelDB) == typeid(MTree)) {
-          ((MTree&)_krigingModelDB).writeObjects(KrigingModelChooser(_agingThreshold));
+       if (typeid(_keyDB) == typeid(MTree)) {
+          ((MTree&)_keyDB).writeObjects(KrigingModelChooser(_agingThreshold));
        }
        else {
           // Need to figure out how to generalize this to work
@@ -3797,8 +3484,8 @@ namespace krigcpl {
     //
 
     std::vector<InterpolationModelPtr>
-    KrigingInterpolationDBDataBase::getKrigingModels(int            numberModels,
-						   const double * point)
+    KrigingInterpolationKeyDB::getKrigingModels(int            numberModels,
+                                                      const double * point)
     {
 
       //
@@ -3820,9 +3507,7 @@ namespace krigcpl {
       
       std::vector<DBSearchResult> searchResults;
       
-      _krigingModelDB.searchKNN(searchResults,
-				queryPoint,
-				numberModels);
+      _keyDB.searchKNN(searchResults, queryPoint, numberModels);
       
       //
       // instantiate container for returned data
@@ -3874,8 +3559,8 @@ namespace krigcpl {
     //
     
     std::vector<krigalg::InterpolationModelPtr>
-    KrigingInterpolationDBDataBase::getKrigingModels(double         radius,
-						   const double * point)
+    KrigingInterpolationKeyDB::getKrigingModels(double         radius,
+                                                const double * point)
     {
 
       //
@@ -3897,9 +3582,7 @@ namespace krigcpl {
       
       std::list<DBSearchResult> searchResults;
       
-      _krigingModelDB.searchRange(searchResults,
-				  queryPoint,
-				  radius);
+      _keyDB.searchRange(searchResults, queryPoint, radius);
       
       //
       // instantiate container for returned data

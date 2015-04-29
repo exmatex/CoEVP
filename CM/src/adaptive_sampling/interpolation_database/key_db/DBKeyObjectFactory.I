@@ -63,98 +63,56 @@ Additional BSD Notice
 */
 /* DO-NOT-DELETE revisionify.end() */
 //
-// File:        DBModelObject.cc
-// Package:     kriging coupler
+// File:        DBKeyObjectFactory.I
 // 
 // Revision:    $Revision$
 // Modified:    $Date$
-// Description: Implementation of the DBModelObject.
+// Description: DB model object factory
 //
 
-#include <iostream>
+#include "DBKeyObject.h"
 
 namespace krigcpl {
 
     //
-    // construction
-    //
-
-    template<typename T>
-    inline
-    DBModelObject<T>::DBModelObject(const T & modelObject)
-      : _modelObject(modelObject)
-    {
-
-      return;
-
-    }
-
-    //
-    // destruction
+    // Constructor.
     //
 
     template <typename T>
-    DBModelObject<T>::~DBModelObject()
+    DBKeyObjectFactory<T>::DBKeyObjectFactory()
     {
 
-      return;
-
-    }
-
-    //
-    // deep copy
-    //
-    
-    template <typename T>
-    DBObjectPtr 
-    DBModelObject<T>::makeCopy() const
-    {
-	
-      return DBObjectPtr(new DBModelObject(_modelObject));
-	
-    }
-    
-    //
-    // DB insertion
-    //
-    
-    template <typename T>
-    void 
-    DBModelObject<T>::putToDatabase(toolbox::Database& db) const
-    { 
-
-      _modelObject->putToDatabase(db);
       return;
       
     }
 
     //
-    // output
-    //
-    
-    template <typename T>
-    ostream & 
-    DBModelObject<T>::print(ostream & stream) const
-    {
-	
-      stream << "   object id = " << getObjectId() << std::endl;
-      stream << "   kriging model = " << *_modelObject << std::endl;
-
-      return stream;
-    }
-
-    //
-    // get object
+    // Destructor.
     //
 
     template <typename T>
-    inline T
-    DBModelObject<T>::getModel() const
+    DBKeyObjectFactory<T>::~DBKeyObjectFactory()
     {
-	
-      return _modelObject;
+
+      return;
 
     }
+
+    //
+    // Allocate object.
+    //
+
+    template <typename T>
+    DBObjectPtr 
+    DBKeyObjectFactory<T>::allocateObject(toolbox::Database& db) const
+    {
+
+      (void)db;
+      DBObjectPtr dummy;
+      return(dummy);
+      
+    }
+
 }
 
 

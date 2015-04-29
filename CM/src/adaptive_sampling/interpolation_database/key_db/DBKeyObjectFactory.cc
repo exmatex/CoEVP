@@ -1,4 +1,3 @@
-/* DO-NOT-DELETE revisionify.begin() */
 /*
 
                             Copyright (c) 2014.
@@ -61,61 +60,31 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-/* DO-NOT-DELETE revisionify.end() */
-//
-// File:        DBModelObjectFactory.I
-// Package:     kriging coupler
-// 
-// Revision:    $Revision$
-// Modified:    $Date$
-// Description: DB model object factory
-//
 
-#include "kriging_db/DBKrigingModelObject.h"
+#include "DBKeyObjectFactory.h"
 
 namespace krigcpl {
 
     //
-    // Constructor.
+    // Allocate database key
     //
 
-    template <typename T>
-    DBModelObjectFactory<T>::DBModelObjectFactory()
-    {
-
-      return;
-      
-    }
-
-    //
-    // Destructor.
-    //
-
-    template <typename T>
-    DBModelObjectFactory<T>::~DBModelObjectFactory()
-    {
-
-      return;
-
-    }
-
-    //
-    // Allocate object.
-    //
-
-    template <typename T>
-    //    mtreedb::DBObjectPtr 
+    template<>
     DBObjectPtr 
-    DBModelObjectFactory<T>::allocateObject(toolbox::Database& db) const
+    DBKeyObjectFactory<std::string>::allocateObject(toolbox::Database& db) const
     {
+	
+      //
+      // instantiate DBKeyObject
+      //
 
-      (void)db;
-      //      mtreedb::DBObjectPtr dummy;
-      DBObjectPtr dummy;
-      return(dummy);
-      
+       DBKeyObject<std::string> * keyObjectPtr = new DBKeyObject<std::string>;
+
+      //
+      // return DBObjectPtr
+      // 
+
+      return DBObjectPtr(keyObjectPtr);
     }
 
 }
-
-

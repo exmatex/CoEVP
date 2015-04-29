@@ -1,4 +1,3 @@
-/* DO-NOT-DELETE revisionify.begin() */
 /*
 
                             Copyright (c) 2014.
@@ -61,100 +60,70 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-/* DO-NOT-DELETE revisionify.end() */
-//
-// File:        DBModelObject.cc
-// Package:     kriging coupler
-// 
-// Revision:    $Revision$
-// Modified:    $Date$
-// Description: Implementation of the DBModelObject.
-//
 
-#include <iostream>
+#include "DBKrigingModelObjectFactory.h"
+
+#include "kriging/LinearDerivativeRegressionModel.h"
+#include "kriging/GaussianDerivativeCorrelationModel.h"
+#include "kriging/DerivativeCorrelationModelFactory.h"
+#include "kriging/DerivativeRegressionModelFactory.h"
+#include "kriging/MultivariateDerivativeKrigingModel.h"
 
 namespace krigcpl {
 
     //
-    // construction
+    // Allocate MultivariateDerivativeKrigingModel
     //
 
-    template<typename T>
-    inline
-    DBModelObject<T>::DBModelObject(const T & modelObject)
-      : _modelObject(modelObject)
-    {
-
-      return;
-
-    }
-
-    //
-    // destruction
-    //
-
-    template <typename T>
-    DBModelObject<T>::~DBModelObject()
-    {
-
-      return;
-
-    }
-
-    //
-    // deep copy
-    //
-    
-    template <typename T>
+    template<>
     DBObjectPtr 
-    DBModelObject<T>::makeCopy() const
+    DBKrigingModelObjectFactory<krigalg::MultivariateDerivativeKrigingModel>::allocateObject(toolbox::Database& db) const
     {
 	
-      return DBObjectPtr(new DBModelObject(_modelObject));
+      //
+      // instantiate dummy regression and correlation models
+      //
+
+      krigalg::DerivativeCorrelationModelPointer correlationModelPtr = 
+	krigalg::DerivativeCorrelationModelFactory().build("krigalg::GaussianDerivativeCorrelationModel");
 	
-    }
-    
-    //
-    // DB insertion
-    //
-    
-    template <typename T>
-    void 
-    DBModelObject<T>::putToDatabase(toolbox::Database& db) const
-    { 
-
-      _modelObject->putToDatabase(db);
-      return;
-      
-    }
-
-    //
-    // output
-    //
-    
-    template <typename T>
-    ostream & 
-    DBModelObject<T>::print(ostream & stream) const
-    {
+      krigalg::DerivativeRegressionModelPointer regressionModelPtr = 
+	krigalg::DerivativeRegressionModelFactory().build("krigalg::LinearDerivativeRegressionModel"); 
 	
-      stream << "   object id = " << getObjectId() << std::endl;
-      stream << "   kriging model = " << *_modelObject << std::endl;
+      //
+      // instantiate new kriging model
+      //
 
-      return stream;
+      krigalg::MultivariateDerivativeKrigingModel *
+	krigingModel = 
+	new krigalg::MultivariateDerivativeKrigingModel(regressionModelPtr,
+							correlationModelPtr);
+
+      //
+      // read the contents of the kriging model from database
+      //
+
+      krigingModel->getFromDatabase(db);
+
+      //
+      // instantiate MultivariateDerivativeKrigingModelPtr
+      //
+
+      krigalg::MultivariateDerivativeKrigingModelPtr krigingModelPtr = 
+	krigalg::MultivariateDerivativeKrigingModelPtr(krigingModel);
+
+      //
+      // instantiate DBKrigingModelObject
+      //
+
+      DBKrigingModelObject * krigingModelObjectPtr = 
+	new DBKrigingModelObject(krigingModelPtr);
+
+      //
+      // return DBObjectPtr
+      // 
+
+      return DBObjectPtr(krigingModelObjectPtr);
     }
 
-    //
-    // get object
-    //
-
-    template <typename T>
-    inline T
-    DBModelObject<T>::getModel() const
-    {
-	
-      return _modelObject;
-
-    }
 }
-
-
