@@ -1,0 +1,5 @@
+*~
+hiredis-*/
+redis-*/
+redis-*.tar.gz
+hiredis-*.tar.gz
