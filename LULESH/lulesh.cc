@@ -612,7 +612,8 @@ void Release(T **ptr)
 #define SEDOV_SYNC_POS_VEL_EARLY 1
 
 /* doRecv flag only works with regular block structure */
-void CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t size)
+void CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t size,
+              bool recvMin = true)
 {
 
    if (domain->numSlices() == 1) return ;
@@ -641,7 +642,7 @@ void CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t size)
    /* post receives */
 
    /* receive data from neighboring domain faces */
-   if (planeMin) {
+   if (planeMin && recvMin) {
       /* contiguous memory */
       int fromRank = myRank - 1 ;
       int recvCount = size * xferFields ;
@@ -2015,7 +2016,7 @@ void LagrangeNodal()
 
 // #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
 #if 1
-  CommRecv(&domain, MSG_SYNC_POS_VEL, 6, domain.commNodes()) ;
+  CommRecv(&domain, MSG_SYNC_POS_VEL, 6, domain.commNodes(), false) ;
 #endif
 
   CalcAccelerationForNodes();
