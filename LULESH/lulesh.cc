@@ -714,7 +714,7 @@ void CommSend(Domain *domain, int msgType,
    if (planeMax && sendMax) {
       destAddr = &domain->commDataSend[pmsg * maxPlaneComm] ;
       for (Index_t fi=0 ; fi<xferFields; ++fi) {
-         Real_t *srcAddr = fieldData[fi] + offset ;
+         Real_t *srcAddr = &fieldData[fi][offset] ;
          for (Index_t ii=0; ii<size; ++ii) {
             destAddr[ii] = srcAddr[iset[ii]] ;
          }
