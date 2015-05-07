@@ -77,7 +77,7 @@ Additional BSD Notice
 #include <omp.h>
 #endif
 
-#define VISIT_DATA_INTERVAL 100  // Set this to 0 to disable VisIt data writing
+#define VISIT_DATA_INTERVAL 25  // Set this to 0 to disable VisIt data writing
 #undef USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
@@ -206,7 +206,7 @@ public:
 
    /* Temporaries should not be initialized in bulk but */
    /* this is a runnable placeholder for now */
-   void AllocateElemTemporary(size_t size)
+   void AllocateElemTemporary(size_t size, size_t ghostSize)
    {
       m_dxx.resize(size) ;
       m_dyy.resize(size) ;
@@ -219,7 +219,7 @@ public:
       m_wyy.resize(size) ;
       m_wzz.resize(size) ;
 
-      m_delv_xi.resize(size) ;
+      m_delv_xi.resize(size + 2*ghostSize) ;
       m_delv_eta.resize(size) ;
       m_delv_zeta.resize(size) ;
 
@@ -555,31 +555,31 @@ void Release(T **ptr)
 
 /* Stuff needed for boundary conditions */
 /* 2 BCs on each of 6 hexahedral faces (12 bits) */
-#define XI_M        0x0003
+#define XI_M        0x0007
 #define XI_M_SYMM   0x0001
 #define XI_M_FREE   0x0002
+#define XI_M_COMM   0x0004
 
-#define XI_P        0x000c
-#define XI_P_SYMM   0x0004
-#define XI_P_FREE   0x0008
+#define XI_P        0x0038
+#define XI_P_SYMM   0x0008
+#define XI_P_FREE   0x0010
+#define XI_P_COMM   0x0020
 
-#define ETA_M       0x0030
-#define ETA_M_SYMM  0x0010
-#define ETA_M_FREE  0x0020
+#define ETA_M       0x00C0
+#define ETA_M_SYMM  0x0040
+#define ETA_M_FREE  0x0080
 
-#define ETA_P       0x00c0
-#define ETA_P_SYMM  0x0040
-#define ETA_P_FREE  0x0080
+#define ETA_P       0x0300
+#define ETA_P_SYMM  0x0100
+#define ETA_P_FREE  0x0200
 
-#define ZETA_M      0x0700
-#define ZETA_M_SYMM 0x0100
-#define ZETA_M_FREE 0x0200
-#define ZETA_M_COMM 0x0400
+#define ZETA_M      0x0C00
+#define ZETA_M_SYMM 0x0400
+#define ZETA_M_FREE 0x0800
 
-#define ZETA_P      0x3800
-#define ZETA_P_SYMM 0x0800
-#define ZETA_P_FREE 0x1000
-#define ZETA_P_COMM 0x2000
+#define ZETA_P      0x3000
+#define ZETA_P_SYMM 0x1000
+#define ZETA_P_FREE 0x2000
 
 // #if defined(COEVP_MPI)
 #if 1
@@ -849,20 +849,20 @@ void CommSyncPosVel(Domain *domain,
 #endif
 
 
-#if defined(COEVP_MPI)
+// #if defined(COEVP_MPI)
+#if 1
 
-void CommMonoQ(Domain *domain)
+void CommMonoQ(Domain *domain, Index_t size)
 {
-   if (domain->numRanks == 1) return ;
+   if (domain->numSlices() == 1) return ;
 
-   int myRank ;
-   Index_t xferFields = 3 ; /* delv_xi, delv_eta, delv_zeta */
-   Real_t *fieldData[3] ;
-   Index_t maxPlaneComm = xferFields * domain.maxPlaneSize() ;
+   int myRank = domain->sliceLoc() ;
+   // Index_t xferFields = 3 ; /* delv_xi, delv_eta, delv_zeta */
+   // Real_t *fieldData[3] ;
+   Index_t xferFields = 1 ; /* delv_xi, delv_eta, delv_zeta */
+   Real_t *fieldData[1] ;
+   Index_t maxPlaneComm = MAX_FIELDS_PER_MPI_COMM * domain->maxPlaneSize() ;
    Index_t pmsg = 0 ; /* plane comm msg */
-   Index_t dx = domain->sizeX ;
-   Index_t dy = domain->sizeY ;
-   Index_t dz = domain->sizeZ ;
    MPI_Status status ;
    Real_t *srcAddr ;
    bool planeMin, planeMax ;
@@ -871,49 +871,47 @@ void CommMonoQ(Domain *domain)
    if (domain->sliceLoc() == 0) {
       planeMin = false ;
    }
-   if (domain->sliceLoc() == (domain->numSlices-1)) {
+   if (domain->sliceLoc() == (domain->numSlices()-1)) {
       planeMax = false ;
    }
 
    /* point into ghost data area */
-   fieldData[0] = domain->delv_xi + domain->numElem ;
-   fieldData[1] = domain->delv_eta + domain->numElem ;
-   fieldData[2] = domain->delv_zeta + domain->numElem ;
+   fieldData[0] = &domain->delv_xi(domain->numElem()) ;
+   // fieldData[1] = &domain->delv_eta(domain->numElem()) ;
+   // fieldData[2] = &domain->delv_zeta(domain->numElem()) ;
 
-   MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
+   /* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      NOT CLEAR IF WE SHOULD UNPACK LINEARLY
+      OR WITH RESPECT TO ISET
+      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 
-   if (planeMin | planeMax) {
-      /* ASSUMING ONE DOMAIN PER RANK, CONSTANT BLOCK SIZE HERE */
-      Index_t opCount = dx * dy ;
-
-      if (planeMin) {
-         /* contiguous memory */
-         srcAddr = &domain->commDataRecv[pmsg * maxPlaneComm] ;
-         MPI_Wait(&domain->recvRequest[pmsg], &status) ;
-         for (Index_t fi=0 ; fi<xferFields; ++fi) {
-            Real_t *destAddr = fieldData[fi] ;
-            for (Index_t i=0; i<opCount; ++i) {
-               destAddr[i] = srcAddr[i] ;
-            }
-            srcAddr += opCount ;
-            fieldData[fi] += opCount ;
+   if (planeMin) {
+      /* contiguous memory */
+      srcAddr = &domain->commDataRecv[pmsg * maxPlaneComm] ;
+      MPI_Wait(&domain->recvRequest[pmsg], &status) ;
+      for (Index_t fi=0 ; fi<xferFields; ++fi) {
+         Real_t *destAddr = fieldData[fi] ;
+         for (Index_t i=0; i<size; ++i) {
+            destAddr[i] = srcAddr[i] ;
          }
-         ++pmsg ;
+         srcAddr += size ;
+         fieldData[fi] += size ; /* prepare each field for next plane */
       }
-      if (planeMax) {
-         /* contiguous memory */
-         srcAddr = &domain->commDataRecv[pmsg * maxPlaneComm] ;
-         MPI_Wait(&domain->recvRequest[pmsg], &status) ;
-         for (Index_t fi=0 ; fi<xferFields; ++fi) {
-            Real_t *destAddr = fieldData[fi] ;
-            for (Index_t i=0; i<opCount; ++i) {
-               destAddr[i] = srcAddr[i] ;
-            }
-            srcAddr += opCount ;
-            fieldData[fi] += opCount ;
+      ++pmsg ;
+   }
+   if (planeMax) {
+      /* contiguous memory */
+      srcAddr = &domain->commDataRecv[pmsg * maxPlaneComm] ;
+      MPI_Wait(&domain->recvRequest[pmsg], &status) ;
+      for (Index_t fi=0 ; fi<xferFields; ++fi) {
+         Real_t *destAddr = fieldData[fi] ;
+         for (Index_t i=0; i<size; ++i) {
+            destAddr[i] = srcAddr[i] ;
          }
-         ++pmsg ;
+         srcAddr += size ;
+         fieldData[fi] += size ;
       }
+      ++pmsg ;
    }
 }
 
@@ -2586,12 +2584,14 @@ void CalcMonotonicQRegionForElems(// parameters
       Real_t norm = Real_t(1.) / ( domain.delv_xi(i) + ptiny ) ;
 
       switch (bcMask & XI_M) {
+         case XI_M_COMM: /* needs comm data */
          case 0:         delvm = domain.delv_xi(domain.lxim(i)) ; break ;
          case XI_M_SYMM: delvm = domain.delv_xi(i) ;              break ;
          case XI_M_FREE: delvm = Real_t(0.0) ;                    break ;
          default:        /* ERROR */ ;                            break ;
       }
       switch (bcMask & XI_P) {
+         case XI_P_COMM: /* needs comm data */
          case 0:         delvp = domain.delv_xi(domain.lxip(i)) ; break ;
          case XI_P_SYMM: delvp = domain.delv_xi(i) ;              break ;
          case XI_P_FREE: delvp = Real_t(0.0) ;                    break ;
@@ -2645,14 +2645,12 @@ void CalcMonotonicQRegionForElems(// parameters
       norm = Real_t(1.) / ( domain.delv_zeta(i) + ptiny ) ;
 
       switch (bcMask & ZETA_M) {
-         case ZETA_M_COMM: /* needs comm data */
          case 0:           delvm = domain.delv_zeta(domain.lzetam(i)) ; break ;
          case ZETA_M_SYMM: delvm = domain.delv_zeta(i) ;                break ;
          case ZETA_M_FREE: delvm = Real_t(0.0) ;                        break ;
          default:          /* ERROR */ ;                                break ;
       }
       switch (bcMask & ZETA_P) {
-         case ZETA_P_COMM: /* needs comm data */
          case 0:           delvp = domain.delv_zeta(domain.lzetap(i)) ; break ;
          case ZETA_P_SYMM: delvp = domain.delv_zeta(i) ;                break ;
          case ZETA_P_FREE: delvp = Real_t(0.0) ;                        break ;
@@ -2744,34 +2742,29 @@ void CalcQForElems()
    // MONOTONIC Q option
    //
 
-#if defined(COEVP_MPI)
-   Real_t *fieldData[3] ;
+// #if defined(COEVP_MPI)
+#if 1
+   // Real_t *fieldData[3] ;
+   Real_t *fieldData[1] ;
 
-   CommRecv(domain, MSG_MONOQ, 3,
-            domain->sizeX, domain->sizeY, domain->sizeZ,
-            true) ;
+   CommRecv(&domain, MSG_MONOQ, 1 /* 3 */, domain.commElems()) ;
 #endif
 
    /* Calculate velocity gradients */
    CalcMonotonicQGradientsForElems() ;
 
-#if defined(COEVP_MPI)
+// #if defined(COEVP_MPI)
+#if 1
 
    /* Transfer veloctiy gradients in the first order elements */
-   /* problem->commElements->Transfer(CommElements::monoQ) ; */
-
-   /* !!!--- HACK ---!!!   !!!--- HACK --!!! */
-   /* !!!--- HACK ---!!!   !!!--- HACK --!!! */
-   /* !!!--- HACK ---!!!   !!!--- HACK --!!! */
 
    fieldData[0] = &domain.delv_xi(0) ;
-   fieldData[1] = &domain.delv_eta(0) ;
-   fieldData[2] = &domain.delv_zeta(0) ;
+   // fieldData[1] = &domain.delv_eta(0) ;
+   // fieldData[2] = &domain.delv_zeta(0) ;
 
-   CommSend(domain, MSG_MONOQ, 3, fieldData,
-            domain->sizeX, domain->sizeY, domain->sizeZ,
-            true, true) ;
-   CommMonoQ(domain) ;
+   CommSend(&domain, MSG_MONOQ, 1 /* 3 */, fieldData,
+            domain.planeElemIds, domain.commElems(), domain.sliceHeight() - 1) ;
+   CommMonoQ(&domain, domain.commElems()) ;
 
 #endif
 
@@ -3291,26 +3284,27 @@ void LagrangeLeapFrog()
    LagrangeElements();
 
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_LATE)
-   CommRecv(domain, MSG_SYNC_POS_VEL, 6,
-            domain->sizeX + 1, domain->sizeY + 1, domain->sizeZ + 1,
+   CommRecv(&domain, MSG_SYNC_POS_VEL, 6, domain.commNodes(), false) ;
+
+   /* !!! May need more time between recv and send !!! */
+
+   fieldData[0] = &domain.x(0) ;
+   fieldData[1] = &domain.y(0) ;
+   fieldData[2] = &domain.z(0) ;
+   fieldData[3] = &domain.xd(0) ;
+   fieldData[4] = &domain.yd(0) ;
+   fieldData[5] = &domain.zd(0) ;
+
+   CommSend(&domain, MSG_SYNC_POS_VEL, 6, fieldData,
+            domain.planeNodeIds, domain.commNodes(), domain.sliceHeight(),
             false) ;
-
-   fieldData[0] = domain->x ;
-   fieldData[1] = domain->y ;
-   fieldData[2] = domain->z ;
-   fieldData[3] = domain->xd ;
-   fieldData[4] = domain->yd ;
-   fieldData[5] = domain->zd ;
-
-   CommSend(domain, MSG_SYNC_POS_VEL, 6, fieldData,
-            domain->sizeX + 1, domain->sizeY + 1, domain->sizeZ + 1,
-            false, false) ;
 #endif
 
    CalcTimeConstraintsForElems();
 
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_LATE)
-   CommSyncPosVel(domain) ;
+   CommSyncPosVel(&domain,
+           domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
 #endif
 
    // LagrangeRelease() ;  Creation/destruction of temps may be important to capture 
@@ -3673,15 +3667,15 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
 
   for(int v=0; v < numvars; ++v) {
     for(int i = 0; i < numRanks; i++) {
-      delete multivarObjs[v][i];
+      delete [] multivarObjs[v][i];
     }
-    delete multivarObjs[v];
+    delete [] multivarObjs[v];
   }
 
   // Clean up
   for(int i=0 ; i<numRanks ; i++) {
-    delete multimeshObjs[i];
-    delete multimatObjs[i];
+    delete [] multimeshObjs[i];
+    delete [] multimatObjs[i];
   }
   delete [] multimeshObjs;
   delete [] multimatObjs;
@@ -3839,8 +3833,10 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
 
 int main(int argc, char *argv[])
 {
-   Index_t gheightElems = 26 ;
-   Index_t edgeElems = 16 ;
+// Index_t gheightElems = 26 ;
+// Index_t edgeElems = 16 ;
+   Index_t gheightElems = 8 ;
+   Index_t edgeElems = 4 ;
    Index_t edgeNodes = edgeElems+1 ;
 
    Index_t xBegin, xEnd ;
@@ -3926,7 +3922,8 @@ int main(int argc, char *argv[])
    /* construct a cylinder mesh */
 
    //   int coreElems = int (0.33333333333333333*edgeElems) ;
-   int coreElems = int (0.25*edgeElems) ;
+// int coreElems = int (0.25*edgeElems) ;
+   int coreElems = int (0.5*edgeElems) ;
    int wingElems = edgeElems - coreElems ;
    int coreNodes = coreElems + 1 ;
    int wingNodes = edgeNodes - coreNodes ;
@@ -3954,10 +3951,10 @@ int main(int argc, char *argv[])
 
    /* assume communication to 2 neighbors by default */
    planeMin = planeMax = 1 ;
-   if (myRank == 0) {
+   if (domain.sliceLoc() == 0) {
       planeMin = 0 ;
    }
-   if (myRank == numRanks-1) {
+   if (domain.sliceLoc() == numRanks-1) {
       planeMax = 0 ;
    }
    /* account for face communication */
@@ -3990,7 +3987,12 @@ int main(int argc, char *argv[])
    /* allocate field memory */
 
    domain.AllocateElemPersistent(domain.numElem()) ;
-   domain.AllocateElemTemporary (domain.numElem()) ;
+// #if defined(COEVP_MPI)
+#if 1
+   domain.AllocateElemTemporary (domain.numElem(), domain.commElems()) ;
+#else
+   domain.AllocateElemTemporary (domain.numElem(), 0) ;
+#endif
 
    domain.AllocateNodalPersistent(domain.numNode()) ;
 
@@ -4258,7 +4260,7 @@ int main(int argc, char *argv[])
    char name[100] ;
 // #if defined(COEVP_MPI)
 #if 1
-   sprintf(name, "checkConn%d.sami", myRank) ;
+   sprintf(name, "checkConn%d.sami", domain.sliceLoc()) ;
 #else
    sprintf(name, "checkConn.sami") ;
 #endif
@@ -4342,17 +4344,19 @@ int main(int argc, char *argv[])
       domain.e(i) = 0.;
    }
 
-   for (int plane=0; plane<coreNodes; ++plane) {
-      for (int row=0; row<edgeNodes; ++row) {
-         domain.xd(row*heightNodes +
-                   plane*edgeNodes*heightNodes) = Real_t(1.75e-2) ;
+   if (domain.sliceLoc() == 0) {
+      for (int plane=0; plane<coreNodes; ++plane) {
+         for (int row=0; row<edgeNodes; ++row) {
+            domain.xd(row*heightNodes +
+                      plane*edgeNodes*heightNodes) = Real_t(1.75e-2) ;
+         }
       }
-   }
-   for (int plane=0; plane<wingNodes; ++plane) {
-     for (int row=0; row<(coreNodes-1); ++row) {
-         domain.xd(coreNodes*edgeNodes*heightNodes +
-                   row*heightNodes +
-                   plane*(coreNodes-1)*heightNodes) = Real_t(1.75e-2) ;
+      for (int plane=0; plane<wingNodes; ++plane) {
+        for (int row=0; row<(coreNodes-1); ++row) {
+            domain.xd(coreNodes*edgeNodes*heightNodes +
+                      row*heightNodes +
+                      plane*(coreNodes-1)*heightNodes) = Real_t(1.75e-2) ;
+         }
       }
    }
 
@@ -4480,44 +4484,19 @@ int main(int argc, char *argv[])
       domain.elemBC(i) = 0 ;  /* clear BCs by default */
    }
 
-#if defined(COEVP_MPI)
+// #if defined(COEVP_MPI)
+#if 1
 
-   for (Index_t i=0; i<2; ++i) {
-      ghostIdx[i] = INT_MIN ;
+   if (domain.sliceLoc() != 0) {
+      /* adjust lxim() */
+      for (int i=0; i<domain.commElems(); ++i) {
+         domain.lxim(domain.planeElemIds[i]) = domElems+i ;
+      }
    }
-
-   pidx = domElems ;
-   if (planeMin != 0) {
-      ghostIdx[0] = pidx ;
-      pidx += domain->sizeX*domain->sizeY ;
-   }
-
-   if (planeMax != 0) {
-      ghostIdx[1] = pidx ;
-      pidx += domain->sizeX*domain->sizeY ;
-   }
-
-   for (Index_t i=0; i<edgeElems; ++i) {
-      Index_t rowInc   = i*edgeElems ;
-      for (Index_t j=0; j<edgeElems; ++j) {
-         if (myRank == 0) {
-            domain->elemBC[rowInc+j] |= ZETA_M_SYMM ;
-         }
-         else {
-            domain->elemBC[rowInc+j] |= ZETA_M_COMM ;
-            domain->lzetam[rowInc+j] = ghostIdx[0] + rowInc + j ;
-         }
-
-         if (myRank == totalRank-1) {
-            domain->elemBC[rowInc+j+domElems-edgeElems*edgeElems] |=
-               ZETA_P_FREE;
-         }
-         else {
-            domain->elemBC[rowInc+j+domElems-edgeElems*edgeElems] |=
-               ZETA_P_COMM ;
-            domain->lzetap[rowInc+j+domElems-edgeElems*edgeElems] =
-               ghostIdx[1] + rowInc + j ;
-         }
+   if (domain.sliceLoc() != domain.numSlices()-1) {
+      /* adjust lxip() */
+      for (int i=0; i<domain.commElems(); ++i) {
+         domain.lxim(domain.planeElemIds[i]+domain.sliceHeight()-1) = domElems+domain.commElems()+i;
       }
    }
 
@@ -4535,6 +4514,7 @@ int main(int argc, char *argv[])
         i<domElems - wingElems*heightElems; ++i) {
       domain.elemBC(i) |= ZETA_P_FREE ;
    }
+
    for (int plane=0; plane<coreElems; ++plane) {
       for (int col=0; col<heightElems; ++col) {
          domain.elemBC(plane*edgeElems*heightElems + col) |= ETA_M_SYMM ;
@@ -4548,29 +4528,34 @@ int main(int argc, char *argv[])
                        plane*(coreElems-1)*heightElems + col) |= ETA_M_SYMM ;
       }
    }
+
+
    for (int plane=0; plane<coreElems; ++plane) {
       for (int row=0; row<edgeElems; ++row) {
          domain.elemBC(plane*edgeElems*heightElems +
-                       row*heightElems) |= XI_M_SYMM ;
+                       row*heightElems) |= ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
          domain.elemBC(plane*edgeElems*heightElems +
-                        row*heightElems + heightElems-1) |= XI_P_FREE ;
+                        row*heightElems + heightElems-1) |= 
+                           ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
       }
    }
    for (int plane=0; plane<wingElems; ++plane) {
       for (int row=0; row<(coreElems-1); ++row) {
          domain.elemBC(coreElems*edgeElems*heightElems +
                        plane*(coreElems-1)*heightElems +
-                       row*heightElems) |= XI_M_SYMM ;
+                       row*heightElems) |= ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
          domain.elemBC(coreElems*edgeElems*heightElems +
                        plane*(coreElems-1)*heightElems +
-                       row*heightElems + heightElems-1) |= XI_P_FREE ;
+                       row*heightElems + heightElems-1) |=
+                          ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
       }
       domain.elemBC(coreElems*edgeElems*heightElems +
                     wingElems*(coreElems-1)*heightElems +
-                    plane*heightElems) |= XI_M_SYMM ;
+                    plane*heightElems) |= ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
       domain.elemBC(coreElems*edgeElems*heightElems +
                     wingElems*(coreElems-1)*heightElems +
-                    plane*heightElems + heightElems-1) |= XI_P_FREE ;
+                    plane*heightElems + heightElems-1) |=
+                       ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
 
    }
 
