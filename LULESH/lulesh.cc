@@ -77,7 +77,7 @@ Additional BSD Notice
 #include <omp.h>
 #endif
 
-#define VISIT_DATA_INTERVAL 25  // Set this to 0 to disable VisIt data writing
+#define VISIT_DATA_INTERVAL 100  // Set this to 0 to disable VisIt data writing
 #undef USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
@@ -3833,10 +3833,10 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
 
 int main(int argc, char *argv[])
 {
-// Index_t gheightElems = 26 ;
-// Index_t edgeElems = 16 ;
-   Index_t gheightElems = 8 ;
-   Index_t edgeElems = 4 ;
+   Index_t gheightElems = 26 ;
+   Index_t edgeElems = 16 ;
+// Index_t gheightElems = 8 ;
+// Index_t edgeElems = 4 ;
    Index_t edgeNodes = edgeElems+1 ;
 
    Index_t xBegin, xEnd ;
@@ -3922,8 +3922,8 @@ int main(int argc, char *argv[])
    /* construct a cylinder mesh */
 
    //   int coreElems = int (0.33333333333333333*edgeElems) ;
-// int coreElems = int (0.25*edgeElems) ;
-   int coreElems = int (0.5*edgeElems) ;
+   int coreElems = int (0.25*edgeElems) ;
+// int coreElems = int (0.5*edgeElems) ;
    int wingElems = edgeElems - coreElems ;
    int coreNodes = coreElems + 1 ;
    int wingNodes = edgeNodes - coreNodes ;
