@@ -21,10 +21,6 @@
 #if !defined(included_krigalg_InterpolationModel)
 #define included_krigalg_InterpolationModel
 
-//#ifndef included_boost_shared_ptr
-//#define included_boost_shared_ptr
-//#include <boost/shared_ptr.hpp>
-//#endif
 #include <memory>
  
 #ifndef included_vector
@@ -74,8 +70,6 @@ using namespace std;
   // local types
   //
   
-  //  typedef boost::shared_ptr<InterpolationModel> InterpolationModelPtr;
-
   typedef std::shared_ptr<InterpolationModel> InterpolationModelPtr;
 
   /*!

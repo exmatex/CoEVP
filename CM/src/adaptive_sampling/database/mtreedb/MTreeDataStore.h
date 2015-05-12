@@ -7,8 +7,8 @@
 // Description: Manager class for MTree node allocation and storage of data objects.
 //
 
-#ifndef included_mtreedb_MTreeDataStore
-#define included_mtreedb_MTreeDataStore
+#ifndef included_MTreeDataStore
+#define included_MTreeDataStore
 
 #ifndef included_iostream
 #define included_iostream
@@ -38,25 +38,22 @@ using namespace std;
 #endif
 #endif
 
-#ifndef included_mtreedb_MTreeObject
-#include "MTreeObject.h"
+#ifndef included_DBObject
+#include <base/DBObject.h>
 #endif
-#ifndef included_mtreedb_MTreeObjectFactory
-#include "MTreeObjectFactory.h"
+#ifndef included_DBObjectFactory
+#include <base/DBObjectFactory.h>
 #endif
 
 #ifndef NULL
 #define NULL (0)
 #endif
 
-namespace mtreedb {
 
 class MTree;
 class MTreeNode;
-//typedef boost::shared_ptr<MTreeNode> MTreeNodePtr;
 typedef std::shared_ptr<MTreeNode> MTreeNodePtr;
 class MTreeEntry;
-//typedef boost::shared_ptr<MTreeEntry> MTreeEntryPtr;
 typedef std::shared_ptr<MTreeEntry> MTreeEntryPtr;
 
 /*!
@@ -88,10 +85,10 @@ typedef std::shared_ptr<MTreeEntry> MTreeEntryPtr;
  *               to write all unwritten data as well as the associated
  *               MTree index structure to files.
  * 
- * @see mtreedb::MTree
- * @see mtreedb::MTreeNode
- * @see mtreedb::MTreeObject
- * @see mtreedb::MTreeObjectFactory
+ * @see MTree
+ * @see MTreeNode
+ * @see DBObject
+ * @see DBObjectFactory
  */
 
 class MTreeDataStore
@@ -139,7 +136,7 @@ public:
     * pointer will throw an assertion.
     */ 
    void create(MTree* mtree,
-               const MTreeObjectFactory* obj_factory,
+               const DBObjectFactory* obj_factory,
                const string& directory_name,
                const string& file_prefix);
 
@@ -169,7 +166,7 @@ public:
     * an unrecoverable error will result.
     */ 
    void open(MTree* mtree,
-             const MTreeObjectFactory* obj_factory,
+             const DBObjectFactory* obj_factory,
              const string& directory_name,
              const string& file_prefix); 
 
@@ -246,7 +243,7 @@ public:
     * @param object  Reference to object to be added.  The reference
     *                is non-const since method sets object identifier.
     */
-   void addObject(MTreeObject& object);
+   void addObject(DBObject& object);
 
    /*!
     * Remove object from data store.
@@ -275,7 +272,7 @@ public:
     * 
     * @param  object_id  Integer identifier of data object.
     */
-   MTreeObjectPtr getObjectCopy(int object_id);
+   DBObjectPtr getObjectCopy(int object_id);
 
    /*!
     * Return pointer to data object in store with given identifier.
@@ -289,7 +286,7 @@ public:
     * routine to not modify the data object returned.  If it is
     * altered in any way, then unexpected behavior can result.
     */
-   MTreeObjectPtr getObjectPtr(int object_id);
+   DBObjectPtr getObjectPtr(int object_id);
 
    /*!
     * Get node owning object with given identifier. 
@@ -562,15 +559,15 @@ private:
    class ObjectInfo
    {
       public:
-         ObjectInfo(MTreeObjectPtr object);
+         ObjectInfo(DBObjectPtr object);
 
          ~ObjectInfo();
 
-         MTreeObjectPtr getObject() const;
+         DBObjectPtr getObject() const;
 
          void resetObjectPtr();
 
-         void setObjectPtr(MTreeObjectPtr obj);
+         void setObjectPtr(DBObjectPtr obj);
 
          void setOwnerLeafNodeInfo(int leaf_node_id,
                                    int entry_position);
@@ -593,7 +590,7 @@ private:
          ObjectInfo(const ObjectInfo&);
          ObjectInfo& operator = (const ObjectInfo&);
 
-         MTreeObjectPtr d_object_ptr;
+         DBObjectPtr d_object_ptr;
          int    d_owner_leaf_node_id;
          int    d_owner_leaf_node_entry_position;
          bool   d_in_file;
@@ -641,7 +638,7 @@ private:
           OBJECT_FILE_VECTOR_ALLOCATION_CHUNK = 50 };
 
    MTree* d_mtree;
-   const MTreeObjectFactory* d_object_factory;
+   const DBObjectFactory* d_object_factory;
 
    bool      d_is_initialized;
    bool      d_is_open;
@@ -687,7 +684,6 @@ private:
 
 };
 
-}
 #ifndef DEBUG_NO_INLINE
 #include "MTreeDataStore.I"
 #endif

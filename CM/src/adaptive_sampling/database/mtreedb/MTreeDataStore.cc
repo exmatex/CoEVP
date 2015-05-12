@@ -71,10 +71,10 @@ Additional BSD Notice
 // Description: Manager class for MTree node allocation and storage of data objects.
 //
 
-#ifndef included_mtreedb_MtreeDataStore_C
-#define included_mtreedb_MTreeDataStore_C
+#ifndef included_MtreeDataStore_C
+#define included_MTreeDataStore_C
 
-#ifndef included_mtreedb_MTreeDataStore
+#ifndef included_MTreeDataStore
 #include "MTreeDataStore.h"
 #endif
 
@@ -96,11 +96,11 @@ Additional BSD Notice
 //#endif
 #include <assert.h>
 
-#ifndef included_mtreedb_MTree
+#ifndef included_MTree
 #include "MTree.h"
 #endif 
 
-#ifndef included_mtreedb_MTreeEntry
+#ifndef included_MTreeEntry
 #include "MTreeEntry.h"
 #endif 
 
@@ -113,8 +113,6 @@ Additional BSD Notice
 #else
 #include <sstream>     
 #endif
-
-namespace mtreedb {
 
       //
       // 
@@ -158,7 +156,7 @@ namespace mtreedb {
 
 MTreeDataStore::MTreeDataStore()
 : d_mtree((MTree*)NULL),
-  d_object_factory((const MTreeObjectFactory*)NULL),
+  d_object_factory((const DBObjectFactory*)NULL),
   d_is_initialized(false),
   d_is_open(false),
   d_num_leaf_nodes(0),
@@ -172,7 +170,7 @@ MTreeDataStore::~MTreeDataStore()
 {
 
    d_mtree = (MTree*)NULL;
-   d_object_factory = (const MTreeObjectFactory*)NULL;
+   d_object_factory = (const DBObjectFactory*)NULL;
 
    const int num_files = d_object_file_info.size();
    for (int file_index = 0; file_index < num_files; ++file_index) {
@@ -209,13 +207,13 @@ MTreeDataStore::~MTreeDataStore()
 */
 
 void MTreeDataStore::create(MTree* mtree,
-                            const MTreeObjectFactory* obj_factory,
+                            const DBObjectFactory* obj_factory,
                             const string& directory_name,
                             const string& file_prefix)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
    assert(mtree != (MTree*)NULL);
-   assert(obj_factory != (MTreeObjectFactory*)NULL);
+   assert(obj_factory != (DBObjectFactory*)NULL);
    assert(!directory_name.empty());
    assert(!file_prefix.empty());
 #endif
@@ -269,13 +267,13 @@ void MTreeDataStore::create(MTree* mtree,
 */
 
 void MTreeDataStore::open(MTree* mtree,
-                          const MTreeObjectFactory* obj_factory,
+                          const DBObjectFactory* obj_factory,
                           const string& directory_name,
                           const string& file_prefix)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
    assert(mtree != (MTree*)NULL);
-   assert(obj_factory != (MTreeObjectFactory*)NULL);
+   assert(obj_factory != (DBObjectFactory*)NULL);
    assert(!directory_name.empty());
    assert(!file_prefix.empty());
 #endif
@@ -593,7 +591,7 @@ bool MTreeDataStore::isValidLeafNodeId(int leaf_node_id) const
 *************************************************************************
 */
 
-void MTreeDataStore::addObject(MTreeObject& object)
+void MTreeDataStore::addObject(DBObject& object)
 {
 
    if ( d_is_open ) { 
@@ -605,7 +603,7 @@ void MTreeDataStore::addObject(MTreeObject& object)
                                 OBJECT_VECTOR_ALLOCATION_CHUNK );
       }
 
-      MTreeObjectPtr store_obj( d_object_factory->cloneObject(object) );
+      DBObjectPtr store_obj( d_object_factory->cloneObject(object) );
 
       store_obj->setObjectId( d_object_info.size() );
       object.setObjectId( store_obj->getObjectId() );
@@ -614,7 +612,7 @@ void MTreeDataStore::addObject(MTreeObject& object)
 
    } else {
 
-      MTreeObjectPtr store_obj( d_object_factory->cloneObject(object) );
+      DBObjectPtr store_obj( d_object_factory->cloneObject(object) );
 
       store_obj->setObjectId( d_recycled_object_indices.front() );
       d_recycled_object_indices.pop_front();
@@ -699,9 +697,9 @@ bool MTreeDataStore::isValidObjectId(int object_id) const
 *************************************************************************
 */
 
-MTreeObjectPtr MTreeDataStore::getObjectCopy(int object_id)
+DBObjectPtr MTreeDataStore::getObjectCopy(int object_id)
 {
-   MTreeObjectPtr ret_object;
+   DBObjectPtr ret_object;
 
    if ( d_is_open ) { 
 
@@ -738,9 +736,9 @@ MTreeObjectPtr MTreeDataStore::getObjectCopy(int object_id)
 *************************************************************************
 */
 
-MTreeObjectPtr MTreeDataStore::getObjectPtr(int object_id)
+DBObjectPtr MTreeDataStore::getObjectPtr(int object_id)
 {
-   MTreeObjectPtr ret_object;
+   DBObjectPtr ret_object;
 
    if ( d_is_open ) { 
 
@@ -1446,7 +1444,7 @@ bool MTreeDataStore::readDataObjectHelper(
             string object_db_name = getObjectDatabaseName(object_id);
             toolbox::DatabasePtr obj_db = read_DB->getDatabase(object_db_name);
 
-            MTreeObjectPtr data_object = 
+            DBObjectPtr data_object = 
                d_object_factory->allocateObject( *(obj_db.get()) );
 
             data_object->setObjectId(object_id);
@@ -1717,7 +1715,7 @@ bool MTreeDataStore::readObjectInfo(
          toolbox::DatabasePtr obj_db =
             read_DB->getDatabase(object_db_name);
 
-         MTreeObjectPtr dummy_obj_ptr;
+         DBObjectPtr dummy_obj_ptr;
 
          ObjectInfo* obj_info = new ObjectInfo(dummy_obj_ptr);
 
@@ -1755,7 +1753,7 @@ void MTreeDataStore::LeafNodeInfo::clearOwnObjectIds()
 {
    const int num_objects = d_object_ids.size();
    for (int in = 0; in < num_objects; ++in) {
-      d_object_ids[in] = MTreeObject::getUndefinedId();
+      d_object_ids[in] = DBObject::getUndefinedId();
    }
 }
 
@@ -1764,7 +1762,7 @@ void MTreeDataStore::LeafNodeInfo::setOwnObjectId(int obj_id, int pos)
    const int object_capacity = d_object_ids.capacity();
    int i = d_object_ids.size();
    while ( (i <= pos) && (i < object_capacity) ) {
-      d_object_ids.push_back(MTreeObject::getUndefinedId());
+      d_object_ids.push_back(DBObject::getUndefinedId());
       i++;
    }
    d_object_ids[pos] = obj_id;
@@ -1841,7 +1839,7 @@ void MTreeDataStore::printClassData(ostream& stream) const
    stream << "this ptr = " << (MTreeDataStore*)this << endl;
    stream << "d_mtree = " << (MTree*)d_mtree << endl;
    stream << "d_object_factory = " 
-          << (MTreeObjectFactory*)d_object_factory << endl;
+          << (DBObjectFactory*)d_object_factory << endl;
    stream << "d_is_initialized = " << d_is_initialized << endl;
    stream << "d_is_open = " << d_is_open << endl;
    stream << "d_directory_name = " << d_directory_name << endl;
@@ -1939,7 +1937,6 @@ void MTreeDataStore::printClassData(ostream& stream) const
 }
 
 
-}
 #endif
 
 

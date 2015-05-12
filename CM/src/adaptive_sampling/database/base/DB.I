@@ -1,4 +1,4 @@
-// DO-NOT-DELETE revisionify.begin() 
+/* DO-NOT-DELETE revisionify.begin() */
 /*
 
                             Copyright (c) 2014.
@@ -61,48 +61,24 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-// DO-NOT-DELETE revisionify.end() 
+/* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreeObjectFactory.h
-// Package:     MTree database
-// 
-// 
-// 
-// Description: Abstract base class for MTree data object factory.
+// File:        DB.I
+// Description: DB structure class.
 //
 
-#ifndef included_mtreedb_MtreeObjectFactory_C
-#define included_mtreedb_MTreeObjectFactory_C
+#ifdef DEBUG_NO_INLINE
+#define inline
+#endif
 
-#include "MTreeObjectFactory.h"
-
-namespace mtreedb {
-
-/*
-*************************************************************************
-*                                                                       *
-* Default ctor and dtor for MTreeObjectFactory class and default        *
-* implementation of clone method.                                       *  
-*                                                                       *
-*************************************************************************
-*/
-
-MTreeObjectFactory::MTreeObjectFactory()
+inline
+string DB::getName() const
 {
+   return(d_db_name);
 }
 
-MTreeObjectFactory::~MTreeObjectFactory()
-{
-}
-
-MTreeObjectPtr 
-MTreeObjectFactory::cloneObject(const MTreeObject& object) const
-{
-   return( object.makeCopy() );
-}
-
-
-}
+#ifdef DEBUG_NO_INLINE
+#undef inline
 #endif
 
 

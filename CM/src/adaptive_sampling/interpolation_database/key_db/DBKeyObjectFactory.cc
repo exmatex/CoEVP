@@ -1,4 +1,3 @@
-// DO-NOT-DELETE revisionify.begin() 
 /*
 
                             Copyright (c) 2014.
@@ -61,72 +60,31 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-// DO-NOT-DELETE revisionify.end() 
-//
-// File:        MTreeObject.cc
-// Package:     MTree database
-// 
-// 
-// 
-// Description: Abstract base class for data objects indexed by an MTree.
-//
 
-#ifndef included_mtreedb_MtreeObject_C
-#define included_mtreedb_MTreeObject_C
+#include "DBKeyObjectFactory.h"
 
-#include "MTreeObject.h"
+namespace krigcpl {
 
-#ifdef DEBUG_NO_INLINE
-#include "MTreeObject.I"
-#endif
+    //
+    // Allocate database key
+    //
 
-namespace mtreedb {
+    template<>
+    DBObjectPtr 
+    DBKeyObjectFactory<std::string>::allocateObject(toolbox::Database& db) const
+    {
+	
+      //
+      // instantiate DBKeyObject
+      //
 
-/*
-*************************************************************************
-*                                                                       *
-* Initialization of and access to static data members.                  * 
-*                                                                       *
-*************************************************************************
-*/
+       DBKeyObject<std::string> * keyObjectPtr = new DBKeyObject<std::string>;
 
-int MTreeObject::s_undefined_object_id = -1;
+      //
+      // return DBObjectPtr
+      // 
 
-int MTreeObject::getUndefinedId()
-{
-   return( s_undefined_object_id );
-}
-
-/*
-*************************************************************************
-*                                                                       *
-* Dtor for MTreeObject class.                                           * 
-*                                                                       *
-*************************************************************************
-*/
-
-MTreeObject::~MTreeObject()
-{
-}
-
-/*
-*************************************************************************
-*                                                                       *
-* Write data object id to database and call virtual method to write     *
-* concrete object data members to database.                             *
-*                                                                       *
-*************************************************************************
-*/
-
-void MTreeObject::writeToDatabase(toolbox::Database& db) const
-{
-   db.putInteger("d_object_id", d_object_id);
-   putToDatabase(db);
-}
+      return DBObjectPtr(keyObjectPtr);
+    }
 
 }
-#endif
-
-
-
-

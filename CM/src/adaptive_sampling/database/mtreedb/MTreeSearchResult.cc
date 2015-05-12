@@ -71,16 +71,14 @@ Additional BSD Notice
 // Description: Container for single data object resulting from MTree search
 //
 
-#ifndef included_mtreedb_MtreeSearchResult_C
-#define included_mtreedb_MTreeSearchResult_C
+#ifndef included_MtreeSearchResult_C
+#define included_MTreeSearchResult_C
 
 #include "MTreeSearchResult.h"
 
 #ifdef DEBUG_NO_INLINE
 #include "MTreeSearchResult.I"
 #endif
-
-namespace mtreedb {
 
 /*
 *************************************************************************
@@ -93,6 +91,7 @@ namespace mtreedb {
 MTreeSearchResult::~MTreeSearchResult()
 {
 }
+
 
 /*
 *************************************************************************
@@ -117,7 +116,6 @@ void MTreeSearchResult::finalizeSearchResult(
 }
 
 
-}
 #endif
 
 

@@ -63,15 +63,15 @@ Additional BSD Notice
 */
 /* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreeModelObjectFactory.I
+// File:        DBKrigingModelObjectFactory.I
 // Package:     kriging coupler
 // 
 // Revision:    $Revision$
 // Modified:    $Date$
-// Description: MTree model object factory
+// Description: DB model object factory
 //
 
-#include "kriging_mtreedb/MTreeKrigingModelObject.h"
+#include "kriging_db/DBKrigingModelObject.h"
 
 namespace krigcpl {
 
@@ -80,7 +80,7 @@ namespace krigcpl {
     //
 
     template <typename T>
-    MTreeModelObjectFactory<T>::MTreeModelObjectFactory()
+    DBKrigingModelObjectFactory<T>::DBKrigingModelObjectFactory()
     {
 
       return;
@@ -92,7 +92,7 @@ namespace krigcpl {
     //
 
     template <typename T>
-    MTreeModelObjectFactory<T>::~MTreeModelObjectFactory()
+    DBKrigingModelObjectFactory<T>::~DBKrigingModelObjectFactory()
     {
 
       return;
@@ -104,12 +104,14 @@ namespace krigcpl {
     //
 
     template <typename T>
-    mtreedb::MTreeObjectPtr 
-    MTreeModelObjectFactory<T>::allocateObject(toolbox::Database& db) const
+    //    mtreedb::DBObjectPtr 
+    DBObjectPtr 
+    DBKrigingModelObjectFactory<T>::allocateObject(toolbox::Database& db) const
     {
 
       (void)db;
-      mtreedb::MTreeObjectPtr dummy;
+      //      mtreedb::DBObjectPtr dummy;
+      DBObjectPtr dummy;
       return(dummy);
       
     }

@@ -68,8 +68,8 @@ Additional BSD Notice
 // Description: Main Mtree index structure class.
 //
 
-#ifndef included_mtreedb_MTree_C
-#define included_mtreedb_MTree_C
+#ifndef included_MTree_C
+#define included_MTree_C
 
 #include "MTree.h"
 
@@ -96,8 +96,6 @@ using namespace std;
 #include "MTree.I"
 #endif
 
-namespace mtreedb {
-
 /*
 *************************************************************************
 *                                                                       *
@@ -109,21 +107,13 @@ namespace mtreedb {
 MTree::MTree(const string& tree_name,
              ostream* error_log_stream,
              bool do_error_checking)
-: d_tree_name(tree_name),
-  d_max_node_entries(DEFAULT_MAX_NODE_ENTRIES),
-  d_do_error_checking(do_error_checking),
-  d_error_log_stream(error_log_stream),
-  d_root_node_promotion_method(MTreeNode::MIN_OVERLAP_PROMOTION),
-  d_node_promotion_method(MTreeNode::MAX_SPREAD_DISTANCE_PROMOTION),
-  d_node_partition_method(MTreeNode::HYPERPLANE_PARTITION),
-  d_min_node_utilization(0.5)
+   : DB(tree_name, error_log_stream, do_error_checking),
+     d_max_node_entries(DEFAULT_MAX_NODE_ENTRIES),
+     d_root_node_promotion_method(MTreeNode::MIN_OVERLAP_PROMOTION),
+     d_node_promotion_method(MTreeNode::MAX_SPREAD_DISTANCE_PROMOTION),
+     d_node_partition_method(MTreeNode::HYPERPLANE_PARTITION),
+     d_min_node_utilization(0.5)
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(!tree_name.empty());
-   if (do_error_checking) {
-      assert(error_log_stream != (ostream*)NULL);
-   }
-#endif
 // For calculating tree statistics, set up array of 
 // node count per level sized to some large number 
 // of levels we hope to never exceed 
@@ -158,7 +148,7 @@ MTree::~MTree()
 
 void MTree::initializeCreate(const string& directory_name,
                              const string& file_prefix,
-                             const MTreeObjectFactory& obj_factory)
+                             const DBObjectFactory& obj_factory)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
    assert(!directory_name.empty());
@@ -172,7 +162,7 @@ void MTree::initializeCreate(const string& directory_name,
                           file_prefix);
    } else {
       TBOX_WARNING("MTree::initializeCreate() warning"
-                   << " for tree named = " << d_tree_name
+                   << " for tree named = " << d_db_name
                    << "\nCannot call initializeCreate() method on tree"
                    << " that is already initialized!" 
                    << "\n So calling initialization method did nothing!"
@@ -186,7 +176,7 @@ void MTree::initializeCreate(const string& directory_name,
 
 void MTree::initializeOpen(const string& directory_name,
                            const string& file_prefix,
-                           const MTreeObjectFactory& obj_factory)
+                           const DBObjectFactory& obj_factory)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
    assert(!directory_name.empty());
@@ -200,7 +190,7 @@ void MTree::initializeOpen(const string& directory_name,
                         file_prefix);
    } else {
       TBOX_WARNING("MTree::initializeOpen() warning"
-                   << " for tree named = " << d_tree_name
+                   << " for tree named = " << d_db_name
                    << "\nCannot call initializeOpen() method on tree"
                    << " that is already initialized!"
                    << "\n So calling initialization method did nothing!"
@@ -234,7 +224,7 @@ void MTree::setMaxNodeEntries(int max_entries)
 {
   if ( d_root_node || (max_entries < 2) ) {
      TBOX_WARNING("MTree::setMaxNodeEntries() warning"
-                  << " for tree named = " << d_tree_name
+                  << " for tree named = " << d_db_name
                   << "\nEither the given max number of entries = " 
                   << max_entries << " is less than 2,"
                   << "\nor some data object has been inserted already."
@@ -258,8 +248,8 @@ void MTree::setMaxNodeEntries(int max_entries)
 *************************************************************************
 */
  
-void MTree::insertObject(MTreeObject& object,
-                         const MTreePoint& point,
+void MTree::insertObject(DBObject& object,
+                         const MetricSpacePoint& point,
                          double radius)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
@@ -267,7 +257,7 @@ void MTree::insertObject(MTreeObject& object,
 #endif
 
    if (!d_data_store.isInitialized()) {
-      TBOX_ERROR("MTree object error: " << d_tree_name
+      TBOX_ERROR("MTree object error: " << d_db_name
                  << "\n   an initialize method must be called"
                  << " before calling MTree::insertObject()" << endl);
    } else {
@@ -299,7 +289,7 @@ void MTree::insertObject(MTreeObject& object,
 
         if (node->isOverfull()) {  // just to be anal....
            TBOX_ERROR("MTree::insertObject() error"
-                      << " for tree named = " << d_tree_name
+                      << " for tree named = " << d_db_name
                       << "\nSplit of overfull node id " 
                       << node->getNodeId()
                       << "\nfailed for object id " 
@@ -342,9 +332,9 @@ void MTree::insertObject(MTreeObject& object,
 *************************************************************************
 */
 
-MTreeObjectPtr MTree::getObject(int object_id) const
+DBObjectPtr MTree::getObject(int object_id) const
 {
-   MTreeObjectPtr ret_object( d_data_store.getObjectCopy(object_id) );
+   DBObjectPtr ret_object( d_data_store.getObjectCopy(object_id) );
    return(ret_object);
 }
 
@@ -509,8 +499,8 @@ void MTree::deleteObject(int object_id)
 *************************************************************************
 */
 
-void MTree::searchKNN(vector<MTreeSearchResult>& results,
-                      const MTreePoint& query_point,
+void MTree::searchKNN(vector<DBSearchResult>& results,
+                      const MetricSpacePoint& query_point,
                       int k_neighbors,
                       bool make_safe)
 {
@@ -525,7 +515,7 @@ void MTree::searchKNN(vector<MTreeSearchResult>& results,
        * and queue of nodes to search.
        */
 
-      const double max_dist = MTreePoint::getMaxDistance();
+      const double max_dist = MetricSpacePoint::getMaxDistance();
       const int    klast    = k_neighbors - 1;
 
       MTreeQuery query( query_point.makeCopy(), max_dist, this );
@@ -635,7 +625,7 @@ void MTree::searchKNN(vector<MTreeSearchResult>& results,
        */
       for (int iresult = klast; iresult >= 0; iresult--) {
          if ( results[iresult].isValidResult() ) {
-            results[iresult].finalizeSearchResult(d_data_store,
+            ((MTreeSearchResult&)results[iresult]).finalizeSearchResult(d_data_store,
                                                   make_safe);
          } else {
             results.pop_back();
@@ -656,8 +646,8 @@ void MTree::searchKNN(vector<MTreeSearchResult>& results,
 *************************************************************************
 */
 
-void MTree::searchRange(list<MTreeSearchResult>& results,
-                        const MTreePoint& query_point,
+void MTree::searchRange(list<DBSearchResult>& results,
+                        const MetricSpacePoint& query_point,
                         double radius,
                         bool make_safe)
 {
@@ -786,7 +776,7 @@ MTreeNodePtr MTree::pickNode(MTreeNodePtr start_node,
 
          if ( !insert_node.get() ) {
             TBOX_ERROR("MTree::pickNode() error"
-                       << " for tree named = " << d_tree_name
+                       << " for tree named = " << d_db_name
                        << "\nFailed to find node to insert entry for object "
                        << entry->getDataObjectId() 
                        << endl);
@@ -990,14 +980,14 @@ void MTree::mapDataObjectsToNode(MTreeNodePtr node)
       }
       if (!operation_successful) {
          TBOX_ERROR("MTree::mapDataObjectsToNode() error"
-                    << " for tree named = " << d_tree_name
+                    << " for tree named = " << d_db_name
                     << "\nSome operation in mapping objects to node # " 
                     << node->getNodeId() << " failed!" 
                     << endl); 
       }
    } else {
       TBOX_ERROR("MTree::mapDataObjectsToNode() error"
-                 << " for tree named = " << d_tree_name
+                 << " for tree named = " << d_db_name
                  << "\nMethod called for node # " << node->getNodeId()
                  << "\nwhich is not marked as a leaf node in tree."
                  << endl);
@@ -1060,7 +1050,7 @@ bool MTree::checkConsistency(ostream& stream) const
 void MTree::printNodeSummary(ostream& stream) const
 {
    stream << "\nMTree::printNodeSummary()\n";
-   stream << "d_tree_name = " << d_tree_name << endl;
+   stream << "d_db_name = " << d_db_name << endl;
    stream << "d_max_node_entries = " << d_max_node_entries << endl;
    const int number_levels_in_tree = getNumberLevels();
    stream << "number levels in tree = " << number_levels_in_tree << endl;
@@ -1111,7 +1101,7 @@ void MTree::printClassData(ostream& stream) const
    stream << "\nMTree::printClassData()\n";
    stream << "--------------------------------------\n";
    stream << "this ptr = " << (MTree*)this << endl;
-   stream << "d_tree_name = " << d_tree_name << endl;
+   stream << "d_db_name = " << d_db_name << endl;
    stream << "d_max_node_entries = " << d_max_node_entries << endl;
    stream << "d_do_error_checking = " << d_do_error_checking << endl;
    stream << "d_root_node_promotion_method = " 
@@ -1300,7 +1290,7 @@ void MTree::clearLevelStatistics()
 void MTree::printAllTreeStatistics(ostream& stream) const
 {
    stream << "\nMTree::printAllTreeStatistics()\n";
-   stream << "d_tree_name = " << d_tree_name << endl;
+   stream << "d_db_name = " << d_db_name << endl;
    printAllTreeOperationStatistics(stream);
 
    const int n_tree_levels = getNumberLevels();
@@ -1432,7 +1422,82 @@ void MTree::clearOperationCountStatistics()
 
 }
 
+void MTree::outputStats(std::ostream & outputStream)
+{
+   //
+   // calculate statistics 
+   //
+
+   calculateLevelStatistics();
+
+   //
+   // print all tree statistics
+   //
+
+   printAllTreeStatistics(outputStream);
+
+   //
+   // get number of levels
+   //
+
+   const int numberLevels = getNumberLevels();
+
+   //
+   // output levels
+   //
+
+   for (int i = 0; i < numberLevels; ++i) {
+
+      //
+      // output level number
+      //
+
+      outputStream << "Level " << i << std::endl;
+
+      //
+      // get level stats
+      //
+
+      const MTreeLevelStatistic * levelStats = getLevelStatistics(i);
+
+      //
+      // get number of nodes at this level
+      //
+
+      const int numberNodes = levelStats->getNumberNodesOnLevel();
+
+      //
+      // iterate over nodes on this level
+      //
+
+      outputStream << "Node   Number entries   Number data leaf nodes"
+                   << std::endl;
+
+      for (int iNode = 0; iNode < numberNodes; ++iNode) {
+
+         //
+         // get node stat
+         //
+
+         const MTreeNodeStat & nodeStat = levelStats->getNodeStat(iNode);
+
+         //
+         // output 
+         //
+	    
+         outputStream << iNode << " "
+                      << nodeStat.getNumberEntries() << " "
+                      << nodeStat.getTotalNumberDataObjectsInSubtree() << " "
+                      << std::endl;
+	  
+      }	  
+
+   }
+	
+   return;
 }
+
+
 #endif
 
 

@@ -1,14 +1,13 @@
 //
-// File:        MTreeObject.h
-// Package:     MTree database
+// File:        DBObject.h
 // 
 // 
 // 
-// Description: Abstract base class for data objects indexed by an MTree.
+// Description: Abstract base class for database objects.
 //
 
-#ifndef included_mtreedb_MTreeObject
-#define included_mtreedb_MTreeObject
+#ifndef included_DBObject
+#define included_DBObject
 
 #ifndef included_toolbox_Database
 #include "toolbox/database/Database.h"
@@ -20,20 +19,13 @@
 using namespace std;
 #endif
 
-//#ifndef included_boost_shared_ptr
-//#define included_boost_shared_ptr
-//#include <boost/shared_ptr.hpp>
-//#endif
 
-namespace mtreedb {
-
-class MTreeObject;
-//typedef boost::shared_ptr<MTreeObject> MTreeObjectPtr;
-typedef std::shared_ptr<MTreeObject> MTreeObjectPtr;
+class DBObject;
+typedef std::shared_ptr<DBObject> DBObjectPtr;
 
 /*!
- * @brief MTreeObject is an abstract base class from which all data 
- *        objects indexed by an MTree structure must be derived.
+ * @brief DBObject is an abstract base class from which all database
+ *        objects must be derived.
  *
  * By default, an object has an undefined object id.  For safety, and 
  * to preserve the uniqueness of object ids, an object id should only 
@@ -41,7 +33,7 @@ typedef std::shared_ptr<MTreeObject> MTreeObjectPtr;
  * is added to the data store.  The setObjectId() method is declared private.
  */
 
-class MTreeObject
+class DBObject
 {
 public:
    friend class MTreeDataStore;
@@ -53,20 +45,20 @@ public:
    static int getUndefinedId();
 
    /*!
-    * MTree object ctor.
+    * Database object ctor.
     */
-   MTreeObject();
+   DBObject();
 
    /*!
-    * Virtual dtor for MTree objects.
+    * Virtual dtor for database objects.
     */
-   virtual ~MTreeObject();
+   virtual ~DBObject();
 
    /*!
     * Pure virtual method to create and return smart pointer to a
     * (deep) copy of this object.
     */
-   virtual MTreeObjectPtr makeCopy() const = 0;
+   virtual DBObjectPtr makeCopy() const = 0;
 
    /*!
     * Pure virtual method to write data members to given database.
@@ -86,8 +78,8 @@ public:
 
 private:
    // The following are not implemented
-   MTreeObject(const MTreeObject&);
-   void operator=(const MTreeObject&);
+   DBObject(const DBObject&);
+   void operator=(const DBObject&);
 
    /*
     * Set object id to given integer value.  Generally, this method must only
@@ -106,8 +98,7 @@ private:
 
 };
 
-}
 #ifndef DEBUG_NO_INLINE
-#include "MTreeObject.I"
+#include "DBObject.I"
 #endif
 #endif

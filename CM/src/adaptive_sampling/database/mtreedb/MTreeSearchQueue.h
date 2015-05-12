@@ -7,8 +7,8 @@
 // Description: Utility class used in MTree searches
 //
 
-#ifndef included_mtreedb_MTreeSearchQueue
-#define included_mtreedb_MTreeSearchQueue
+#ifndef included_MTreeSearchQueue
+#define included_MTreeSearchQueue
 
 #ifndef included_list
 #define included_list
@@ -16,11 +16,9 @@
 using namespace std;
 #endif
 
-#ifndef included_mtreedb_MTreeSearchNode
+#ifndef included_MTreeSearchNode
 #include "MTreeSearchNode.h"
 #endif
-
-namespace mtreedb {
 
 /*!
  * @brief MTreeSearchQueue implements a simple ordered list 
@@ -87,7 +85,6 @@ private:
  
 };
 
-}
 #ifndef DEBUG_NO_INLINE
 #include "MTreeSearchQueue.I"
 #endif

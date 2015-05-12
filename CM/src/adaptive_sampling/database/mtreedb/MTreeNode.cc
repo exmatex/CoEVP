@@ -71,14 +71,14 @@ Additional BSD Notice
 // Description: Representation of node in an MTree.
 //
 
-#ifndef included_mtreedb_MtreeNode_C
-#define included_mtreedb_MTreeNode_C
+#ifndef included_MtreeNode_C
+#define included_MTreeNode_C
 
-#ifndef included_mtreedb_MTreeNode
+#ifndef included_MTreeNode
 #include "MTreeNode.h"
 #endif
 
-#ifndef included_mtreedb_MTree
+#ifndef included_MTree
 #include "MTree.h"
 #endif
 
@@ -101,8 +101,6 @@ Additional BSD Notice
 #include "MTreeNode.I"
 #endif
 
-
-namespace mtreedb {
 
 /*
 *************************************************************************
@@ -336,7 +334,7 @@ MTreeNode::searchBestSubtreeForInsert(MTreeEntryPtr new_entry) const
              * doesn't apply.  Thus, we cannot conclude that the regions 
              * defined by the test entry and the new entry do not intersect.
              */
-            dist_penalty += rad_sum - MTreePoint::getMaxDistance(); 
+            dist_penalty += rad_sum - MetricSpacePoint::getMaxDistance(); 
          }
 
          if ( (best_penalty < toolbox::MathUtilities<double>::getMax()) &&
@@ -367,7 +365,7 @@ MTreeNode::searchBestSubtreeForInsert(MTreeEntryPtr new_entry) const
              * We set tpenalty so that it will be assigned to the nearest
              * such entry.
              */     
-            tpenalty = tdistance - MTreePoint::getMaxDistance();
+            tpenalty = tdistance - MetricSpacePoint::getMaxDistance();
          }
 
       }
@@ -905,7 +903,7 @@ bool MTreeNode::promoteTwo(MTreeEntryPtr& entry1,
 
       case MIN_OVERLAP_PROMOTION: {
 
-         double min_overlap = -MTreePoint::getMaxDistance();
+         double min_overlap = -MetricSpacePoint::getMaxDistance();
  
          for (int ie1 = 0; ie1 < num_entries; ++ie1) {
             MTreeEntryPtr entry1(d_entries[ie1]);
@@ -1436,7 +1434,6 @@ void MTreeNode::printClassData(ostream& stream) const
 }
 
 
-}
 #endif
 
 

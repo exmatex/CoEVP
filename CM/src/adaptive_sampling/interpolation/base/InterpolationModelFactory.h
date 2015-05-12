@@ -15,11 +15,6 @@
 #include "InterpolationModel.h"
 #endif
 
-//#ifndef included_boost_shared_ptr
-//#define included_boost_shared_ptr
-//#include <boost/shared_ptr.hpp>
-//#endif
-
 #include <string>
 
   //
@@ -38,7 +33,6 @@
     // local types
     //
 
-    //    typedef boost::shared_ptr<InterpolationModelFactory> InterpolationModelFactoryPointer;
     typedef std::shared_ptr<InterpolationModelFactory> InterpolationModelFactoryPointer;
 
     /*!

@@ -71,8 +71,8 @@ Additional BSD Notice
 // Description: Simple class for holding MTree statistic for a level in the tree
 //
 
-#ifndef included_mtreedb_MtreeLevelStatistic_C
-#define included_mtreedb_MTreeLevelStatistic_C
+#ifndef included_MtreeLevelStatistic_C
+#define included_MTreeLevelStatistic_C
 
 #include "MTreeLevelStatistic.h"
 
@@ -82,8 +82,6 @@ Additional BSD Notice
 #include <cassert>
 #endif
 #endif
-
-namespace mtreedb {
 
 /*
 *************************************************************************
@@ -242,7 +240,6 @@ void MTreeLevelStatistic::setTotalNumberDataObjectsInSubtree(
  
 }
 
-}
 #endif
 
 

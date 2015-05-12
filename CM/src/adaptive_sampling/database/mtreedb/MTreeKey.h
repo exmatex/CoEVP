@@ -7,8 +7,8 @@
 // Description: Description of metric space region associated with each MTree entry
 //
 
-#ifndef included_mtreedb_MTreeKey
-#define included_mtreedb_MTreeKey
+#ifndef included_MTreeKey
+#define included_MTreeKey
 
 #ifndef included_iostream
 #define included_iostream
@@ -16,18 +16,16 @@
 using namespace std;
 #endif
 
-#ifndef included_mtreedb_MTreePoint
-#include "MTreePoint.h"
+#ifndef included_MetricSpacePoint
+#include <base/MetricSpacePoint.h>
 #endif
-
-namespace mtreedb {
 
 /*!
  * @brief MTreeKey maintains the representation of the metric space region 
  * associated with each MTreeEntry in an MTree structure.  The metric space 
- * region is defined by a center point (an MTreePoint object) and a radius.
+ * region is defined by a center point (an MetricSpacePoint object) and a radius.
  * 
- * @see mtreedb::MTreePoint
+ * @see MetricSpacePoint
  */
 
 class MTreeKey
@@ -52,7 +50,7 @@ public:
    /*!
     * MTree key ctor that specifies all data members.
     */
-   MTreeKey(const MTreePointPtr point,
+   MTreeKey(const MetricSpacePointPtr point,
             double radius, 
             double dist2parent = getUndefinedDistanceToParent());
 
@@ -67,10 +65,10 @@ public:
    MTreeKey& operator=(const MTreeKey& rhs);
 
    /*!
-    * Return const pointer to MTreePoint associated with this 
+    * Return const pointer to MetricSpacePoint associated with this 
     * key object.
     */
-   const MTreePointPtr getPoint() const;
+   const MetricSpacePointPtr getPoint() const;
 
    /*!
     * Return radius of region associated with this key object.
@@ -118,7 +116,7 @@ private:
     * Center point of metric space region defined by key;
     * null by default
     */
-   MTreePointPtr  d_point;
+   MetricSpacePointPtr  d_point;
 
    /*
     * Radius of metric space region defined by key;
@@ -135,7 +133,6 @@ private:
 
 };
 
-}
 #ifndef DEBUG_NO_INLINE
 #include "MTreeKey.I"
 #endif

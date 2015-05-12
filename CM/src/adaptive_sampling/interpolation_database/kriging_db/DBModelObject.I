@@ -63,12 +63,12 @@ Additional BSD Notice
 */
 /* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreeModelObject.cc
+// File:        DBModelObject.cc
 // Package:     kriging coupler
 // 
 // Revision:    $Revision$
 // Modified:    $Date$
-// Description: Implementation of the MTreeModelObject.
+// Description: Implementation of the DBModelObject.
 //
 
 #include <iostream>
@@ -81,7 +81,7 @@ namespace krigcpl {
 
     template<typename T>
     inline
-    MTreeModelObject<T>::MTreeModelObject(const T & modelObject)
+    DBModelObject<T>::DBModelObject(const T & modelObject)
       : _modelObject(modelObject)
     {
 
@@ -94,7 +94,7 @@ namespace krigcpl {
     //
 
     template <typename T>
-    MTreeModelObject<T>::~MTreeModelObject()
+    DBModelObject<T>::~DBModelObject()
     {
 
       return;
@@ -106,11 +106,11 @@ namespace krigcpl {
     //
     
     template <typename T>
-    mtreedb::MTreeObjectPtr 
-    MTreeModelObject<T>::makeCopy() const
+    DBObjectPtr 
+    DBModelObject<T>::makeCopy() const
     {
 	
-      return mtreedb::MTreeObjectPtr(new MTreeModelObject(_modelObject));
+      return DBObjectPtr(new DBModelObject(_modelObject));
 	
     }
     
@@ -120,7 +120,7 @@ namespace krigcpl {
     
     template <typename T>
     void 
-    MTreeModelObject<T>::putToDatabase(toolbox::Database& db) const
+    DBModelObject<T>::putToDatabase(toolbox::Database& db) const
     { 
 
       _modelObject->putToDatabase(db);
@@ -134,7 +134,7 @@ namespace krigcpl {
     
     template <typename T>
     ostream & 
-    MTreeModelObject<T>::print(ostream & stream) const
+    DBModelObject<T>::print(ostream & stream) const
     {
 	
       stream << "   object id = " << getObjectId() << std::endl;
@@ -149,7 +149,7 @@ namespace krigcpl {
 
     template <typename T>
     inline T
-    MTreeModelObject<T>::getModel() const
+    DBModelObject<T>::getModel() const
     {
 	
       return _modelObject;

@@ -1,4 +1,4 @@
-/* DO-NOT-DELETE revisionify.begin() */
+// DO-NOT-DELETE revisionify.begin() 
 /*
 
                             Copyright (c) 2014.
@@ -61,49 +61,66 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-/* DO-NOT-DELETE revisionify.end() */
+// DO-NOT-DELETE revisionify.end() 
 //
-// File:        MTreePoint.I
-// Package:     MTree database
+// File:        DBObject.cc
 // 
 // 
 // 
-// Description: Abstract base class for points that represent entries in an MTree.
+// Description: Abstract base class for database objects.
 //
 
+#ifndef included_DBObject_C
+#define included_DBObject_C
+
+#include "DBObject.h"
+
 #ifdef DEBUG_NO_INLINE
-#define inline
+#include "DBObject.I"
 #endif
 
-namespace mtreedb {
+/*
+*************************************************************************
+*                                                                       *
+* Initialization of and access to static data members.                  * 
+*                                                                       *
+*************************************************************************
+*/
 
-inline 
-MTreePoint::MTreePoint()
+int DBObject::s_undefined_object_id = -1;
+
+int DBObject::getUndefinedId()
+{
+   return( s_undefined_object_id );
+}
+
+/*
+*************************************************************************
+*                                                                       *
+* Dtor for DBObject class.                                           * 
+*                                                                       *
+*************************************************************************
+*/
+
+DBObject::~DBObject()
 {
 }
 
-inline 
-MTreePoint::~MTreePoint()
+/*
+*************************************************************************
+*                                                                       *
+* Write data object id to database and call virtual method to write     *
+* concrete object data members to database.                             *
+*                                                                       *
+*************************************************************************
+*/
+
+void DBObject::writeToDatabase(toolbox::Database& db) const
 {
+   db.putInteger("d_object_id", d_object_id);
+   putToDatabase(db);
 }
 
-inline
-double MTreePoint::computeDistanceTo(MTreePointPtr other) const
-{
-   return( computeDistanceTo( *(other.get()) ) );
-}
-
-inline
-ostream& MTreePoint::print(ostream& stream) const
-{
-   stream << "No printClassData method supplied for MTreePoint base class" << endl;
-   return(stream);
-}
-
-}
-
-#ifdef DEBUG_NO_INLINE
-#undef inline
 #endif
 
 

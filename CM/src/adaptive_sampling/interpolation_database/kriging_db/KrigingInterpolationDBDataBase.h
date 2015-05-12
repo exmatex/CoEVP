@@ -1,5 +1,5 @@
 //
-// File:        KrigingInterpolationDataBase.h
+// File:        KrigingInterpolationDBDataBase.h
 // Package:     kriging coupler
 // 
 // Revision:    $Revision$
@@ -7,11 +7,15 @@
 // Description: Kriging interpolation database.
 //
 
-#ifndef included_krigcpl_KrigingInterpolationDataBase_h
-#define included_krigcpl_KrigingInterpolationDataBase_h
+#ifndef included_krigcpl_KrigingInterpolationDBDataBase_h
+#define included_krigcpl_KrigingInterpolationDBDataBase_h
 
 #ifndef included_krigcpl_InterpolationDataBase_h
 #include "base/InterpolationDataBase.h"
+#endif 
+
+#ifndef included_krigcpl_ResponsePoint_h
+#include "base/ResponsePoint.h"
 #endif 
 
 #ifndef included_krigalg_Point
@@ -30,9 +34,12 @@
 #include <base/InterpolationModelFactory.h>
 #endif
 
-#ifndef included_mtreedb_MTree
-#include "mtreedb/MTree.h"
-#endif // included_mtreedb_MTree
+#ifndef included_DB
+#include <base/DB.h>
+#endif // included_DB
+#ifndef included_DB
+#include <base/DB.h>
+#endif // included_DB
 
 #include <vector>
 #include <utility>
@@ -44,7 +51,7 @@ namespace krigcpl {
      * kriging as the interpolation model
      */
 
-    class KrigingInterpolationDataBase :
+    class KrigingInterpolationDBDataBase :
       public InterpolationDataBase {
 
     public:
@@ -71,20 +78,20 @@ namespace krigcpl {
        *                                   query point and the model for which
        *                                   interpolation is still attempted. 
        * @param agingThreshold Time threshold for object aging.
-       * @param mtreeDirectoryName Name of the directory to use for storage
-       *                           of disk MTree data.
+       * @param directoryName Name of the directory to use for storage
+       *                           of disk DB data.
        */
-      KrigingInterpolationDataBase(int    pointDimension,
+      KrigingInterpolationDBDataBase(int    pointDimension,
 				   int    valueDimension,
 				   const krigalg::InterpolationModelFactoryPointer  & modelFactory,
+                                   DB&    db,
 				   int    maxKrigingModelSize,
 				   int    maxNumberSearchModels,
 				   bool   useHint,
 				   double meanErrorFactor,
 				   double tolerance,
 				   double maxQueryPointModelDistance,
-				   int    agingThreshold,
-				   const std::string & mtreeDirectoryName);
+				   int    agingThreshold);
       /*!
        * Construction.
        * 
@@ -107,13 +114,14 @@ namespace krigcpl {
        *                                   query point and the model for which
        *                                   interpolation is still attempted.
        * @param agingThreshold Time threshold for object aging.
-       * @param mtreeDirectoryName Name of the directory to use for storage
-       *                           of disk MTree data.
+       * @param directoryName Name of the directory to use for storage
+       *                           of disk DB data.
        * @param fileName File name to be used for seeding the database.
        */
-      KrigingInterpolationDataBase(int    pointDimension,
+      KrigingInterpolationDBDataBase(int    pointDimension,
 				   int    valueDimension,
 				   const krigalg::InterpolationModelFactoryPointer  & modelFactory,
+                                   DB&   db,
 				   int    maxKrigingModelSize,
 				   int    maxNumberSearchModels,
 				   bool   useHint,
@@ -121,14 +129,13 @@ namespace krigcpl {
 				   double tolerance,
 				   double maxQueryPointModelDistance,
 				   int    agingThreshold,
-				   const std::string & mtreeDirectoryName,
+				   const std::string & directoryName,
 				   const std::string & fileName);
-      
       
       /*!
        * Destruction.
        */
-      ~KrigingInterpolationDataBase();
+      ~KrigingInterpolationDBDataBase();
 
       /*!
        * Compute interpolated value at a point.
@@ -328,6 +335,7 @@ namespace krigcpl {
 
       virtual void printDBStats(std::ostream & outputStream);
 
+#if 0
       /*!
        * Output object given predicate.
        *
@@ -338,6 +346,7 @@ namespace krigcpl {
       {
 	return _krigingModelDB.writeObjects(predicate);
       }
+#endif
 
       /*!
        * Swap out some objects in order to free up memory
@@ -377,8 +386,8 @@ namespace krigcpl {
 
     private:
       // Not implemented
-      KrigingInterpolationDataBase(const KrigingInterpolationDataBase &);
-      const KrigingInterpolationDataBase & operator=(const KrigingInterpolationDataBase&);
+      KrigingInterpolationDBDataBase(const KrigingInterpolationDBDataBase &);
+      const KrigingInterpolationDBDataBase & operator=(const KrigingInterpolationDBDataBase&);
 
       //
       // data
@@ -388,15 +397,15 @@ namespace krigcpl {
 
     protected:
       
-    private:
       krigalg::InterpolationModelFactoryPointer _modelFactory;
+      DB& _krigingModelDB;
+
       int    _maxKrigingModelSize;
       int    _maxNumberSearchModels;
       bool   _useHint;
       double _meanErrorFactor;
       double _tolerance;
       double _maxQueryPointModelDistance;
-      mtreedb::MTree _krigingModelDB;
       
       //
       // various statistics
@@ -413,8 +422,9 @@ namespace krigcpl {
 
       int _agingThreshold;
 
+    private:
     };
 
 }
 
-#endif // included_krigcpl_KrigingInterpolationDataBase_h
+#endif // included_krigcpl_KrigingInterpolationDBDataBase_h

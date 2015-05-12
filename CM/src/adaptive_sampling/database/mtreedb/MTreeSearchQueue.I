@@ -75,8 +75,6 @@ Additional BSD Notice
 #define inline
 #endif
 
-namespace mtreedb {
- 
 /*
 *************************************************************************
 *                                                                       *
@@ -126,8 +124,6 @@ void MTreeSearchQueue::clear()
    d_queue.clear();
 }
 
-
-}
 
 #ifdef DEBUG_NO_INLINE
 #undef inline

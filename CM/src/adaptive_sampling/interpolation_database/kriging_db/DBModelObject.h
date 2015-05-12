@@ -1,46 +1,46 @@
 //
-// File:        MTreeModelObject.h
+// File:        DBModelObject.h
 // Package:     kriging coupler
 // 
 // Revision:    $Revision$
 // Modified:    $Date$
-// Description: MTree model object
+// Description: DB model object
 //
 
-#ifndef included_krigcpl_MTreeModelObject_h
-#define included_krigcpl_MTreeModelObject_h
+#ifndef included_krigcpl_DBModelObject_h
+#define included_krigcpl_DBModelObject_h
 
 #include <iosfwd>
 
 namespace krigcpl {
 
     /*!
-     * @brief Abstraction of a model object to be used with MTree DB.
+     * @brief Abstraction of a model object to be used with DB.
      */
 
     template <typename T>
-    class MTreeModelObject : public mtreedb::MTreeObject
+    class DBModelObject : public DBObject
     {
       
     public:
       /*!
-       * @brief Constructor for the MTreeModelObject.
+       * @brief Constructor for the DBModelObject.
        * 
        * @param modelObject A handle to a model object to be stored on 
-       *                    in an MTree DB.
+       *                    in a DB.
        */
-      MTreeModelObject(const T & modelObject);
+      DBModelObject(const T & modelObject);
 
       /*!
-       * @brief Destructor for the MTreeModelObject.
+       * @brief Destructor for the DBModelObject.
        */
-      virtual ~MTreeModelObject();
+      virtual ~DBModelObject();
 
       /*!
        * @brief Concrete virtual method to create and return smart
        * pointer to a (deep) copy of this object.
        */
-      mtreedb::MTreeObjectPtr makeCopy() const;
+      DBObjectPtr makeCopy() const;
 
       /*!
        * @brief Concrete virtual method to write data members to given
@@ -64,8 +64,8 @@ namespace krigcpl {
       //
       // not implemented
       //
-      MTreeModelObject(const MTreeModelObject &);
-      const MTreeModelObject & operator=(const MTreeModelObject &);
+      DBModelObject(const DBModelObject &);
+      const DBModelObject & operator=(const DBModelObject &);
 
       //
       // data
@@ -76,6 +76,6 @@ namespace krigcpl {
 
 }
 
-#include "MTreeModelObject.I"
+#include "DBModelObject.I"
 
-#endif // included_krigcpl_MTreeModelObject_h
+#endif // included_krigcpl_DBModelObject_h

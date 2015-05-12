@@ -71,15 +71,13 @@ Additional BSD Notice
 // Description: Manager class for MTree node allocation and storage of data objects.
 //
 
-#ifndef included_mtreedb_MTreeNode
+#ifndef included_MTreeNode
 #include "MTreeNode.h"
 #endif
 
 #ifdef DEBUG_NO_INLINE
 #define inline
 #endif
-
-namespace mtreedb {
 
 /*
 *************************************************************************
@@ -166,7 +164,7 @@ bool MTreeDataStore::LeafNodeInfo::getInMemory() const
 */
 
 inline
-MTreeDataStore::ObjectInfo::ObjectInfo(MTreeObjectPtr object)
+MTreeDataStore::ObjectInfo::ObjectInfo(DBObjectPtr object)
 :
    d_object_ptr(object),
    d_owner_leaf_node_id( MTreeNode::getUndefinedId() ),
@@ -184,7 +182,7 @@ MTreeDataStore::ObjectInfo::~ObjectInfo()
 }
 
 inline
-MTreeObjectPtr MTreeDataStore::ObjectInfo::getObject() const 
+DBObjectPtr MTreeDataStore::ObjectInfo::getObject() const 
 { 
    return d_object_ptr; 
 }
@@ -196,7 +194,7 @@ void MTreeDataStore::ObjectInfo::resetObjectPtr()
 }
 
 inline 
-void MTreeDataStore::ObjectInfo::setObjectPtr(MTreeObjectPtr obj) 
+void MTreeDataStore::ObjectInfo::setObjectPtr(DBObjectPtr obj) 
 { 
    d_object_ptr = obj; 
 }
@@ -311,8 +309,6 @@ bool MTreeDataStore::ObjectFileInfo::fileIsFull() const
    return( d_object_ids.size() == d_object_ids.capacity() );
 }
 
-
-}
 
 #ifdef DEBUG_NO_INLINE
 #undef inline

@@ -71,8 +71,8 @@ Additional BSD Notice
 // Description: Representation of data entry or routing entry in MTree
 //
 
-#ifndef included_mtreedb_MtreeEntry_C
-#define included_mtreedb_MTreeEntry_C
+#ifndef included_MtreeEntry_C
+#define included_MTreeEntry_C
 
 #include "MTreeEntry.h"
 
@@ -84,8 +84,6 @@ Additional BSD Notice
 #endif
 
 #include <assert.h>
-
-namespace mtreedb {
 
 /*
 *************************************************************************
@@ -102,7 +100,7 @@ MTreeEntry::MTreeEntry(const MTreeKey& key)
   d_my_node_id(MTreeNode::getUndefinedId()),
   d_my_position_in_node(-1),
   d_subtree_node_id(MTreeNode::getUndefinedId()),
-  d_data_object_id(MTreeObject::getUndefinedId())
+  d_data_object_id(DBObject::getUndefinedId())
 {
 }
 
@@ -158,7 +156,7 @@ void MTreeEntry::setSubtreeNode(MTreeNodePtr subtree)
    d_entry_type = ROUTING_ENTRY;
    d_subtree_node = subtree;
    d_subtree_node_id = subtree->getNodeId();
-   d_data_object_id = MTreeObject::getUndefinedId();
+   d_data_object_id = DBObject::getUndefinedId();
 }
 
 void MTreeEntry::setDataObjectId(int object_id)
@@ -242,7 +240,7 @@ bool MTreeEntry::checkConsistency(MTreeNodePtr my_node,
          entry_is_consistent = false;
       }
 
-      if ( d_data_object_id == MTreeObject::getUndefinedId() ) {
+      if ( d_data_object_id == DBObject::getUndefinedId() ) {
          stream << "MTREE ENTRY ERROR: "
                 << "Data object id not set for leaf node entry!" << endl;
          entry_is_consistent = false;
@@ -264,7 +262,7 @@ bool MTreeEntry::checkConsistency(MTreeNodePtr my_node,
          entry_is_consistent = false;
       }
 
-      if ( d_data_object_id != MTreeObject::getUndefinedId() ) {
+      if ( d_data_object_id != DBObject::getUndefinedId() ) {
          stream << "MTREE ENTRY ERROR: "
                 << "Data object id defined for non-leaf node entry!"
                 << endl;
@@ -326,7 +324,6 @@ void MTreeEntry::printClassData(ostream& stream) const
 }
 
 
-}
 #endif
 
 

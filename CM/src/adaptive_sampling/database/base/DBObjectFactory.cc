@@ -1,3 +1,4 @@
+// DO-NOT-DELETE revisionify.begin() 
 /*
 
                             Copyright (c) 2014.
@@ -60,70 +61,46 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
+// DO-NOT-DELETE revisionify.end() 
+//
+// File:        DBObjectFactory.h
+// 
+// 
+// 
+// Description: Abstract base class for database object factory.
+//
 
-#include "MTreeModelObjectFactory.h"
+#ifndef included_DBObjectFactory_C
+#define included_DBObjectFactory_C
 
-#include "kriging/LinearDerivativeRegressionModel.h"
-#include "kriging/GaussianDerivativeCorrelationModel.h"
-#include "kriging/DerivativeCorrelationModelFactory.h"
-#include "kriging/DerivativeRegressionModelFactory.h"
-#include "kriging/MultivariateDerivativeKrigingModel.h"
+#include "DBObjectFactory.h"
 
-namespace krigcpl {
+/*
+*************************************************************************
+*                                                                       *
+* Default ctor and dtor for DBObjectFactory class and default        *
+* implementation of clone method.                                       *  
+*                                                                       *
+*************************************************************************
+*/
 
-    //
-    // Allocate MultivariateDerivativeKrigingModel
-    //
-
-    template<>
-    mtreedb::MTreeObjectPtr 
-    MTreeModelObjectFactory<krigalg::MultivariateDerivativeKrigingModel>::allocateObject(toolbox::Database& db) const
-    {
-	
-      //
-      // instantiate dummy regression and correlation models
-      //
-
-      krigalg::DerivativeCorrelationModelPointer correlationModelPtr = 
-	krigalg::DerivativeCorrelationModelFactory().build("krigalg::GaussianDerivativeCorrelationModel");
-	
-      krigalg::DerivativeRegressionModelPointer regressionModelPtr = 
-	krigalg::DerivativeRegressionModelFactory().build("krigalg::LinearDerivativeRegressionModel"); 
-	
-      //
-      // instantiate new kriging model
-      //
-
-      krigalg::MultivariateDerivativeKrigingModel *
-	krigingModel = 
-	new krigalg::MultivariateDerivativeKrigingModel(regressionModelPtr,
-							correlationModelPtr);
-
-      //
-      // read the contents of the kriging model from database
-      //
-
-      krigingModel->getFromDatabase(db);
-
-      //
-      // instantiate MultivariateDerivativeKrigingModelPtr
-      //
-
-      krigalg::MultivariateDerivativeKrigingModelPtr krigingModelPtr = 
-	krigalg::MultivariateDerivativeKrigingModelPtr(krigingModel);
-
-      //
-      // instantiate MTreeKrigingModelObject
-      //
-
-      MTreeKrigingModelObject * krigingModelObjectPtr = 
-	new MTreeKrigingModelObject(krigingModelPtr);
-
-      //
-      // return MTreeObjectPtr
-      // 
-
-      return mtreedb::MTreeObjectPtr(krigingModelObjectPtr);
-    }
-
+DBObjectFactory::DBObjectFactory()
+{
 }
+
+DBObjectFactory::~DBObjectFactory()
+{
+}
+
+DBObjectPtr 
+DBObjectFactory::cloneObject(const DBObject& object) const
+{
+   return( object.makeCopy() );
+}
+
+
+#endif
+
+
+
+

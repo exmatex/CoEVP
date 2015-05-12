@@ -75,8 +75,6 @@ Additional BSD Notice
 #define inline
 #endif
 
-namespace mtreedb {
-
 /*
 *************************************************************************
 *                                                                       *
@@ -133,8 +131,6 @@ double MTreeSearchNode::getDistance() const
 }
 
  
-}
-
 #ifdef DEBUG_NO_INLINE
 #undef inline
 #endif

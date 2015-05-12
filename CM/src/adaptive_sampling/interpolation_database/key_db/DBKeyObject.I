@@ -63,121 +63,97 @@ Additional BSD Notice
 */
 /* DO-NOT-DELETE revisionify.end() */
 //
-// File:        ResponsePoint.I
-// Package:     kriging coupler
+// File:        DBKeyObject.cc
 // 
-// 
-// 
-// Description: Representation of point where response is calculated.
+// Revision:    $Revision$
+// Modified:    $Date$
+// Description: Implementation of the DBKeyObject.
 //
 
-#ifdef DEBUG_CHECK_ASSERTIONS
-#ifndef included_cassert
-#define included_cassert
-#include <cassert>
-#endif
-#endif
-
-#ifndef included_mtl_mtl
-#define included_mtl_mtl
-#include <mtl/mtl.h>
-#endif
-
-#ifdef DEBUG_NO_INLINE
-#define inline
-#endif
+#include <iostream>
 
 namespace krigcpl {
 
-inline 
-ResponsePoint::ResponsePoint()
-: 
-mtreedb::MTreePoint(), 
-krigalg::Point()
-{
-}
+    //
+    // construction
+    //
 
-inline 
-ResponsePoint::ResponsePoint(int dimension)
-: 
-mtreedb::MTreePoint(), 
-krigalg::Point(dimension)
-{
-}
+    template<typename T>
+    inline
+    DBKeyObject<T>::DBKeyObject(const T & keyObject)
+      : _keyObject(keyObject)
+    {
 
-inline
-ResponsePoint::ResponsePoint(int dimension, double value)
-:
-mtreedb::MTreePoint(),
-krigalg::Point(dimension, value)
-{
-}
+      return;
 
-inline
-ResponsePoint::ResponsePoint(int            dimension,
-                             const double * coordinates)
-  :
-  mtreedb::MTreePoint(),
-  krigalg::Point(dimension, coordinates)
-{
-}
+    }
 
-inline
-ResponsePoint::ResponsePoint(const ResponsePoint& response_pt)
-:
-mtreedb::MTreePoint(),
-krigalg::Point(response_pt.size())
-{
-   mtl::copy(response_pt, *this);
-}
+    //
+    // destruction
+    //
 
-inline
-ResponsePoint::~ResponsePoint()
-{
-}
+    template <typename T>
+    DBKeyObject<T>::~DBKeyObject()
+    {
 
-inline
-mtreedb::MTreePointPtr ResponsePoint::makeCopy() const
-{
-   return( mtreedb::MTreePointPtr( new ResponsePoint(*this) ) );
-}
+      return;
 
-inline
-double ResponsePoint::distance(const ResponsePoint& other_pt) const
-{
-   return( krigalg::distance( *this, other_pt ) );
-}
+    }
 
-inline
-double ResponsePoint::computeDistanceTo(
-   const mtreedb::MTreePoint& other_pt) const
-{
-   const ResponsePoint* t_other = 
-      dynamic_cast< const ResponsePoint* >(&other_pt);
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(t_other); 
-#endif
-   return( distance(*t_other) );
-}
+    //
+    // deep copy
+    //
+    
+    template <typename T>
+    DBObjectPtr 
+    DBKeyObject<T>::makeCopy() const
+    {
+	
+      return DBObjectPtr(new DBKeyObject(_keyObject));
+	
+    }
+    
+    //
+    // DB insertion
+    //
+    
+    template <typename T>
+    void 
+    DBKeyObject<T>::putToDatabase(toolbox::Database& db) const
+    { 
 
-inline
-ostream& operator<< (ostream& stream, const ResponsePoint& point)
-{
-   stream << static_cast<krigalg::Point>(point);
-   return( stream );
-}
+       //      _keyObject->putToDatabase(db);
+      return;
+      
+    }
 
-inline
-ostream& ResponsePoint::print(ostream& stream) const
-{
-   stream << *this;
-   return( stream );
-}
+    //
+    // output
+    //
+    
+    template <typename T>
+    ostream & 
+    DBKeyObject<T>::print(ostream & stream) const
+    {
+	
+      stream << "   object id = " << getObjectId() << std::endl;
+      //      stream << "   key = " << *_keyObject << std::endl;
 
-#ifdef DEBUG_NO_INLINE
-#undef inline
-#endif
+      return stream;
+    }
 
+    //
+    // get object
+    //
+
+    template <typename T>
+    inline T
+    DBKeyObject<T>::getKey() const
+    {
+	
+      return _keyObject;
+
+    }
 }
 
 

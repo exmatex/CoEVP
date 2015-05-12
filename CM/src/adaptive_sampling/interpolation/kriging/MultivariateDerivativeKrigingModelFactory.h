@@ -42,7 +42,6 @@
     // local types
     //
 
-    //    typedef boost::shared_ptr<MultivariateDerivativeKrigingModelFactory> MultivariateDerivativeKrigingModelFactoryPointer;
     typedef std::shared_ptr<MultivariateDerivativeKrigingModelFactory> MultivariateDerivativeKrigingModelFactoryPointer;
 
     //

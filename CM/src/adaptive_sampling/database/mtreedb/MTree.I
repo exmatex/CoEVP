@@ -72,14 +72,6 @@ Additional BSD Notice
 #define inline
 #endif
 
-namespace mtreedb {
-
-inline
-string MTree::getName() const
-{
-   return(d_tree_name);
-}
-
 /*
 *************************************************************************
 *                                                                       *
@@ -286,8 +278,6 @@ void MTree::removeNodeFromLevelCount(int level)
    d_number_nodes_in_level[level]--;
 }
 
-
-}
 
 #ifdef DEBUG_NO_INLINE
 #undef inline

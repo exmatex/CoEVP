@@ -7,13 +7,13 @@
 // Description: Simple class for holding MTree statistic data for a node in tree
 //
 
-#ifndef included_mtreedb_MTreeNodeStat
-#define included_mtreedb_MTreeNodeStat
+#ifndef included_MTreeNodeStat
+#define included_MTreeNodeStat
 
-#ifndef included_mtreedb_MTreePoint
-#include "MTreePoint.h"
+#ifndef included_MetricSpacePoint
+#include <base/MetricSpacePoint.h>
 #endif
-#ifndef included_mtreedb_MTreeNode
+#ifndef included_MTreeNode
 #include "MTreeNode.h"
 #endif
 
@@ -23,14 +23,13 @@
 using namespace std;
 #endif
 
-namespace mtreedb {
 
 /*!
  * @brief MTreeNodeStat is a simple class for accessing
  * statistical informatio for a single MTree node.
  * 
- * @see mtreedb::MTreeNode 
- * @see mtreedb::MTreePoint 
+ * @see MTreeNode 
+ * @see MetricSpacePoint 
  */
 
 class MTreeNodeStat
@@ -103,7 +102,7 @@ public:
     * this MTreeNodeStat.  Note: if node is root of tree, it has no 
     * center point and a null pointer is returned.
     */
-   MTreePointPtr getCenterPoint() const;
+   MetricSpacePointPtr getCenterPoint() const;
 
    /*!
     * Return total number of data objects in all leaf nodes of node
@@ -131,5 +130,4 @@ private:
    vector<int>   d_node_object_ids;
 };
 
-}
 #endif

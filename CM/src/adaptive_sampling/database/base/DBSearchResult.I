@@ -63,76 +63,108 @@ Additional BSD Notice
 */
 /* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreeObject.I
-// Package:     MTree database
+// File:        DBSearchResult.I
 // 
 // 
 // 
-// Description: Abstract base class for data objects indexed by an MTree.
+// Description: Container for single data object resulting from DB search
 //
+
+#ifdef DEBUG_CHECK_ASSERTIONS
+#ifndef included_cassert
+#define included_cassert
+#include <cassert>
+#endif
+#endif
 
 #ifdef DEBUG_NO_INLINE
 #define inline
 #endif
 
-namespace mtreedb {
-
 /*
 *************************************************************************
 *                                                                       *
-* Default ctor for MTree object base class.                             *
+* Default ctor, copy ctor, and copy assignment operator.                *
 *                                                                       *
 *************************************************************************
 */
+
+inline
+DBSearchResult::DBSearchResult()
+   :
+   d_distance_to_query_point( -MetricSpacePoint::getMaxDistance() ),
+   d_data_object_id( DBObject::getUndefinedId() ),
+   d_data_object_radius( -MetricSpacePoint::getMaxDistance() ),
+   d_is_valid_result(false)
+{
+}
+
+inline
+DBSearchResult::DBSearchResult(const DBSearchResult& result)
+   :
+   d_query_point(result.d_query_point),
+   d_distance_to_query_point(result.d_distance_to_query_point),
+   d_data_object(result.d_data_object),
+   d_data_object_id(result.d_data_object_id),
+   d_data_object_point(result.d_data_object_point),
+   d_data_object_radius(result.d_data_object_radius),
+   d_is_valid_result(result.d_is_valid_result)
+{
+}
 
 inline 
-MTreeObject::MTreeObject()
-:  d_object_id( MTreeObject::getUndefinedId() )
+DBSearchResult& 
+DBSearchResult::operator=(const DBSearchResult& rhs)
 {
+   d_query_point = rhs.d_query_point;
+   d_distance_to_query_point = rhs.d_distance_to_query_point;
+   d_data_object = rhs.d_data_object;
+   d_data_object_id = rhs.d_data_object_id;
+   d_data_object_point = rhs.d_data_object_point;
+   d_data_object_radius = rhs.d_data_object_radius;
+   d_is_valid_result = rhs.d_is_valid_result;
+
+   return(*this);
 }
 
 /*
 *************************************************************************
 *                                                                       *
-* Default virtual print method.                                         *
+* Accessory functions to get data members.                              * 
 *                                                                       *
 *************************************************************************
 */
 
 inline
-ostream& MTreeObject::print(ostream& stream) const
+const DBObject& DBSearchResult::getDataObject() const
 {
-   stream << "No printClassData method supplied for derived MTreeObject class." << endl;
-   stream << "d_object_id = " << d_object_id << endl;
-   return(stream);
+   return( *(d_data_object.get()) );
 }
 
-/*
-*************************************************************************
-*                                                                       *
-* Accessory functions to get and set object identifier.                 *
-*                                                                       *
-*************************************************************************
-*/
-
-inline
-int MTreeObject::getObjectId() const
+inline 
+double DBSearchResult::getDistanceToQueryPoint() const
 {
-   return( d_object_id );
+   return( d_distance_to_query_point );
 }
 
 inline
-void MTreeObject::setObjectId(int id)
+const MetricSpacePoint& DBSearchResult::getDataObjectPoint() const
 {
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(d_object_id == MTreeObject::getUndefinedId());
-   assert(id >= 0);
-#endif
-   d_object_id = id;
+   return( *(d_data_object_point.get()) );
 }
 
-
+inline 
+double DBSearchResult::getDataObjectRadius() const
+{
+   return( d_data_object_radius );
 }
+
+inline
+const MetricSpacePoint& DBSearchResult::getQueryPoint() const
+{
+   return( *(d_query_point.get()) );
+}
+
 
 #ifdef DEBUG_NO_INLINE
 #undef inline

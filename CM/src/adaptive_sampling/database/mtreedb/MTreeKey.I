@@ -79,8 +79,6 @@ Additional BSD Notice
 #define inline
 #endif
 
-namespace mtreedb {
-
 /*
 *************************************************************************
 *                                                                       *
@@ -108,7 +106,7 @@ MTreeKey::MTreeKey(const MTreeKey& key)
 
 inline
 MTreeKey::MTreeKey(
-   const MTreePointPtr point,
+   const MetricSpacePointPtr point,
    double radius,
    double dist2parent)
 :
@@ -145,7 +143,7 @@ MTreeKey& MTreeKey::operator=(const MTreeKey& rhs)
 */
 
 inline 
-const MTreePointPtr MTreeKey::getPoint() const 
+const MetricSpacePointPtr MTreeKey::getPoint() const 
 {
    return(d_point);
 }
@@ -197,8 +195,6 @@ double MTreeKey::computeDistanceTo(const MTreeKey& other) const
    return( d_point->computeDistanceTo( other.d_point ) );
 }
 
-
-}
 
 #ifdef DEBUG_NO_INLINE
 #undef inline

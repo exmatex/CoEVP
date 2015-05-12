@@ -63,18 +63,14 @@ Additional BSD Notice
 */
 // DO-NOT-DELETE revisionify.end() 
 //
-// File:        MTreePoint.cc
-// Package:     MTree database
-// 
-// 
-// 
-// Description: Abstract base class for points that represent entries in an MTree.
+// File:        DB.cc
+// Description: DB structure class.
 //
 
-#ifndef included_mtreedb_MtreePoint_C
-#define included_mtreedb_MTreePoint_C
+#ifndef included_DB_C
+#define included_DB_C
 
-#include "MTreePoint.h"
+#include "DB.h"
 
 #ifdef DEBUG_CHECK_ASSERTIONS
 #ifndef included_cassert
@@ -83,37 +79,43 @@ Additional BSD Notice
 #endif
 #endif
 
-#ifdef DEBUG_NO_INLINE
-#include "MTreePoint.I"
-#endif
+#include "toolbox/base/Utilities.h"
+#include "toolbox/base/MathUtilities.h"
 
-namespace mtreedb {
+
+#ifdef DEBUG_NO_INLINE
+#include "DB.I"
+#endif
 
 /*
 *************************************************************************
 *                                                                       *
-* Initialization, set/unset functions for static members.               *
+* DB ctor and dtor.                                                     *
 *                                                                       *
 *************************************************************************
 */
 
-double MTreePoint::s_max_distance = 999999.0;
-
-double MTreePoint::getMaxDistance() 
-{
-   return(s_max_distance);
-}
-
-void MTreePoint::setMaxDistance(double max_dist)
+DB::DB(const string& db_name,
+       ostream* error_log_stream,
+       bool do_error_checking)
+   : d_db_name(db_name),
+     d_error_log_stream(error_log_stream),
+     d_do_error_checking(do_error_checking)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-   assert(max_dist > 0.0);
+   assert(!db_name.empty());
+   if (do_error_checking) {
+      assert(error_log_stream != (ostream*)NULL);
+   }
 #endif
-   s_max_distance = max_dist;
 }
 
+DB::~DB()
+{
 }
+
 #endif
+
 
 
 

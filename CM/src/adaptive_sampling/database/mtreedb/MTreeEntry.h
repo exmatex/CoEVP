@@ -7,8 +7,8 @@
 // Description: Representation of data entry or routing entry in MTree
 //
 
-#ifndef included_mtreedb_MTreeEntry
-#define included_mtreedb_MTreeEntry
+#ifndef included_MTreeEntry
+#define included_MTreeEntry
 
 #ifndef included_iostream
 #define included_iostream
@@ -16,28 +16,19 @@
 using namespace std;
 #endif
 
-//#ifndef included_boost_shared_ptr
-//#define included_boost_shared_ptr
-//#include <boost/shared_ptr.hpp>
-//#endif
-
-#ifndef included_mtreedb_MTreeKey
+#ifndef included_MTreeKey
 #include "MTreeKey.h"
 #endif
-#ifndef included_mtreedb_MTreeObject
-#include "MTreeObject.h"
+#ifndef included_DBObject
+#include <base/DBObject.h>
 #endif
 
-namespace mtreedb {
-
 class MTreeEntry;
-//typedef boost::shared_ptr<MTreeEntry> MTreeEntryPtr;
 typedef std::shared_ptr<MTreeEntry> MTreeEntryPtr;
 
 // This forward declaration is kinda gross, but it eliminates a
 // circular dependency.
 class MTreeNode;
-//typedef boost::shared_ptr<MTreeNode> MTreeNodePtr;
 typedef std::shared_ptr<MTreeNode> MTreeNodePtr;
 
 /*!
@@ -58,7 +49,7 @@ typedef std::shared_ptr<MTreeNode> MTreeNodePtr;
  * isRoutingEntry() or isDataEntry() would return true.  Otherwise, it 
  * will return false and the entry is undefined.
  * 
- * @see mtreedb::MTreeKey
+ * @see MTreeKey
  */
 
 class MTreeEntry
@@ -205,7 +196,7 @@ public:
    /*!
     * Return point of this entry.
     */
-   MTreePointPtr getPoint() const;
+   MetricSpacePointPtr getPoint() const;
 
    //@}
 
@@ -270,7 +261,6 @@ private:
 
 };
 
-}
 #ifndef DEBUG_NO_INLINE
 #include "MTreeEntry.I"
 #endif

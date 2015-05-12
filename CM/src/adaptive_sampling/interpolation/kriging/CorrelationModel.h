@@ -23,10 +23,6 @@
 using namespace std;
 #endif
 
-//#ifndef included_boost_shared_ptr
-//#define included_boost_shared_ptr
-//#include <boost/shared_ptr.hpp>
-//#endif
 #include <memory>
 
 #ifndef included_krigalg_Point
@@ -58,7 +54,6 @@ using namespace std;
   //
 
   class CorrelationModel;
-  //  typedef boost::shared_ptr<CorrelationModel> CorrelationModelPointer;
   typedef std::shared_ptr<CorrelationModel> CorrelationModelPointer;
 
   //

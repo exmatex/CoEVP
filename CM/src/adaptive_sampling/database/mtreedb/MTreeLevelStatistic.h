@@ -7,16 +7,16 @@
 // Description: Simple class for holding MTree statistic for a level in the tree
 //
 
-#ifndef included_mtreedb_MTreeLevelStatistic
-#define included_mtreedb_MTreeLevelStatistic
+#ifndef included_MTreeLevelStatistic
+#define included_MTreeLevelStatistic
 
-#ifndef included_mtreedb_MTreePoint
-#include "MTreePoint.h"
+#ifndef included_MetricSpacePoint
+#include <base/MetricSpacePoint.h>
 #endif
-#ifndef included_mtreedb_MTreeNode
+#ifndef included_MTreeNode
 #include "MTreeNode.h"
 #endif
-#ifndef included_mtreedb_MTreeNodeStat
+#ifndef included_MTreeNodeStat
 #include "MTreeNodeStat.h"
 #endif
 
@@ -26,7 +26,6 @@
 using namespace std;
 #endif
 
-namespace mtreedb {
 
 class MTreeNodeStat;
 
@@ -34,7 +33,7 @@ class MTreeNodeStat;
  * @brief MTreeLevelStatistic is a simple class for storing
  * statistics for a single MTree level.
  * 
- * @see mtreedb::MTreePoint 
+ * @see MetricSpacePoint 
  */
 
 class MTreeLevelStatistic
@@ -99,5 +98,4 @@ private:
    vector<MTreeNodeStat> d_node_stats;
 };
 
-}
 #endif
