@@ -3632,7 +3632,7 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
 
   // Build up the multiobject names
   for(int i=0 ; i<numRanks ; ++i) {
-    int iorank = 0;
+    int iorank = i;
 
     //delete multivarObjs[i];
     if (iorank == 0) {
@@ -3689,20 +3689,23 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
 }
 
 
-void DumpToVisit(Domain& domain, char *meshName, int myRank, int numRanks)
+void DumpToVisit(Domain& domain, char *baseName, char *meshName,
+                 int myRank, int numRanks)
 {
-  char subdirName[128];
   DBfile *db;
-
-  sprintf(subdirName, "data_%d", myRank);
 
   db = (DBfile*)DBCreate(meshName, DB_CLOBBER, DB_LOCAL, NULL, DB_HDF5X);
 
   if (db) {
+     char subdirName[128];
+
+     sprintf(subdirName, "data_%d", myRank);
      DBMkDir(db, subdirName);
      DBSetDir(db, subdirName);
      DumpDomainToVisit(db, domain, myRank);
-     DumpMultiblockObjects(db, meshName, numRanks);
+     if (myRank == 0) {
+        DumpMultiblockObjects(db, baseName, numRanks);
+     }
      DBClose(db) ;
   }
   else {
@@ -3806,10 +3809,10 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
       sprintf(meshName, "%s", baseName) ;
    }
    else {
-      sprintf(meshName, "%s.%d", baseName, myRank) ;
+      sprintf(meshName, "%s.%03d", baseName, myRank) ;
    }
 
-   DumpToVisit(*domain, meshName, 0, 1) ;
+   DumpToVisit(*domain, baseName, meshName, myRank, numProcs) ;
    // DumpSAMI(domain, meshName) ;
 
 #if 0
