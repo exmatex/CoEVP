@@ -77,7 +77,7 @@ Additional BSD Notice
 #include <omp.h>
 #endif
 
-#define VISIT_DATA_INTERVAL 100  // Set this to 0 to disable VisIt data writing
+#define VISIT_DATA_INTERVAL 20  // Set this to 0 to disable VisIt data writing
 #undef USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
@@ -3584,6 +3584,28 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
    delete [] as_efficiency;
 #endif
 
+#ifdef CONNECTIVITY_DEBUGGING
+   Index_t *nodeList = new int[domain.numElem()] ;
+
+   for (int i=0 ; i<8; ++i) {
+      char fieldName[40] ;
+      sprintf(fieldName, "node_conn%d", i) ;
+      for (int j=0; j<domain.numElem(); ++j) {
+         nodeList[j] = domain.nodelist(j)[i] ;
+      }
+      ok += DBPutUcdvar1(db, fieldName, "mesh", (int*) nodeList,
+                      domain.numElem(), NULL, 0, DB_INT, DB_ZONECENT,
+                      NULL);
+   }
+
+   delete [] nodeList ;
+
+#if 0
+   Index_t *elemList = new int[domain.numElem()] ;
+#endif
+
+#endif
+
    if (ok != 0) {
       printf("Error writing out viz file - rank %d\n", myRank);
    }
@@ -3599,11 +3621,17 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
   int *varTypes;
   int ok = 0;
   // Make sure this list matches what's written out above
+  char vars[][16] = {"p","e","v","volo","q","speed","xd","yd","zd","nodalmass"
+
 #ifdef USE_ADAPTIVE_SAMPLING
-  char vars[][14] = {"p","e","v","volo","q","speed","xd","yd","zd","nodalmass","num_as_models","as_efficiency"};
-#else
-  char vars[][10] = {"p","e","v","volo","q","speed","xd","yd","zd", "nodalmass"};
+                    ,"num_as_models","as_efficiency"
 #endif
+#ifdef CONNECTIVITY_DEBUGGING
+                    ,"node_conn0", "node_conn1", "node_conn2", "node_conn3",
+                     "node_conn4", "node_conn5", "node_conn6", "node_conn7"
+#endif
+  };
+
   int numvars = sizeof(vars)/sizeof(vars[0]);
 
   // Reset to the root directory of the silo file
@@ -4499,7 +4527,7 @@ int main(int argc, char *argv[])
    if (domain.sliceLoc() != domain.numSlices()-1) {
       /* adjust lxip() */
       for (int i=0; i<domain.commElems(); ++i) {
-         domain.lxim(domain.planeElemIds[i]+domain.sliceHeight()-1) = domElems+domain.commElems()+i;
+         domain.lxip(domain.planeElemIds[i]+domain.sliceHeight()-1) = domElems+domain.commElems()+i;
       }
    }
 
