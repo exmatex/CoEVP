@@ -1214,7 +1214,8 @@ namespace krigcpl {
 
         // Insert the interpolation model into the interpolation model database
 
-        modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(dbObject.getKey(), krigingModel) );
+        //        modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(dbObject.getKey(), krigingModel) );
+        modelDB.insert( std::make_pair(dbObject.getKey(), krigingModel) );
 
 	return;
 	
@@ -3070,7 +3071,8 @@ namespace krigcpl {
 
             int objectId = dbObject.getObjectId();
 
-            _modelDB.insert( std::make_pair<std::string , InterpolationModelPtr>(dbObject.getKey(), krigingModel) );
+            //            _modelDB.insert( std::make_pair<std::string , InterpolationModelPtr>(dbObject.getKey(), krigingModel) );
+            _modelDB.insert( std::make_pair(dbObject.getKey(), krigingModel) );
 
 	  } else {
 
@@ -3291,7 +3293,8 @@ namespace krigcpl {
 
               // Insert the interpolation model into the model database
 
-              _modelDB.insert( std::make_pair<std::string , InterpolationModelPtr>(new_dbObject.getKey(), krigingModel) );
+              //              _modelDB.insert( std::make_pair<std::string , InterpolationModelPtr>(new_dbObject.getKey(), krigingModel) );
+              _modelDB.insert( std::make_pair(new_dbObject.getKey(), krigingModel) );
 	      
 	      //
 	      // record currentHint in hintUsed
