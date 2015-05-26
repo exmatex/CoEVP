@@ -77,7 +77,8 @@ Additional BSD Notice
 #include <omp.h>
 #endif
 
-#define VISIT_DATA_INTERVAL 20  // Set this to 0 to disable VisIt data writing
+#define CONNECTIVITY_DEBUGGING 1
+#define VISIT_DATA_INTERVAL 50  // Set this to 0 to disable VisIt data writing
 #undef USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
@@ -3590,7 +3591,7 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
    for (int i=0 ; i<8; ++i) {
       char fieldName[40] ;
       sprintf(fieldName, "node_conn%d", i) ;
-      for (int j=0; j<domain.numElem(); ++j) {
+      for (Index_t j=0; j<domain.numElem(); ++j) {
          nodeList[j] = domain.nodelist(j)[i] ;
       }
       ok += DBPutUcdvar1(db, fieldName, "mesh", (int*) nodeList,
@@ -3600,9 +3601,49 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
 
    delete [] nodeList ;
 
-#if 0
-   Index_t *elemList = new int[domain.numElem()] ;
-#endif
+
+   char *fname[] = { "lxim", "lxip", "letam", "letap", "lzetam", "lzetap" } ;
+   Index_t *eList = new int[domain.numElem()] ;
+
+   for (int i=0; i<6; ++i) {
+      for (Index_t j=0; j<domain.numElem(); ++j) {
+         switch (i) {
+            case 0:
+               eList[j] = domain.lxim(j) ;
+               break ;
+            case 1:
+               eList[j] = domain.lxip(j) ;
+               break ;
+            case 2:
+               eList[j] = domain.letam(j) ;
+               break ;
+            case 3:
+               eList[j] = domain.letap(j) ;
+               break ;
+            case 4:
+               eList[j] = domain.lzetam(j) ;
+               break ;
+            case 5:
+               eList[j] = domain.lzetap(j) ;
+               break ;
+         }
+      }
+      ok += DBPutUcdvar1(db, fname[i], "mesh", (int*) eList,
+                         domain.numElem(), NULL, 0, DB_INT, DB_ZONECENT,
+                         NULL);
+   }
+   delete [] eList ;
+
+   Index_t *eBC = new int[domain.numElem()] ;
+
+   for (Index_t i=0; i<domain.numElem(); ++i) {
+      eBC[i] = domain.elemBC(i) ;
+   }
+   ok += DBPutUcdvar1(db, "elembc", "mesh", (int*) eBC,
+                      domain.numElem(), NULL, 0, DB_INT, DB_ZONECENT,
+                      NULL);
+
+   delete [] eBC ;
 
 #endif
 
@@ -3628,7 +3669,9 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
 #endif
 #ifdef CONNECTIVITY_DEBUGGING
                     ,"node_conn0", "node_conn1", "node_conn2", "node_conn3",
-                     "node_conn4", "node_conn5", "node_conn6", "node_conn7"
+                     "node_conn4", "node_conn5", "node_conn6", "node_conn7",
+                     "lxim", "lxip", "letam", "letap", "lzetam", "lzetap",
+                     "elembc"
 #endif
   };
 
@@ -4475,7 +4518,7 @@ int main(int argc, char *argv[])
                             domElems-edgeElems*heightElems+i ;
    }
    for (Index_t i=edgeElems*heightElems;
-        i<coreElems*edgeElems*heightElems; ++i) {
+        i<coreElems*edgeElems*heightElems+(coreElems-1)*heightElems; ++i) {
       domain.lzetam(i) = i - edgeElems*heightElems ;
       domain.lzetap(i-edgeElems*heightElems) = i ;
    }
