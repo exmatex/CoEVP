@@ -77,8 +77,9 @@ Additional BSD Notice
 #include <omp.h>
 #endif
 
+int showMeMonoQ = 0 ;
 #define CONNECTIVITY_DEBUGGING 1
-#define VISIT_DATA_INTERVAL 50  // Set this to 0 to disable VisIt data writing
+#define VISIT_DATA_INTERVAL 100  // Set this to 0 to disable VisIt data writing
 #undef USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
@@ -698,14 +699,23 @@ void CommSend(Domain *domain, int msgType,
 
    if (planeMin) {
       destAddr = &domain->commDataSend[pmsg * maxPlaneComm] ;
+      if (showMeMonoQ) {
+         printf("%d, %d, %d -> %d: ", domain->cycle(), offset, domain->sliceLoc(), domain->sliceLoc() - 1) ;
+      }
       for (Index_t fi=0 ; fi<xferFields; ++fi) {
          Real_t *srcAddr = fieldData[fi] ;
          for (Index_t ii=0; ii<size; ++ii) {
             destAddr[ii] = srcAddr[iset[ii]] ;
+            if (showMeMonoQ) {
+               printf("%e[%d] ", srcAddr[iset[ii]], iset[ii]) ;
+            }
          }
          destAddr += size ;
       }
       destAddr -= xferFields*size ;
+      if (showMeMonoQ) {
+         printf("\n") ;
+      }
 
       MPI_Isend(destAddr, xferFields*size,
                 baseType, myRank - 1, msgType,
@@ -715,14 +725,23 @@ void CommSend(Domain *domain, int msgType,
 
    if (planeMax && sendMax) {
       destAddr = &domain->commDataSend[pmsg * maxPlaneComm] ;
+      if (showMeMonoQ) {
+         printf("%d, %d, %d -> %d: ", domain->cycle(), offset, domain->sliceLoc(), domain->sliceLoc() + 1) ;
+      }
       for (Index_t fi=0 ; fi<xferFields; ++fi) {
          Real_t *srcAddr = &fieldData[fi][offset] ;
          for (Index_t ii=0; ii<size; ++ii) {
             destAddr[ii] = srcAddr[iset[ii]] ;
+            if (showMeMonoQ) {
+               printf("%e[%d] ", srcAddr[iset[ii]], iset[ii]+offset) ;
+            }
          }
          destAddr += size ;
       }
       destAddr -= xferFields*size ;
+      if (showMeMonoQ) {
+         printf("\n") ;
+      }
 
       MPI_Isend(destAddr, xferFields*size,
                 baseType, myRank + 1, msgType,
@@ -853,7 +872,7 @@ void CommSyncPosVel(Domain *domain,
 // #if defined(COEVP_MPI)
 #if 1
 
-void CommMonoQ(Domain *domain, Index_t size)
+void CommMonoQ(Domain *domain, Index_t *iset, Index_t size, Index_t offset)
 {
    if (domain->numSlices() == 1) return ;
 
@@ -890,13 +909,22 @@ void CommMonoQ(Domain *domain, Index_t size)
       /* contiguous memory */
       srcAddr = &domain->commDataRecv[pmsg * maxPlaneComm] ;
       MPI_Wait(&domain->recvRequest[pmsg], &status) ;
+      if (showMeMonoQ) {
+         printf("%d, %d, %d <- %d: ", domain->cycle(), offset, domain->sliceLoc(), domain->sliceLoc() - 1) ;
+      }
       for (Index_t fi=0 ; fi<xferFields; ++fi) {
          Real_t *destAddr = fieldData[fi] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[i] = srcAddr[i] ;
+            if (showMeMonoQ) {
+               printf("%e[%d] ", srcAddr[i], iset[i]) ;
+            }
          }
          srcAddr += size ;
          fieldData[fi] += size ; /* prepare each field for next plane */
+      }
+      if (showMeMonoQ) {
+         printf("\n") ;
       }
       ++pmsg ;
    }
@@ -904,13 +932,22 @@ void CommMonoQ(Domain *domain, Index_t size)
       /* contiguous memory */
       srcAddr = &domain->commDataRecv[pmsg * maxPlaneComm] ;
       MPI_Wait(&domain->recvRequest[pmsg], &status) ;
+      if (showMeMonoQ) {
+         printf("%d, %d, %d <- %d: ", domain->cycle(), offset, domain->sliceLoc(), domain->sliceLoc() + 1) ;
+      }
       for (Index_t fi=0 ; fi<xferFields; ++fi) {
          Real_t *destAddr = fieldData[fi] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[i] = srcAddr[i] ;
+            if (showMeMonoQ) {
+               printf("%e[%d] ", srcAddr[i], iset[i]+offset) ;
+            }
          }
          srcAddr += size ;
          fieldData[fi] += size ;
+      }
+      if (showMeMonoQ) {
+         printf("\n") ;
       }
       ++pmsg ;
    }
@@ -2763,9 +2800,11 @@ void CalcQForElems()
    // fieldData[1] = &domain.delv_eta(0) ;
    // fieldData[2] = &domain.delv_zeta(0) ;
 
+   showMeMonoQ = 0 ;
    CommSend(&domain, MSG_MONOQ, 1 /* 3 */, fieldData,
             domain.planeElemIds, domain.commElems(), domain.sliceHeight() - 1) ;
-   CommMonoQ(&domain, domain.commElems()) ;
+   CommMonoQ(&domain, domain.planeElemIds, domain.commElems(), domain.sliceHeight() - 1) ;
+   showMeMonoQ = 0 ;
 
 #endif
 
@@ -4569,8 +4608,9 @@ int main(int argc, char *argv[])
    }
    if (domain.sliceLoc() != domain.numSlices()-1) {
       /* adjust lxip() */
+      int tmpOffSet = (domain.numSlices() == 2 || domain.sliceLoc() == 0) ? 0 : domain.commElems() ;
       for (int i=0; i<domain.commElems(); ++i) {
-         domain.lxip(domain.planeElemIds[i]+domain.sliceHeight()-1) = domElems+domain.commElems()+i;
+         domain.lxip(domain.planeElemIds[i]+domain.sliceHeight()-1) = domElems+tmpOffSet+i;
       }
    }
 
@@ -4820,9 +4860,11 @@ int main(int argc, char *argv[])
 #ifdef LULESH_SHOW_PROGRESS
       //      printf("time = %e, dt=%e\n",
       //             double(domain.time()), double(domain.deltatime()) ) ;
-      printf("step = %d, time = %e, dt=%e\n",
-             domain.cycle(), double(domain.time()), double(domain.deltatime()) ) ;
-      fflush(stdout);
+      if (domain.sliceLoc() == 0) {
+         printf("step = %d, time = %e, dt=%e\n",
+                domain.cycle(), double(domain.time()), double(domain.deltatime()) ) ;
+         fflush(stdout);
+      }
 
 #ifdef PRINT_PERFORMANCE_DIAGNOSTICS
       if ( use_adaptive_sampling ) {
