@@ -74,6 +74,9 @@ Additional BSD Notice
 #undef WRITE_FSM_EVAL_COUNT
 #undef WRITE_CHECKPOINT
 
+// Domain
+#include "lulesh.h"
+
 // EOS options
 #include "BulkPressure.h"
 #include "MieGruneisen.h"
@@ -86,424 +89,6 @@ Additional BSD Notice
 #include "Taylor.h"        // the fine-scale plasticity model
 
 enum { VolumeError = -1, QStopError = -2 } ;
-
-/****************************************************/
-/* Allow flexibility for arithmetic representations */
-/****************************************************/
-
-/* Could also support fixed point and interval arithmetic types */
-typedef float        real4 ;
-typedef double       real8 ;
-typedef long double  real10 ;  /* 10 bytes on x86 */
-
-typedef int    Index_t ; /* array subscript and loop index */
-typedef real8  Real_t ;  /* floating point representation */
-typedef int    Int_t ;   /* integer representation */
-
-inline real4  SQRT(real4  arg) { return sqrtf(arg) ; }
-inline real8  SQRT(real8  arg) { return sqrt(arg) ; }
-inline real10 SQRT(real10 arg) { return sqrtl(arg) ; }
-
-inline real4  CBRT(real4  arg) { return cbrtf(arg) ; }
-inline real8  CBRT(real8  arg) { return cbrt(arg) ; }
-inline real10 CBRT(real10 arg) { return cbrtl(arg) ; }
-
-inline real4  FABS(real4  arg) { return fabsf(arg) ; }
-inline real8  FABS(real8  arg) { return fabs(arg) ; }
-inline real10 FABS(real10 arg) { return fabsl(arg) ; }
-
-
-/************************************************************/
-/* Allow for flexible data layout experiments by separating */
-/* array interface from underlying implementation.          */
-/************************************************************/
-
-struct Domain {
-
-/* This first implementation allows for runnable code */
-/* and is not meant to be optimal. Final implementation */
-/* should separate declaration and allocation phases */
-/* so that allocation can be scheduled in a cache conscious */
-/* manner. */
-
-public:
-
-   /**************/
-   /* Allocation */
-   /**************/
-
-   void AllocateNodalPersistent(size_t size)
-   {
-      m_x.resize(size) ;
-      m_y.resize(size) ;
-      m_z.resize(size) ;
-
-      m_xd.resize(size, Real_t(0.)) ;
-      m_yd.resize(size, Real_t(0.)) ;
-      m_zd.resize(size, Real_t(0.)) ;
-
-      m_xdd.resize(size, Real_t(0.)) ;
-      m_ydd.resize(size, Real_t(0.)) ;
-      m_zdd.resize(size, Real_t(0.)) ;
-
-      m_fx.resize(size) ;
-      m_fy.resize(size) ;
-      m_fz.resize(size) ;
-
-      m_nodalMass.resize(size, Real_t(0.)) ;
-   }
-
-   void AllocateElemPersistent(size_t size)
-   {
-      m_matElemlist.resize(size) ;
-      m_nodelist.resize(8*size) ;
-
-      m_lxim.resize(size) ;
-      m_lxip.resize(size) ;
-      m_letam.resize(size) ;
-      m_letap.resize(size) ;
-      m_lzetam.resize(size) ;
-      m_lzetap.resize(size) ;
-
-      m_elemBC.resize(size) ;
-
-      m_e.resize(size, Real_t(0.)) ;
-
-      m_p.resize(size, Real_t(0.)) ;
-      m_q.resize(size, Real_t(0.)) ;
-      m_ql.resize(size) ;
-      m_qq.resize(size) ;
-
-      m_v.resize(size, 1.0) ;
-      m_volo.resize(size) ;
-      m_delv.resize(size) ;
-      m_vdov.resize(size) ;
-
-      m_arealg.resize(size) ;
-   
-      m_ss.resize(size) ;
-
-      m_elemMass.resize(size) ;
-
-      m_sx.resize(size, Real_t(0.)) ;
-      m_sy.resize(size, Real_t(0.)) ;
-      m_txy.resize(size, Real_t(0.)) ;
-      m_txz.resize(size, Real_t(0.)) ;
-      m_tyz.resize(size, Real_t(0.)) ;
-
-      m_cm.resize(size);
-   }
-
-   /* Temporaries should not be initialized in bulk but */
-   /* this is a runnable placeholder for now */
-   void AllocateElemTemporary(size_t size)
-   {
-      m_dxx.resize(size) ;
-      m_dyy.resize(size) ;
-      m_dzz.resize(size) ;
-      m_dxy.resize(size) ;
-      m_dyz.resize(size) ;
-      m_dxz.resize(size) ;
-
-      m_wxx.resize(size) ;
-      m_wyy.resize(size) ;
-      m_wzz.resize(size) ;
-
-      m_delv_xi.resize(size) ;
-      m_delv_eta.resize(size) ;
-      m_delv_zeta.resize(size) ;
-
-      m_delx_xi.resize(size) ;
-      m_delx_eta.resize(size) ;
-      m_delx_zeta.resize(size) ;
-
-      m_vnew.resize(size) ;
-   }
-
-   void AllocateNodesets(size_t sizeBoundary, size_t sizeImpact)
-   {
-      m_symmX.resize(sizeImpact) ;
-      m_symmY.resize(sizeBoundary) ;
-      m_symmZ.resize(sizeBoundary) ;
-   }
-   
-   /**********/
-   /* Access */
-   /**********/
-
-   /* Node-centered */
-
-   Real_t& x(Index_t idx)    { return m_x[idx] ; }
-   Real_t& y(Index_t idx)    { return m_y[idx] ; }
-   Real_t& z(Index_t idx)    { return m_z[idx] ; }
-
-   Real_t& xd(Index_t idx)   { return m_xd[idx] ; }
-   Real_t& yd(Index_t idx)   { return m_yd[idx] ; }
-   Real_t& zd(Index_t idx)   { return m_zd[idx] ; }
-
-   Real_t& xdd(Index_t idx)  { return m_xdd[idx] ; }
-   Real_t& ydd(Index_t idx)  { return m_ydd[idx] ; }
-   Real_t& zdd(Index_t idx)  { return m_zdd[idx] ; }
-
-   Real_t& fx(Index_t idx)   { return m_fx[idx] ; }
-   Real_t& fy(Index_t idx)   { return m_fy[idx] ; }
-   Real_t& fz(Index_t idx)   { return m_fz[idx] ; }
-
-   Real_t& nodalMass(Index_t idx) { return m_nodalMass[idx] ; }
-
-   Index_t&  symmX(Index_t idx) { return m_symmX[idx] ; }
-   Index_t&  symmY(Index_t idx) { return m_symmY[idx] ; }
-   Index_t&  symmZ(Index_t idx) { return m_symmZ[idx] ; }
-
-   /* Element-centered */
-
-   Index_t&  matElemlist(Index_t idx) { return m_matElemlist[idx] ; }
-   Index_t*  nodelist(Index_t idx)    { return &m_nodelist[Index_t(8)*idx] ; }
-
-   Index_t&  lxim(Index_t idx) { return m_lxim[idx] ; }
-   Index_t&  lxip(Index_t idx) { return m_lxip[idx] ; }
-   Index_t&  letam(Index_t idx) { return m_letam[idx] ; }
-   Index_t&  letap(Index_t idx) { return m_letap[idx] ; }
-   Index_t&  lzetam(Index_t idx) { return m_lzetam[idx] ; }
-   Index_t&  lzetap(Index_t idx) { return m_lzetap[idx] ; }
-
-   Int_t&  elemBC(Index_t idx) { return m_elemBC[idx] ; }
-
-   Real_t& dxx(Index_t idx)  { return m_dxx[idx] ; }
-   Real_t& dyy(Index_t idx)  { return m_dyy[idx] ; }
-   Real_t& dzz(Index_t idx)  { return m_dzz[idx] ; }
-   Real_t& dxy(Index_t idx)  { return m_dxy[idx] ; }
-   Real_t& dyz(Index_t idx)  { return m_dyz[idx] ; }
-   Real_t& dxz(Index_t idx)  { return m_dxz[idx] ; }
-
-   Real_t& wxx(Index_t idx)  { return m_wxx[idx] ; }
-   Real_t& wyy(Index_t idx)  { return m_wyy[idx] ; }
-   Real_t& wzz(Index_t idx)  { return m_wzz[idx] ; }
-
-   Real_t& delv_xi(Index_t idx)    { return m_delv_xi[idx] ; }
-   Real_t& delv_eta(Index_t idx)   { return m_delv_eta[idx] ; }
-   Real_t& delv_zeta(Index_t idx)  { return m_delv_zeta[idx] ; }
-
-   Real_t& delx_xi(Index_t idx)    { return m_delx_xi[idx] ; }
-   Real_t& delx_eta(Index_t idx)   { return m_delx_eta[idx] ; }
-   Real_t& delx_zeta(Index_t idx)  { return m_delx_zeta[idx] ; }
-
-   Real_t& e(Index_t idx)          { return m_e[idx] ; }
-
-   Real_t& p(Index_t idx)          { return m_p[idx] ; }
-   Real_t& q(Index_t idx)          { return m_q[idx] ; }
-   Real_t& ql(Index_t idx)         { return m_ql[idx] ; }
-   Real_t& qq(Index_t idx)         { return m_qq[idx] ; }
-
-   Real_t& v(Index_t idx)          { return m_v[idx] ; }
-   Real_t& volo(Index_t idx)       { return m_volo[idx] ; }
-   Real_t& vnew(Index_t idx)       { return m_vnew[idx] ; }
-   Real_t& delv(Index_t idx)       { return m_delv[idx] ; }
-   Real_t& vdov(Index_t idx)       { return m_vdov[idx] ; }
-
-   Real_t& arealg(Index_t idx)     { return m_arealg[idx] ; }
-   
-   Real_t& ss(Index_t idx)         { return m_ss[idx] ; }
-
-   Real_t& elemMass(Index_t idx)  { return m_elemMass[idx] ; }
-
-   Real_t& sx(Index_t idx)         { return m_sx[idx] ; }
-   Real_t& sy(Index_t idx)         { return m_sy[idx] ; }
-   Real_t& txy(Index_t idx)        { return m_txy[idx] ; }
-   Real_t& txz(Index_t idx)        { return m_txz[idx] ; }
-   Real_t& tyz(Index_t idx)        { return m_tyz[idx] ; }
-
-   Constitutive*& cm(Index_t idx)  { return m_cm[idx] ; }
-
-   /* Params */
-
-   Real_t& dtfixed()              { return m_dtfixed ; }
-   Real_t& time()                 { return m_time ; }
-   Real_t& deltatime()            { return m_deltatime ; }
-   Real_t& deltatimemultlb()      { return m_deltatimemultlb ; }
-   Real_t& deltatimemultub()      { return m_deltatimemultub ; }
-   Real_t& stoptime()             { return m_stoptime ; }
-
-   Real_t& u_cut()                { return m_u_cut ; }
-   Real_t& hgcoef()               { return m_hgcoef ; }
-   Real_t& qstop()                { return m_qstop ; }
-   Real_t& monoq_max_slope()      { return m_monoq_max_slope ; }
-   Real_t& monoq_limiter_mult()   { return m_monoq_limiter_mult ; }
-   Real_t& e_cut()                { return m_e_cut ; }
-   Real_t& p_cut()                { return m_p_cut ; }
-   Real_t& ss4o3()                { return m_ss4o3 ; }
-   Real_t& q_cut()                { return m_q_cut ; }
-   Real_t& v_cut()                { return m_v_cut ; }
-   Real_t& qlc_monoq()            { return m_qlc_monoq ; }
-   Real_t& qqc_monoq()            { return m_qqc_monoq ; }
-   Real_t& qqc()                  { return m_qqc ; }
-   Real_t& eosvmax()              { return m_eosvmax ; }
-   Real_t& eosvmin()              { return m_eosvmin ; }
-   Real_t& pmin()                 { return m_pmin ; }
-   Real_t& emin()                 { return m_emin ; }
-   Real_t& dvovmax()              { return m_dvovmax ; }
-   Real_t& refdens()              { return m_refdens ; }
-   Real_t& crqt()                 { return m_crqt ; }
-
-   Real_t& dtcourant()            { return m_dtcourant ; }
-   Real_t& dthydro()              { return m_dthydro ; }
-   Real_t& dtmax()                { return m_dtmax ; }
-
-   Int_t&  cycle()                { return m_cycle ; }
-
-   Index_t&  numSymmNodesImpact()   { return m_numSymmNodesImpact ; }
-   Index_t&  numSymmNodesBoundary() { return m_numSymmNodesBoundary ; }
-   Index_t&  numElem()            { return m_numElem ; }
-   Index_t&  numNode()            { return m_numNode ; }
-
-private:
-
-   /******************/
-   /* Implementation */
-   /******************/
-
-   /* Node-centered */
-
-   std::vector<Real_t> m_x ;  /* coordinates */
-   std::vector<Real_t> m_y ;
-   std::vector<Real_t> m_z ;
-
-   std::vector<Real_t> m_xd ; /* velocities */
-   std::vector<Real_t> m_yd ;
-   std::vector<Real_t> m_zd ;
-
-   std::vector<Real_t> m_xdd ; /* accelerations */
-   std::vector<Real_t> m_ydd ;
-   std::vector<Real_t> m_zdd ;
-
-   std::vector<Real_t> m_fx ;  /* forces */
-   std::vector<Real_t> m_fy ;
-   std::vector<Real_t> m_fz ;
-
-   std::vector<Real_t> m_nodalMass ;  /* mass */
-
-   std::vector<Index_t> m_symmX ;  /* symmetry plane nodesets */
-   std::vector<Index_t> m_symmY ;
-   std::vector<Index_t> m_symmZ ;
-
-   /* Element-centered */
-
-   std::vector<Index_t>  m_matElemlist ;  /* material indexset */
-   std::vector<Index_t>  m_nodelist ;     /* elemToNode connectivity */
-
-   std::vector<Index_t>  m_lxim ;  /* element connectivity across each face */
-   std::vector<Index_t>  m_lxip ;
-   std::vector<Index_t>  m_letam ;
-   std::vector<Index_t>  m_letap ;
-   std::vector<Index_t>  m_lzetam ;
-   std::vector<Index_t>  m_lzetap ;
-
-   std::vector<Int_t>    m_elemBC ;  /* symmetry/free-surface flags for each elem face */
-
-   std::vector<Real_t> m_dxx ;  /* principal strains -- temporary */
-   std::vector<Real_t> m_dyy ;
-   std::vector<Real_t> m_dzz ;
-   std::vector<Real_t> m_dxy ;
-   std::vector<Real_t> m_dyz ;
-   std::vector<Real_t> m_dxz ;
-
-   std::vector<Real_t> m_wxx ;  /* angular -- temporary */
-   std::vector<Real_t> m_wyy ;
-   std::vector<Real_t> m_wzz ;
-
-   std::vector<Real_t> m_delv_xi ;    /* velocity gradient -- temporary */
-   std::vector<Real_t> m_delv_eta ;
-   std::vector<Real_t> m_delv_zeta ;
-
-   std::vector<Real_t> m_delx_xi ;    /* coordinate gradient -- temporary */
-   std::vector<Real_t> m_delx_eta ;
-   std::vector<Real_t> m_delx_zeta ;
-   
-   std::vector<Real_t> m_e ;   /* energy */
-
-   std::vector<Real_t> m_p ;   /* pressure */
-   std::vector<Real_t> m_q ;   /* q */
-   std::vector<Real_t> m_ql ;  /* linear term for q */
-   std::vector<Real_t> m_qq ;  /* quadratic term for q */
-
-   std::vector<Real_t> m_v ;     /* relative volume */
-   std::vector<Real_t> m_volo ;  /* reference volume */
-   std::vector<Real_t> m_vnew ;  /* new relative volume -- temporary */
-   std::vector<Real_t> m_delv ;  /* m_vnew - m_v */
-   std::vector<Real_t> m_vdov ;  /* volume derivative over volume */
-
-   std::vector<Real_t> m_arealg ;  /* characteristic length of an element */
-   
-   std::vector<Real_t> m_ss ;      /* "sound speed" */
-
-   std::vector<Real_t> m_elemMass ;  /* mass */
-
-   std::vector<Real_t> m_sx ;  /* stress */
-   std::vector<Real_t> m_sy ;
-   std::vector<Real_t> m_txy ;
-   std::vector<Real_t> m_txz ;
-   std::vector<Real_t> m_tyz ;
-
-   std::vector<Constitutive*> m_cm ;  /* constitutive model */
-
-   /* Parameters */
-
-   Real_t  m_dtfixed ;           /* fixed time increment */
-   Real_t  m_time ;              /* current time */
-   Real_t  m_deltatime ;         /* variable time increment */
-   Real_t  m_deltatimemultlb ;
-   Real_t  m_deltatimemultub ;
-   Real_t  m_stoptime ;          /* end time for simulation */
-
-   Real_t  m_u_cut ;             /* velocity tolerance */
-   Real_t  m_hgcoef ;            /* hourglass control */
-   Real_t  m_qstop ;             /* excessive q indicator */
-   Real_t  m_monoq_max_slope ;
-   Real_t  m_monoq_limiter_mult ;
-   Real_t  m_e_cut ;             /* energy tolerance */
-   Real_t  m_p_cut ;             /* pressure tolerance */
-   Real_t  m_ss4o3 ;
-   Real_t  m_q_cut ;             /* q tolerance */
-   Real_t  m_v_cut ;             /* relative volume tolerance */
-   Real_t  m_qlc_monoq ;         /* linear term coef for q */
-   Real_t  m_qqc_monoq ;         /* quadratic term coef for q */
-   Real_t  m_qqc ;
-   Real_t  m_eosvmax ;
-   Real_t  m_eosvmin ;
-   Real_t  m_pmin ;              /* pressure floor */
-   Real_t  m_emin ;              /* energy floor */
-   Real_t  m_dvovmax ;           /* maximum allowable volume change */
-   Real_t  m_refdens ;           /* reference density */
-   Real_t  m_crqt ;              /* hourglass viscosity */
-
-   Real_t  m_dtcourant ;         /* courant constraint */
-   Real_t  m_dthydro ;           /* volume change constraint */
-   Real_t  m_dtmax ;             /* maximum allowable time increment */
-
-   Int_t   m_cycle ;             /* iteration count for simulation */
-
-   Index_t   m_numSymmNodesImpact ;    
-   Index_t   m_numSymmNodesBoundary ;
-
-   Index_t   m_numElem ;         /* Elements/Nodes in this domain */
-   Index_t   m_numNode ;
-} domain ;
-
-
-template <typename T>
-T *Allocate(size_t size)
-{
-   return static_cast<T *>(malloc(sizeof(T)*size)) ;
-}
-
-template <typename T>
-void Release(T **ptr)
-{
-   if (*ptr != NULL) {
-      free(*ptr) ;
-      *ptr = NULL ;
-   }
-}
 
 
 /* Stuff needed for boundary conditions */
@@ -537,8 +122,7 @@ void Release(T **ptr)
 // for fast time scales in the fine-scale model
 Real_t finescale_dt_modifier = Real_t(1.);
 
-static inline
-void TimeIncrement()
+void Lulesh::TimeIncrement()
 {
    Real_t targetdt = domain.stoptime() - domain.time() ;
 
@@ -587,8 +171,7 @@ void TimeIncrement()
    ++domain.cycle() ;
 }
 
-static inline
-void InitStressTermsForElems(Index_t numElem, 
+void Lulesh::InitStressTermsForElems(Index_t numElem, 
                              Real_t *sigxx, Real_t *sigyy, Real_t *sigzz,
                              Real_t *sigxy, Real_t *sigxz, Real_t *sigyz)
 {
@@ -605,8 +188,7 @@ void InitStressTermsForElems(Index_t numElem,
    }
 }
 
-static inline
-void CalcElemShapeFunctionDerivatives( const Real_t* const x,
+void Lulesh::CalcElemShapeFunctionDerivatives( const Real_t* const x,
                                        const Real_t* const y,
                                        const Real_t* const z,
                                        Real_t b[][8],
@@ -694,8 +276,7 @@ void CalcElemShapeFunctionDerivatives( const Real_t* const x,
   *volume = Real_t(8.) * ( fjxet * cjxet + fjyet * cjyet + fjzet * cjzet);
 }
 
-static inline
-void SumElemFaceNormal(Real_t *normalX0, Real_t *normalY0, Real_t *normalZ0,
+void Lulesh::SumElemFaceNormal(Real_t *normalX0, Real_t *normalY0, Real_t *normalZ0,
                        Real_t *normalX1, Real_t *normalY1, Real_t *normalZ1,
                        Real_t *normalX2, Real_t *normalY2, Real_t *normalZ2,
                        Real_t *normalX3, Real_t *normalY3, Real_t *normalZ3,
@@ -730,8 +311,7 @@ void SumElemFaceNormal(Real_t *normalX0, Real_t *normalY0, Real_t *normalZ0,
    *normalZ3 += areaZ;
 }
 
-static inline
-void CalcElemNodeNormals(Real_t pfx[8],
+void Lulesh::CalcElemNodeNormals(Real_t pfx[8],
                          Real_t pfy[8],
                          Real_t pfz[8],
                          const Real_t x[8],
@@ -787,8 +367,7 @@ void CalcElemNodeNormals(Real_t pfx[8],
                   x[6], y[6], z[6], x[5], y[5], z[5]);
 }
 
-static inline
-void SumElemStressesToNodeForces( const Real_t B[][8],
+void Lulesh::SumElemStressesToNodeForces( const Real_t B[][8],
                                   const Real_t stress_xx,
                                   const Real_t stress_yy,
                                   const Real_t stress_zz,
@@ -842,8 +421,7 @@ void SumElemStressesToNodeForces( const Real_t B[][8],
   fz[7] = -( (stress_xz * pfx7) + (stress_yz * pfy7) + (stress_zz * pfz7) );
 }
 
-static inline
-void IntegrateStressForElems( Index_t numElem,
+void Lulesh::IntegrateStressForElems( Index_t numElem,
                               Real_t *sigxx, Real_t *sigyy, Real_t *sigzz,
                               Real_t *sigxy, Real_t *sigxz, Real_t *sigyz,
                               Real_t *determ)
@@ -892,8 +470,7 @@ void IntegrateStressForElems( Index_t numElem,
   }
 }
 
-static inline
-void CollectDomainNodesToElemNodes(const Index_t* elemToNode,
+void Lulesh::CollectDomainNodesToElemNodes(const Index_t* elemToNode,
                                    Real_t elemX[8],
                                    Real_t elemY[8],
                                    Real_t elemZ[8])
@@ -936,8 +513,7 @@ void CollectDomainNodesToElemNodes(const Index_t* elemToNode,
 
 }
 
-static inline
-void VoluDer(const Real_t x0, const Real_t x1, const Real_t x2,
+void Lulesh::VoluDer(const Real_t x0, const Real_t x1, const Real_t x2,
              const Real_t x3, const Real_t x4, const Real_t x5,
              const Real_t y0, const Real_t y1, const Real_t y2,
              const Real_t y3, const Real_t y4, const Real_t y5,
@@ -966,8 +542,7 @@ void VoluDer(const Real_t x0, const Real_t x1, const Real_t x2,
    *dvdz *= twelfth;
 }
 
-static inline
-void CalcElemVolumeDerivative(Real_t dvdx[8],
+void Lulesh::CalcElemVolumeDerivative(Real_t dvdx[8],
                               Real_t dvdy[8],
                               Real_t dvdz[8],
                               const Real_t x[8],
@@ -1008,8 +583,7 @@ void CalcElemVolumeDerivative(Real_t dvdx[8],
            &dvdx[7], &dvdy[7], &dvdz[7]);
 }
 
-static inline
-void CalcElemFBHourglassForce(Real_t *xd, Real_t *yd, Real_t *zd,  Real_t *hourgam0,
+void Lulesh::CalcElemFBHourglassForce(Real_t *xd, Real_t *yd, Real_t *zd,  Real_t *hourgam0,
                               Real_t *hourgam1, Real_t *hourgam2, Real_t *hourgam3,
                               Real_t *hourgam4, Real_t *hourgam5, Real_t *hourgam6,
                               Real_t *hourgam7, Real_t coefficient,
@@ -1191,8 +765,7 @@ void CalcElemFBHourglassForce(Real_t *xd, Real_t *yd, Real_t *zd,  Real_t *hourg
        hourgam7[i02] * h02 + hourgam7[i03] * h03);
 }
 
-static inline
-void CalcFBHourglassForceForElems(Real_t *determ,
+void Lulesh::CalcFBHourglassForceForElems(Real_t *determ,
             Real_t *x8n,      Real_t *y8n,      Real_t *z8n,
             Real_t *dvdx,     Real_t *dvdy,     Real_t *dvdz,
             Real_t hourg)
@@ -1396,8 +969,7 @@ void CalcFBHourglassForceForElems(Real_t *determ,
    }
 }
 
-static inline
-void CalcHourglassControlForElems(Real_t determ[], Real_t hgcoef)
+void Lulesh::CalcHourglassControlForElems(Real_t determ[], Real_t hgcoef)
 {
    Index_t i, ii, jj ;
    Real_t  x1[8],  y1[8],  z1[8] ;
@@ -1453,8 +1025,7 @@ void CalcHourglassControlForElems(Real_t determ[], Real_t hgcoef)
    return ;
 }
 
-static inline
-void CalcVolumeForceForElems()
+void Lulesh::CalcVolumeForceForElems()
 {
    Index_t numElem = domain.numElem() ;
    if (numElem != 0) {
@@ -1495,7 +1066,7 @@ void CalcVolumeForceForElems()
    }
 }
 
-static inline void CalcForceForNodes()
+void Lulesh::CalcForceForNodes()
 {
   Index_t numNode = domain.numNode() ;
   for (Index_t i=0; i<numNode; ++i) {
@@ -1512,8 +1083,7 @@ static inline void CalcForceForNodes()
 
 }
 
-static inline
-void CalcAccelerationForNodes()
+void Lulesh::CalcAccelerationForNodes()
 {
    Index_t numNode = domain.numNode() ;
    for (Index_t i = 0; i < numNode; ++i) {
@@ -1523,8 +1093,7 @@ void CalcAccelerationForNodes()
    }
 }
 
-static inline
-void ApplyAccelerationBoundaryConditionsForNodes()
+void Lulesh::ApplyAccelerationBoundaryConditionsForNodes()
 {
   Index_t numBoundaryNodes = domain.numSymmNodesBoundary() ;
 
@@ -1540,8 +1109,7 @@ void ApplyAccelerationBoundaryConditionsForNodes()
      domain.zdd(domain.symmZ(i)) = Real_t(0.0) ;
 }
 
-static inline
-void CalcVelocityForNodes(const Real_t dt, const Real_t u_cut)
+void Lulesh::CalcVelocityForNodes(const Real_t dt, const Real_t u_cut)
 {
    Index_t numNode = domain.numNode() ;
 
@@ -1563,8 +1131,7 @@ void CalcVelocityForNodes(const Real_t dt, const Real_t u_cut)
    }
 }
 
-static inline
-void CalcPositionForNodes(const Real_t dt)
+void Lulesh::CalcPositionForNodes(const Real_t dt)
 {
    Index_t numNode = domain.numNode() ;
 
@@ -1576,8 +1143,7 @@ void CalcPositionForNodes(const Real_t dt)
    }
 }
 
-static inline
-void LagrangeNodal()
+void Lulesh::LagrangeNodal()
 {
   const Real_t delt = domain.deltatime() ;
   Real_t u_cut = domain.u_cut() ;
@@ -1755,8 +1321,7 @@ Real_t CalcElemCharacteristicLength( const Real_t x[8],
    return charLength;
 }
 
-static inline
-void CalcElemVelocityGradient( const Real_t* const xvel,
+void Lulesh::CalcElemVelocityGradient( const Real_t* const xvel,
                                const Real_t* const yvel,
                                const Real_t* const zvel,
                                const Real_t b[][8],
@@ -1821,8 +1386,7 @@ void CalcElemVelocityGradient( const Real_t* const xvel,
   w[0]  = Real_t( .5) * ( dzddy - dyddz );
 }
 
-static inline
-void CalcKinematicsForElems( Index_t numElem, Real_t dt )
+void Lulesh::CalcKinematicsForElems( Index_t numElem, Real_t dt )
 {
   Real_t B[3][8] ; /** shape function derivatives */
   Real_t D[6] ;
@@ -1932,8 +1496,7 @@ void CalcKinematicsForElems( Index_t numElem, Real_t dt )
   }
 }
 
-static inline
-void CalcLagrangeElements(Real_t deltatime)
+void Lulesh::CalcLagrangeElements(Real_t deltatime)
 {
    Index_t numElem = domain.numElem() ;
    if (numElem > 0) {
@@ -1961,8 +1524,7 @@ void CalcLagrangeElements(Real_t deltatime)
    }
 }
 
-static inline
-void CalcMonotonicQGradientsForElems()
+void Lulesh::CalcMonotonicQGradientsForElems()
 {
 #define SUM4(a,b,c,d) (a + b + c + d)
    Index_t numElem = domain.numElem() ;
@@ -2108,8 +1670,7 @@ void CalcMonotonicQGradientsForElems()
 #undef SUM4
 }
 
-static inline
-void CalcMonotonicQRegionForElems(// parameters
+void Lulesh::CalcMonotonicQRegionForElems(// parameters
                           Real_t qlc_monoq,
                           Real_t qqc_monoq,
                           Real_t monoq_limiter_mult,
@@ -2247,8 +1808,7 @@ void CalcMonotonicQRegionForElems(// parameters
    }
 }
 
-static inline
-void CalcMonotonicQForElems()
+void Lulesh::CalcMonotonicQForElems()
 {  
    //
    // initialize parameters
@@ -2276,8 +1836,7 @@ void CalcMonotonicQForElems()
    }
 }
 
-static inline
-void CalcQForElems()
+void Lulesh::CalcQForElems()
 {
    Real_t qstop = domain.qstop() ;
    Index_t numElem = domain.numElem() ;
@@ -2311,8 +1870,7 @@ void CalcQForElems()
    }
 }
 
-static inline
-void CalcPressureForElems(Real_t* p_new, Real_t* bvc,
+void Lulesh::CalcPressureForElems(Real_t* p_new, Real_t* bvc,
                           Real_t* pbvc, Real_t* e_old,
                           Real_t* compression, Real_t *vnewc,
                           Real_t pmin,
@@ -2330,8 +1888,7 @@ void CalcPressureForElems(Real_t* p_new, Real_t* bvc,
    }
 }
 
-static inline
-void CalcEnergyForElems(Real_t* p_new, Real_t* e_new, Real_t* q_new,
+void Lulesh::CalcEnergyForElems(Real_t* p_new, Real_t* e_new, Real_t* q_new,
                         Real_t* bvc, Real_t* pbvc,
                         Real_t* p_old, Real_t* e_old, Real_t* q_old,
                         Real_t* compression, Real_t* compHalfStep,
@@ -2452,8 +2009,7 @@ void CalcEnergyForElems(Real_t* p_new, Real_t* e_new, Real_t* q_new,
    return ;
 }
 
-static inline
-void CalcSoundSpeedForElems(Real_t *vnewc, Real_t rho0, Real_t *enewc,
+void Lulesh::CalcSoundSpeedForElems(Real_t *vnewc, Real_t rho0, Real_t *enewc,
                             Real_t *pnewc, Real_t *pbvc,
                             Real_t *bvc, Real_t ss4o3, Index_t nz)
 {
@@ -2470,8 +2026,7 @@ void CalcSoundSpeedForElems(Real_t *vnewc, Real_t rho0, Real_t *enewc,
 }
 
 
-static inline
-void CalcWorkForElems(Real_t *vc, Real_t *work, Index_t length)
+void Lulesh::CalcWorkForElems(Real_t *vc, Real_t *work, Index_t length)
 {
    Real_t dt = domain.deltatime();
 
@@ -2491,8 +2046,7 @@ void CalcWorkForElems(Real_t *vc, Real_t *work, Index_t length)
    }
 }
 
-static inline
-void EvalEOSForElems(Real_t *vnewc, Index_t length)
+void Lulesh::EvalEOSForElems(Real_t *vnewc, Index_t length)
 {
    Real_t  e_cut = domain.e_cut();
    Real_t  p_cut = domain.p_cut();
@@ -2615,8 +2169,7 @@ void EvalEOSForElems(Real_t *vnewc, Index_t length)
    Release(&e_old) ;
 }
 
-static inline
-void ApplyMaterialPropertiesForElems()
+void Lulesh::ApplyMaterialPropertiesForElems()
 {
   Index_t length = domain.numElem() ;
 
@@ -2668,8 +2221,7 @@ void ApplyMaterialPropertiesForElems()
   }
 }
 
-static inline
-void UpdateVolumesForElems()
+void Lulesh::UpdateVolumesForElems()
 {
    Index_t numElem = domain.numElem();
    if (numElem != 0) {
@@ -2688,8 +2240,7 @@ void UpdateVolumesForElems()
    return ;
 }
 
-static inline
-void LagrangeElements()
+void Lulesh::LagrangeElements()
 {
   const Real_t deltatime = domain.deltatime() ;
 
@@ -2703,8 +2254,7 @@ void LagrangeElements()
   UpdateVolumesForElems() ;
 }
 
-static inline
-void CalcCourantConstraintForElems()
+void Lulesh::CalcCourantConstraintForElems()
 {
    Real_t dtcourant = Real_t(1.0e+20) ;
    Index_t   courant_elem = -1 ;
@@ -2747,8 +2297,7 @@ void CalcCourantConstraintForElems()
    return ;
 }
 
-static inline
-void CalcHydroConstraintForElems()
+void Lulesh::CalcHydroConstraintForElems()
 {
    Real_t dthydro = Real_t(1.0e+20) ;
    Index_t hydro_elem = -1 ;
@@ -2774,8 +2323,7 @@ void CalcHydroConstraintForElems()
    return ;
 }
 
-static inline
-void CalcTimeConstraintsForElems() {
+void Lulesh::CalcTimeConstraintsForElems() {
    /* evaluate time constraint */
    CalcCourantConstraintForElems() ;
 
@@ -2783,8 +2331,7 @@ void CalcTimeConstraintsForElems() {
    CalcHydroConstraintForElems() ;
 }
 
-static inline
-void LagrangeLeapFrog()
+void Lulesh::LagrangeLeapFrog()
 {
    /* calculate nodal forces, accelerations, velocities, positions, with
     * applied boundary conditions and slide surface considerations */
@@ -2799,8 +2346,7 @@ void LagrangeLeapFrog()
    // LagrangeRelease() ;  Creation/destruction of temps may be important to capture 
 }
 
-static inline
-void UpdateStressForElems()
+void Lulesh::UpdateStressForElems()
 {
 #define MAX_NONLINEAR_ITER 5
    int max_nonlinear_iters = 0;
@@ -3311,7 +2857,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
 
 #endif
 
-int main(int argc, char *argv[])
+int Lulesh::go(int argc, char *argv[])
 {
    Index_t edgeElems = 16 ;
    int heightElems = 26 ;
