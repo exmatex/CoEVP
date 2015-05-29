@@ -68,8 +68,7 @@ Additional BSD Notice
 #include <string.h>
 #include <sstream>
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
 #include <mpi.h>
 #endif
 
@@ -131,8 +130,7 @@ enum { VolumeError = -1, QStopError = -2 } ;
 #define ZETA_P_SYMM 0x1000
 #define ZETA_P_FREE 0x2000
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
 
 /* Assume 128 byte coherence */
 /* Assume Real_t is an "integral power of 2" bytes wide */
@@ -417,8 +415,7 @@ void Lulesh::CommSyncPosVel(Domain *domain,
 #endif
 
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
 
 void Lulesh::CommMonoQ(Domain *domain, Index_t *iset, Index_t size, Index_t offset)
 {
@@ -528,8 +525,7 @@ void Lulesh::TimeIncrement()
 
       gnewdt *= finescale_dt_modifier;
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
       MPI_Allreduce(&gnewdt, &newdt, 1,
                     ((sizeof(Real_t) == 4) ? MPI_FLOAT : MPI_DOUBLE),
                     MPI_MIN, MPI_COMM_WORLD) ;
@@ -1474,8 +1470,7 @@ void Lulesh::CalcVolumeForceForElems()
 void Lulesh::CalcForceForNodes()
 {
   Index_t numNode = domain.numNode() ;
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
   Real_t *fieldData[3] ;
 
   CommRecv(&domain, MSG_COMM_SBN, 3, domain.commNodes()) ;
@@ -1490,8 +1485,7 @@ void Lulesh::CalcForceForNodes()
   /* Calcforce calls partial, force, hourq */
   CalcVolumeForceForElems() ;
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
   fieldData[0] = &domain.fx(0) ;
   fieldData[1] = &domain.fy(0) ;
   fieldData[2] = &domain.fz(0) ;
@@ -1567,8 +1561,7 @@ void Lulesh::CalcPositionForNodes(const Real_t dt)
 
 void Lulesh::LagrangeNodal()
 {
-// #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
-#if 1
+#if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
   Real_t *fieldData[6] ;
 #endif
 
@@ -1579,8 +1572,7 @@ void Lulesh::LagrangeNodal()
    * acceleration boundary conditions. */
   CalcForceForNodes();
 
-// #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
-#if 1
+#if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
   CommRecv(&domain, MSG_SYNC_POS_VEL, 6, domain.commNodes(), false) ;
 #endif
 
@@ -1592,8 +1584,7 @@ void Lulesh::LagrangeNodal()
 
   CalcPositionForNodes( delt );
 
-// #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
-#if 1
+#if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
   fieldData[0] = &domain.x(0) ;
   fieldData[1] = &domain.y(0) ;
   fieldData[2] = &domain.z(0) ;
@@ -2302,8 +2293,7 @@ void Lulesh::CalcQForElems()
    // MONOTONIC Q option
    //
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
    // Real_t *fieldData[3] ;
    Real_t *fieldData[1] ;
 
@@ -2313,8 +2303,7 @@ void Lulesh::CalcQForElems()
    /* Calculate velocity gradients */
    CalcMonotonicQGradientsForElems() ;
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
 
    /* Transfer veloctiy gradients in the first order elements */
 
@@ -3469,8 +3458,7 @@ void Lulesh::go(int argc, char *argv[])
    Index_t planeNodes ;
    Index_t planeElems ;
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
    Index_t chunkSize ;
    Index_t remainder ;
 
@@ -3562,8 +3550,7 @@ void Lulesh::go(int argc, char *argv[])
 
    domElems = domain.numElem() ;
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
 
    /* allocate a buffer large enough for nodal ghost data */
    Index_t planeMin, planeMax ;
@@ -3609,8 +3596,7 @@ void Lulesh::go(int argc, char *argv[])
    /* allocate field memory */
 
    domain.AllocateElemPersistent(domain.numElem()) ;
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
    domain.AllocateElemTemporary (domain.numElem(), domain.commElems()) ;
 #else
    domain.AllocateElemTemporary (domain.numElem(), 0) ;
@@ -3880,8 +3866,7 @@ void Lulesh::go(int argc, char *argv[])
    }
 
    char name[100] ;
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
    sprintf(name, "checkConn%d.sami", domain.sliceLoc()) ;
 #else
    sprintf(name, "checkConn.sami") ;
@@ -3957,8 +3942,7 @@ void Lulesh::go(int argc, char *argv[])
 
    // DumpSAMI(&domain, name) ;
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
    CommRecv(&domain, MSG_COMM_SBN, 1, domain.commNodes()) ;
 #endif
 
@@ -4106,8 +4090,7 @@ void Lulesh::go(int argc, char *argv[])
       domain.elemBC(i) = 0 ;  /* clear BCs by default */
    }
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
 
    if (domain.sliceLoc() != 0) {
       /* adjust lxim() */
@@ -4339,8 +4322,7 @@ void Lulesh::go(int argc, char *argv[])
    Int_t cumulative_fsm_count = 0;
 #endif   
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
    Real_t *fieldData = &domain.nodalMass(0) ;
    CommSend(&domain, MSG_COMM_SBN, 1, &fieldData,
             domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
@@ -4484,8 +4466,7 @@ void Lulesh::go(int argc, char *argv[])
    checkpoint_file.close();
 #endif
 
-// #if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
    MPI_Finalize() ;
 #endif
 }

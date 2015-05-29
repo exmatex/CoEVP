@@ -517,8 +517,7 @@ private:
    Index_t   m_numElem ;         /* Elements/Nodes in this domain */
    Index_t   m_numNode ;
 
-//#if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
    Index_t   m_commElems ;       /* communicated elements per plane */
    Index_t   m_commNodes ;       /* communicated nodes per plane */
    Index_t   m_maxPlaneSize ;    /* maximum communicated bytes per plane */
