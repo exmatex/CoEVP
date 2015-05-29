@@ -3453,7 +3453,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
 
 #endif
 
-int Lulesh::go(int argc, char *argv[])
+void Lulesh::go(int argc, char *argv[])
 {
    Index_t gheightElems = 26 ;
    Index_t edgeElems = 16 ;
@@ -4488,7 +4488,5 @@ int Lulesh::go(int argc, char *argv[])
 #if 1
    MPI_Finalize() ;
 #endif
-
-   return 0 ;
 }
 
