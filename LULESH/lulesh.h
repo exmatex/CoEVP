@@ -153,7 +153,7 @@ void DumpToVisit(Domain& domain, char *baseName, char *meshName,
 void DumpSAMI(Domain *domain, char *name);
 void DumpDomain(Domain *domain, int myRank, int numProcs);
 */
-int go(int argc, char *argv[]);
+void go(int argc, char *argv[]);
 
 };
 

@@ -2857,7 +2857,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
 
 #endif
 
-int Lulesh::go(int argc, char *argv[])
+void Lulesh::go(int argc, char *argv[])
 {
    Index_t edgeElems = 16 ;
    int heightElems = 26 ;
@@ -3674,8 +3674,6 @@ int Lulesh::go(int argc, char *argv[])
 
    checkpoint_file.close();
 #endif
-
-   return 0 ;
 }
 
 
