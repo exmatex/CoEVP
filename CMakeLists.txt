@@ -38,12 +38,21 @@ endif()
 # User input options                                                   #
 ########################################################################
 option(BUILD_SHARED_LIBS "Build shared libs" OFF)
+option(WIT_MPI "Build mpi version" OFF)
 
 ########################################################################
 #Find external packages
 ########################################################################
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
+
+if(WITH_MPI)
+  find_package(MPI REQUIRED)
+  add_definitions(-DCOEVP_MPI)
+  include_directories(MPI_CXX_INCLUDE_PATH)
+else()
+  set(MPI_CXX_LIBRARIES)
+endif()
 
 ########################################################################
 # Basic system tests (standard libraries, headers, functions, types)   #
@@ -99,4 +108,5 @@ add_library(cm ${CM_SOURCES})
 file(GLOB LULESH_SOURCES LULESH/*.cc)
 add_executable(lulesh ${LULESH_SOURCES})
 set_target_properties(lulesh PROPERTIES RUNTIME_OUTPUT_DIRECTORY LULESH)
-target_link_libraries(lulesh cm ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+target_link_libraries(lulesh cm ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
+	${MPI_CXX_LIBRARIES})
