@@ -71,8 +71,7 @@ Additional BSD Notice
 #include <string.h>
 #include <sstream>
 
-//#if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
 #include <mpi.h>
 #endif
 
