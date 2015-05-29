@@ -360,8 +360,7 @@ public:
    Index_t&  numElem()            { return m_numElem ; }
    Index_t&  numNode()            { return m_numNode ; }
 
-//#if defined(COEVP_MPI)
-#if 1
+#if defined(COEVP_MPI)
 
    Index_t&  commElems()          { return m_commElems ; }
    Index_t&  commNodes()          { return m_commNodes ; }

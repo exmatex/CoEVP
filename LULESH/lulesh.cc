@@ -1513,7 +1513,10 @@ void Lulesh::ApplyAccelerationBoundaryConditionsForNodes()
 
   Index_t numImpactNodes   = domain.numSymmNodesImpact() ;
 
-  if (domain.sliceLoc() == 0) {
+#if defined(COEVP_MPI)
+  if (domain.sliceLoc() == 0)
+#endif
+  {
      for(Index_t i=0 ; i<numImpactNodes ; ++i)
         domain.xdd(domain.symmX(i)) = Real_t(0.0) ;
   }
@@ -3618,11 +3621,16 @@ void Lulesh::go(int argc, char *argv[])
    for (Index_t plane=0; plane<coreNodes; ++plane) {
       ty = Real_t(0.) ;
       for (Index_t row=0; row<coreNodes; ++row) {
+#if defined(COEVP_MPI)
          tx = domain_length[0]*Real_t(xBegin)/Real_t(edgeNodes) ;
          if (domain.numSlices() != 1) {
             domain.planeNodeIds[planeNodes++] = nidx ;
          }
          for (Index_t col=xBegin; col<(xEnd+1); ++col) {
+#else
+         tx = Real_t(0.) ;
+         for (Index_t col=0; col<heightNodes; ++col) {
+#endif
             domain.x(nidx) = tx ;
             domain.y(nidx) = ty ;
             domain.z(nidx) = tz ;
@@ -3663,12 +3671,18 @@ void Lulesh::go(int argc, char *argv[])
                Real_t(row+1 - coreNodes)/Real_t(wingNodes) /* wing distance */
                );
 
+#if defined(COEVP_MPI)
          tx = domain_length[0]*Real_t(xBegin)/Real_t(edgeNodes) ;
          if (domain.numSlices() != 1) {
             domain.planeNodeIds[planeNodes++] = nidx ;
          }
 
          for (Index_t col=xBegin; col<(xEnd+1); ++col) {
+#else
+         tx = Real_t(0.) ;
+
+         for (Index_t col=0; col<heightNodes; ++col) {
+#endif
             domain.x(nidx) = tx ;
             domain.y(nidx) = ty ;
             domain.z(nidx) = tz ;
@@ -3706,12 +3720,18 @@ void Lulesh::go(int argc, char *argv[])
                Real_t(plane+1-coreNodes)/Real_t(wingNodes)    /* wing dist */
               ) ;
 
+#if defined(COEVP_MPI)
          tx = domain_length[0]*Real_t(xBegin)/Real_t(edgeNodes) ;
          if (domain.numSlices() != 1) {
             domain.planeNodeIds[planeNodes++] = nidx ;
          }
 
          for (Index_t col=xBegin; col<(xEnd+1); ++col) {
+#else
+         tx = Real_t(0.) ;
+
+         for (Index_t col=0; col<heightNodes; ++col) {
+#endif
             domain.x(nidx) = tx ;
             domain.y(nidx) = ty ;
             domain.z(nidx) = tz ;
@@ -3722,12 +3742,14 @@ void Lulesh::go(int argc, char *argv[])
       }
    }
 
+#if defined(COEVP_MPI)
    if (domain.numSlices() != 1) {
       if (planeNodes != domain.commNodes()) {
          printf("error computing comm nodes\n") ;
          exit(-1) ;
       }
    }
+#endif
 
    /* embed hexehedral elements in nodal point lattice */
 
@@ -3736,9 +3758,11 @@ void Lulesh::go(int argc, char *argv[])
    planeElems = 0 ;
    for (Index_t plane=0; plane<coreElems; ++plane) {
       for (Index_t row=0; row<edgeElems; ++row) {
+#if defined(COEVP_MPI)
          if (domain.numSlices() != 1) {
             domain.planeElemIds[planeElems++] = zidx ;
          }
+#endif
          for (Index_t col=0; col<heightElems; ++col) {
             Index_t *localNode = domain.nodelist(zidx) ;
             localNode[0] = nidx                                           ;
@@ -3761,9 +3785,11 @@ void Lulesh::go(int argc, char *argv[])
    nidx = (coreNodes-1)*edgeNodes*heightNodes ;
    zidx = coreElems*edgeElems*heightElems ;
    for (Index_t row=0; row<(coreElems-1); ++row) {
+#if defined(COEVP_MPI)
       if (domain.numSlices() != 1) {
          domain.planeElemIds[planeElems++] = zidx ;
       }
+#endif
       for (Index_t col=0; col<heightElems; ++col) {
          Index_t *localNode = domain.nodelist(zidx) ;
          localNode[0] = nidx                                           ;
@@ -3783,9 +3809,11 @@ void Lulesh::go(int argc, char *argv[])
    nidx = coreNodes*heightNodes*edgeNodes ;
    for (Index_t plane=coreElems+1; plane<edgeElems; ++plane) {
       for (Index_t row=0; row<(coreElems-1); ++row) {
+#if defined(COEVP_MPI)
          if (domain.numSlices() != 1) {
             domain.planeElemIds[planeElems++] = zidx ;
          }
+#endif
          for (Index_t col=0; col<heightElems; ++col) {
             Index_t *localNode = domain.nodelist(zidx) ;
             localNode[0] = nidx                                               ;
@@ -3807,9 +3835,11 @@ void Lulesh::go(int argc, char *argv[])
    nidx = (coreNodes-1)*edgeNodes*heightNodes +
           (coreNodes-1)*heightNodes ;
    for (Index_t row=coreElems ; row<edgeElems; ++row) {
+#if defined(COEVP_MPI)
       if (domain.numSlices() != 1) {
          domain.planeElemIds[planeElems++] = zidx ;
       }
+#endif
       for (Index_t col=0; col<heightElems; ++col) {
          Index_t *localNode = domain.nodelist(zidx) ;
          localNode[0] = nidx                                             ;
@@ -3852,6 +3882,7 @@ void Lulesh::go(int argc, char *argv[])
       nidx += (coreNodes-1)*heightNodes ;
    }
 
+#if defined(COEVP_MPI)
    if (domain.numSlices() != 1) {
       if (planeElems != domain.commElems()) {
          printf("%d %d error computing comm elems\n",
@@ -3859,6 +3890,7 @@ void Lulesh::go(int argc, char *argv[])
          exit(-1) ;
       }
    }
+#endif
 
    /* Create a material IndexSet (entire domain same material for now) */
    for (Index_t i=0; i<domElems; ++i) {
@@ -3950,7 +3982,10 @@ void Lulesh::go(int argc, char *argv[])
       domain.e(i) = 0.;
    }
 
-   if (domain.sliceLoc() == 0) {
+#if defined(COEVP_MPI)
+   if (domain.sliceLoc() == 0)
+#endif
+   {
       for (int plane=0; plane<coreNodes; ++plane) {
          for (int row=0; row<edgeNodes; ++row) {
             domain.xd(row*heightNodes +
@@ -3985,7 +4020,10 @@ void Lulesh::go(int argc, char *argv[])
       }
    }
    /* X Symmetry */
-   if (domain.sliceLoc() == 0) {
+#if defined(COEVP_MPI)
+   if (domain.sliceLoc() == 0) 
+#endif
+   {
       nidx = 0 ;
       for (int plane=0; plane<coreNodes; ++plane) {
          for (int row=0; row<edgeNodes; ++row) {
@@ -4138,30 +4176,54 @@ void Lulesh::go(int argc, char *argv[])
 
    for (int plane=0; plane<coreElems; ++plane) {
       for (int row=0; row<edgeElems; ++row) {
-         domain.elemBC(plane*edgeElems*heightElems +
-                       row*heightElems) |= ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+         domain.elemBC(plane*edgeElems*heightElems + row*heightElems) |=
+#if defined(COEVP_MPI)
+		 ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+#else
+		 XI_M_SYMM ;	
+#endif
          domain.elemBC(plane*edgeElems*heightElems +
                         row*heightElems + heightElems-1) |= 
+#if defined(COEVP_MPI)
                            ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
+#else
+                           XI_P_FREE ;
+#endif
       }
    }
    for (int plane=0; plane<wingElems; ++plane) {
       for (int row=0; row<(coreElems-1); ++row) {
          domain.elemBC(coreElems*edgeElems*heightElems +
-                       plane*(coreElems-1)*heightElems +
-                       row*heightElems) |= ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+                       plane*(coreElems-1)*heightElems + row*heightElems) |= 
+#if defined(COEVP_MPI)
+		 ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+#else
+	         XI_M_SYMM ;
+#endif
          domain.elemBC(coreElems*edgeElems*heightElems +
                        plane*(coreElems-1)*heightElems +
                        row*heightElems + heightElems-1) |=
+#if defined(COEVP_MPI)
                           ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
+#else
+                          XI_P_FREE ;
+#endif
       }
       domain.elemBC(coreElems*edgeElems*heightElems +
-                    wingElems*(coreElems-1)*heightElems +
-                    plane*heightElems) |= ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+                    wingElems*(coreElems-1)*heightElems + plane*heightElems) |= 
+#if defined(COEVP_MPI)
+	      ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+#else
+	         XI_M_SYMM ;
+#endif
       domain.elemBC(coreElems*edgeElems*heightElems +
                     wingElems*(coreElems-1)*heightElems +
                     plane*heightElems + heightElems-1) |=
+#if defined(COEVP_MPI)
                        ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
+#else
+                          XI_P_FREE ;
+#endif
 
    }
 
@@ -4351,7 +4413,10 @@ void Lulesh::go(int argc, char *argv[])
 #ifdef LULESH_SHOW_PROGRESS
       //      printf("time = %e, dt=%e\n",
       //             double(domain.time()), double(domain.deltatime()) ) ;
-      if (domain.sliceLoc() == 0) {
+#if defined(COEVP_MPI)
+      if (domain.sliceLoc() == 0) 
+#endif
+      {
          printf("step = %d, time = %e, dt=%e\n",
                 domain.cycle(), double(domain.time()), double(domain.deltatime()) ) ;
          fflush(stdout);
