@@ -130,6 +130,8 @@ namespace krigcpl {
 
           buildKey(key_string, point_data, point_size, tag, stringDigits);
 
+          delete [] point_data;
+
           return key_string;
        }
 
