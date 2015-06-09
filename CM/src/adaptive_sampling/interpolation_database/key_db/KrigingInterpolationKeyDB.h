@@ -6,6 +6,8 @@
 // Description: Kriging interpolation using a keyed database.
 //
 
+#undef STRING_MODELS
+
 #ifndef included_krigcpl_KrigingInterpolationKeyDB_h
 #define included_krigcpl_KrigingInterpolationKeyDB_h
 
@@ -25,7 +27,11 @@
 
 namespace krigcpl {
 
+#ifdef STRING_MODELS
+    typedef std::unordered_map<std::string, std::string> InterpolationModelDataBase;
+#else
     typedef std::unordered_map<std::string, krigalg::InterpolationModelPtr> InterpolationModelDataBase;
+#endif
 
     /*!
      * @brief Concrete implementation of the InterpolationDataBase class using
