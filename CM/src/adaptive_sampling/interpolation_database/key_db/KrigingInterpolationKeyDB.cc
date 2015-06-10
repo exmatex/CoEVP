@@ -91,6 +91,8 @@ Additional BSD Notice
 
 #include "DBKeyObject.h"
 
+#define STRING_DIGITS 14
+
 #ifndef DEBUG
 #  define DEBUG 0
 #endif
@@ -101,36 +103,54 @@ namespace krigcpl {
 
     namespace {
 
-       void buildKey(string& key, double *data, int n, char * tag, int keyDigits)
+       void buildKey(string& key, std::vector<double> data, int keyDigits)
        {
           //Build format
-          for (int i = 0; i < n; i++)
+          for (int i = 0; i < data.size(); i++)
              {
                 char format[32];
-                sprintf(format, "%%.%dlf:", keyDigits);
+                //                sprintf(format, "%%.%dlf:", keyDigits);
+                sprintf(format, "%%.%de:", keyDigits);
                 char fBuff[1024];
                 sprintf(fBuff, format, data[i]);
                 key += fBuff;
              }
-          key += tag;
        }
 
-       string
-       getKeyString(const ResponsePoint& point)
+       string getKeyString(const ResponsePoint& point)
        {
           int point_size = point.size();
-          double * point_data = new double[point_size];
+
+          std::vector<double> data;
+          data.resize(point_size);
           for (int i=0; i<point_size; ++i) {
-             point_data[i] = point[i];
+             data[i] = point[i];
           }
 
           string key_string;
-          char tag[] = "test";
-          int stringDigits = 10;
-
-          buildKey(key_string, point_data, point_size, tag, stringDigits);
+          buildKey(key_string, data, STRING_DIGITS);
 
           return key_string;
+       }
+
+       void unpackKey(std::string& key, std::vector<double>& data)
+       {
+          char buffer[80];
+          const char * ptr = key.c_str();
+          unsigned numChar_total = 0;
+          unsigned numChar;
+          unsigned data_length = 0;
+
+          data.clear();
+
+          while (sscanf(ptr+numChar_total, "%[^:]%n", buffer, &numChar) != EOF) {
+             numChar++;
+             numChar_total += numChar;
+             data_length++;
+             data.resize(data_length);
+             //             data[data_length-1] = atof(buffer);
+             data[data_length-1] = strtod(buffer,NULL);
+          }
        }
 
       //
@@ -481,6 +501,7 @@ namespace krigcpl {
 			     const ResponsePoint &        point,
 			     DB &                         krigingModels,
                              InterpolationModelDataBase & modelDB,
+                             const InterpolationModelFactoryPointer& _modelFactory,
 			     double                       tolerance,
 			     double                       meanErrorFactor,
 			     double                       maxQueryPointModelDistance,
@@ -539,8 +560,17 @@ namespace krigcpl {
 	  const DBKeyObject<std::string> & dbObject = 
              dynamic_cast<const DBKeyObject<std::string> &>(searchResult.getDataObject()); 
 
-	  InterpolationModelPtr& krigingModel = modelDB[dbObject.getKey()];
+#ifdef STRING_MODELS
+          std::string& modelKey = modelDB[dbObject.getKey()];
 
+          std::vector<double> packedContainer;
+          unpackKey(modelKey, packedContainer);
+
+          InterpolationModelPtr krigingModel = _modelFactory->build();
+          krigingModel->unpack(packedContainer);
+#else
+          InterpolationModelPtr& krigingModel = modelDB[dbObject.getKey()];
+#endif
 	  //
 	  // skip invalid models
 	  //
@@ -588,6 +618,7 @@ namespace krigcpl {
 			     const ResponsePoint &        point,
 			     DB &                         krigingModels,
                              InterpolationModelDataBase & modelDB,
+                             const InterpolationModelFactoryPointer& _modelFactory,
 			     double                       tolerance,
 			     double                       meanErrorFactor,
 			     double                       maxQueryPointModelDistance,
@@ -667,7 +698,17 @@ namespace krigcpl {
 	  const DBKeyObject<std::string> & dbObject = 
              dynamic_cast<const DBKeyObject<std::string> &>(searchResult.getDataObject()); 
 
+#ifdef STRING_MODELS
+          std::string& modelKey = modelDB[dbObject.getKey()];
+
+          std::vector<double> packedContainer;
+          unpackKey(modelKey, packedContainer);
+
+          InterpolationModelPtr krigingModel = _modelFactory->build();
+          krigingModel->unpack(packedContainer);
+#else
 	  InterpolationModelPtr& krigingModel = modelDB[dbObject.getKey()];
+#endif
 
 	  //
 	  // skip if invalid model
@@ -731,7 +772,18 @@ namespace krigcpl {
 	const DBKeyObject<std::string> & dbObject = 
            dynamic_cast<const DBKeyObject<std::string> &>(searchResults[0].getDataObject()); 
 
+#ifdef STRING_MODELS
+        std::string& modelKey = modelDB[dbObject.getKey()];
+
+        std::vector<double> packedContainer;
+        unpackKey(modelKey, packedContainer);
+
+        InterpolationModelPtr krigingModel = _modelFactory->build();
+        krigingModel->unpack(packedContainer);
+#else
+
         InterpolationModelPtr& krigingModel = modelDB[dbObject.getKey()];
+#endif
 
 #ifdef HAVE_PKG_libprof
 
@@ -1214,8 +1266,17 @@ namespace krigcpl {
 
         // Insert the interpolation model into the interpolation model database
 
-        //        modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(dbObject.getKey(), krigingModel) );
+#ifdef STRING_MODELS
+        std::vector<double> packedContainer;
+        krigingModel->pack(packedContainer);
+
+        std::string modelKey;
+        buildKey(modelKey, packedContainer, STRING_DIGITS);
+        
+        modelDB.insert( std::make_pair(dbObject.getKey(), modelKey) );
+#else
         modelDB.insert( std::make_pair(dbObject.getKey(), krigingModel) );
+#endif
 
 	return;
 	
@@ -1452,7 +1513,17 @@ namespace krigcpl {
 
             // Insert the interpolation model into the interpolation model database
 
+#ifdef STRING_MODELS
+            std::vector<double> packedContainer;
+            krigingModelPtr->pack(packedContainer);
+
+            std::string modelKey;
+            buildKey(modelKey, packedContainer, STRING_DIGITS);
+        
+            modelDB.insert( std::make_pair(dbObject.getKey(), modelKey) );
+#else
             modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(dbObject.getKey(), krigingModelPtr) );
+#endif
 	  }
 
 	  //
@@ -1754,7 +1825,18 @@ namespace krigcpl {
 	} else {
 
            const DBKeyObject<std::string>& dbObject = dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+
+#ifdef STRING_MODELS
+          std::string& modelKey = _modelDB[dbObject.getKey()];
+
+          std::vector<double> packedContainer;
+          unpackKey(modelKey, packedContainer);
+
+          InterpolationModelPtr hintKrigingModel = _modelFactory->build();
+          hintKrigingModel->unpack(packedContainer);
+#else
            const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
+#endif
 	
 	  //
 	  // check if can interpolate; need a valid model for this
@@ -1877,6 +1959,7 @@ namespace krigcpl {
 							queryPoint,
 							_keyDB,
                                                         _modelDB,
+                                                        _modelFactory,
 							_tolerance,
 							_meanErrorFactor,
 							_maxQueryPointModelDistance,
@@ -2000,7 +2083,18 @@ namespace krigcpl {
 	} else {
     
            const DBKeyObject<std::string>& dbObject = dynamic_cast<const DBKeyObject<std::string>&>(*dbObjectPtr);
+
+#ifdef STRING_MODELS
+           std::string& modelKey = _modelDB[dbObject.getKey()];
+
+           std::vector<double> packedContainer;
+           unpackKey(modelKey, packedContainer);
+
+           InterpolationModelPtr hintKrigingModel = _modelFactory->build();
+           hintKrigingModel->unpack(packedContainer);
+#else
            const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
+#endif
 	  
 	  //
 	  // check the distance between hintKrigingModel and point
@@ -2119,6 +2213,7 @@ namespace krigcpl {
 							queryPoint,
 							_keyDB,
                                                         _modelDB,
+                                                        _modelFactory,
 							_tolerance,
 							_meanErrorFactor,
 							_maxQueryPointModelDistance,
@@ -2259,7 +2354,17 @@ namespace krigcpl {
 	  } else {
 
              const DBKeyObject<std::string>& dbObject = dynamic_cast<const DBKeyObject<std::string>&>(*dbObjectPtr);
+#ifdef STRING_MODELS
+             std::string& modelKey = _modelDB[dbObject.getKey()];
+
+             std::vector<double> packedContainer;
+             unpackKey(modelKey, packedContainer);
+
+             InterpolationModelPtr hintKrigingModel = _modelFactory->build();
+             hintKrigingModel->unpack(packedContainer);
+#else
              const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
+#endif
 	  
 	    const bool hintModelSuccess = 
 	      checkErrorAndInterpolate(&(interpolatedValue[0]),
@@ -2402,6 +2507,7 @@ namespace krigcpl {
 							queryPoint,
 							_keyDB,
                                                         _modelDB,
+                                                        _modelFactory,
 							_tolerance,
 							_meanErrorFactor,
 							_maxQueryPointModelDistance,
@@ -2553,7 +2659,19 @@ namespace krigcpl {
 	  } else {
 
            const DBKeyObject<std::string>& dbObject = dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+
+#ifdef STRING_MODELS
+           std::string& modelKey = _modelDB[dbObject.getKey()];
+
+           std::vector<double> packedContainer;
+           unpackKey(modelKey, packedContainer);
+
+           InterpolationModelPtr hintKrigingModel = _modelFactory->build();
+           hintKrigingModel->unpack(packedContainer);
+#else
+
            const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
+#endif
 
 	    const bool hintModelSuccess = 
 	      checkErrorAndInterpolate(&(interpolatedValue[0]),
@@ -2707,6 +2825,7 @@ namespace krigcpl {
 							queryPoint,
 							_keyDB,
                                                         _modelDB,
+                                                        _modelFactory,
 							_tolerance,
 							_meanErrorFactor,
 							_maxQueryPointModelDistance,
@@ -2842,7 +2961,17 @@ namespace krigcpl {
        } else {
     
            const DBKeyObject<std::string>& dbObject = dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+#ifdef STRING_MODELS
+           std::string& modelKey = _modelDB[dbObject.getKey()];
+
+           std::vector<double> packedContainer;
+           unpackKey(modelKey, packedContainer);
+
+           InterpolationModelPtr hintKrigingModel = _modelFactory->build();
+           hintKrigingModel->unpack(packedContainer);
+#else
            const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
+#endif
 	  
           assert(hintKrigingModel->hasGradient() == true);
 
@@ -2971,7 +3100,17 @@ namespace krigcpl {
 	DBKeyObject<std::string> & dbObject = 
 	  dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
 
+#ifdef STRING_MODELS
+        std::string& modelKey = _modelDB[dbObject.getKey()];
+
+        std::vector<double> packedContainer;
+        unpackKey(modelKey, packedContainer);
+
+        InterpolationModelPtr krigingModel = _modelFactory->build();
+        krigingModel->unpack(packedContainer);
+#else
         InterpolationModelPtr krigingModel = _modelDB[dbObject.getKey()];
+#endif
 
 	//
 	// check the size of the model; if the next point would put
@@ -3071,8 +3210,17 @@ namespace krigcpl {
 
             int objectId = dbObject.getObjectId();
 
-            //            _modelDB.insert( std::make_pair<std::string , InterpolationModelPtr>(dbObject.getKey(), krigingModel) );
+#ifdef STRING_MODELS
+            std::vector<double> packedContainer;
+            krigingModel->pack(packedContainer);
+
+            std::string modelKey;
+            buildKey(modelKey, packedContainer, STRING_DIGITS);
+        
+            _modelDB.insert( std::make_pair(dbObject.getKey(), modelKey) );
+#else
             _modelDB.insert( std::make_pair(dbObject.getKey(), krigingModel) );
+#endif
 
 	  } else {
 
@@ -3218,7 +3366,18 @@ namespace krigcpl {
 	  DBObjectPtr dbObjectPtr = _keyDB.getObject(currentHint);
 	  DBKeyObject<std::string> & dbObject = 
              dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+
+#ifdef STRING_MODELS
+          std::string& modelKey = _modelDB[dbObject.getKey()];
+
+          std::vector<double> packedContainer;
+          unpackKey(modelKey, packedContainer);
+
+          InterpolationModelPtr krigingModel = _modelFactory->build();
+          krigingModel->unpack(packedContainer);
+#else
 	  InterpolationModelPtr krigingModel = _modelDB[dbObject.getKey()];
+#endif
 
 	  //
 	  // check the size of the model; if the next point would put
@@ -3293,8 +3452,17 @@ namespace krigcpl {
 
               // Insert the interpolation model into the model database
 
-              //              _modelDB.insert( std::make_pair<std::string , InterpolationModelPtr>(new_dbObject.getKey(), krigingModel) );
+#ifdef STRING_MODELS
+              std::vector<double> packedContainer;
+              krigingModel->pack(packedContainer);
+
+              std::string modelKey;
+              buildKey(modelKey, packedContainer, STRING_DIGITS);
+        
+              _modelDB.insert( std::make_pair(dbObject.getKey(), modelKey) );
+#else
               _modelDB.insert( std::make_pair(new_dbObject.getKey(), krigingModel) );
+#endif
 	      
 	      //
 	      // record currentHint in hintUsed
