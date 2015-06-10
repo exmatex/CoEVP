@@ -96,7 +96,12 @@ include_directories(${CM_INCLUDE_DIRS}
 add_definitions(-DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN)
 add_library(cm ${CM_SOURCES})
 
-file(GLOB LULESH_SOURCES LULESH/*.cc)
+file(GLOB LULESH_SOURCES LULESH/*_main.cc)
 add_executable(lulesh ${LULESH_SOURCES})
+
+file(GLOB LULESH_CORE_SOURCES LULESH/*.cc)
+list(REMOVE_ITEM LULESH_CORE_SOURCES ${LULESH_SOURCES})
+add_library(lulesh_core ${LULESH_CORE_SOURCES})
+
 set_target_properties(lulesh PROPERTIES RUNTIME_OUTPUT_DIRECTORY LULESH)
-target_link_libraries(lulesh cm ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
+target_link_libraries(lulesh lulesh_core cm ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
