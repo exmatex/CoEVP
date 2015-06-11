@@ -37,7 +37,7 @@ endif()
 ########################################################################
 # User input options                                                   #
 ########################################################################
-option(BUILD_SHARED_LIBS "Build shared libs" OFF)
+option(BUILD_SHARED_LIBS "Build shared libs" ON)
 option(WIT_MPI "Build mpi version" OFF)
 
 ########################################################################
@@ -88,6 +88,9 @@ endforeach(FUNC)
 ######################################
 include_directories(${CMAKE_BINARY_DIR})
 file(GLOB_RECURSE CM_SOURCES CM/*.cc)
+file(GLOB_RECURSE CM_NOT_SOURCES CM/src/tensors/basetest.cc
+	CM/src/tensors/xtest.cc)
+list(REMOVE_ITEM CM_SOURCES ${CM_NOT_SOURCES})
 file(GLOB_RECURSE CM_HEADERS CM/*.h)
 set(CM_INCLUDE_DIRS)
 foreach(_HEADER ${CM_HEADERS})
@@ -113,5 +116,5 @@ list(REMOVE_ITEM LULESH_CORE_SOURCES ${LULESH_SOURCES})
 add_library(lulesh_core ${LULESH_CORE_SOURCES})
 
 set_target_properties(lulesh PROPERTIES RUNTIME_OUTPUT_DIRECTORY LULESH)
-target_link_libraries(lulesh lulesh_core cm ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
+target_link_libraries(lulesh lulesh_core cm ${FLANN_LIBRARIES} ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
 	${MPI_CXX_LIBRARIES})
