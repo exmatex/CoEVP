@@ -38,7 +38,7 @@ endif()
 # User input options                                                   #
 ########################################################################
 option(BUILD_SHARED_LIBS "Build shared libs" ON)
-option(WIT_MPI "Build mpi version" OFF)
+option(WITH_MPI "Build mpi version" OFF)
 
 ########################################################################
 #Find external packages
@@ -49,7 +49,7 @@ find_package(LAPACK REQUIRED)
 if(WITH_MPI)
   find_package(MPI REQUIRED)
   add_definitions(-DCOEVP_MPI)
-  include_directories(MPI_CXX_INCLUDE_PATH)
+  include_directories(${MPI_CXX_INCLUDE_PATH})
 else()
   set(MPI_CXX_LIBRARIES)
 endif()
@@ -107,6 +107,7 @@ include_directories(${CM_INCLUDE_DIRS}
 
 add_definitions(-DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN)
 add_library(cm ${CM_SOURCES})
+target_link_libraries(cm ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})
 
 file(GLOB LULESH_SOURCES LULESH/*_main.cc)
 add_executable(lulesh ${LULESH_SOURCES})
@@ -114,7 +115,7 @@ add_executable(lulesh ${LULESH_SOURCES})
 file(GLOB LULESH_CORE_SOURCES LULESH/*.cc)
 list(REMOVE_ITEM LULESH_CORE_SOURCES ${LULESH_SOURCES})
 add_library(lulesh_core ${LULESH_CORE_SOURCES})
+target_link_libraries(lulesh_core cm)
 
 set_target_properties(lulesh PROPERTIES RUNTIME_OUTPUT_DIRECTORY LULESH)
-target_link_libraries(lulesh lulesh_core cm ${FLANN_LIBRARIES} ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES}
-	${MPI_CXX_LIBRARIES})
+target_link_libraries(lulesh lulesh_core ${FLANN_LIBRARIES} ${MPI_CXX_LIBRARIES})
