@@ -98,12 +98,16 @@ foreach(_HEADER ${CM_HEADERS})
 	list(APPEND CM_INCLUDE_DIRS ${_DIR})
 endforeach()
 list(REMOVE_DUPLICATES CM_INCLUDE_DIRS)
-include_directories(${CM_INCLUDE_DIRS}
-	CM/src/adaptive_sampling/interpolation_database
-	CM/src/adaptive_sampling/interpolation
-	CM/src/adaptive_sampling/mtl_headers
-	CM/src/adaptive_sampling/database
-	CM/src/adaptive_sampling/utils)
+list(APPEND CM_INCLUDE_DIRS
+	${CMAKE_CURRENT_SOURCE_DIR}/CM/src/adaptive_sampling/interpolation_database
+	${CMAKE_CURRENT_SOURCE_DIR}/CM/src/adaptive_sampling/interpolation
+	${CMAKE_CURRENT_SOURCE_DIR}/CM/src/adaptive_sampling/mtl_headers
+	${CMAKE_CURRENT_SOURCE_DIR}/CM/src/adaptive_sampling/database
+	${CMAKE_CURRENT_SOURCE_DIR}/CM/src/adaptive_sampling/utils)
+if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+	set(CM_INCLUDE_DIRS "${CM_INCLUDE_DIRS}" PARENT_SCOPE)
+endif()
+include_directories(${CM_INCLUDE_DIRS})
 
 add_definitions(-DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN)
 add_library(cm ${CM_SOURCES})
