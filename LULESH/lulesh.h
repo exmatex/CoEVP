@@ -154,11 +154,13 @@ void DumpSAMI(Domain *domain, char *name);
 void DumpDomain(Domain *domain, int myRank, int numProcs);
 */
 
-#if defined(COEVP_MPI)
+//#if defined(COEVP_MPI)
 void go(int myRank, int numRanks);
+/*
 #else
-void go();
+void go(int numRanks);
 #endif
+*/
 
 };
 
