@@ -6,8 +6,6 @@
 // Description: Kriging interpolation using a keyed database.
 //
 
-#define STRING_MODELS
-
 #ifndef included_krigcpl_KrigingInterpolationKeyDB_h
 #define included_krigcpl_KrigingInterpolationKeyDB_h
 
