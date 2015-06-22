@@ -64,13 +64,15 @@ Additional BSD Notice
 #include "ElastoViscoPlasticity.h"
 #include "xtensor.h"
 
-ElastoViscoPlasticity::ElastoViscoPlasticity( const Tensor2Gen&      L,
+ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&    global,
+                                              const Tensor2Gen&      L,
                                               const double           bulk_modulus,
                                               const double           shear_modulus,
                                               const EOS*             eos_model,
                                               const Plasticity*      plasticity_model,
                                               const bool             use_adaptive_sampling )
-   : m_D_old(sym(L)),
+   : Constitutive(global),
+     m_D_old(sym(L)),
      m_W_old(skew(L)),
      m_R(1),
      m_J(1.),
@@ -176,7 +178,7 @@ ElastoViscoPlasticity::soundSpeedSquared( const double reference_density,
 }
 
 
-void
+ConstitutiveData
 ElastoViscoPlasticity::advance( const double delta_t )
 {
    // Get the deviatoric strain rate at the new time
@@ -217,6 +219,13 @@ ElastoViscoPlasticity::advance( const double delta_t )
    m_Wbar = Wbar_new;
    m_D_old = m_D_new;
    m_W_old = m_W_new;
+
+   ConstitutiveData return_data;
+   return_data.sigma_prime = stressDeviator();
+   getModelInfo(return_data.num_models, return_data.num_point_value_pairs);
+   return_data.num_Newton_iters = numNewtonIterations();
+
+   return return_data;
 }
 
 

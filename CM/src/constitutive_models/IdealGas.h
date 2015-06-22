@@ -10,10 +10,11 @@ class IdealGas
 {
  public:
 
-   IdealGas( const double gamma,
-             const bool use_adaptive_sampling = false );
+   IdealGas( ConstitutiveGlobal& global,
+             const double        gamma,
+             const bool          use_adaptive_sampling = false );
 
-   virtual void advance( const double delta_t ) {};
+   virtual ConstitutiveData advance( const double delta_t );
 
    virtual void setNewVelocityGradient( const Tensor2Gen& L_new ) {};
 

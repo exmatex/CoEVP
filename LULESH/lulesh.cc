@@ -2363,23 +2363,18 @@ void Lulesh::UpdateStressForElems()
 #endif
       for (Index_t k=0; k<numElem; ++k) {
 
-         // advance constitutive model
-         domain.cm(k)->advance(domain.deltatime());
+         ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime());
 
-         const ElastoViscoPlasticity* cm = (ElastoViscoPlasticity*)domain.cm(k);
-
-         int num_iters = cm->numNewtonIterations();
+         int num_iters = cm_data.num_Newton_iters;
          if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
 
 #if 0
          if (num_iters > MAX_NONLINEAR_ITER) {
-            Int_t numModels, numPairs;
-            domain.cm(k)->getModelInfo(numModels, numPairs);
-            cout << "numModels = " << numModels << ", numPairs = " << numPairs << endl;
+            cout << "numModels = " << cm_data.num_models << ", numPairs = " << cm_data.num_point_value_pairs << endl;
          }
 #endif
 
-         Tensor2Sym sigma_prime = domain.cm(k)->stressDeviator();
+         const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
 
          domain.sx(k) = sigma_prime(1,1);
          domain.sy(k) = sigma_prime(2,2);
@@ -3405,6 +3400,8 @@ void Lulesh::go(int argc, char *argv[])
    bool use_adaptive_sampling = false;
 #endif
 
+   ConstitutiveGlobal cm_global;
+
    for (Index_t i=0; i<domElems; ++i) {
 
       // Construct the fine-scale plasticity model
@@ -3507,7 +3504,7 @@ void Lulesh::go(int argc, char *argv[])
          L(3,2) = D[3] + W[0];  // dyddz
          L(3,3) = D[2];         // dzddz
 
-         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(L, bulk_modulus, shear_modulus, eos_model,
+         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, L, bulk_modulus, shear_modulus, eos_model,
                                                                   plasticity_model, use_adaptive_sampling));
       }
    }

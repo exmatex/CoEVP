@@ -12,12 +12,13 @@ class ElastoViscoPlasticity
 {
    public:
 
-      ElastoViscoPlasticity( const Tensor2Gen& L,
-                             const double      bulk_modulus,
-                             const double      shear_modulus,
-                             const EOS*        eos,
-                             const Plasticity* fine_scale_model,
-                             const bool        use_adaptive_sampling = false );
+     ElastoViscoPlasticity( ConstitutiveGlobal& global,
+                            const Tensor2Gen&   L,
+                             const double       bulk_modulus,
+                             const double       shear_modulus,
+                             const EOS*         eos,
+                             const Plasticity*  fine_scale_model,
+                             const bool         use_adaptive_sampling = false );
 
       ~ElastoViscoPlasticity();
 
@@ -27,7 +28,7 @@ class ElastoViscoPlasticity
 
       virtual Tensor2Sym stressDeviator() const;
       
-      virtual void advance( const double delta_t );
+      virtual ConstitutiveData advance( const double delta_t );
 
       virtual void setNewVelocityGradient( const Tensor2Gen& L_new );
 

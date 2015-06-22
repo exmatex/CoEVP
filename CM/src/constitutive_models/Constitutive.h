@@ -1,21 +1,31 @@
 #ifndef _CONSTITUTIVE_
 #define _CONSTITUTIVE_
 
+#include "ConstitutiveGlobal.h"
 #include "FineScale.h"
 #include "tensor.h"
 
 class AdaptiveSampler;
 
+struct ConstitutiveData
+{
+   Tensor2Sym  sigma_prime;
+   int         num_models;
+   int         num_point_value_pairs;
+   int         num_Newton_iters;
+};
+
 class Constitutive
 {
  public:
 
-   Constitutive()
-      : m_sampler(NULL), m_finescale_verbose(false) {;}
+   Constitutive( ConstitutiveGlobal& global)
+      : m_global(&global), m_sampler(NULL), m_finescale_verbose(false) {;}
 
    ~Constitutive();
 
-   virtual void advance( const double delta_t ) = 0;
+   //   virtual void advance( const double delta_t ) = 0;
+   virtual ConstitutiveData advance( const double delta_t ) = 0;
 
    virtual void setNewVelocityGradient( const Tensor2Gen& L_new ) = 0;
 
@@ -85,7 +95,10 @@ class Constitutive
 
    AdaptiveSampler* m_sampler;
 
+   ConstitutiveGlobal* m_global;
+
 };
+
 
 #endif
 
