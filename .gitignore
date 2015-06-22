@@ -1,0 +1,9 @@
+CMakeFiles
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+libcm.a
+liblulesh_core.a
+lulesh
+*~
+build

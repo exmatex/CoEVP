@@ -13,6 +13,14 @@
 
 #include <unordered_map>
 
+#ifdef STRING_MODELS
+#ifdef REDIS
+#define REDIS_PORT 6379
+#define REDIS_HOST "localhost"
+#include <hiredis.h>
+#endif
+#endif
+
 #ifndef included_krigcpl_InterpolationDataBase_h
 #include "base/InterpolationDataBase.h"
 #endif 

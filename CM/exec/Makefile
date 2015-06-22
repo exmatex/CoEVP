@@ -126,6 +126,11 @@ CXXFLAGS += -I$(AS_LOC) -I$(MTL_LOC) -I$(INTERPDB_LOC) -I$(INTERP_LOC) -I$(DB_LO
 CXXFLAGS += -I$(TENSOR_LOC) -I$(CM_LOC) -I$(EOS_LOC) -I$(FS_LOC)
 CXXFLAGS += -DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN
 
+ifeq ($(REDIS), yes)
+CXXFLAGS += -DSTRING_MODELS -DREDIS -I../../redis/hiredis
+LIBS += -L../../redis/hiredis -Lhiredis
+endif
+
 MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 
 default: libcm

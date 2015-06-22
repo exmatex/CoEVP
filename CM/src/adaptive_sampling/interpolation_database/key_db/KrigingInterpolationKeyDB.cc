@@ -103,6 +103,41 @@ namespace krigcpl {
 
     namespace {
 
+#ifdef REDIS
+       void modelToRedis(const string& key, const string& modelKey)
+       {
+	    //TODO move this to constructor
+	    redisContext* redis;
+	    redis = redisConnect(REDIS_HOST, REDIS_PORT);
+	    redisReply* reply;
+            reply = (redisReply *) redisCommand(redis, "SADD %s %b", key.c_str(), modelKey.c_str(), (modelKey.length()+1)*sizeof(char));
+            freeReplyObject(reply);
+	    //TODO move this to destructor
+	    redisFree(redis);
+       }
+
+       string& redisToModel(const string& key)
+       {
+	    //TODO move this to constructor
+	    string *modelKey;
+	    redisContext* redis;
+	    redis = redisConnect(REDIS_HOST, REDIS_PORT);
+	    redisReply* reply;
+            reply = (redisReply *)redisCommand(redis, "SMEMBERS %s", key);
+            assert(reply->type == REDIS_REPLY_ARRAY);
+	    if (reply->elements != 0) {
+		 //TODO not sure what to do with other replies
+		 modelKey= new string((reply->element)[0]->str);
+	    } else {
+		 modelKey= new string();
+	    }
+            freeReplyObject(reply);
+	    //TODO move this to destructor
+	    redisFree(redis);
+	    return *modelKey;
+       }
+#endif
+
        void buildKey(string& key, std::vector<double> data, int keyDigits)
        {
           //Build format
@@ -561,7 +596,11 @@ namespace krigcpl {
              dynamic_cast<const DBKeyObject<std::string> &>(searchResult.getDataObject()); 
 
 #ifdef STRING_MODELS
+#ifdef REDIS
+	  std::string& modelKey = redisToModel(dbObject.getKey());
+#else
           std::string& modelKey = modelDB[dbObject.getKey()];
+#endif
 
           std::vector<double> packedContainer;
           unpackKey(modelKey, packedContainer);
@@ -699,7 +738,11 @@ namespace krigcpl {
              dynamic_cast<const DBKeyObject<std::string> &>(searchResult.getDataObject()); 
 
 #ifdef STRING_MODELS
+#ifdef REDIS
+	  std::string& modelKey = redisToModel(dbObject.getKey());
+#else
           std::string& modelKey = modelDB[dbObject.getKey()];
+#endif
 
           std::vector<double> packedContainer;
           unpackKey(modelKey, packedContainer);
@@ -773,7 +816,11 @@ namespace krigcpl {
            dynamic_cast<const DBKeyObject<std::string> &>(searchResults[0].getDataObject()); 
 
 #ifdef STRING_MODELS
+#ifdef REDIS
+	  std::string& modelKey = redisToModel(dbObject.getKey());
+#else
         std::string& modelKey = modelDB[dbObject.getKey()];
+#endif
 
         std::vector<double> packedContainer;
         unpackKey(modelKey, packedContainer);
@@ -1273,7 +1320,11 @@ namespace krigcpl {
         std::string modelKey;
         buildKey(modelKey, packedContainer, STRING_DIGITS);
         
+#ifdef REDIS
+	      modelToRedis(dbObject.getKey(),modelKey);
+#else
         modelDB.insert( std::make_pair(dbObject.getKey(), modelKey) );
+#endif
 #else
         modelDB.insert( std::make_pair(dbObject.getKey(), krigingModel) );
 #endif
@@ -1520,7 +1571,11 @@ namespace krigcpl {
             std::string modelKey;
             buildKey(modelKey, packedContainer, STRING_DIGITS);
         
+#ifdef REDIS
+	      modelToRedis(dbObject.getKey(),modelKey);
+#else
             modelDB.insert( std::make_pair(dbObject.getKey(), modelKey) );
+#endif
 #else
             modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(dbObject.getKey(), krigingModelPtr) );
 #endif
@@ -1827,7 +1882,11 @@ namespace krigcpl {
            const DBKeyObject<std::string>& dbObject = dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
 
 #ifdef STRING_MODELS
+#ifdef REDIS
+	  std::string& modelKey = redisToModel(dbObject.getKey());
+#else
           std::string& modelKey = _modelDB[dbObject.getKey()];
+#endif
 
           std::vector<double> packedContainer;
           unpackKey(modelKey, packedContainer);
@@ -2085,7 +2144,11 @@ namespace krigcpl {
            const DBKeyObject<std::string>& dbObject = dynamic_cast<const DBKeyObject<std::string>&>(*dbObjectPtr);
 
 #ifdef STRING_MODELS
+#ifdef REDIS
+	  std::string& modelKey = redisToModel(dbObject.getKey());
+#else
            std::string& modelKey = _modelDB[dbObject.getKey()];
+#endif
 
            std::vector<double> packedContainer;
            unpackKey(modelKey, packedContainer);
@@ -2355,7 +2418,11 @@ namespace krigcpl {
 
              const DBKeyObject<std::string>& dbObject = dynamic_cast<const DBKeyObject<std::string>&>(*dbObjectPtr);
 #ifdef STRING_MODELS
+#ifdef REDIS
+	  std::string& modelKey = redisToModel(dbObject.getKey());
+#else
              std::string& modelKey = _modelDB[dbObject.getKey()];
+#endif
 
              std::vector<double> packedContainer;
              unpackKey(modelKey, packedContainer);
@@ -2661,7 +2728,11 @@ namespace krigcpl {
            const DBKeyObject<std::string>& dbObject = dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
 
 #ifdef STRING_MODELS
+#ifdef REDIS
+	  std::string& modelKey = redisToModel(dbObject.getKey());
+#else
            std::string& modelKey = _modelDB[dbObject.getKey()];
+#endif
 
            std::vector<double> packedContainer;
            unpackKey(modelKey, packedContainer);
@@ -2962,7 +3033,11 @@ namespace krigcpl {
     
            const DBKeyObject<std::string>& dbObject = dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
 #ifdef STRING_MODELS
+#ifdef REDIS
+	  std::string& modelKey = redisToModel(dbObject.getKey());
+#else
            std::string& modelKey = _modelDB[dbObject.getKey()];
+#endif
 
            std::vector<double> packedContainer;
            unpackKey(modelKey, packedContainer);
@@ -3101,7 +3176,11 @@ namespace krigcpl {
 	  dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
 
 #ifdef STRING_MODELS
+#ifdef REDIS
+	  std::string& modelKey = redisToModel(dbObject.getKey());
+#else
         std::string& modelKey = _modelDB[dbObject.getKey()];
+#endif
 
         std::vector<double> packedContainer;
         unpackKey(modelKey, packedContainer);
@@ -3217,7 +3296,11 @@ namespace krigcpl {
             std::string modelKey;
             buildKey(modelKey, packedContainer, STRING_DIGITS);
         
+#ifdef REDIS
+	      modelToRedis(dbObject.getKey(),modelKey);
+#else
             _modelDB.insert( std::make_pair(dbObject.getKey(), modelKey) );
+#endif
 #else
             _modelDB.insert( std::make_pair(dbObject.getKey(), krigingModel) );
 #endif
@@ -3368,7 +3451,11 @@ namespace krigcpl {
              dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
 
 #ifdef STRING_MODELS
+#ifdef REDIS
+	  std::string& modelKey = redisToModel(dbObject.getKey());
+#else
           std::string& modelKey = _modelDB[dbObject.getKey()];
+#endif
 
           std::vector<double> packedContainer;
           unpackKey(modelKey, packedContainer);
@@ -3458,8 +3545,13 @@ namespace krigcpl {
 
               std::string newModelKey;
               buildKey(newModelKey, packedContainer, STRING_DIGITS);
-        
+
+#ifdef REDIS
+	      modelToRedis(dbObject.getKey(),newModelKey);
+#else
               _modelDB.insert( std::make_pair(dbObject.getKey(), newModelKey) );
+#endif
+
 #else
               _modelDB.insert( std::make_pair(new_dbObject.getKey(), krigingModel) );
 #endif
