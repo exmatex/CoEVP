@@ -91,7 +91,7 @@ Additional BSD Notice
 
 #include "DBKeyObject.h"
 
-#define STRING_DIGITS 14
+#define STRING_DIGITS 16
 
 #ifndef DEBUG
 #  define DEBUG 0
@@ -3456,10 +3456,10 @@ namespace krigcpl {
               std::vector<double> packedContainer;
               krigingModel->pack(packedContainer);
 
-              std::string modelKey;
-              buildKey(modelKey, packedContainer, STRING_DIGITS);
+              std::string newModelKey;
+              buildKey(newModelKey, packedContainer, STRING_DIGITS);
         
-              _modelDB.insert( std::make_pair(dbObject.getKey(), modelKey) );
+              _modelDB.insert( std::make_pair(dbObject.getKey(), newModelKey) );
 #else
               _modelDB.insert( std::make_pair(new_dbObject.getKey(), krigingModel) );
 #endif
