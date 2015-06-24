@@ -123,7 +123,7 @@ namespace krigcpl {
 	    redisContext* redis;
 	    redis = redisConnect(REDIS_HOST, REDIS_PORT);
 	    redisReply* reply;
-            reply = (redisReply *)redisCommand(redis, "SMEMBERS %s", key);
+            reply = (redisReply *)redisCommand(redis, "SMEMBERS %s", key.c_str());
             assert(reply->type == REDIS_REPLY_ARRAY);
 	    if (reply->elements != 0) {
 		 //TODO not sure what to do with other replies
