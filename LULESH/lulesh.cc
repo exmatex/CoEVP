@@ -534,7 +534,7 @@ void Lulesh::TimeIncrement()
 
       /* This will require a reduction in parallel */
       Real_t gnewdt = Real_t(1.0e+20) ;
-      Real_t newdt ;
+      Real_t newdt;
       if (domain.dtcourant() < gnewdt) {
          gnewdt = domain.dtcourant() / Real_t(2.0) ;
       }
@@ -1504,6 +1504,9 @@ void Lulesh::CalcForceForNodes()
   /* Calcforce calls partial, force, hourq */
   CalcVolumeForceForElems() ;
 
+  /* Calculate Nodal Forces at domain boundaries */
+  /* problem->commSBN->Transfer(CommSBN::forces); */
+
 //#if defined(COEVP_MPI)
   fieldData[0] = &domain.fx(0) ;
   fieldData[1] = &domain.fy(0) ;
@@ -1947,8 +1950,8 @@ void Lulesh::CalcKinematicsForElems( Index_t numElem, Real_t dt )
 
     CalcElemVelocityGradient( xd_local,
                               yd_local,
-                              zd_local,
-                              B, detJ, D, W );
+                            zd_local,
+                            B, detJ, D, W );
 
     // put velocity gradient quantities into their global arrays.
     domain.dxx(k) = D[0];
@@ -2895,22 +2898,18 @@ void Lulesh::UpdateStressForElems()
       for (Index_t k=0; k<numElem; ++k) {
 
          // advance constitutive model
-         domain.cm(k)->advance(domain.deltatime());
+         ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime());
 
-         const ElastoViscoPlasticity* cm = (ElastoViscoPlasticity*)domain.cm(k);
-
-         int num_iters = cm->numNewtonIterations();
+         int num_iters = cm_data.num_Newton_iters;
          if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
 
 #if 0
          if (num_iters > MAX_NONLINEAR_ITER) {
-            Int_t numModels, numPairs;
-            domain.cm(k)->getModelInfo(numModels, numPairs);
-            cout << "numModels = " << numModels << ", numPairs = " << numPairs << endl;
+            cout << "numModels = " << cm_data.num_models << ", numPairs = " << cm_data.num_point_value_pairs << endl;
          }
 #endif
 
-         Tensor2Sym sigma_prime = domain.cm(k)->stressDeviator();
+         const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
 
          domain.sx(k) = sigma_prime(1,1);
          domain.sy(k) = sigma_prime(2,2);
@@ -3638,6 +3637,7 @@ void Lulesh::go(int myRank, int numRanks)
 
    domain.AllocateNodalPersistent(domain.numNode()) ;
 
+   /* Taylor impact will need a different X symm definition */
    domain.AllocateNodesets(domain.numSymmNodesBoundary(),
                            domain.numSymmNodesImpact()) ;
 
@@ -4294,6 +4294,8 @@ void Lulesh::go(int myRank, int numRanks)
    bool use_adaptive_sampling = false;
 #endif
 
+   ConstitutiveGlobal cm_global;
+
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -4399,7 +4401,7 @@ void Lulesh::go(int myRank, int numRanks)
          L(3,2) = D[3] + W[0];  // dyddz
          L(3,3) = D[2];         // dzddz
 
-         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(L, bulk_modulus, shear_modulus, eos_model,
+         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, L, bulk_modulus, shear_modulus, eos_model,
                                                                   plasticity_model, use_adaptive_sampling));
       }
    }
