@@ -12,7 +12,7 @@ CXX = g++
 # Specify compiler options (optimization level, debugging options, etc.)
 #
 
-CXXFLAGS = -g -O3
+CXXFLAGS = -O3
 
 #
 # Specify the location of the BLAS and LAPACK libraries.  Depending upon the
@@ -126,6 +126,12 @@ CXXFLAGS += -I$(AS_LOC) -I$(MTL_LOC) -I$(INTERPDB_LOC) -I$(INTERP_LOC) -I$(DB_LO
 CXXFLAGS += -I$(TENSOR_LOC) -I$(CM_LOC) -I$(EOS_LOC) -I$(FS_LOC)
 CXXFLAGS += -DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN
 
+ifeq ($(REDIS), yes)
+REDIS_LOC = ../../redis/hiredis
+CXXFLAGS += -DSTRING_MODELS -DREDIS -I$(REDIS_LOC)
+REDIS_LIBS = $(REDIS_LOC)/libhiredis.a
+endif
+
 MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 
 default: libcm
@@ -137,7 +143,7 @@ kintest2: $(KINTEST2_OBJS)
 	$(CXX) $(CXXFLAGS) $(KINTEST2_OBJS) $(LIBS) -o kintest2
 
 libcm:  $(CMLIB_OBJS)
-	ar crs libcm.a $(CMLIB_OBJS)
+	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS)
 	cp $(CMLIB_INCL) ../include
 	mv libcm.a ../lib
 

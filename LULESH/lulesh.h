@@ -154,13 +154,10 @@ void DumpSAMI(Domain *domain, char *name);
 void DumpDomain(Domain *domain, int myRank, int numProcs);
 */
 
-//#if defined(COEVP_MPI)
+void Initialize(int myRank, int numRanks);
+void ConstructFineScaleModel(bool use_adaptive_sampling);
+void ExchangeNodalMass();
 void go(int myRank, int numRanks);
-/*
-#else
-void go(int numRanks);
-#endif
-*/
 
 };
 

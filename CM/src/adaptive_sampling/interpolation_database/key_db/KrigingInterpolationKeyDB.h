@@ -6,12 +6,18 @@
 // Description: Kriging interpolation using a keyed database.
 //
 
-#undef STRING_MODELS
-
 #ifndef included_krigcpl_KrigingInterpolationKeyDB_h
 #define included_krigcpl_KrigingInterpolationKeyDB_h
 
 #include <unordered_map>
+
+#ifdef STRING_MODELS
+#ifdef REDIS
+#define REDIS_PORT 6379
+#define REDIS_HOST "localhost"
+#include <hiredis.h>
+#endif
+#endif
 
 #ifndef included_krigcpl_InterpolationDataBase_h
 #include "base/InterpolationDataBase.h"

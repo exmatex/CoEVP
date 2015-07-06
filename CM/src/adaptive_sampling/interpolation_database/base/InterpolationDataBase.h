@@ -203,6 +203,7 @@ namespace krigcpl {
 			  const double      * gradient,
 			  std::vector<bool> & flags) = 0;
       
+#if 0
       /*!
        * Insert the point-value pair into the database.
        *
@@ -227,6 +228,7 @@ namespace krigcpl {
 			  int                 numberHints,
 			  bool                forceInsert,
 			  std::vector<bool> & flags) = 0;
+#endif
       
       virtual double interpolateSpecificModel(double            * value,
                                               double            * gradient,

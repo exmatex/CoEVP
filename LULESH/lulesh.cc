@@ -3469,11 +3469,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
 
 #endif
 
-#if defined(COEVP_MPI)
-void Lulesh::go(int myRank, int numRanks)
-#else
-void Lulesh::go(int myRank, int numRanks)
-#endif
+void Lulesh::Initialize(int myRank, int numRanks)
 {
    Index_t gheightElems = 26 ;
    Index_t edgeElems = 16 ;
@@ -4288,11 +4284,11 @@ void Lulesh::go(int myRank, int numRanks)
    exit(0) ;
 #endif
 
-#ifdef USE_ADAPTIVE_SAMPLING
-   bool use_adaptive_sampling = true;
-#else
-   bool use_adaptive_sampling = false;
-#endif
+}
+
+void Lulesh::ConstructFineScaleModel(bool use_adaptive_sampling)
+{
+   Index_t domElems = domain.numElem();
 
    ConstitutiveGlobal cm_global;
 
@@ -4437,6 +4433,10 @@ void Lulesh::go(int myRank, int numRanks)
    Int_t cumulative_fsm_count = 0;
 #endif   
 
+}
+
+void Lulesh::ExchangeNodalMass()
+{
 //#if defined(COEVP_MPI)
    Real_t *fieldData = &domain.nodalMass(0) ;
    CommSend(&domain, MSG_COMM_SBN, 1, &fieldData,
@@ -4450,6 +4450,27 @@ void Lulesh::go(int myRank, int numRanks)
    MPI_Finalize() ;
    exit(0) ;
 #endif
+
+}
+
+void Lulesh::go(int myRank, int numRanks)
+{
+    Index_t domElems = domain.numElem();
+
+#ifdef USE_ADAPTIVE_SAMPLING
+   bool use_adaptive_sampling = true;
+#else
+   bool use_adaptive_sampling = false;
+#endif
+
+    // Initialize Taylor cylinder mesh
+    Initialize(myRank, numRanks);
+ 
+    // Construct fine scale models
+    ConstructFineScaleModel(use_adaptive_sampling);
+
+    // Exchange nodal mass
+    ExchangeNodalMass();
 
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
