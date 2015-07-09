@@ -96,7 +96,6 @@ class AdaptiveSampler
    KrigingInterpolationKeyDB* m_interp;
 
    InterpolationModelDataBase m_modelDB;
-   //   InterpolationModelDataBase2 m_modelDB2;
    DB* m_keyDB;
 
    std::vector<double> m_pointScaling;
