@@ -1,7 +1,7 @@
 ###### CONFIGURATION START ############
 
 # Use MPI
-#COEVP_MPI = ON
+COEVP_MPI = ON
 
 # Silo (www.hdfgroup.org/HDF5) and HDF5 (www.hdfgroup.org/HDF5) library
 # locations.  These macros can be left undefined if visualization is not required.

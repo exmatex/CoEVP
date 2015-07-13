@@ -3,13 +3,16 @@
 
 #include "domain.h"
 
+/* For neighbor-1 and neighbor+1 comm */
+#define NBR_M1 11
+#define NBR_P1 22
+
 class Lulesh {
 
 private:
 
-  Domain domain;
-
 public:
+  Domain domain;
 
 Lulesh(){}
 ~Lulesh(){}
@@ -96,6 +99,8 @@ void ApplyAccelerationBoundaryConditionsForNodes();
 void CalcVelocityForNodes(const Real_t dt, const Real_t u_cut);
 void CalcPositionForNodes(const Real_t dt);
 void LagrangeNodal();
+void LagrangeNodal1();
+void LagrangeNodal2();
 void CalcElemVelocityGradient( const Real_t* const xvel,
          const Real_t* const yvel,
          const Real_t* const zvel,
@@ -157,7 +162,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs);
 void Initialize(int myRank, int numRanks);
 void ConstructFineScaleModel(bool use_adaptive_sampling);
 void ExchangeNodalMass();
-void go(int myRank, int numRanks);
+void go(int myRank, int numRanks, bool use_adaptive_sampling);
 
 };
 

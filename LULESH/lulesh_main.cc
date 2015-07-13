@@ -17,13 +17,23 @@ int main(int argc, char *argv[])
 
   Lulesh luleshSystem;
 
-//#if defined(COEVP_MPI)
-  luleshSystem.go(myRank, numRanks); 
-/*
+  // Initialize Taylor cylinder mesh
+  luleshSystem.Initialize(myRank, numRanks);
+  
+#ifdef USE_ADAPTIVE_SAMPLING
+   bool use_adaptive_sampling = true;
 #else
-  luleshSystem.go();
+   bool use_adaptive_sampling = false;
 #endif
-*/
+
+  // Construct fine scale models
+  luleshSystem.ConstructFineScaleModel(use_adaptive_sampling);
+  
+  // Exchange nodal mass
+  luleshSystem.ExchangeNodalMass();
+
+  // Simulate 
+  luleshSystem.go(myRank, numRanks, use_adaptive_sampling); 
 
 #if defined(COEVP_MPI)
    MPI_Finalize() ;
