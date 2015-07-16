@@ -536,7 +536,7 @@ void Lulesh::CommMonoQ(Domain *domain, Index_t *iset, Index_t size, Index_t offs
 
 // Factor to be multiply the time step by to compensate
 // for fast time scales in the fine-scale model
-Real_t finescale_dt_modifier = Real_t(1.);
+//Real_t finescale_dt_modifier = Real_t(1.);
 
 void Lulesh::TimeIncrement()
 {
