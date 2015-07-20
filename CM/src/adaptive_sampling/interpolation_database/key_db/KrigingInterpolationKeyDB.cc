@@ -108,13 +108,17 @@ namespace krigcpl {
        void modelToRedis(const string& key, const std::vector<double>& packedContainer)
        {
 	    if (packedContainer.size() != MODEL_SIZE ){
-		    cout << packedContainer.size() << " vs. " << MODEL_SIZE << endl;
+		    cerr << "Please recompile with MODEL_SIZE = " << packedContainer.size() << endl;
 		    assert(packedContainer.size() == MODEL_SIZE);
 	    }
         
 	    //TODO move this to constructor
 	    redisContext* redis;
 	    redis = redisConnect(REDIS_HOST, REDIS_PORT);
+            if (redis==NULL) {
+               cerr << "No connection to redis server" << endl;
+               assert(redis==NULL);
+            }
 	    redisReply* reply;
             reply = (redisReply *) redisCommand(redis, "SADD %s %b", key.c_str(), &packedContainer[0], MODEL_SIZE*sizeof(double)); 
             freeReplyObject(reply);
@@ -127,8 +131,16 @@ namespace krigcpl {
 	    //TODO move this to constructor
 	    redisContext* redis;
 	    redis = redisConnect(REDIS_HOST, REDIS_PORT);
+            if (redis==NULL) {
+               cerr << "No connection to redis server" << endl;
+               assert(redis==NULL);
+            }
 	    redisReply* reply;
             reply = (redisReply *)redisCommand(redis, "SMEMBERS %s", key.c_str());
+            if (reply==NULL) {
+               cerr << "No connection to redis server" << endl;
+               assert(reply==NULL);
+            }
             assert(reply->type == REDIS_REPLY_ARRAY);
             //TODO not sure what to do with other replies
 	    assert(reply->elements == 1);
