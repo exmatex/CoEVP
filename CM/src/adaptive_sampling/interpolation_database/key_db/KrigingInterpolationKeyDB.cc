@@ -89,10 +89,16 @@ Additional BSD Notice
 
 #include <toolbox/database/HDFDatabase.h>
 
+#ifdef REDIS
+#include <inttypes.h>
+#include <murmur3/MurmurHash3.h>
+#endif
+
 #include "DBKeyObject.h"
 
 #define STRING_DIGITS 16
 #define MODEL_SIZE 365
+#define MURMUR_SEED 42
 
 #ifndef DEBUG
 #  define DEBUG 0
@@ -154,6 +160,7 @@ namespace krigcpl {
        }
 #endif
 
+#ifndef REDIS
        void buildKey(string& key, std::vector<double> data, int keyDigits)
        {
           //Build format
@@ -167,6 +174,7 @@ namespace krigcpl {
                 key += fBuff;
              }
        }
+#endif
 
        string getKeyString(const ResponsePoint& point)
        {
@@ -179,7 +187,14 @@ namespace krigcpl {
           }
 
           string key_string;
+#ifdef REDIS
+	  uint64_t hash[2]; 
+	  MurmurHash3_x64_128(&data[0], point_size*sizeof(double)/sizeof(char), MURMUR_SEED, hash);
+	  key_string=to_string(hash[0]);
+	  key_string.append(to_string(hash[1]));
+#else
           buildKey(key_string, data, STRING_DIGITS);
+#endif
 
           return key_string;
        }
