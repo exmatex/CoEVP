@@ -105,55 +105,23 @@ namespace krigcpl {
     namespace {
 
 #ifdef REDIS
-       void modelToRedis(const string& key, const std::vector<double>& packedContainer)
-       {
+      void modelToRedis(const string& key, const std::vector<double>& packedContainer)
+      {
 	    if (packedContainer.size() != MODEL_SIZE ){
-		    cerr << "Please recompile with MODEL_SIZE = " << packedContainer.size() << endl;
-		    assert(packedContainer.size() == MODEL_SIZE);
+          cerr << "Please recompile with MODEL_SIZE = "
+               << packedContainer.size() << endl;
+          assert(packedContainer.size() == MODEL_SIZE);
 	    }
-        
-	    //TODO move this to constructor
-	    redisContext* redis;
-	    redis = redisConnect(REDIS_HOST, REDIS_PORT);
-            if (redis==NULL) {
-               cerr << "No connection to redis server" << endl;
-               assert(redis==NULL);
-            }
-	    redisReply* reply;
-            reply = (redisReply *) redisCommand(redis, "SADD %s %b", key.c_str(), &packedContainer[0], MODEL_SIZE*sizeof(double)); 
-            freeReplyObject(reply);
-	    //TODO move this to destructor
-	    redisFree(redis);
-       }
+        SingletonDB& db = SingletonDB::getInstance();
+        db.sadd_sb(key.c_str(), &packedContainer[0], MODEL_SIZE*sizeof(double));
+      }
 
-       std::vector<double> redisToModel(const string& key)
-       {
-	    //TODO move this to constructor
-	    redisContext* redis;
-	    redis = redisConnect(REDIS_HOST, REDIS_PORT);
-            if (redis==NULL) {
-               cerr << "No connection to redis server" << endl;
-               assert(redis==NULL);
-            }
-	    redisReply* reply;
-            reply = (redisReply *)redisCommand(redis, "SMEMBERS %s", key.c_str());
-            if (reply==NULL) {
-               cerr << "No connection to redis server" << endl;
-               assert(reply==NULL);
-            }
-            assert(reply->type == REDIS_REPLY_ARRAY);
-            //TODO not sure what to do with other replies
-	    assert(reply->elements == 1);
-	    double *raw=(double *)(reply->element)[0]->str;
-	    std::vector<double> packedContainer;
-	    packedContainer.assign(raw, raw + MODEL_SIZE);
-            freeReplyObject(reply);
-	    //TODO move this to destructor
-	    redisFree(redis);
-	    return packedContainer;
-       }
-#endif
-
+      std::vector<double> redisToModel(const string& key)
+      {
+        SingletonDB& db = SingletonDB::getInstance();
+        return(db.smembers_s(key.c_str(), MODEL_SIZE));
+      }
+#endif  // REDIS
        void buildKey(string& key, std::vector<double> data, int keyDigits)
        {
           //Build format
