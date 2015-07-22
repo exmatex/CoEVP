@@ -4,9 +4,10 @@
 #include <mpi.h>
 #endif
 
+#define USE_ADAPTIVE_SAMPLING
+
 int main(int argc, char *argv[])
 {
-//#if defined(COEVP_MPI)
    int numRanks = 1;
    int myRank = 0;
 #if defined(COEVP_MPI)

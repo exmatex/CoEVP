@@ -7,6 +7,8 @@
 #define NBR_M1 11
 #define NBR_P1 22
 
+#define MAX_NONLINEAR_ITER 5
+
 class Lulesh {
 
 private:
@@ -80,6 +82,27 @@ void VoluDer(const Real_t x0, const Real_t x1, const Real_t x2,
          const Real_t z0, const Real_t z1, const Real_t z2,
          const Real_t z3, const Real_t z4, const Real_t z5,
          Real_t* dvdx, Real_t* dvdy, Real_t* dvdz);
+Real_t CalcElemVolume( const Real_t x0, const Real_t x1,
+         const Real_t x2, const Real_t x3,
+         const Real_t x4, const Real_t x5,
+         const Real_t x6, const Real_t x7,
+         const Real_t y0, const Real_t y1,
+         const Real_t y2, const Real_t y3,
+         const Real_t y4, const Real_t y5,
+         const Real_t y6, const Real_t y7,
+         const Real_t z0, const Real_t z1,
+         const Real_t z2, const Real_t z3,
+         const Real_t z4, const Real_t z5,
+         const Real_t z6, const Real_t z7 );
+Real_t CalcElemVolume( const Real_t x[8], const Real_t y[8], const Real_t z[8] );
+Real_t AreaFace( const Real_t x0, const Real_t x1,
+         const Real_t x2, const Real_t x3,
+         const Real_t y0, const Real_t y1,
+         const Real_t y2, const Real_t y3,
+         const Real_t z0, const Real_t z1,
+         const Real_t z2, const Real_t z3);
+Real_t CalcElemCharacteristicLength( const Real_t x[8], const Real_t y[8],
+                                     const Real_t z[8], const Real_t volume);
 void CalcElemVolumeDerivative(Real_t dvdx[8],
          Real_t dvdy[8],
          Real_t dvdz[8],
@@ -153,7 +176,9 @@ void CalcCourantConstraintForElems();
 void CalcHydroConstraintForElems();
 void CalcTimeConstraintsForElems();
 void LagrangeLeapFrog();
-void UpdateStressForElems();
+//void UpdateStressForElems();
+int UpdateStressForElems();
+void UpdateStressForElems2(int reducedIters);
 /*
 void DumpDomainToVisit(DBfile *db, Domain& domain, int myRank);
 void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks);
