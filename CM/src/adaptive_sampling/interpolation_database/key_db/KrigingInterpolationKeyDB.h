@@ -16,6 +16,7 @@
 #define REDIS_PORT 6379
 #define REDIS_HOST "localhost"
 #include <hiredis.h>
+#include "SingletonDB.h"
 #endif
 #endif
 
