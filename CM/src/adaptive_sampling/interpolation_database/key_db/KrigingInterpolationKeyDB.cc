@@ -97,7 +97,6 @@ Additional BSD Notice
 #include "DBKeyObject.h"
 
 #define STRING_DIGITS 16
-#define MODEL_SIZE 365
 #define MURMUR_SEED 42
 
 #ifndef DEBUG
@@ -113,19 +112,14 @@ namespace krigcpl {
 #ifdef REDIS
       void modelToRedis(const string& key, const std::vector<double>& packedContainer)
       {
-	    if (packedContainer.size() != MODEL_SIZE ){
-          cerr << "Please recompile with MODEL_SIZE = "
-               << packedContainer.size() << endl;
-          assert(packedContainer.size() == MODEL_SIZE);
-	    }
         SingletonDB& db = SingletonDB::getInstance();
-        db.sadd_sb(key.c_str(), &packedContainer[0], MODEL_SIZE*sizeof(double));
+        db.sadd_sb(key.c_str(), packedContainer);
       }
 
       std::vector<double> redisToModel(const string& key)
       {
         SingletonDB& db = SingletonDB::getInstance();
-        return(db.smembers_s(key.c_str(), MODEL_SIZE));
+        return(db.smembers_s(key.c_str()));
       }
 #endif  // REDIS
 
