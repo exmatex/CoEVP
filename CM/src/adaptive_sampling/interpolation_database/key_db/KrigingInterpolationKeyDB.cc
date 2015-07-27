@@ -90,7 +90,7 @@ Additional BSD Notice
 #include <toolbox/database/HDFDatabase.h>
 
 #ifdef REDIS
-#include <inttypes.h>
+#define uint128_t unsigned __int128
 #include <murmur3/MurmurHash3.h>
 #endif
 
@@ -138,6 +138,10 @@ namespace krigcpl {
              }
        }
 #endif
+       string uint128_to_string(const uint128_t &in){
+	  uint64_t *in64 = (uint64_t *)&in; 
+	  return to_string(*in64)+to_string(*(in64+1));
+       }
 
        string getKeyString(const ResponsePoint& point)
        {
@@ -151,10 +155,9 @@ namespace krigcpl {
 
           string key_string;
 #ifdef REDIS
-	  uint64_t hash[2]; 
-	  MurmurHash3_x64_128(&data[0], point_size*sizeof(double)/sizeof(char), MURMUR_SEED, hash);
-	  key_string=to_string(hash[0]);
-	  key_string.append(to_string(hash[1]));
+	  uint128_t hash;
+	  MurmurHash3_x64_128(&data[0], point_size*sizeof(double)/sizeof(char), MURMUR_SEED, &hash);
+	  key_string=uint128_to_string(hash);
 #else
           buildKey(key_string, data, STRING_DIGITS);
 #endif
