@@ -26,11 +26,8 @@ class SingletonDB {
   }
   void  sadd_sb(const char *key, const std::vector<double>& buf) {
     redisReply* reply;
-    reply = (redisReply *)redisCommand(redis, "SADD %s %lu", key, buf.size());
-    if (!reply) {
-      throw std::runtime_error("No connection to redis server, please start one on host'" + std::string(REDIS_HOST) + "' and port " + std::to_string(REDIS_PORT));
-    }
-    reply = (redisReply *)redisCommand(redis, "SADD %s %b", key, &buf[0],buf.size()*sizeof(double));
+    unsigned long sz = buf.size();
+    reply = (redisReply *)redisCommand(redis, "SADD %s %b%b", key, &sz, sizeof(unsigned long), &buf[0], buf.size()*sizeof(double));
     if (!reply) {
       throw std::runtime_error("No connection to redis server, please start one on host'" + std::string(REDIS_HOST) + "' and port " + std::to_string(REDIS_PORT));
     }
@@ -48,13 +45,13 @@ class SingletonDB {
       throw std::runtime_error("Wrong redis return type");
     }
     //TODO not sure what to do with other replies
-    if(reply->elements < 2) {
+    if(reply->elements < 1) {
       throw std::runtime_error("Number of redis reply elements wrong, got: " + std::to_string(reply->elements));
     }
-    unsigned long sz=std::stoul((reply->element)[0]->str,nullptr,0);
-    double *raw=(double *)(reply->element)[1]->str;
+    unsigned long *sz = (unsigned long *)(reply->element)[0]->str;
+    double *raw=(double *)(sz+1);
     std::vector<double> packedContainer;
-    packedContainer.assign(raw, raw + sz);
+    packedContainer.assign(raw, raw + *sz);
     freeReplyObject(reply);
     return packedContainer;
   }
