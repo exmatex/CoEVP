@@ -2376,6 +2376,14 @@ void Lulesh::CalcQForElems()
 
 #endif
 
+}
+
+void Lulesh::CalcQForElems2()
+{
+
+   Real_t qstop = domain.qstop() ;
+   Index_t numElem = domain.numElem() ;
+
    CalcMonotonicQForElems() ;
 
    /* Don't allow excessive artificial viscosity */
@@ -2782,6 +2790,13 @@ void Lulesh::LagrangeElements()
 
   /* Calculate Q.  (Monotonic q option requires communication) */
   CalcQForElems() ;
+
+}
+
+void Lulesh::LagrangeElements2()
+{
+ 
+  CalcQForElems2();
 
   ApplyMaterialPropertiesForElems() ;
 
