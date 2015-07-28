@@ -2989,7 +2989,7 @@ void Lulesh::UpdateStressForElems2(int reducedIters)
 {
    int max_nonlinear_iters = reducedIters;
 
-   printf("%d iters = %d\n", domain.sliceLoc(), max_nonlinear_iters);
+   //printf("%d iters = %d\n", domain.sliceLoc(), max_nonlinear_iters);
 
    // The maximum number of Newton iterations required is an indicaton of
    // fast time scales in the fine-scale model.  If the number of iterations
