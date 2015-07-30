@@ -6,8 +6,8 @@
 //
 // http://stackoverflow.com/questions/1008019/c-singleton-design-pattern
 
-#ifndef included_SignletonDB_h
-#define included_SignletonDB_h
+#ifndef included_SingletonDB_h
+#define included_SingletonDB_h
 
 
 #include <vector>
