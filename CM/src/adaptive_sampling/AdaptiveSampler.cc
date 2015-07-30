@@ -69,7 +69,7 @@ Additional BSD Notice
 
 #include <mtreedb/MTree.h>
 
-#include "interpolation_database/kriging_db/DBKrigingModelObjectFactory.h"
+#include "interpolation_database/key_db/DBKeyObjectFactory.h"
 
 AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
                                   const int                  valueDimension,
@@ -123,7 +123,7 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
    m_keyDB->initializeCreate(mtreeDirectoryName + "/" 
                           "kriging_model_database",
                           "krigcpl",
-                          *(new DBKrigingModelObjectFactory<InterpolationModel>));
+                          *(new DBKeyObjectFactory<std::string>));
       
    ((MTree*)m_keyDB)->setMaxNodeEntries(12);
      

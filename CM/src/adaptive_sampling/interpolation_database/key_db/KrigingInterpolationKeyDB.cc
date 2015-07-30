@@ -138,10 +138,12 @@ namespace krigcpl {
              }
        }
 #endif
+#ifdef REDIS
        string uint128_to_string(const uint128_t &in){
-	  uint64_t *in64 = (uint64_t *)&in; 
-	  return to_string(*in64)+to_string(*(in64+1));
+          uint64_t *in64 = (uint64_t *)&in; 
+          return to_string(*in64)+to_string(*(in64+1));
        }
+#endif
 
        string getKeyString(const ResponsePoint& point)
        {

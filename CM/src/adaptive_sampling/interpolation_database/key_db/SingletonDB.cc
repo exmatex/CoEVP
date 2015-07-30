@@ -6,6 +6,8 @@
 //
 // http://stackoverflow.com/questions/1008019/c-singleton-design-pattern
 
+#ifdef REDIS
+
 #include "SingletonDB.h"
 
 #define REDIS_PORT 6379
@@ -14,7 +16,7 @@
 #include <iostream>
 #include <string>
 #include <assert.h>
-
+#include <stdexcept>
 
 //  Will eventually be something like add_points
 void  SingletonDB::sadd_sb(const char *key, const std::vector<double>& buf) {
@@ -68,3 +70,5 @@ SingletonDB::~SingletonDB() {
   redisFree(redis);
   std::cout << "Closing redis in SingletonDB..." << std::endl;
 }
+
+#endif
