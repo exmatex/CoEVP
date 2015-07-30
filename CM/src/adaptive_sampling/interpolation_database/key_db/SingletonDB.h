@@ -6,6 +6,10 @@
 //
 // http://stackoverflow.com/questions/1008019/c-singleton-design-pattern
 
+#ifndef included_SignletonDB_h
+#define included_SignletonDB_h
+
+
 #include <vector>
 #include <hiredis.h>
 
@@ -32,3 +36,5 @@ private:
   void operator=(SingletonDB const&) = delete;
 };
 
+
+#endif // included_SingletonDB_h
