@@ -27,7 +27,7 @@ cd ../../LULESH
 make clean;make
 ./lulesh
 ```
-Before running LULESH, make sure an start a redis-server (instructions for
+Before running LULESH, make sure and start a redis-server (instructions for
 doing this depend on your system environment). CoEVP will connect to redis on
 the standard address (`localhost:6379`). If CoEVP detects any data in the redis databse
 (from a previous run) it will be deleted. This is a (temporary) convenience so
