@@ -120,10 +120,17 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
 
    std::string mtreeDirectoryName = ".";
 
+#if 0
    m_keyDB->initializeCreate(mtreeDirectoryName + "/" 
                           "kriging_model_database",
                           "krigcpl",
                           *(new DBKeyObjectFactory<std::string>));
+#else
+   m_keyDB->initializeCreate(mtreeDirectoryName + "/" 
+                          "kriging_model_database",
+                          "krigcpl",
+                          *(new DBKeyObjectFactory<uint128_t>));
+#endif
       
    ((MTree*)m_keyDB)->setMaxNodeEntries(12);
      

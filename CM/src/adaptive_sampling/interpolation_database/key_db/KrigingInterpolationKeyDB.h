@@ -32,13 +32,30 @@
 #include <base/DB.h>
 #endif // included_base_DB
 
-namespace krigcpl {
+#define uint128_t unsigned __int128
+
+namespace std {
+
+   // Defining a hash function in order to use uint128_t as a key
+   // for an std::unordered_map
+   template <>
+      struct hash<uint128_t>
+      {
+         std::size_t operator()(const uint128_t& in) const
+            {
+               return (size_t)in;
+            }
+      };
 
 #ifdef STRING_MODELS
-    typedef std::unordered_map<std::string, std::string> InterpolationModelDataBase;
+   typedef std::unordered_map<uint128_t, std::string> InterpolationModelDataBase;
 #else
-    typedef std::unordered_map<std::string, krigalg::InterpolationModelPtr> InterpolationModelDataBase;
+   typedef std::unordered_map<uint128_t, krigalg::InterpolationModelPtr> InterpolationModelDataBase;
 #endif
+
+}
+
+namespace krigcpl {
 
     /*!
      * @brief Concrete implementation of the InterpolationDataBase class using

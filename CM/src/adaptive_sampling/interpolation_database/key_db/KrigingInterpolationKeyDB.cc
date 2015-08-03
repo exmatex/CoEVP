@@ -89,10 +89,7 @@ Additional BSD Notice
 
 #include <toolbox/database/HDFDatabase.h>
 
-#ifdef REDIS
-#define uint128_t unsigned __int128
 #include <murmur3/MurmurHash3.h>
-#endif
 
 #include "DBKeyObject.h"
 
@@ -145,7 +142,7 @@ namespace krigcpl {
        }
 #endif
 
-       string getKeyString(const ResponsePoint& point)
+       uint128_t getKeyHash(const ResponsePoint& point)
        {
           int point_size = point.size();
 
@@ -155,16 +152,10 @@ namespace krigcpl {
              data[i] = point[i];
           }
 
-          string key_string;
-#ifdef REDIS
 	  uint128_t hash;
 	  MurmurHash3_x64_128(&data[0], point_size*sizeof(double)/sizeof(char), MURMUR_SEED, &hash);
-	  key_string=uint128_to_string(hash);
-#else
-          buildKey(key_string, data, STRING_DIGITS);
-#endif
 
-          return key_string;
+          return hash;
        }
 
        void unpackKey(std::string& key, std::vector<double>& data)
@@ -591,8 +582,8 @@ namespace krigcpl {
 	  // get handle to object
 	  //
 
-	  const DBKeyObject<std::string> & dbObject = 
-             dynamic_cast<const DBKeyObject<std::string> &>(searchResult.getDataObject()); 
+          const DBKeyObject<uint128_t> & dbObject = 
+             dynamic_cast<const DBKeyObject<uint128_t> &>(searchResult.getDataObject()); 
 
 #ifdef STRING_MODELS
 #ifdef REDIS
@@ -733,8 +724,8 @@ namespace krigcpl {
 	  // get handle to object
 	  //
 
-	  const DBKeyObject<std::string> & dbObject = 
-             dynamic_cast<const DBKeyObject<std::string> &>(searchResult.getDataObject()); 
+	  const DBKeyObject<uint128_t> & dbObject = 
+             dynamic_cast<const DBKeyObject<uint128_t> &>(searchResult.getDataObject()); 
 
 #ifdef STRING_MODELS
 #ifdef REDIS
@@ -811,8 +802,8 @@ namespace krigcpl {
 	// found-return the closest model
 	//
 
-	const DBKeyObject<std::string> & dbObject = 
-           dynamic_cast<const DBKeyObject<std::string> &>(searchResults[0].getDataObject()); 
+	const DBKeyObject<uint128_t> & dbObject = 
+           dynamic_cast<const DBKeyObject<uint128_t> &>(searchResults[0].getDataObject()); 
 
 #ifdef STRING_MODELS
 #ifdef REDIS
@@ -1304,7 +1295,7 @@ namespace krigcpl {
         // Create a key string corresponding to the new point at
         // which the new interpolation model is centered
 
-        DBKeyObject<std::string> dbObject(getKeyString(point));
+        DBKeyObject<uint128_t> dbObject(getKeyHash(point));
 
         // Insert the key into the key database
 
@@ -1555,7 +1546,7 @@ namespace krigcpl {
 
             // Create a key string corresponding to interpolation model center
 
-            DBKeyObject<std::string> dbObject(getKeyString(point));
+            DBKeyObject<uint128_t> dbObject(getKeyHash(point));
 
             // Insert the key into the key database
 
@@ -1878,7 +1869,7 @@ namespace krigcpl {
 
 	} else {
 
-           const DBKeyObject<std::string>& dbObject = dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+           const DBKeyObject<uint128_t>& dbObject = dynamic_cast<DBKeyObject<uint128_t> &>(*dbObjectPtr);
 
 #ifdef STRING_MODELS
 #ifdef REDIS
@@ -2140,7 +2131,7 @@ namespace krigcpl {
 
 	} else {
     
-           const DBKeyObject<std::string>& dbObject = dynamic_cast<const DBKeyObject<std::string>&>(*dbObjectPtr);
+           const DBKeyObject<uint128_t>& dbObject = dynamic_cast<const DBKeyObject<uint128_t>&>(*dbObjectPtr);
 
 #ifdef STRING_MODELS
 #ifdef REDIS
@@ -2398,7 +2389,7 @@ namespace krigcpl {
 
        } else {
     
-           const DBKeyObject<std::string>& dbObject = dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+           const DBKeyObject<uint128_t>& dbObject = dynamic_cast<DBKeyObject<uint128_t> &>(*dbObjectPtr);
 #ifdef STRING_MODELS
 #ifdef REDIS
 	  std::vector<double> packedContainer = redisToModel(dbObject.getKey());
@@ -2539,8 +2530,8 @@ namespace krigcpl {
 
 
 	DBObjectPtr dbObjectPtr = _keyDB.getObject(hint);
-	DBKeyObject<std::string> & dbObject = 
-	  dynamic_cast<DBKeyObject<std::string> &>(*dbObjectPtr);
+	DBKeyObject<uint128_t> & dbObject = 
+	  dynamic_cast<DBKeyObject<uint128_t> &>(*dbObjectPtr);
 
 #ifdef STRING_MODELS
 #ifdef REDIS
@@ -2646,7 +2637,7 @@ namespace krigcpl {
 	    
             // Create a key string corresponding to the center of mass point
 
-            DBKeyObject<std::string> dbObject(getKeyString(centerMassRP));
+            DBKeyObject<uint128_t> dbObject(getKeyHash(centerMassRP));
 
             // Insert the key into the key database
 
