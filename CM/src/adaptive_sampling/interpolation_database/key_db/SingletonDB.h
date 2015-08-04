@@ -12,6 +12,7 @@
 
 #include <vector>
 #include <hiredis.h>
+#define uint128_t unsigned __int128
 
 class SingletonDB {
  public:
@@ -22,8 +23,8 @@ class SingletonDB {
     return instance;
   }
 
-  void  sadd_sb(const char *key, const std::vector<double>& buf);
-  std::vector<double> smembers_s(const char *key);
+  void  push(const uint128_t &key, const std::vector<double>& buf);
+  std::vector<double> pull(const uint128_t &key);
 
 private:
   redisContext*   redis;

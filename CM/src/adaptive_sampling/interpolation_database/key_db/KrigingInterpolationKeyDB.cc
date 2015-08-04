@@ -107,20 +107,18 @@ namespace krigcpl {
     namespace {
 
 #ifdef REDIS
-      void modelToRedis(const string& key, const std::vector<double>& packedContainer)
+      void modelToRedis(const uint64_t& key, const std::vector<double>& packedContainer)
       {
         SingletonDB& db = SingletonDB::getInstance();
-        db.sadd_sb(key.c_str(), packedContainer);
+        db.push(key, packedContainer);
       }
 
-      std::vector<double> redisToModel(const string& key)
+      std::vector<double> redisToModel(const uint64_t& key)
       {
         SingletonDB& db = SingletonDB::getInstance();
-        return(db.smembers_s(key.c_str()));
+        return(db.pull(key));
       }
-#endif  // REDIS
-
-#ifndef REDIS
+#else
        void buildKey(string& key, std::vector<double> data, int keyDigits)
        {
           //Build format
@@ -133,12 +131,6 @@ namespace krigcpl {
                 sprintf(fBuff, format, data[i]);
                 key += fBuff;
              }
-       }
-#endif
-#ifdef REDIS
-       string uint128_to_string(const uint128_t &in){
-          uint64_t *in64 = (uint64_t *)&in; 
-          return to_string(*in64)+to_string(*(in64+1));
        }
 #endif
 

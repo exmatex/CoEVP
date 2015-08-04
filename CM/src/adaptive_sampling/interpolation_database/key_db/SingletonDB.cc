@@ -18,12 +18,18 @@
 #include <assert.h>
 #include <stdexcept>
 
+static std::string uint128_to_string(const uint128_t &in){
+   uint64_t *in64 = (uint64_t *)&in; 
+   return std::to_string(*in64)+std::to_string(*(in64+1));
+}
+      
 //  Will eventually be something like add_points
-void  SingletonDB::sadd_sb(const char *key, const std::vector<double>& buf) {
+void  SingletonDB::push(const uint128_t &key, const std::vector<double>& buf) {
   redisReply* reply;
   unsigned long sz = buf.size();
+  std::string skey=uint128_to_string(key);
   reply = (redisReply *)redisCommand(redis, "SADD %s %b%b",
-                                     key, &sz, sizeof(unsigned long),
+                                     skey.c_str(), &sz, sizeof(unsigned long),
                                      &buf[0], buf.size()*sizeof(double));
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
@@ -35,9 +41,10 @@ void  SingletonDB::sadd_sb(const char *key, const std::vector<double>& buf) {
 
 
 //  Will eventually be something like get_points
-std::vector<double> SingletonDB::smembers_s(const char *key) {
+std::vector<double> SingletonDB::pull(const uint128_t &key) {
   redisReply* reply;
-  reply = (redisReply *)redisCommand(redis, "SMEMBERS %s", key);
+  std::string skey=uint128_to_string(key);
+  reply = (redisReply *)redisCommand(redis, "SMEMBERS %s", skey.c_str());
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
                              + std::string(REDIS_HOST) + "' and port "
