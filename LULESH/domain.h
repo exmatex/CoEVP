@@ -187,6 +187,9 @@ public:
       m_tyz.resize(size, Real_t(0.)) ;
 
       m_cm.resize(size);
+      m_cm_state.resize(size);
+      m_cm_vel_grad.resize(size);
+      m_cm_vol_chng.resize(size);
    }
 
    /* Temporaries should not be initialized in bulk but */
@@ -309,6 +312,9 @@ public:
    Real_t& tyz(Index_t idx)        { return m_tyz[idx] ; }
 
    Constitutive*& cm(Index_t idx)  { return m_cm[idx] ; }
+   void*& cm_state(Index_t idx)     { return m_cm_state[idx] ; }
+   Tensor2Gen& cm_vel_grad(Index_t idx)  { return m_cm_vel_grad[idx] ; }
+   double& cm_vol_chng(Index_t idx)  { return m_cm_vol_chng[idx] ; }
 
    /* Params */
 
@@ -440,6 +446,9 @@ private:
    std::vector<Real_t> m_tyz ;
 
    std::vector<Constitutive*> m_cm ;  /* constitutive model */
+   std::vector<void*> m_cm_state ;  /* constitutive model state */
+   std::vector<Tensor2Gen> m_cm_vel_grad ;  /* constitutive model velocity gradient */
+   std::vector<double> m_cm_vol_chng ;  /* constitutive model volume change */
 
    /* Parameters */
 

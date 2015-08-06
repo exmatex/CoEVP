@@ -1462,8 +1462,8 @@ void Lulesh::CalcKinematicsForElems( Index_t numElem, Real_t dt )
     L(3,2) = D[3] + W[0];  // dyddz
     L(3,3) = D[2];         // dzddz
 
-    domain.cm(k)->setNewVelocityGradient( L );
-    domain.cm(k)->setVolumeChange( relativeVolume/domain.v(k) );
+    domain.cm_vel_grad(k) = L;
+    domain.cm_vol_chng(k) = relativeVolume/domain.v(k);
 
     Real_t dt2 = Real_t(0.5) * dt;
     for ( Index_t j=0 ; j<8 ; ++j )
@@ -2363,7 +2363,10 @@ void Lulesh::UpdateStressForElems()
 #endif
       for (Index_t k=0; k<numElem; ++k) {
 
-         ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime());
+         ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
+                                                          domain.cm_vel_grad(k),
+                                                          domain.cm_vol_chng(k),
+                                                          domain.cm_state(k));
 
          int num_iters = cm_data.num_Newton_iters;
          if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
@@ -3504,8 +3507,11 @@ void Lulesh::go(int argc, char *argv[])
          L(3,2) = D[3] + W[0];  // dyddz
          L(3,3) = D[2];         // dzddz
 
+         size_t state_size;
          domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, L, bulk_modulus, shear_modulus, eos_model,
-                                                                  plasticity_model, use_adaptive_sampling));
+                                                                  plasticity_model, use_adaptive_sampling, state_size));
+         domain.cm_state(i) = operator new(state_size);
+         domain.cm(i)->getState(domain.cm_state(i));
       }
    }
 
