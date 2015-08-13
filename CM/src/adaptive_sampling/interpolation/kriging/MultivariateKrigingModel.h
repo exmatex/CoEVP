@@ -211,7 +211,7 @@
       virtual void putToDatabase(toolbox::Database & db) const;
       virtual void getFromDatabase(toolbox::Database & db);
       
-      virtual void pack(std::vector<double> & packedContainer) const;
+      virtual void pack(const Point& point, std::vector<double> & packedContainer) const;
       virtual void unpack(const std::vector<double> & packedContainer);
 
       friend std::ostream & 
