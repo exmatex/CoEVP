@@ -67,7 +67,7 @@ namespace krigcpl {
        * Virtual destructor.
        */
       virtual ~InterpolationDataBase() = 0;
-      
+
       /*!
        * Compute interpolated value at a point.
        *
@@ -91,37 +91,6 @@ namespace krigcpl {
 			       const double      * point,
 			       std::vector<bool> & flags,
                                double            & error_estimate) = 0;
-      /*!
-       * Compute interpolated value at a point.
-       *
-       * @param value Pointer for storing the value. Size of at least
-       *              _valueDimension assumed.
-       * @param hintList Pointer to an array of hints.
-       * @param numberHints Size of hintList array.
-       * @param oVIndexForMin Integer index of the value component used to
-       *                      check for the best hint-based model.
-       * @param hintUsed Reference to integer id of a hint actually used.
-       * @param hint  Reference to integer. This variable may be used to 
-       *              provide a hint to the database. May be updated upon 
-       *              return. An example of use would be the case in which 
-       *              the database contains a collection of models. hint could
-       *              then contain an index to the appropriate model.
-       * @param point Pointer for accesing the point. Needs to have the size
-       *              of at least _pointDimension.
-       * @param flags Handle to a container for storing flags related
-       *              to the inner workings of the interpolation database.
-       * @param error_estimate Error estimate
-       *
-       * @return true if the interpolation successful; false otherwise. 
-       */      
-      virtual bool interpolate(double            * value,
-			       const int         * hintList,
-			       int                 numberHints, 
-			       int                 oVIndexForMin, 
-			       int                & hintUsed,
-			       const double       * point,
-			       std::vector<bool>  & flags,
-                               double             & error_estimate) = 0;
 
       /*!
        * Compute interpolated value at a point.
@@ -149,41 +118,6 @@ namespace krigcpl {
 			       std::vector<bool> & flags,
                                double            & error_estimate) = 0;
       
-      /*!
-       * Compute interpolated value at a point.
-       *
-       * @param value Pointer for storing the value. Size of at least
-       *              _valueDimension assumed.
-       * @param gradient Pointer for storing gradient of the value wrt.
-       *                 point evaluated at the point.
-       * @param hintList Pointer to an array of hints.
-       * @param numberHints Size of hintList array.
-       * @param oVIndexForMin Integer index of the value component used to
-       *                      check for the best hint-based model.
-       * @param hintUsed Reference to integer id of a hint actually used.
-       * @param hint  Reference to integer. This variable may be used to 
-       *              provide a hint to the database. May be updated upon 
-       *              return. An example of use would be the case in which 
-       *              the database contains a collection of models. hint could
-       *              then contain an index to the appropriate model.
-       * @param point Pointer for accesing the point. Needs to have the size
-       *              of at least _pointDimension.
-       * @param flags Handle to a container for storing flags related
-       *              to the inner workings of the interpolation database.
-       * @param error_estimate Error estimate
-       *
-       * @return true if the interpolation successful; false otherwise. 
-       */      
-      virtual bool interpolate(double            * value,
-			       double            * gradient,
-			       const int         * hintList,
-			       int                 numberHints, 
-			       int                 oVIndexForMin, 
-			       int                & hintUsed,
-			       const double       * point,
-			       std::vector<bool>  & flags,
-                               double             & error_estimate) = 0;
-
       /*!
        * Insert the point-value pair into the database.
        *
@@ -202,33 +136,6 @@ namespace krigcpl {
 			  const double      * value,
 			  const double      * gradient,
 			  std::vector<bool> & flags) = 0;
-      
-#if 0
-      /*!
-       * Insert the point-value pair into the database.
-       *
-       * @param hintUsed Reference for integer hint used in the insertion.
-       * @param point  Pointer to point data. Needs to have the size of
-       *               at least _pointDimension.
-       * @param value  Pointer to value data. Needs to have the size of 
-       *               at least _valueDimension
-       * @param gradient Pointer to gradient of the value wrt. point.
-       * @param hintList Pointer to an array of hints.
-       * @param numberHints Size of hintList array.
-       * @param forceInsert A flag to force creation of a new model
-       *                    containing a single point-value pair.
-       * @param flags Handle to a container for storing flags related
-       *              to the inner workings of the interpolation database.
-       */
-      virtual void insert(int               & hintUsed,
-			  const double      * point,
-			  const double      * value,
-			  const double      * gradient,
-			  const int         * hintList,
-			  int                 numberHints,
-			  bool                forceInsert,
-			  std::vector<bool> & flags) = 0;
-#endif
       
       virtual double interpolateSpecificModel(double            * value,
                                               double            * gradient,

@@ -12,13 +12,14 @@ class ElastoViscoPlasticity
 {
    public:
 
-     ElastoViscoPlasticity( ConstitutiveGlobal& global,
-                            const Tensor2Gen&   L,
+      ElastoViscoPlasticity( ConstitutiveGlobal& global,
+                             const Tensor2Gen&   L,
                              const double       bulk_modulus,
                              const double       shear_modulus,
                              const EOS*         eos,
                              const Plasticity*  fine_scale_model,
-                             const bool         use_adaptive_sampling = false );
+                             const bool         use_adaptive_sampling,
+                             size_t&            state_size );
 
       ~ElastoViscoPlasticity();
 
@@ -28,11 +29,7 @@ class ElastoViscoPlasticity
 
       virtual Tensor2Sym stressDeviator() const;
       
-      virtual ConstitutiveData advance( const double delta_t );
-
-      virtual void setNewVelocityGradient( const Tensor2Gen& L_new );
-
-      virtual void setVolumeChange( const double volume_change ) {m_volume_change = volume_change;}
+      virtual ConstitutiveData advance( const double delta_t, const Tensor2Gen& L_new, const double, void* state );
 
       virtual double pressure( const double compression,
                                const double internal_energy ) const
@@ -42,6 +39,12 @@ class ElastoViscoPlasticity
                                         const double relativeVolume,
                                         const double energy ) const;
    
+      virtual size_t getStateSize() const;
+
+      virtual void getState( void* buffer ) const;
+
+      virtual void setState( void* buffer );
+
       int numNewtonIterations() const {return m_num_iters;}
 
    private:

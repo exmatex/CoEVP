@@ -77,7 +77,7 @@ INTERP_SRC   = $(shell ls $(INTERP_LOC)/*/*.cc)
 DB_LOC       = $(AS_LOC)/database
 DB_SRC       = $(shell ls $(DB_LOC)/base/*.cc $(DB_LOC)/mtreedb/*.cc)
 UTILS_LOC    = $(AS_LOC)/utils
-UTILS_SRC    = $(shell ls $(UTILS_LOC)/toolbox/*/*.cc)
+UTILS_SRC    = $(shell ls $(UTILS_LOC)/toolbox/*/*.cc $(UTILS_LOC)/murmur3/*.cc)
 MTL_LOC      = $(AS_LOC)/mtl_headers
 AS_SRC       = $(AS_LOC)/AdaptiveSampler.cc $(INTERPDB_SRC) $(INTERP_SRC) $(DB_SRC) $(UTILS_SRC)
 AS_OBJS      = $(AS_SRC:.cc=.o)

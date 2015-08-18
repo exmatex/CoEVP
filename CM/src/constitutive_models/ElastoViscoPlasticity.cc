@@ -61,6 +61,7 @@ Additional BSD Notice
 
 */
 
+#include <cstring>
 #include "ElastoViscoPlasticity.h"
 #include "xtensor.h"
 
@@ -70,7 +71,8 @@ ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&    global,
                                               const double           shear_modulus,
                                               const EOS*             eos_model,
                                               const Plasticity*      plasticity_model,
-                                              const bool             use_adaptive_sampling )
+                                              const bool             use_adaptive_sampling,
+                                              size_t&                state_size )
    : Constitutive(global),
      m_D_old(sym(L)),
      m_W_old(skew(L)),
@@ -111,6 +113,8 @@ ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&    global,
 
       m_tol = tolerance;
    }
+
+   state_size = getStateSize();
 }
 
 
@@ -150,14 +154,6 @@ ElastoViscoPlasticity::stressDeviator() const
 }
 
 
-void
-ElastoViscoPlasticity::setNewVelocityGradient( const Tensor2Gen& L_new )
-{
-   m_D_new = sym(L_new);
-   m_W_new = skew(L_new);
-}
-
-
 double
 ElastoViscoPlasticity::soundSpeedSquared( const double reference_density,
                                           const double relativeVolume,
@@ -179,8 +175,15 @@ ElastoViscoPlasticity::soundSpeedSquared( const double reference_density,
 
 
 ConstitutiveData
-ElastoViscoPlasticity::advance( const double delta_t )
+ElastoViscoPlasticity::advance( const double delta_t, const Tensor2Gen& L_new, const double volume_change, void* state )
 {
+   setState(state);
+
+   m_D_new = sym(L_new);
+   m_W_new = skew(L_new);
+
+   m_volume_change = volume_change;
+
    // Get the deviatoric strain rate at the new time
    Tensor2Sym Dprime_new( dev(m_D_new) );
 
@@ -224,6 +227,8 @@ ElastoViscoPlasticity::advance( const double delta_t )
    return_data.sigma_prime = stressDeviator();
    getModelInfo(return_data.num_models, return_data.num_point_value_pairs);
    return_data.num_Newton_iters = numNewtonIterations();
+
+   getState(state);
 
    return return_data;
 }
@@ -810,3 +815,76 @@ ElastoViscoPlasticity::printTensor4LSym( const Tensor4LSym& tensor ) const
 }
 
 
+size_t
+ElastoViscoPlasticity::getStateSize() const
+{
+   return
+      sizeof(m_Delta_max) +
+      sizeof(m_Delta) +
+      sizeof(m_D_old) +
+      sizeof(m_W_old) +
+      sizeof(m_D_new) +
+      sizeof(m_W_new) +
+      sizeof(m_R) +
+      sizeof(m_J) +
+      sizeof(m_num_iters) +
+      sizeof(m_Vbar_prime) +
+      sizeof(m_Vbar_prime_dot) +
+      sizeof(m_Dbar_prime) +
+      sizeof(m_Wbar) +
+      sizeof(m_volume_change) +
+      sizeof(m_tol) +
+      sizeof(m_K) +
+      sizeof(m_G);
+}
+
+
+void
+ElastoViscoPlasticity::getState( void* state ) const
+{
+   // Each of the following "put" calls bumps this local pointer
+   void* buffer = state;
+
+   pushObjectToBuffer<double>(&buffer, m_Delta_max);
+   pushObjectToBuffer<double>(&buffer, m_Delta);
+   pushObjectToBuffer<Tensor2Sym>(&buffer, m_D_old);
+   pushObjectToBuffer<Tensor2Gen>(&buffer, m_W_old);
+   pushObjectToBuffer<Tensor2Sym>(&buffer, m_D_new);
+   pushObjectToBuffer<Tensor2Gen>(&buffer, m_W_new);
+   pushObjectToBuffer<Tensor2Gen>(&buffer, m_R);
+   pushObjectToBuffer<double>(&buffer, m_J);
+   pushObjectToBuffer<int>(&buffer, m_num_iters);
+   pushObjectToBuffer<Tensor2Sym>(&buffer, m_Vbar_prime);
+   pushObjectToBuffer<Tensor2Sym>(&buffer, m_Vbar_prime_dot);
+   pushObjectToBuffer<Tensor2Sym>(&buffer, m_Dbar_prime);
+   pushObjectToBuffer<Tensor2Gen>(&buffer, m_Wbar);
+   pushObjectToBuffer<double>(&buffer, m_volume_change);
+   pushObjectToBuffer<double>(&buffer, m_tol);
+   pushObjectToBuffer<double>(&buffer, m_K);
+   pushObjectToBuffer<double>(&buffer, m_G);
+}
+
+void
+ElastoViscoPlasticity::setState( void* state )
+{
+   // Each of the following "put" calls bumps this local pointer
+   void* buffer = state;
+
+   popObjectFromBuffer<double>(&buffer, m_Delta_max);
+   popObjectFromBuffer<double>(&buffer, m_Delta);
+   popObjectFromBuffer<Tensor2Sym>(&buffer, m_D_old);
+   popObjectFromBuffer<Tensor2Gen>(&buffer, m_W_old);
+   popObjectFromBuffer<Tensor2Sym>(&buffer, m_D_new);
+   popObjectFromBuffer<Tensor2Gen>(&buffer, m_W_new);
+   popObjectFromBuffer<Tensor2Gen>(&buffer, m_R);
+   popObjectFromBuffer<double>(&buffer, m_J);
+   popObjectFromBuffer<int>(&buffer, m_num_iters);
+   popObjectFromBuffer<Tensor2Sym>(&buffer, m_Vbar_prime);
+   popObjectFromBuffer<Tensor2Sym>(&buffer, m_Vbar_prime_dot);
+   popObjectFromBuffer<Tensor2Sym>(&buffer, m_Dbar_prime);
+   popObjectFromBuffer<Tensor2Gen>(&buffer, m_Wbar);
+   popObjectFromBuffer<double>(&buffer, m_volume_change);
+   popObjectFromBuffer<double>(&buffer, m_tol);
+   popObjectFromBuffer<double>(&buffer, m_K);
+   popObjectFromBuffer<double>(&buffer, m_G);
+}

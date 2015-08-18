@@ -16,6 +16,7 @@
 #define REDIS_PORT 6379
 #define REDIS_HOST "localhost"
 #include <hiredis.h>
+#include "SingletonDB.h"
 #endif
 #endif
 
@@ -31,13 +32,30 @@
 #include <base/DB.h>
 #endif // included_base_DB
 
-namespace krigcpl {
+#define uint128_t unsigned __int128
+
+namespace std {
+
+   // Defining a hash function in order to use uint128_t as a key
+   // for an std::unordered_map
+   template <>
+      struct hash<uint128_t>
+      {
+         std::size_t operator()(const uint128_t& in) const
+            {
+               return (size_t)in;
+            }
+      };
 
 #ifdef STRING_MODELS
-    typedef std::unordered_map<std::string, std::string> InterpolationModelDataBase;
+   typedef std::unordered_map<uint128_t, std::string> InterpolationModelDataBase;
 #else
-    typedef std::unordered_map<std::string, krigalg::InterpolationModelPtr> InterpolationModelDataBase;
+   typedef std::unordered_map<uint128_t, krigalg::InterpolationModelPtr> InterpolationModelDataBase;
 #endif
+
+}
+
+namespace krigcpl {
 
     /*!
      * @brief Concrete implementation of the InterpolationDataBase class using
@@ -157,38 +175,6 @@ namespace krigcpl {
        *
        * @param value Pointer for storing the value. Size of at least
        *              _valueDimension assumed.
-       * @param hintList Pointer to an array of hints.
-       * @param numberHints Size of hintList array.
-       * @param oVIndexForMin Integer index of the value component used to
-       *                      check for the best hint-based model.
-       * @param hintUsed Reference to integer id of a hint actually used.
-       * @param hint  Reference to integer. This variable may be used to 
-       *              provide a hint to the database. May be updated upon 
-       *              return. An example of use would be the case in which 
-       *              the database contains a collection of models. hint could
-       *              then contain an index to the appropriate model.
-       * @param point Pointer for accesing the point. Needs to have the size
-       *              of at least _pointDimension.
-       * @param flags Handle to a container for storing flags related
-       *              to the inner workings of the interpolation database.
-       * @param error_estimate Error estimate
-       *
-       * @return true if the interpolation successful; false otherwise. 
-       */      
-      virtual bool interpolate(double            * value,
-			       const int         * hintList,
-			       int                 numberHints, 
-			       int                 oVIndexForMin, 
-			       int                & hintUsed,
-			       const double       * point,
-			       std::vector<bool>  & flags,
-                               double             & error_estimate);
-
-      /*!
-       * Compute interpolated value at a point.
-       *
-       * @param value Pointer for storing the value. Size of at least
-       *              _valueDimension assumed.
        * @param gradient Pointer for storing gradient of the value wrt.
        *                 point evaluated at the point.
        * @param hint  Reference to integer. This variable may be used to 
@@ -210,41 +196,6 @@ namespace krigcpl {
 			       const double      * point,
 			       std::vector<bool> & flags,
                                double            & error_estimate);	
-
-      /*!
-       * Compute interpolated value at a point.
-       *
-       * @param value Pointer for storing the value. Size of at least
-       *              _valueDimension assumed.
-       * @param gradient Pointer for storing gradient of the value wrt.
-       *                 point evaluated at the point.
-       * @param hintList Pointer to an array of hints.
-       * @param numberHints Size of hintList array.
-       * @param oVIndexForMin Integer index of the value component used to
-       *                      check for the best hint-based model.
-       * @param hintUsed Reference to integer id of a hint actually used.
-       * @param hint  Reference to integer. This variable may be used to 
-       *              provide a hint to the database. May be updated upon 
-       *              return. An example of use would be the case in which 
-       *              the database contains a collection of models. hint could
-       *              then contain an index to the appropriate model.
-       * @param point Pointer for accesing the point. Needs to have the size
-       *              of at least _pointDimension.
-       * @param flags Handle to a container for storing flags related
-       *              to the inner workings of the interpolation database.
-       * @param error_estimate Error estimate
-       *
-       * @return true if the interpolation successful; false otherwise. 
-       */      
-      virtual bool interpolate(double            * value,
-			       double            * gradient,
-			       const int         * hintList,
-			       int                 numberHints, 
-			       int                 oVIndexForMin, 
-			       int                & hintUsed,
-			       const double       * point,
-			       std::vector<bool>  & flags,
-                               double             & error_estimate);
 
       virtual double interpolateSpecificModel(double            * value,
                                               double            * gradient,
@@ -270,31 +221,6 @@ namespace krigcpl {
 			  const double      * gradient,
 			  std::vector<bool> & flags);
 
-      /*!
-       * Insert the point-value pair into the database.
-       *
-       * @param hintUsed Reference for integer hint used in the insertion.
-       * @param point  Pointer to point data. Needs to have the size of
-       *               at least _pointDimension.
-       * @param value  Pointer to value data. Needs to have the size of 
-       *               at least _valueDimension
-       * @param gradient Pointer to gradient of the value wrt. point.
-       * @param hintList Pointer to an array of hints.
-       * @param numberHints Size of hintList array.
-       * @param forceInsert A flag to force creation of a new model
-       *                    containing a single point-value pair.
-       * @param flags Handle to a container for storing flags related
-       *              to the inner workings of the interpolation database.
-       */
-      virtual void insert(int               & hintUsed,
-			  const double      * point,
-			  const double      * value,
-			  const double      * gradient,
-			  const int         * hintList,
-			  int                 numberHints,
-			  bool                forceInsert,
-			  std::vector<bool> & flags);
-      
       /*!
        * Get the number of performance statistic data collected
        *

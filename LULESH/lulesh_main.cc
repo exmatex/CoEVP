@@ -4,7 +4,7 @@
 #include <mpi.h>
 #endif
 
-#define USE_ADAPTIVE_SAMPLING
+//#define USE_ADAPTIVE_SAMPLING
 
 int main(int argc, char *argv[])
 {

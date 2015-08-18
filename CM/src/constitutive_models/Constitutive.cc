@@ -256,4 +256,3 @@ Constitutive::getValueNormMax() const
 
    return max;
 }
-

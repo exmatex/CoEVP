@@ -94,7 +94,10 @@ IdealGas::IdealGas( ConstitutiveGlobal& global,
 
 
 ConstitutiveData
-IdealGas::advance( const double delta_t )
+IdealGas::advance( const double      delta_t,
+                   const Tensor2Gen& L_new,
+                   const             double,
+                   void*             state )
 {
    ConstitutiveData return_data;
    return_data.sigma_prime = stressDeviator();
