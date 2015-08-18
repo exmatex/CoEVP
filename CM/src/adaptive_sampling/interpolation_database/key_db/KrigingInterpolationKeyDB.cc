@@ -107,10 +107,10 @@ namespace krigcpl {
     namespace {
 
 #ifdef REDIS
-      void modelToRedis(const uint64_t& key, const std::vector<double>& packedContainer)
+      void modelToRedis(const uint64_t& key, const std::vector<double>& packedContainer, const int keyLength)
       {
         SingletonDB& db = SingletonDB::getInstance();
-        db.push(key, packedContainer);
+        db.push(key, packedContainer,keyLength);
       }
 
       std::vector<double> redisToModel(const uint64_t& key)
@@ -1300,7 +1300,7 @@ namespace krigcpl {
         krigingModel->pack(point, packedContainer);
 
 #ifdef REDIS
-	      modelToRedis(dbObject.getKey(),packedContainer);
+	      modelToRedis(dbObject.getKey(),packedContainer,point.size());
 #else
         std::string modelKey;
         buildKey(modelKey, packedContainer, STRING_DIGITS);
@@ -1551,7 +1551,7 @@ namespace krigcpl {
             krigingModelPtr->pack(point, packedContainer);
 
 #ifdef REDIS
-	      modelToRedis(dbObject.getKey(),packedContainer);
+	      modelToRedis(dbObject.getKey(),packedContainer,point.size());
 #else
             std::string modelKey;
             buildKey(modelKey, packedContainer, STRING_DIGITS);
@@ -2644,7 +2644,7 @@ namespace krigcpl {
             krigingModel->pack(centerMassRP, packedContainer);
 
 #ifdef REDIS
-	      modelToRedis(dbObject.getKey(),packedContainer);
+	      modelToRedis(dbObject.getKey(),packedContainer,centerMassRP.size());
 #else
             std::string modelKey;
             buildKey(modelKey, packedContainer, STRING_DIGITS);
