@@ -15,11 +15,13 @@ hiredis-${HIREDIS_PV}.tar.gz:
 $(REDIS_SERVER): redis-${REDIS_PV}.tar.gz
 	tar -xzvf $<
 	make -C redis-${REDIS_PV}
+	ln -s redis-${REDIS_PV} redis
 	echo Please use $(REDIS_SERVER)
 
 $(HIREDIS_LIB): hiredis-${HIREDIS_PV}.tar.gz
 	tar -xzvf $<
 	make -C hiredis-${HIREDIS_PV}
+	ln -s hiredis-${HIREDIS_PV} hiredis
 
 clean:
 	rm -rf redis-${REDIS_PV}

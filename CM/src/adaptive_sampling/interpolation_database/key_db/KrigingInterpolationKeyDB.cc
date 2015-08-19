@@ -1297,7 +1297,7 @@ namespace krigcpl {
 
 #ifdef STRING_MODELS
         std::vector<double> packedContainer;
-        krigingModel->pack(packedContainer);
+        krigingModel->pack(point, packedContainer);
 
 #ifdef REDIS
 	      modelToRedis(dbObject.getKey(),packedContainer);
@@ -1548,7 +1548,7 @@ namespace krigcpl {
 
 #ifdef STRING_MODELS
             std::vector<double> packedContainer;
-            krigingModelPtr->pack(packedContainer);
+            krigingModelPtr->pack(point, packedContainer);
 
 #ifdef REDIS
 	      modelToRedis(dbObject.getKey(),packedContainer);
@@ -2641,7 +2641,7 @@ namespace krigcpl {
 
 #ifdef STRING_MODELS
             std::vector<double> packedContainer;
-            krigingModel->pack(packedContainer);
+            krigingModel->pack(centerMassRP, packedContainer);
 
 #ifdef REDIS
 	      modelToRedis(dbObject.getKey(),packedContainer);

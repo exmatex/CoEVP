@@ -7,3 +7,10 @@ liblulesh_core.a
 lulesh
 *~
 build
+
+*.o
+*.d
+CM/include/*.h
+dump.rdb
+redis/hiredis
+redis/redis
