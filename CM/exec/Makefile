@@ -12,7 +12,7 @@ CXX = g++
 # Specify compiler options (optimization level, debugging options, etc.)
 #
 
-CXXFLAGS = -O3
+CXXFLAGS = -O3 -g
 
 #
 # Specify the location of the BLAS and LAPACK libraries.  Depending upon the
@@ -132,6 +132,12 @@ CXXFLAGS += -DSTRING_MODELS -DREDIS -I$(REDIS_LOC)
 REDIS_LIBS = $(REDIS_LOC)/libhiredis.a
 endif
 
+ifeq ($(FLANN), yes)
+FLANN_LOC = ../../flann/flann/src/cpp
+CXXFLAGS += -DFLANN -I$(FLANN_LOC)
+FLANN_LIBS = $(FLANN_LOC)/../../lib/libflann_s.a
+endif
+
 MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 
 default: libcm
@@ -143,7 +149,7 @@ kintest2: $(KINTEST2_OBJS)
 	$(CXX) $(CXXFLAGS) $(KINTEST2_OBJS) $(LIBS) -o kintest2
 
 libcm:  $(CMLIB_OBJS)
-	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS)
+	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
 	cp $(CMLIB_INCL) ../include
 	mv libcm.a ../lib
 

@@ -1,22 +1,21 @@
 FLANN_PV=1.8.1
-
-FLANN_LIB=build/lib/libflann_cpp.so
+FLANN_DIR=flann-${FLANN_PV}-src
+FLANN_LIB=$(FLANN_DIR)/lib/libflann_cpp.so
 
 all: ${FLANN_LIB}
 
-flann-${FLANN_PV}-src.tar.gz:
+$(FLANN_DIR).tar.gz:
 	wget -O $@ https://github.com/mariusmuja/flann/archive/${FLANN_PV}-src.tar.gz
 
-$(FLANN_LIB): flann-${FLANN_PV}-src.tar.gz
+$(FLANN_LIB): ${FLANN_DIR}.tar.gz
 	tar -xzvf $<
-	mkdir build
-	cd build && cmake ../flann-${FLANN_PV}-src
-	make -C build
-	ln -s flann-${FLANN_PV}-src flann
+	cd ${FLANN_DIR} && cmake -DPDFLATEX_COMPILER=NOTFOUND .
+	make -C ${FLANN_DIR}
+	ln -s ${FLANN_DIR} flann
 	echo Please use $(FLANN_LIB)
 
 clean:
-	rm -rf flann-${FLANN_PV}-src flann build
+	rm -rf ${FLANN_DIR} flann
 
 clean-tar:
 		rm -rf *.tar.gz
