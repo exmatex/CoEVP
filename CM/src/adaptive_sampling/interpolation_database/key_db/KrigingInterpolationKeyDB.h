@@ -286,19 +286,6 @@ namespace krigcpl {
 	getKrigingModels(int            numberModels,
 			 const double * point);
 
-      /*!
-       * Perform a range query given a point.
-       *
-       * @param radius Radius of the range query.
-       * @param point  Point to use.
-       *
-       * @return An STL-vector containg kriging interpolants.
-       */
-
-      std::vector<krigalg::InterpolationModelPtr>
-	getKrigingModels(double         radius,
-			 const double * point);
-
     protected:
 
     private:

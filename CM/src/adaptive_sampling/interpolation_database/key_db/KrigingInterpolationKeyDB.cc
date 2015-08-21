@@ -198,8 +198,7 @@ namespace krigcpl {
 	  //
 
 	  InterpolationModelPtr krigingModelPointer = 
-	    dbObject.getModel();
-	  const int krigingModelId = dbObject.getObjectId();
+             dbObject.getModel();
 
 	  //
 	  // get kriging model time
@@ -225,9 +224,6 @@ namespace krigcpl {
 
 	  assert(timeDiff >= 0);
 
-// 	  if (timeDiff > _diffThreshold)
-// 	    std::cout << "Model id: " << krigingModelId << " aged" << std::endl;
-
 	  if (timeDiff > _diffThreshold)
 	    return true;
 
@@ -244,9 +240,10 @@ namespace krigcpl {
       //
 
       std::pair<int, InterpolationModelPtr>
-      findClosestCoKrigingModel(const ResponsePoint & point,
-				DB                  & krigingModels,
-				double                maxQueryPointModelDistance)
+      findClosestCoKrigingModel(const ResponsePoint        & point,
+				DB                         & krigingModels,
+                                InterpolationModelDataBase & modelDB,
+				double                       maxQueryPointModelDistance)
       {
 
 #ifdef HAVE_PKG_libprof
@@ -291,9 +288,6 @@ namespace krigcpl {
 	// with the value of maxQueryPointModelDistance
 	//
 
-        //	std::cout << "distance to closest model: " << searchResults[0].getDistanceToQueryPoint()
-        //         		  << std::endl;
-
 	if (searchResults[0].getDistanceToQueryPoint() > maxQueryPointModelDistance) {
 
 #ifdef HAVE_PKG_libprof
@@ -311,10 +305,25 @@ namespace krigcpl {
 	// get handle to the located object
 	//
 
-	const DBKrigingModelObject & dbObject = 
-	  dynamic_cast<const DBKrigingModelObject &>(searchResults[0].getDataObject()); 
+        const DBKeyObject<uint128_t> & dbObject = 
+           dynamic_cast<const DBKeyObject<uint128_t> &>(searchResults[0].getDataObject()); 
 
-	closestKrigingModel   = dbObject.getModel();
+#ifdef STRING_MODELS
+#ifdef REDIS
+        std::vector<double> packedContainer = redisToModel(dbObject.getKey());
+#else
+        std::string& modelKey = modelDB[dbObject.getKey()];
+
+        std::vector<double> packedContainer;
+        unpackKey(modelKey, packedContainer);
+#endif
+
+        closestKrigingModel = _modelFactory->build();
+        closestKrigingModel->unpack(packedContainer);
+#else
+        closestKrigingModel = modelDB[dbObject.getKey()];
+#endif
+
 	closestKrigingModelId = dbObject.getObjectId();
 
 #ifdef HAVE_PKG_libprof
@@ -774,18 +783,6 @@ namespace krigcpl {
 				  krigingModel);
 
 	  }
-
-	  // //
-	  // // insert model into the ranking
-	  // //
-	  // 
-	  // const std::pair<int, InterpolationModelPtr>
-	  //   krigingModelPair = std::make_pair(dbObject.getObjectId(),
-	  // 				      krigingModel);
-	  // 
-	  // krigingModelRanking.insert(std::make_pair(errorEstimate,
-	  // 					    krigingModelPair));
-	  // 
 
 	}
 
@@ -1933,10 +1930,10 @@ namespace krigcpl {
 
 #endif // HAVE_PKG_libprof
 
-
 	const std::pair<int, InterpolationModelPtr> 
 	  closestKrigingModelData = findClosestCoKrigingModel(queryPoint,
 							      _keyDB,
+                                                              _modelDB,
 							      _maxQueryPointModelDistance);
       
 	InterpolationModelPtr closestKrigingModel = 
@@ -2028,19 +2025,10 @@ namespace krigcpl {
 
 	}
 
-// 	if (hint == DBObject::getUndefinedId())
-// 	  return false;
-	
 	//
 	// interpolate using the best kriging model available
 	//
 
-#if 0
-	krigcpl::interpolate(value,
-                             bestKrigingModel,
-                             queryPoint,
-                             valueDimension);
-#else
  	return checkErrorAndInterpolate(value,
  					bestKrigingModel,
  					queryPoint,
@@ -2048,7 +2036,6 @@ namespace krigcpl {
  					_tolerance,
  					_meanErrorFactor,
                                         error_estimate);
-#endif
 
 #ifdef HAVE_PKG_libprof
 
@@ -2194,6 +2181,7 @@ namespace krigcpl {
 	const std::pair<int, InterpolationModelPtr> 
 	  closestKrigingModelData = findClosestCoKrigingModel(queryPoint,
 							      _keyDB,
+                                                              _modelDB,
 							      _maxQueryPointModelDistance);
       
 	InterpolationModelPtr closestKrigingModel = 
@@ -2637,7 +2625,7 @@ namespace krigcpl {
 
             // Insert the interpolation model into the interpolation model database
 
-            int objectId = dbObject.getObjectId();
+            //            int objectId = dbObject.getObjectId();
 
 #ifdef STRING_MODELS
             std::vector<double> packedContainer;
@@ -2875,81 +2863,6 @@ namespace krigcpl {
 
       std::vector<DBSearchResult>::const_iterator searchResultsIter;
       const std::vector<DBSearchResult>::const_iterator 
-	searchResultsEnd = searchResults.end();
-      
-      for (searchResultsIter  = searchResults.begin();
-	   searchResultsIter != searchResultsEnd;
-	   ++searchResultsIter) {
-	
-	//
-	// get handle to search result
-	//
-
-	const DBSearchResult & searchResult = *searchResultsIter;
-	
-	//
-	// get handle to object
-	//
-	
-	const DBKrigingModelObject & dbObject = 
-	  dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
-	
-	InterpolationModelPtr krigingModelPtr = dbObject.getModel();
-	
-	//
-	// store a copy of the model
-	//
-
-	krigingModels.push_back(krigingModelPtr);
-	
-      }
-
-      return krigingModels;
-
-    }
-   
-    //
-    // Perform a range query.
-    //
-    
-    std::vector<krigalg::InterpolationModelPtr>
-    KrigingInterpolationKeyDB::getKrigingModels(double         radius,
-                                                const double * point)
-    {
-
-      //
-      // shortcuts to frequently accesses data
-      //
-
-      const int pointDimension = getPointDimension();
-
-      //
-      // instatiate point object from point data
-      //
-
-      const ResponsePoint queryPoint(pointDimension,
-				     point);
-      
-      //
-      // query the tree for the numberModels closest models
-      //
-      
-      std::list<DBSearchResult> searchResults;
-      
-      _keyDB.searchRange(searchResults, queryPoint, radius);
-      
-      //
-      // instantiate container for returned data
-      //
-
-      std::vector<InterpolationModelPtr> krigingModels;
-
-      //
-      // iterate over searchResults
-      //
-
-      std::list<DBSearchResult>::const_iterator searchResultsIter;
-      const std::list<DBSearchResult>::const_iterator 
 	searchResultsEnd = searchResults.end();
       
       for (searchResultsIter  = searchResults.begin();
