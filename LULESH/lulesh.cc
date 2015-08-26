@@ -522,7 +522,7 @@ void Lulesh::TimeIncrement()
          gnewdt = domain.dthydro() * Real_t(2.0) / Real_t(3.0) ;
       }
 
-      printf("%d fmod = %e\n", domain.sliceLoc(), finescale_dt_modifier);
+      //printf("%d fmod = %e\n", domain.sliceLoc(), finescale_dt_modifier);
       gnewdt *= finescale_dt_modifier;
 
 #if defined(COEVP_MPI)
@@ -2901,16 +2901,10 @@ int Lulesh::UpdateStressForElems()
       for (Index_t k=0; k<numElem; ++k) {
 
          // advance constitutive model
-
-         // test
-         //domain.cm(k)->getState(domain.cm_state(k));
-
          ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
                                                           domain.cm_vel_grad(k),
                                                           domain.cm_vol_chng(k),
                                                           domain.cm_state(k));
-         // test
-         //domain.cm(k)->setState(domain.cm_state(k));
 
          int num_iters = cm_data.num_Newton_iters;
          //if (num_iters > 1)
@@ -2956,7 +2950,7 @@ void Lulesh::UpdateStressForElems2(int reducedIters)
 {
    int max_nonlinear_iters = reducedIters;
 
-   printf("%d iters = %d\n", domain.sliceLoc(), max_nonlinear_iters);
+   //printf("%d iters = %d\n", domain.sliceLoc(), max_nonlinear_iters);
 
    // The maximum number of Newton iterations required is an indicaton of
    // fast time scales in the fine-scale model.  If the number of iterations
