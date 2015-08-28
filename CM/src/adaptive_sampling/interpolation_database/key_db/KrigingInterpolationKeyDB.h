@@ -32,6 +32,8 @@
 #include <base/DB.h>
 #endif // included_base_DB
 
+#include "ApproxNearestNeighbors.h"
+
 #define uint128_t unsigned __int128
 
 namespace std {
@@ -73,7 +75,7 @@ namespace krigcpl {
        * @param pointDimension The dimension of the point space.
        * @param valueDimension The dimension of the value space.
        * @param modelFactory   Handle to a factory for creating interpolation models
-       * @param keyDB          Handle to a database for keys indexing the interpolation database
+       * @param ann            Handle to an approximate nearest neighbor database
        * @param modelDB        Handle to an interpolation model database
        * @param maxKrigingModelSize Maximum number of point/value pairs in
        *                            a single kriging model.
@@ -92,7 +94,7 @@ namespace krigcpl {
       KrigingInterpolationKeyDB(int    pointDimension,
                                 int    valueDimension,
                                 const krigalg::InterpolationModelFactoryPointer  & modelFactory,
-                                DB&    keyDB,
+                                ApproxNearestNeighbors& ann,
                                 InterpolationModelDataBase& modelDB,
                                 int    maxKrigingModelSize,
                                 int    maxNumberSearchModels,
@@ -107,7 +109,7 @@ namespace krigcpl {
        * @param pointDimension The dimension of the point space.
        * @param valueDimension The dimension of the value space.
        * @param modelFactory   Handle to a factory for creating interpolation models
-       * @param keyDB          Handle to a database for keys indexing the interpolation database
+       * @param ann            Handle to an approximate nearest neighbor database
        * @param modelDB        Handle to an interpolation model database
        * @param maxKrigingModelSize Maximum number of point/value pairs in
        *                            a single kriging model.
@@ -129,7 +131,7 @@ namespace krigcpl {
       KrigingInterpolationKeyDB(int    pointDimension,
                                 int    valueDimension,
                                 const krigalg::InterpolationModelFactoryPointer  & modelFactory,
-                                DB&    keyDB,
+                                ApproxNearestNeighbors& ann,
                                 InterpolationModelDataBase& modelDB,
                                 int    maxKrigingModelSize,
                                 int    maxNumberSearchModels,
@@ -271,21 +273,6 @@ namespace krigcpl {
 
       virtual void swapOutObjects() const;
 
-      /*!
-       * Perform a query for k-closest interpolants.
-       *
-       * @param numberInterpolants The number of closest interpolants 
-       *        requested (k).
-       *
-       * @param point The point.
-       *
-       * @return An STL-vector containg kriging interpolants.
-       */
-
-      std::vector<krigalg::InterpolationModelPtr>
-	getKrigingModels(int            numberModels,
-			 const double * point);
-
     protected:
 
     private:
@@ -303,7 +290,7 @@ namespace krigcpl {
       
       krigalg::InterpolationModelFactoryPointer _modelFactory;
 
-      DB&                         _keyDB;
+      ApproxNearestNeighbors&     _ann;
       InterpolationModelDataBase& _modelDB;
 
       int    _maxKrigingModelSize;

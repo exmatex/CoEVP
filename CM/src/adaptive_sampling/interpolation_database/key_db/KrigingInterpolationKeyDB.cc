@@ -85,6 +85,8 @@ Additional BSD Notice
 #include <base/ResponsePoint.h>
 #include <kriging_db/DBKrigingModelObject.h>
 
+#include "ApproxNearestNeighbors.h"
+
 #include <mtreedb/MTree.h>
 
 #include <toolbox/database/HDFDatabase.h>
@@ -171,69 +173,8 @@ namespace krigcpl {
        }
 
       //
-      // local data-types
+      // local functions
       //
-
-      struct KrigingModelChooser : 
-	std::unary_function<DBObjectPtr, bool> {
-	
-	KrigingModelChooser(int diffThreshold) 
-	  : _diffThreshold(diffThreshold)
-	{
-	  return;
-	}
-
-	bool operator()(DBObjectPtr objectPtr) const
-	{
-	
-	  //
-	  // get handle to the located object
-	  //
-	  
-	  const DBKrigingModelObject & dbObject = 
-	    dynamic_cast<const DBKrigingModelObject &>(*objectPtr);
-
-	  //
-	  // get pointer to kriging model
-	  //
-
-	  InterpolationModelPtr krigingModelPointer = 
-             dbObject.getModel();
-
-	  //
-	  // get kriging model time
-	  //
-
-	  const TimeRecorder modelTime = krigingModelPointer->getTime();
-
-	  //
-	  // get current time
-	  //
-
-	  const TimeRecorder currentTime;
-	  
-	  //
-	  // compute difference
-	  //
-
-	  const int timeDiff = currentTime.diff(modelTime);
-
-	  //
-	  // firewall on timeDiff
-	  //
-
-	  assert(timeDiff >= 0);
-
-	  if (timeDiff > _diffThreshold)
-	    return true;
-
-	  return false;
-	  
-	}
-	
-	int _diffThreshold;
-
-      };
 
       //
       // given a point find closest CoKrigingModel 
@@ -241,7 +182,8 @@ namespace krigcpl {
 
       std::pair<int, InterpolationModelPtr>
       findClosestCoKrigingModel(const ResponsePoint        & point,
-				DB                         & krigingModels,
+                                ApproxNearestNeighbors     & ann,
+                                krigalg::InterpolationModelFactoryPointer modelFactory,
                                 InterpolationModelDataBase & modelDB,
 				double                       maxQueryPointModelDistance)
       {
@@ -256,79 +198,63 @@ namespace krigcpl {
 	// query tree for the closest model
 	//
 
-	std::vector<DBSearchResult> searchResults;
-	
-	krigingModels.searchKNN(searchResults,
-				point,
-				1);
+        int k_neighbors = 1;
+
+        std::vector<int> ids(k_neighbors);
+        std::vector<uint128_t> keys(k_neighbors);
+        std::vector<double> dists(k_neighbors);
+
+        std::vector<double> x;
+        x.resize(point.size());
+        for (int i=0; i<point.size(); ++i) {
+           x[i] = point[i];
+        }
+        ann.knn(x, k_neighbors, ids, keys, dists);
+
+        bool found_neighbors = (ids.size() == k_neighbors);
 
 	InterpolationModelPtr closestKrigingModel;
-	int closestKrigingModelId = DBObject::getUndefinedId();
+	int closestKrigingModelId;
 
-	//
-	// short-circuit if an empty kriging models list encountered
-	//
+        //
+        // If a neighbor is found, compare the distance between the query point and the model
+        // with the value of maxQueryPointModelDistance
+        //
 
-	if (searchResults.empty() == true) {
+	if ( found_neighbors &&
+             dists[0] <= maxQueryPointModelDistance ) {
 
-#ifdef HAVE_PKG_libprof
+           //
+           // get handle to the located object
+           //
 
-	  ProfileEnd("findClosest");
-
-#endif // HAVE_PKG_libprof
-
-	  return std::make_pair(closestKrigingModelId,
-				closestKrigingModel);
-
-
-	}
-
-	//
-	// compare the distance between the query point and the model
-	// with the value of maxQueryPointModelDistance
-	//
-
-	if (searchResults[0].getDistanceToQueryPoint() > maxQueryPointModelDistance) {
-
-#ifdef HAVE_PKG_libprof
-	  
-	  ProfileEnd("findClosest");
-	  
-#endif // HAVE_PKG_libprof
-
-	  return std::make_pair(DBObject::getUndefinedId(),
-				closestKrigingModel);
-
-	}
-
-	//
-	// get handle to the located object
-	//
-
-        const DBKeyObject<uint128_t> & dbObject = 
-           dynamic_cast<const DBKeyObject<uint128_t> &>(searchResults[0].getDataObject()); 
+           uint128_t model_key = keys[0];
 
 #ifdef STRING_MODELS
 #ifdef REDIS
-        std::vector<double> packedContainer = redisToModel(dbObject.getKey());
+           std::vector<double> packedContainer = redisToModel(model_key);
 #else
-        std::string& modelKey = modelDB[dbObject.getKey()];
+           std::string& model_string = modelDB[model_key];
 
-        std::vector<double> packedContainer;
-        unpackKey(modelKey, packedContainer);
+           std::vector<double> packedContainer;
+           unpackKey(model_string, packedContainer);
 #endif
 
-        closestKrigingModel = _modelFactory->build();
-        closestKrigingModel->unpack(packedContainer);
+           closestKrigingModel = modelFactory->build();
+           closestKrigingModel->unpack(packedContainer);
 #else
-        closestKrigingModel = modelDB[dbObject.getKey()];
+           closestKrigingModel = modelDB[model_key];
 #endif
 
-	closestKrigingModelId = dbObject.getObjectId();
+           closestKrigingModelId = ids[0];
+        }
+        else {
+           closestKrigingModelId = -1;
+        }
 
 #ifdef HAVE_PKG_libprof
 
-	ProfileEnd("findClosest");
+        ProfileEnd("findClosest");
 
 #endif // HAVE_PKG_libprof
 
@@ -518,14 +444,14 @@ namespace krigcpl {
       // Given a point find the "best" kriging model. Here, best means
       // that its use results in the smallest possible interpolation
       // error. This function returns a handle to the best model that
-      // satisfies given tolerance or DBObject::getUndefinedId() if
-      // no model can be found.
+      // satisfies given tolerance or id_undefined if no model can be found.
       //
 
       std::pair<int, InterpolationModelPtr>
       findBestCoKrigingModel(bool &                       canInterpolateFlag,
 			     const ResponsePoint &        point,
-			     DB &                         krigingModels,
+                             ApproxNearestNeighbors     & ann,
+                             //			     DB &                         krigingModels,
                              InterpolationModelDataBase & modelDB,
                              const InterpolationModelFactoryPointer& _modelFactory,
 			     double                       tolerance,
@@ -541,112 +467,104 @@ namespace krigcpl {
 	// query the tree for the maxNumberSearchModels closest models
 	//
 
-	std::vector<DBSearchResult> searchResults;
-	
-	krigingModels.searchKNN(searchResults,
-				point,
-				maxNumberSearchModels);
+        int k_neighbors = maxNumberSearchModels;
 
-	//
-	// short-circuit if an empty kriging models list encountered
-	//
+        std::vector<int> ids(k_neighbors);
+        std::vector<uint128_t> keys(k_neighbors);
+        std::vector<double> dists(k_neighbors);
 
-	if (searchResults.empty() == true) {
+        std::vector<double> x;
+        x.resize(point.size());
+        for (int i=0; i<point.size(); ++i) {
+           x[i] = point[i];
+        }
+        ann.knn(x, k_neighbors, ids, keys, dists);
 
-	  return std::make_pair(DBObject::getUndefinedId(),
-				InterpolationModelPtr());
+        bool found_neighbors = (ids.size() > 0);
 
-	}
+	InterpolationModelPtr bestKrigingModel;
+	int bestKrigingModelId;
 
-	//
-	// iterate through the search results
-	//
+        std::pair<int, InterpolationModelPtr> bestCoKrigingModel;
 
-	double minError = std::numeric_limits<double>::max();
-	std::pair<int, InterpolationModelPtr> bestCoKrigingModel;
+        if ( found_neighbors ) {
 
-	std::vector<DBSearchResult>::const_iterator searchResultsIter;
-	const std::vector<DBSearchResult>::const_iterator 
-	  searchResultsEnd = searchResults.end();
+           //
+           // iterate through the search results
+           //
 
-	for (searchResultsIter  = searchResults.begin();
-	     searchResultsIter != searchResultsEnd;
-	     ++searchResultsIter) {
+           double minError = std::numeric_limits<double>::max();
 
-	  //
-	  // get handle to search result
-	  //
+           for (int iter=0; iter<ids.size(); ++iter) {
 
-	  const DBSearchResult & searchResult = *searchResultsIter;
-
-	  //
-	  // get handle to object
-	  //
-
-          const DBKeyObject<uint128_t> & dbObject = 
-             dynamic_cast<const DBKeyObject<uint128_t> &>(searchResult.getDataObject()); 
+              uint128_t model_key = keys[iter];
 
 #ifdef STRING_MODELS
 #ifdef REDIS
-	  std::vector<double> packedContainer = redisToModel(dbObject.getKey());
+              std::vector<double> packedContainer = redisToModel(model_key);
 #else
-          std::string& modelKey = modelDB[dbObject.getKey()];
+              std::string& model_key_string = modelDB[model_key];
 
-          std::vector<double> packedContainer;
-          unpackKey(modelKey, packedContainer);
+              std::vector<double> packedContainer;
+              unpackKey(model_key_string, packedContainer);
 #endif
 
-          InterpolationModelPtr krigingModel = _modelFactory->build();
-          krigingModel->unpack(packedContainer);
+              InterpolationModelPtr krigingModel = _modelFactory->build();
+              krigingModel->unpack(packedContainer);
 #else
-          InterpolationModelPtr& krigingModel = modelDB[dbObject.getKey()];
+              InterpolationModelPtr& krigingModel = modelDB[model_key];
 #endif
-	  //
-	  // skip invalid models
-	  //
+              //
+              // skip invalid models
+              //
 
-	  if (krigingModel->isValid() == false)
-	    continue;
+              if (krigingModel->isValid() == false)
+                 continue;
 
-	  //
-	  // compute error predicted by dbObject
-	  //
+              //
+              // compute error
+              //
 
-	  const double errorEstimate = checkError(krigingModel,
-						  point,
-						  valueDimension,
-						  meanErrorFactor);
-
-	  //
-	  // check if a better model encountered
-	  //
-
-	  if (errorEstimate < minError) {
-
-	    bestCoKrigingModel = std::make_pair(dbObject.getObjectId(),
-						krigingModel);
-
-	    minError = errorEstimate;
-	    
-	  }
-
-	}
+              const double errorEstimate = checkError(krigingModel,
+                                                      point,
+                                                      valueDimension,
+                                                      meanErrorFactor);
+              
+              //
+              // check if a better model encountered
+              //
+              
+              if (errorEstimate < minError) {
+                 
+                 bestCoKrigingModel = std::make_pair(ids[iter], krigingModel);
+                 
+                 minError = errorEstimate;
+                 
+              }
+              
+           }
 	 
-	//
-	// check if the best model satisfies tolerance requirement
-	//
+           //
+           // check if the best model satisfies tolerance requirement
+           //
 	
-	if (minError <= tolerance*tolerance)
-	  canInterpolateFlag = true;
+           if (minError <= tolerance*tolerance)
+              canInterpolateFlag = true;
 
-	return bestCoKrigingModel;
+        }
+        else {
+	  bestCoKrigingModel = make_pair(-1, InterpolationModelPtr());
+        }
+
+        return bestCoKrigingModel;
 
       }
 
       std::pair<int, InterpolationModelPtr>
       findBestCoKrigingModel(bool &                       canInterpolateFlag,
 			     const ResponsePoint &        point,
-			     DB &                         krigingModels,
+                             ApproxNearestNeighbors     & ann,
+                             //			     DB &                         krigingModels,
                              InterpolationModelDataBase & modelDB,
                              const InterpolationModelFactoryPointer& _modelFactory,
 			     double                       tolerance,
@@ -665,160 +583,133 @@ namespace krigcpl {
 
 	canInterpolateFlag = false;
 
-	//
-	// query the tree for the maxNumberSearchModels closest models
-	//
-
-	std::vector<DBSearchResult> searchResults; // SearchResultContainer searchResults;
-
-	krigingModels.searchKNN(searchResults,
-				point,
-				maxNumberSearchModels);
-	// krigingModels.searchRange(searchResults,
-	// 			  point,
-	// 			  maxQueryPointModelDistance);
-
-
-	//
-	// short-circuit if an empty kriging models list encountered
-	//
-
-	if (searchResults.empty() == true) {
-
 #ifdef HAVE_PKG_libprof
 
 	  ProfileEnd("findBest");
 	
 #endif // HAVE_PKG_libprof
 
-	  return std::make_pair(DBObject::getUndefinedId(),
-				InterpolationModelPtr());
-
-	}
-
 	//
-	// iterate through the search results
+	// query the tree for the maxNumberSearchModels closest models
 	//
 
-	// krigingModelRanking is not used for anything
-	// std::map<double, std::pair<int, InterpolationModelPtr> >
-	//   krigingModelRanking;
+        int k_neighbors = maxNumberSearchModels;
 
-	std::vector<DBSearchResult>::const_iterator searchResultsIter;
-	const std::vector<DBSearchResult>::const_iterator 
-	  searchResultsEnd = searchResults.end();
-	// SearchResultContainer::const_iterator searchResultsIter;
-	// const SearchResultContainer::const_iterator searchResultsEnd =
-	//   searchResults.end();
+        std::vector<int> ids(k_neighbors);
+        std::vector<uint128_t> keys(k_neighbors);
+        std::vector<double> dists(k_neighbors);
 
-	for (searchResultsIter  = searchResults.begin();
-	     searchResultsIter != searchResultsEnd;
-	     ++searchResultsIter) {
+        std::vector<double> x;
+        x.resize(point.size());
+        for (int i=0; i<point.size(); ++i) {
+           x[i] = point[i];
+        }
+        ann.knn(x, k_neighbors, ids, keys, dists);
 
-	  //
-	  // get handle to search result
-	  //
+        bool found_neighbors = (ids.size() > 0);
 
-	  const DBSearchResult & searchResult = *searchResultsIter;
+        if ( found_neighbors ) {
 
-	  //
-	  // get handle to object
-	  //
+           //
+           // iterate through the search results
+           //
 
-	  const DBKeyObject<uint128_t> & dbObject = 
-             dynamic_cast<const DBKeyObject<uint128_t> &>(searchResult.getDataObject()); 
+           for (int iter=0; iter<ids.size(); ++iter) {
+              
+              uint128_t model_key = keys[iter];
 
 #ifdef STRING_MODELS
 #ifdef REDIS
-	  std::vector<double> packedContainer = redisToModel(dbObject.getKey());
+              std::vector<double> packedContainer = redisToModel(model_key);
 #else
-          std::string& modelKey = modelDB[dbObject.getKey()];
+              std::string& model_key_string = modelDB[model_key];
 
-          std::vector<double> packedContainer;
-          unpackKey(modelKey, packedContainer);
+              std::vector<double> packedContainer;
+              unpackKey(model_key_string, packedContainer);
 #endif
 
-          InterpolationModelPtr krigingModel = _modelFactory->build();
-          krigingModel->unpack(packedContainer);
+              InterpolationModelPtr krigingModel = _modelFactory->build();
+              krigingModel->unpack(packedContainer);
 #else
-	  InterpolationModelPtr& krigingModel = modelDB[dbObject.getKey()];
+              InterpolationModelPtr& krigingModel = modelDB[model_key];
 #endif
 
-	  //
-	  // skip if invalid model
-	  //
+              //
+              // skip if invalid model
+              //
+              
+              if (krigingModel->isValid() == false)
+                 continue;
 
-	  if (krigingModel->isValid() == false)
-	    continue;
+              //
+              // skip if too far away; as results come back closest-first, we know
+              // all of the other results are too far away as well, so can break
+              // could probably 
+              //
+              
+              if (dists[iter] > maxQueryPointModelDistance)
+                 break;
 
-	  //
-	  // skip if too far away; as results come back closest-first, we know
-	  // all of the other results are too far away as well, so can break
-	  // could probably 
-	  //
+              //
+              // compute error
+              //
 
-	  if (searchResult.getDistanceToQueryPoint() > maxQueryPointModelDistance)
-	     break;
+              const double errorEstimate = checkError(krigingModel,
+                                                      point,
+                                                      valueDimension,
+                                                      meanErrorFactor);
 
-	  //
-	  // compute error predicted by dbObject
-	  //
-
-	  const double errorEstimate = checkError(krigingModel,
-						  point,
-						  valueDimension,
-						  meanErrorFactor);
-
-	  if (errorEstimate <= tolerance*tolerance) {
+              if (errorEstimate <= tolerance*tolerance) {
 
 #ifdef HAVE_PKG_libprof
 
-	    ProfileEnd("findBest");
+                 ProfileEnd("findBest");
 	
 #endif // HAVE_PKG_libprof
 
-	    canInterpolateFlag = true;
+                 canInterpolateFlag = true;
 
-	    return std::make_pair(dbObject.getObjectId(),
-				  krigingModel);
+                 return std::make_pair(ids[iter], krigingModel);
 
-	  }
+              }
+           }
 
-	}
+           //
+           // a model suitable for interpolation has not been
+           // found-return the closest model
+           //
 
-	//
-	// a model suitable for interpolation has not been
-	// found-return the closest model
-	//
-
-	const DBKeyObject<uint128_t> & dbObject = 
-           dynamic_cast<const DBKeyObject<uint128_t> &>(searchResults[0].getDataObject()); 
+           uint128_t model_key = keys[0];
 
 #ifdef STRING_MODELS
 #ifdef REDIS
-	  std::vector<double> packedContainer = redisToModel(dbObject.getKey());
+           std::vector<double> packedContainer = redisToModel(model_key);
 #else
-        std::string& modelKey = modelDB[dbObject.getKey()];
+           std::string& model_key_string = modelDB[model_key];
 
-        std::vector<double> packedContainer;
-        unpackKey(modelKey, packedContainer);
+           std::vector<double> packedContainer;
+           unpackKey(model_key_string, packedContainer);
 #endif
 
-        InterpolationModelPtr krigingModel = _modelFactory->build();
-        krigingModel->unpack(packedContainer);
+           InterpolationModelPtr krigingModel = _modelFactory->build();
+           krigingModel->unpack(packedContainer);
 #else
 
-        InterpolationModelPtr& krigingModel = modelDB[dbObject.getKey()];
+           InterpolationModelPtr& krigingModel = modelDB[model_key];
 #endif
 
 #ifdef HAVE_PKG_libprof
 
-	ProfileEnd("findBest");
+           ProfileEnd("findBest");
 	
 #endif // HAVE_PKG_libprof
 
-	return std::make_pair(dbObject.getObjectId(),
-			      krigingModel);
+           return std::make_pair(ids[0], krigingModel);
+
+        }
+        else {
+           return std::make_pair(-1, InterpolationModelPtr());
+        }
       }
 
 
@@ -1235,7 +1126,7 @@ namespace krigcpl {
 
        void
        addNewModel(InterpolationModelDataBase &             modelDB,
-                   DB &                                     keyDB,
+                   ApproxNearestNeighbors&                  ann,
                    const InterpolationModelFactoryPointer & _modelFactory,
                    int &                                    objectId,
                    const double *                           pointData,
@@ -1284,11 +1175,16 @@ namespace krigcpl {
         // Create a key string corresponding to the new point at
         // which the new interpolation model is centered
 
-        DBKeyObject<uint128_t> dbObject(getKeyHash(point));
+        // Insert the model key into the approximate nearest neighbor database
 
-        // Insert the key into the key database
+        std::vector<double> point_data;
+        point_data.resize(point.size());
+        for (int i=0; i<point.size(); ++i) {
+           point_data[i] = point[i];
+        }
 
-	keyDB.insertObject(dbObject, point, 0.0);
+        uint128_t model_key = getKeyHash(point);
+        objectId = ann.insert(point_data, model_key);
 
         // Insert the interpolation model into the interpolation model database
 
@@ -1297,15 +1193,15 @@ namespace krigcpl {
         krigingModel->pack(point, packedContainer);
 
 #ifdef REDIS
-	      modelToRedis(dbObject.getKey(),packedContainer,point.size());
+        modelToRedis(model_key, packedContainer, point.size());
 #else
-        std::string modelKey;
-        buildKey(modelKey, packedContainer, STRING_DIGITS);
+        std::string model_key_string;
+        buildKey(model_key_string, packedContainer, STRING_DIGITS);
         
-        modelDB.insert( std::make_pair(dbObject.getKey(), modelKey) );
+        modelDB.insert( std::make_pair(model_key, model_key_string) );
 #endif
 #else
-        modelDB.insert( std::make_pair(dbObject.getKey(), krigingModel) );
+        modelDB.insert( std::make_pair(model_key, krigingModel) );
 #endif
 
 	return;
@@ -1394,7 +1290,8 @@ namespace krigcpl {
       //
 
       std::pair<int, int>
-      initializeModelDBFromFile(DB &                                     keyDB,
+      initializeModelDBFromFile(
+                                ApproxNearestNeighbors&                  ann,
                                 InterpolationModelDataBase &             modelDB,
 				const InterpolationModelFactoryPointer & _modelFactory,
 				const std::string &                      directoryName,
@@ -1410,7 +1307,6 @@ namespace krigcpl {
 	summaryDatabase.mount(directoryName + "/" + prefix +
 			      "__data_store_summary",
 			      "R");
-
 
 	//
 	// get number of objects
@@ -1533,13 +1429,17 @@ namespace krigcpl {
 	    const ResponsePoint point(krigingModelCenter.size(),
 				      &(krigingModelCenter[0]));
 
-            // Create a key string corresponding to interpolation model center
+            // Create a key corresponding to interpolation model center
+            // and insert it into the approximate nearest neighbor database
 
-            DBKeyObject<uint128_t> dbObject(getKeyHash(point));
+            std::vector<double> point_data;
+            point_data.resize(point.size());
+            for (int i=0; i<point.size(); ++i) {
+               point_data[i] = point[i];
+            }
 
-            // Insert the key into the key database
-
-	    keyDB.insertObject(dbObject, point, 0.0);
+            uint128_t model_key = getKeyHash(point);
+            ann.insert(point_data, model_key);
 
             // Insert the interpolation model into the interpolation model database
 
@@ -1548,15 +1448,15 @@ namespace krigcpl {
             krigingModelPtr->pack(point, packedContainer);
 
 #ifdef REDIS
-	      modelToRedis(dbObject.getKey(),packedContainer,point.size());
+            modelToRedis(model_key, packedContainer, point.size());
 #else
-            std::string modelKey;
-            buildKey(modelKey, packedContainer, STRING_DIGITS);
+            std::string model_key_string;
+            buildKey(model_key_string, packedContainer, STRING_DIGITS);
         
-            modelDB.insert( std::make_pair(dbObject.getKey(), modelKey) );
+            modelDB.insert( std::make_pair(model_key, model_key_string) );
 #endif
 #else
-            modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(dbObject.getKey(), krigingModelPtr) );
+            modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(model_key, krigingModelPtr) );
 #endif
 	  }
 
@@ -1593,6 +1493,8 @@ namespace krigcpl {
       outputKrigingModelPositionData(const std::string & fileName,
 				     DB                & keyDB)
       {
+
+#if 0
          if (typeid(keyDB) == typeid(MTree)) {
 
             //
@@ -1701,6 +1603,7 @@ namespace krigcpl {
             // with databases other than MTree
 
          }
+#endif
 
          return;
 	
@@ -1716,7 +1619,7 @@ namespace krigcpl {
     KrigingInterpolationKeyDB::KrigingInterpolationKeyDB(int pointDimension,
                                                          int valueDimension,
                                                          const InterpolationModelFactoryPointer  & modelFactory,
-                                                         DB&    db,
+                                                         ApproxNearestNeighbors& ann,
                                                          InterpolationModelDataBase& modelDB,
                                                          int    maxKrigingModelSize,
                                                          int    maxNumberSearchModels,
@@ -1734,7 +1637,7 @@ namespace krigcpl {
 	_meanErrorFactor(meanErrorFactor),
 	_tolerance(tolerance),
 	_maxQueryPointModelDistance(maxQueryPointModelDistance),
-        _keyDB(db),
+        _ann(ann),
         _modelDB(modelDB),
 	_numberKrigingModels(0),
 	_numberPointValuePairs(0),
@@ -1748,7 +1651,7 @@ namespace krigcpl {
     KrigingInterpolationKeyDB::KrigingInterpolationKeyDB(int pointDimension,
                                                          int valueDimension,
                                                          const InterpolationModelFactoryPointer  & modelFactory,
-                                                         DB&    db,
+                                                         ApproxNearestNeighbors& ann,
                                                          InterpolationModelDataBase& modelDB,
                                                          int    maxKrigingModelSize,
                                                          int    maxNumberSearchModels,
@@ -1769,7 +1672,7 @@ namespace krigcpl {
          _meanErrorFactor(meanErrorFactor),
          _tolerance(tolerance),
          _maxQueryPointModelDistance(maxQueryPointModelDistance),
-         _keyDB(db),
+         _ann(ann),
          _modelDB(modelDB),
          _numberKrigingModels(0),
          _numberPointValuePairs(0),
@@ -1777,7 +1680,8 @@ namespace krigcpl {
     {
 
        const std::pair<int, int> kriginigModelsStats =
-          initializeModelDBFromFile(_keyDB,
+          initializeModelDBFromFile(
+                                    _ann,
                                     _modelDB,
                                     _modelFactory,
                                     directoryName,
@@ -1786,10 +1690,6 @@ namespace krigcpl {
        _numberKrigingModels   += kriginigModelsStats.first;
        _numberPointValuePairs += kriginigModelsStats.second;
 
-       //       _keyDB.initializeOpen(fileName,
-       //  				     "krigcpl",
-       //  				     *(new MTreeKrigingModelObjectFactory));
-      
        return;
       
     }
@@ -1847,73 +1747,70 @@ namespace krigcpl {
       // use hint to get the most recently used model
       //
 
-      if (_useHint &&
-	  hint != DBObject::getUndefinedId()) {
+      if (_useHint && hint != -1) {
 	
-	const DBObjectPtr dbObjectPtr = _keyDB.getObject(hint);
+         uint128_t model_key = _ann.getKey(hint);
 
-	if (dbObjectPtr == NULL) {
+         if (model_key == uint128_t_undefined) {
 
-	  flags[LOST_HINT_FLAG] = true;
+            flags[LOST_HINT_FLAG] = true;
 
-	} else {
-
-           const DBKeyObject<uint128_t>& dbObject = dynamic_cast<DBKeyObject<uint128_t> &>(*dbObjectPtr);
+         } else {
 
 #ifdef STRING_MODELS
 #ifdef REDIS
-	  std::vector<double> packedContainer = redisToModel(dbObject.getKey());
+            std::vector<double> packedContainer = redisToModel(model_key);
 #else
-          std::string& modelKey = _modelDB[dbObject.getKey()];
+            std::string& model_key_string = _modelDB[model_key];
 
-          std::vector<double> packedContainer;
-          unpackKey(modelKey, packedContainer);
+            std::vector<double> packedContainer;
+            unpackKey(model_key_string, packedContainer);
 #endif
 
-          InterpolationModelPtr hintKrigingModel = _modelFactory->build();
-          hintKrigingModel->unpack(packedContainer);
+            InterpolationModelPtr hintKrigingModel = _modelFactory->build();
+            hintKrigingModel->unpack(packedContainer);
 #else
-           const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
+            const InterpolationModelPtr hintKrigingModel = _modelDB[model_key];
 #endif
 	
-	  //
-	  // check if can interpolate; need a valid model for this
-	  //
+            //
+            // check if can interpolate; need a valid model for this
+            //
 
-	  if (hintKrigingModel->isValid() == true) {
+            if (hintKrigingModel->isValid() == true) {
 
-	    //
-	    // check the distance between hintKrigingModel and point
-	    //
-	    const Point modelCenter = getModelCenterMass(*hintKrigingModel);
-	    const Vector pointRelativePosition = queryPoint - modelCenter;
-	    const double distanceSqr = krigalg::dot(pointRelativePosition,
-						    pointRelativePosition);
+               //
+               // check the distance between hintKrigingModel and point
+               //
+               const Point modelCenter = getModelCenterMass(*hintKrigingModel);
+               const Vector pointRelativePosition = queryPoint - modelCenter;
+               const double distanceSqr = krigalg::dot(pointRelativePosition,
+                                                       pointRelativePosition);
 
-	    if (distanceSqr > 
-		_maxQueryPointModelDistance*_maxQueryPointModelDistance) {
-	      flags[LOST_HINT_FLAG] = true;
-	    } else {
+               if (distanceSqr > 
+                   _maxQueryPointModelDistance*_maxQueryPointModelDistance) {
+                  flags[LOST_HINT_FLAG] = true;
+               } else {
 
-  	      const bool hintModelSuccess = 
-  	        checkErrorAndInterpolate(value,
-                                         hintKrigingModel,
-                                         queryPoint,
-                                         valueDimension,
-                                         _tolerance,
-                                         _meanErrorFactor,
-                                         error_estimate );
+                  const bool hintModelSuccess = 
+                     checkErrorAndInterpolate(value,
+                                              hintKrigingModel,
+                                              queryPoint,
+                                              valueDimension,
+                                              _tolerance,
+                                              _meanErrorFactor,
+                                              error_estimate );
 
-  	      if (hintModelSuccess == true) {
-  	        flags[USED_HINT_FLAG] = true;
-  	        return true;
-  	      }
+                  if (hintModelSuccess == true) {
+                     flags[USED_HINT_FLAG] = true;
+                     return true;
+                  }
 	      
-	    }
-	    
-	  }
-
-	}
+               }
+               
+            }
+            
+         }
 	
       }
 
@@ -1932,7 +1829,8 @@ namespace krigcpl {
 
 	const std::pair<int, InterpolationModelPtr> 
 	  closestKrigingModelData = findClosestCoKrigingModel(queryPoint,
-							      _keyDB,
+                                                              _ann,
+                                                              _modelFactory,
                                                               _modelDB,
 							      _maxQueryPointModelDistance);
       
@@ -1944,8 +1842,7 @@ namespace krigcpl {
 	// if no kriging model is available return
 	//
 
-	if (hint == DBObject::getUndefinedId() || 
-	    closestKrigingModel->isValid() == false) {
+	if (hint == id_undefined || closestKrigingModel->isValid() == false) {
 
 #ifdef HAVE_PKG_libprof
 
@@ -1995,7 +1892,7 @@ namespace krigcpl {
 	const std::pair<int, InterpolationModelPtr> 
 	  bestKrigingModelData = findBestCoKrigingModel(canInterpolateFlag,
 							queryPoint,
-							_keyDB,
+                                                        _ann,
                                                         _modelDB,
                                                         _modelFactory,
 							_tolerance,
@@ -2099,33 +1996,30 @@ namespace krigcpl {
       // try hint (if valid)
       //
 
-      if (_useHint &&
-	  hint != DBObject::getUndefinedId()) {
+      if (_useHint && hint != -1) {
 	
-         const DBObjectPtr dbObjectPtr = _keyDB.getObject(hint); 
+         uint128_t model_key = _ann.getKey(hint);
 
-	if (dbObjectPtr == NULL) {
+        if (model_key == uint128_t_undefined) {
 
 	  flags[LOST_HINT_FLAG] = true;
 
 	} else {
     
-           const DBKeyObject<uint128_t>& dbObject = dynamic_cast<const DBKeyObject<uint128_t>&>(*dbObjectPtr);
-
 #ifdef STRING_MODELS
 #ifdef REDIS
-	  std::vector<double> packedContainer = redisToModel(dbObject.getKey());
+	  std::vector<double> packedContainer = redisToModel(model_key);
 #else
-           std::string& modelKey = _modelDB[dbObject.getKey()];
+           std::string& model_key_string = _modelDB[model_key];
 
            std::vector<double> packedContainer;
-           unpackKey(modelKey, packedContainer);
+           unpackKey(model_key_string, packedContainer);
 #endif
 
            InterpolationModelPtr hintKrigingModel = _modelFactory->build();
            hintKrigingModel->unpack(packedContainer);
 #else
-           const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
+           const InterpolationModelPtr hintKrigingModel = _modelDB[model_key];
 #endif
 	  
 	  //
@@ -2180,7 +2074,8 @@ namespace krigcpl {
 
 	const std::pair<int, InterpolationModelPtr> 
 	  closestKrigingModelData = findClosestCoKrigingModel(queryPoint,
-							      _keyDB,
+                                                              _ann,
+                                                              _modelFactory,
                                                               _modelDB,
 							      _maxQueryPointModelDistance);
       
@@ -2192,7 +2087,7 @@ namespace krigcpl {
 	// if no kriging model is available return
 	//
 
-	if (hint == DBObject::getUndefinedId()) {
+	if (hint == id_undefined) {
 
 #ifdef HAVE_PKG_libprof
 
@@ -2244,7 +2139,7 @@ namespace krigcpl {
 	const std::pair<int, InterpolationModelPtr> 
 	  bestKrigingModelData = findBestCoKrigingModel(canInterpolateFlag,
 							queryPoint,
-							_keyDB,
+                                                        _ann,
                                                         _modelDB,
                                                         _modelFactory,
 							_tolerance,
@@ -2274,9 +2169,6 @@ namespace krigcpl {
 
 	}
 
-// 	if (hint == DBObject::getUndefinedId())
-// 	  return false;
-	
 	//
 	// interpolate using the best kriging model available
 	//
@@ -2353,14 +2245,14 @@ namespace krigcpl {
        const ResponsePoint queryPoint(pointDimension,
                                       point);
 
-       if (model == DBObject::getUndefinedId()) {
+       if (model == id_undefined) {
           cout << "Undefined model passed to adaptive sampler" << endl;
           exit(1);
        }
 
-       const DBObjectPtr dbObjectPtr = _keyDB.getObject(model); 
+       uint128_t model_key = _ann.getKey(model);
 
-       if (dbObjectPtr == NULL) {
+       if (model_key == uint128_t_undefined) {
 
           cout << "Couldn't find model in kriging interpolation database " << endl;
           exit(1);
@@ -2368,22 +2260,21 @@ namespace krigcpl {
           //          flags[LOST_HINT_FLAG] = true;
 
        } else {
-    
-           const DBKeyObject<uint128_t>& dbObject = dynamic_cast<DBKeyObject<uint128_t> &>(*dbObjectPtr);
+   
 #ifdef STRING_MODELS
 #ifdef REDIS
-	  std::vector<double> packedContainer = redisToModel(dbObject.getKey());
+	  std::vector<double> packedContainer = redisToModel(model_key);
 #else
-           std::string& modelKey = _modelDB[dbObject.getKey()];
+           std::string& model_key_string = _modelDB[model_key];
 
            std::vector<double> packedContainer;
-           unpackKey(modelKey, packedContainer);
+           unpackKey(model_key_string, packedContainer);
 #endif
 
            InterpolationModelPtr hintKrigingModel = _modelFactory->build();
            hintKrigingModel->unpack(packedContainer);
 #else
-           const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
+           const InterpolationModelPtr hintKrigingModel = _modelDB[model_key];
 #endif
 	  
           assert(hintKrigingModel->hasGradient() == true);
@@ -2480,14 +2371,14 @@ namespace krigcpl {
       // check if the list of kriging models in non-empty
       //
 
-      if (hint == DBObject::getUndefinedId()) {
+      if (hint == id_undefined) {
 	
 	//
 	// create and add new model
 	//
 
          addNewModel(_modelDB,
-                     _keyDB,
+                     _ann,
                      _modelFactory,
                      hint, 
                      point,
@@ -2508,25 +2399,22 @@ namespace krigcpl {
 	// get a handle to the right kriging model
 	//
 
-
-	DBObjectPtr dbObjectPtr = _keyDB.getObject(hint);
-	DBKeyObject<uint128_t> & dbObject = 
-	  dynamic_cast<DBKeyObject<uint128_t> &>(*dbObjectPtr);
+         uint128_t model_key = _ann.getKey(hint);
 
 #ifdef STRING_MODELS
 #ifdef REDIS
-	  std::vector<double> packedContainer = redisToModel(dbObject.getKey());
+	  std::vector<double> packedContainer = redisToModel(model_key);
 #else
-        std::string& modelKey = _modelDB[dbObject.getKey()];
+        std::string& model_key_string = _modelDB[model_key];
 
         std::vector<double> packedContainer;
-        unpackKey(modelKey, packedContainer);
+        unpackKey(model_key_string, packedContainer);
 #endif
 
         InterpolationModelPtr krigingModel = _modelFactory->build();
         krigingModel->unpack(packedContainer);
 #else
-        InterpolationModelPtr krigingModel = _modelDB[dbObject.getKey()];
+        InterpolationModelPtr krigingModel = _modelDB[model_key];
 #endif
 
 	//
@@ -2538,7 +2426,7 @@ namespace krigcpl {
 	if (krigingModel->getNumberPoints() == _maxKrigingModelSize) {
 
            addNewModel(_modelDB,
-                       _keyDB,
+                       _ann,
                        _modelFactory,
                        hint, 
                        point,
@@ -2599,14 +2487,14 @@ namespace krigcpl {
 	    //
 	    
 	    const Point centerMass = getModelCenterMass(*krigingModel);
-	    // std::cout << "new center: " << centerMass << std::endl;
+
 	    //
 	    // remove old kriging model from the database
 	    //
-	    
-	    _keyDB.deleteObject(hint);
 
-            _modelDB.erase(dbObject.getKey());
+            _ann.remove(hint);
+
+            _modelDB.erase(model_key);
 	    
 	    //
 	    // insert updated kriging model into database
@@ -2616,31 +2504,33 @@ namespace krigcpl {
 					     &(centerMass[0]));
 	    
             // Create a key string corresponding to the center of mass point
+            // and insert it into the approximate nearest neighbor database
 
-            DBKeyObject<uint128_t> dbObject(getKeyHash(centerMassRP));
+            std::vector<double> point_data;
+            point_data.resize(centerMassRP.size());
+            for (int i=0; i<centerMassRP.size(); ++i) {
+               point_data[i] = centerMassRP[i];
+            }
 
-            // Insert the key into the key database
-
-	    _keyDB.insertObject(dbObject, centerMassRP, 0.0);
+            uint128_t new_model_key = getKeyHash(centerMassRP);
+            hint = _ann.insert(point_data, new_model_key);
 
             // Insert the interpolation model into the interpolation model database
-
-            //            int objectId = dbObject.getObjectId();
 
 #ifdef STRING_MODELS
             std::vector<double> packedContainer;
             krigingModel->pack(centerMassRP, packedContainer);
 
 #ifdef REDIS
-	      modelToRedis(dbObject.getKey(),packedContainer,centerMassRP.size());
+            modelToRedis(new_model_key, packedContainer, centerMassRP.size());
 #else
-            std::string modelKey;
-            buildKey(modelKey, packedContainer, STRING_DIGITS);
+            std::string new_model_key_string;
+            buildKey(new_model_key_string, packedContainer, STRING_DIGITS);
         
-            _modelDB.insert( std::make_pair(dbObject.getKey(), modelKey) );
+            _modelDB.insert( std::make_pair(new_model_key, new_model_key_string) );
 #endif
 #else
-            _modelDB.insert( std::make_pair(dbObject.getKey(), krigingModel) );
+            _modelDB.insert( std::make_pair(new_model_key, krigingModel) );
 #endif
 
 	  } else {
@@ -2650,7 +2540,7 @@ namespace krigcpl {
 	    //
 
              addNewModel(_modelDB,
-                         _keyDB,
+                         _ann,
                          _modelFactory,
                          hint, 
                          point,
@@ -2785,19 +2675,19 @@ namespace krigcpl {
       // output kriging model stats
       //
 
-      outputKrigingModelStats(outputStream, _keyDB, _maxKrigingModelSize);
+      //      outputKrigingModelStats(outputStream, _keyDB, _maxKrigingModelSize);
       
       //
       // output db stats
       //
 
-      _keyDB.outputStats(outputStream);
+      //      _keyDB.outputStats(outputStream);
 
       //
       // output positions of all kriging models
       //
 
-      outputKrigingModelPositionData("kriging_model_centers.txt", _keyDB);
+      //      outputKrigingModelPositionData("kriging_model_centers.txt", _keyDB);
 
       return;
     }
@@ -2809,6 +2699,7 @@ namespace krigcpl {
     void
     KrigingInterpolationKeyDB::swapOutObjects() const
     {
+#if 0
        if (typeid(_keyDB) == typeid(MTree)) {
           ((MTree&)_keyDB).writeObjects(KrigingModelChooser(_agingThreshold));
        }
@@ -2816,83 +2707,12 @@ namespace krigcpl {
           // Need to figure out how to generalize this to work
           // with databases other than MTree
        }
+#else
+       cout << "KrigingInterpolationKeyDB::swapOutObjects(): Figure out why this is being called" << endl;
+       exit(1);
+#endif
 
       return;
-
-    }
-
-    //
-    // Perform a query for k-closest interpolants.
-    //
-
-    std::vector<InterpolationModelPtr>
-    KrigingInterpolationKeyDB::getKrigingModels(int            numberModels,
-                                                      const double * point)
-    {
-
-      //
-      // shortcuts to frequently accesses data
-      //
-
-      const int pointDimension = getPointDimension();
-
-      //
-      // instatiate point object from point data
-      //
-
-      const ResponsePoint queryPoint(pointDimension,
-				     point);
-      
-      //
-      // query the tree for the numberModels closest models
-      //
-      
-      std::vector<DBSearchResult> searchResults;
-      
-      _keyDB.searchKNN(searchResults, queryPoint, numberModels);
-      
-      //
-      // instantiate container for returned data
-      //
-
-      std::vector<InterpolationModelPtr> krigingModels;
-
-      //
-      // iterate over searchResults
-      //
-
-      std::vector<DBSearchResult>::const_iterator searchResultsIter;
-      const std::vector<DBSearchResult>::const_iterator 
-	searchResultsEnd = searchResults.end();
-      
-      for (searchResultsIter  = searchResults.begin();
-	   searchResultsIter != searchResultsEnd;
-	   ++searchResultsIter) {
-	
-	//
-	// get handle to search result
-	//
-
-	const DBSearchResult & searchResult = *searchResultsIter;
-	
-	//
-	// get handle to object
-	//
-	
-	const DBKrigingModelObject & dbObject = 
-	  dynamic_cast<const DBKrigingModelObject &>(searchResult.getDataObject()); 
-	
-	InterpolationModelPtr krigingModelPtr = dbObject.getModel();
-	
-	//
-	// store a copy of the model
-	//
-
-	krigingModels.push_back(krigingModelPtr);
-	
-      }
-
-      return krigingModels;
 
     }
 }

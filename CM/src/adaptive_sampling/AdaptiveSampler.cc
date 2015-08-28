@@ -114,11 +114,11 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
       modelFactory(new MultivariateDerivativeKrigingModelFactory(regressionModel,
                                                                  correlationModel));
 
+   std::string mtreeDirectoryName = ".";
+
    // Construct the key database
 
    m_keyDB = (DB*)(new MTree("kriging_model_database", &(std::cout), false));
-
-   std::string mtreeDirectoryName = ".";
 
 #if 0
    m_keyDB->initializeCreate(mtreeDirectoryName + "/" 
@@ -134,6 +134,19 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
       
    ((MTree*)m_keyDB)->setMaxNodeEntries(12);
      
+#ifdef FLANN
+   int n_trees = 1;
+   m_ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(m_pointDimension,
+                                                                     n_trees,
+                                                                     20));
+#else
+   m_ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(m_pointDimension,
+                                                                     "kriging_model_database",
+                                                                     mtreeDirectoryName,
+                                                                     &(std::cout),
+                                                                     false));
+#endif
+
    bool db_from_file = false;  // FIX THIS (input from somewhere)
 
    if ( db_from_file ) {
@@ -144,7 +157,8 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
       m_interp = new KrigingInterpolationKeyDB( m_pointDimension,
                                                 m_valueDimension,
                                                 modelFactory,
-                                                *m_keyDB,
+                                                *m_ann,
+                                                //                                                *m_keyDB,
                                                 m_modelDB,
                                                 m_maxKrigingModelSize,
                                                 m_maxNumberSearchModels,

@@ -2,6 +2,8 @@
 #define ADAPTIVESAMPLER_INCLUDED
 
 #include <key_db/KrigingInterpolationKeyDB.h>
+#include <key_db/ApproxNearestNeighborsMTree.h>
+#include <key_db/ApproxNearestNeighborsFLANN.h>
 #include <vector>
 
 #include "FineScale.h"
@@ -97,6 +99,7 @@ class AdaptiveSampler
 
    InterpolationModelDataBase m_modelDB;
    DB* m_keyDB;
+   ApproxNearestNeighbors* m_ann;
 
    std::vector<double> m_pointScaling;
    std::vector<double> m_valueScaling;

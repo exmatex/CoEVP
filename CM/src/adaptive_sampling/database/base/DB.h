@@ -248,6 +248,7 @@ public:
                           int k_neighbors,
                           bool make_safe = false) = 0;
 
+#if 0
    /*!
     * Search the DB for all data objects within given distance of given 
     * query point.
@@ -286,6 +287,7 @@ public:
                             const MetricSpacePoint& query_point,
                             double radius,
                             bool make_safe = false) = 0;
+#endif
 
    /*!
     * Write objects to disk. Return boolean tru if write is successful

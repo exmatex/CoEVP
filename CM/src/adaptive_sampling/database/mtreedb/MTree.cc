@@ -645,7 +645,7 @@ void MTree::searchKNN(vector<DBSearchResult>& results,
 *                                                                       *
 *************************************************************************
 */
-
+#if 0
 void MTree::searchRange(list<DBSearchResult>& results,
                         const MetricSpacePoint& query_point,
                         double radius,
@@ -696,6 +696,7 @@ void MTree::searchRange(list<DBSearchResult>& results,
 
    }
 }
+#endif
 
 /*
 *************************************************************************

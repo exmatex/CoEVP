@@ -347,7 +347,7 @@ public:
                           const MetricSpacePoint& query_point,
                           int k_neighbors,
                           bool make_safe = false);
-
+#if 0
    /*!
     * Search tree for all data objects within given distance of given 
     * query point.
@@ -386,6 +386,7 @@ public:
                             const MetricSpacePoint& query_point,
                             double radius,
                             bool make_safe = false);
+#endif
 
    //@}
   

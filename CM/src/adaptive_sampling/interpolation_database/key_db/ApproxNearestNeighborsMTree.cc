@@ -1,0 +1,116 @@
+#include "ApproxNearestNeighborsMTree.h"
+#include "DBKeyObjectFactory.h"
+
+#include "base/ResponsePoint.h"
+
+
+ApproxNearestNeighborsMTree::ApproxNearestNeighborsMTree( int dim,
+                                                          const string& tree_name,
+                                                          const string& directory_name,
+                                                          ostream* error_log_stream,
+                                                          bool do_error_checking )
+   : m_dim(dim)
+{
+   m_tree = new MTree(tree_name, error_log_stream, do_error_checking);
+
+   m_tree->initializeCreate(directory_name + "/" 
+                            "kriging_model_database",
+                            "krigcpl",
+                            *(new krigcpl::DBKeyObjectFactory<uint128_t>));
+
+   m_tree->setMaxNodeEntries(12);
+}
+
+
+int
+ApproxNearestNeighborsMTree::insert(std::vector<double>& point, uint128_t& key)
+{
+   krigcpl::DBKeyObject<uint128_t> dbObject(key);
+
+   krigcpl::ResponsePoint rpt(point.size(), point.data());
+
+   m_tree->insertObject(dbObject, rpt, 0.0);
+
+   return dbObject.getObjectId();
+}
+
+
+void
+ApproxNearestNeighborsMTree::insert(std::vector<uint128_t> const& keys)
+{
+}
+    
+    
+void
+ApproxNearestNeighborsMTree::remove(int id)
+{
+   m_tree->deleteObject(id);
+}
+    
+    
+void
+ApproxNearestNeighborsMTree::knn(std::vector<double> const& x,
+                                 int k_neighbors,
+                                 std::vector<int> &ids,
+                                 std::vector<uint128_t> &keys,
+                                 std::vector<double> &dists)
+{
+   krigcpl::ResponsePoint point(x.size());
+
+   for (int i=0; i<x.size(); ++i) {
+      point[i] = x[i];
+   }
+
+   std::vector<DBSearchResult> searchResults;
+
+   m_tree->searchKNN(searchResults,
+                     point,
+                     k_neighbors);
+
+   int num_neighbors_found = searchResults.size();
+
+   if (num_neighbors_found > 0) {
+
+      ids.resize(num_neighbors_found);
+      keys.resize(num_neighbors_found);
+      dists.resize(num_neighbors_found);
+
+      for (int i=0; i<num_neighbors_found; ++i) {
+
+         const krigcpl::DBKeyObject<uint128_t> & dbObject = 
+            dynamic_cast<const krigcpl::DBKeyObject<uint128_t> &>(searchResults[i].getDataObject()); 
+
+         ids[i] = dbObject.getObjectId();
+         keys[i] = dbObject.getKey();
+         dists[i] = searchResults[i].getDistanceToQueryPoint();
+      }
+   }
+   else {
+      ids.resize(0);
+      keys.resize(0);
+      dists.resize(0);
+   }
+}
+
+
+uint128_t
+ApproxNearestNeighborsMTree::getKey(int id)
+{
+   uint128_t key;
+
+   const DBObjectPtr dbObjectPtr = m_tree->getObject(id);
+
+   if (dbObjectPtr == NULL) {
+      key = uint128_t_undefined;
+   }
+   else {
+
+      const krigcpl::DBKeyObject<uint128_t> & dbObject = 
+         dynamic_cast<const krigcpl::DBKeyObject<uint128_t> &>(*dbObjectPtr); 
+
+      key = dbObject.getKey();
+   }
+
+   return key;
+}
+
