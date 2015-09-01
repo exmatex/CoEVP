@@ -100,6 +100,13 @@ Additional BSD Notice
 #  define DEBUG 0
 #endif
 
+#ifdef FSTRACE
+static std::string uint128_to_string(const uint128_t &in){
+  uint64_t *in64 = (uint64_t *)&in; 
+  return std::to_string(*in64)+std::to_string(*(in64+1));
+}
+#endif
+
 using namespace krigalg;
 
 namespace krigcpl {
@@ -2128,6 +2135,17 @@ namespace krigcpl {
            const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
 #endif
 	  
+#ifdef FSTRACE
+       std::cout << "Using krigging model with id " << uint128_to_string(dbObject.getKey()) << std::endl;
+       vector<Point> model_points = hintKrigingModel->getPoints();
+       for (int i=0; i<model_points.size(); i++){
+         std::cout << "point " << i << " coordinates";
+         for (int j=0; j<model_points[i].size(); j++) {
+           std::cout << " " << model_points[i][j];
+         }
+         std::cout << std::endl;
+       }
+#endif
 	  //
 	  // check the distance between hintKrigingModel and point
 	  //

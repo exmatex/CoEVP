@@ -215,12 +215,23 @@ AdaptiveSampler::sample( std::vector<double>&       value,
                             flags,
                             error_estimate);
 
+#ifdef FSTRACE
+         std::cout << "   Querying : (" << local_point[0];
+         for (int i=1; i<m_pointDimension; ++i) {
+            std::cout << ", " << local_point[i];
+         }
+         std::cout << ")";
+
+         std::cout << " Error estimate: " << error_estimate;
+         std::cout << " Used: " << interpolationSuccess << endl; 
+#endif
+
    if (interpolationSuccess == false) {
 
       fineScaleModel.evaluate(point, value);
 
       if (m_verbose) {
-#if 0
+#ifdef FSTRACE
          std::cout << "   Adding key : (" << local_point[0];
          for (int i=1; i<m_pointDimension; ++i) {
             std::cout << ", " << local_point[i];
@@ -270,6 +281,19 @@ AdaptiveSampler::sample( std::vector<double>&       value,
          value[i] = local_value[i] * m_valueScaling[i];
       }
 
+#ifdef FSTRACE
+         std::cout << "   Krigging key : (" << local_point[0];
+         for (int i=1; i<m_pointDimension; ++i) {
+            std::cout << ", " << local_point[i];
+         }
+         std::cout << ")";
+
+         std::cout << ", value : (" << value[0] / m_valueScaling[0];
+         for (int i=1; i<m_valueDimension; ++i) {
+            std::cout << ", " << value[i] / m_valueScaling[i];
+         }
+         std::cout << ")" << std::endl;
+#endif
 #if 0
       // For debugging: override the interpolant with the true fine-scale
       // model value and/or derivative

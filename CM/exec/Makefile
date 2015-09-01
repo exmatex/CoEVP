@@ -138,6 +138,10 @@ CXXFLAGS += -DFLANN -I$(FLANN_LOC)
 FLANN_LIBS = $(FLANN_LOC)/../../lib/libflann_s.a
 endif
 
+ifeq ($(FSTRACE), yes)
+CXXFLAGS += -DFSTRACE
+endif
+
 MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 
 default: libcm
