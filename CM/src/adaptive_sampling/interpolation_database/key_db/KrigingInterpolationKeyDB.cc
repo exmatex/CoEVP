@@ -106,6 +106,8 @@ using namespace krigalg;
 
 namespace krigcpl {
 
+uint128_t saved_model_key;
+
     namespace {
 
 #ifdef REDIS
@@ -147,7 +149,7 @@ namespace krigcpl {
           }
 
 	  uint128_t hash;
-	  MurmurHash3_x64_128(&data[0], point_size*sizeof(double)/sizeof(char), MURMUR_SEED, &hash);
+          MurmurHash3_x64_128(&data[0], point_size*sizeof(double)/sizeof(char), MURMUR_SEED, &hash);
 
           return hash;
        }
@@ -631,7 +633,7 @@ namespace krigcpl {
               InterpolationModelPtr krigingModel = _modelFactory->build();
               krigingModel->unpack(packedContainer);
 #else
-              InterpolationModelPtr& krigingModel = modelDB[model_key];
+              InterpolationModelPtr krigingModel = modelDB[model_key];
 #endif
 
               //
@@ -1148,6 +1150,7 @@ namespace krigcpl {
 	
 	std::vector<Value> pointValue;
 
+
 	if (krigingModel->hasGradient() == true) 
 	  pointValue = copyValueData(valueData,
 				     gradientData,
@@ -1456,8 +1459,10 @@ namespace krigcpl {
             modelDB.insert( std::make_pair(model_key, model_key_string) );
 #endif
 #else
-            modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(model_key, krigingModelPtr) );
+            //            modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(model_key, krigingModelPtr) );
+            modelDB.insert( std::make_pair(model_key, krigingModelPtr) );
 #endif
+
 	  }
 
 	  //

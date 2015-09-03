@@ -113,4 +113,3 @@ ApproxNearestNeighborsMTree::getKey(int id)
 
    return key;
 }
-

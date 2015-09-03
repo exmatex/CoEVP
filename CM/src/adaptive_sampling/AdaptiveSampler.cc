@@ -67,9 +67,6 @@ Additional BSD Notice
 #include <kriging/GaussianDerivativeCorrelationModel.h>
 #include <kriging/MultivariateDerivativeKrigingModelFactory.h>
 
-#include <mtreedb/MTree.h>
-
-#include "interpolation_database/key_db/DBKeyObjectFactory.h"
 
 AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
                                   const int                  valueDimension,
@@ -114,32 +111,18 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
       modelFactory(new MultivariateDerivativeKrigingModelFactory(regressionModel,
                                                                  correlationModel));
 
-   std::string mtreeDirectoryName = ".";
+   // Construct the approximate nearest neighbor search object
 
-   // Construct the key database
-
-   m_keyDB = (DB*)(new MTree("kriging_model_database", &(std::cout), false));
-
-#if 0
-   m_keyDB->initializeCreate(mtreeDirectoryName + "/" 
-                          "kriging_model_database",
-                          "krigcpl",
-                          *(new DBKeyObjectFactory<std::string>));
-#else
-   m_keyDB->initializeCreate(mtreeDirectoryName + "/" 
-                          "kriging_model_database",
-                          "krigcpl",
-                          *(new DBKeyObjectFactory<uint128_t>));
-#endif
-      
-   ((MTree*)m_keyDB)->setMaxNodeEntries(12);
-     
 #ifdef FLANN
-   int n_trees = 1;
+   int n_trees = 1;         // input this from somewhere
+   int n_checks = 20;       // input this from somewhere
+
    m_ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(m_pointDimension,
                                                                      n_trees,
-                                                                     20));
+                                                                     n_checks));
 #else
+   std::string mtreeDirectoryName = ".";
+
    m_ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(m_pointDimension,
                                                                      "kriging_model_database",
                                                                      mtreeDirectoryName,
@@ -158,7 +141,6 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
                                                 m_valueDimension,
                                                 modelFactory,
                                                 *m_ann,
-                                                //                                                *m_keyDB,
                                                 m_modelDB,
                                                 m_maxKrigingModelSize,
                                                 m_maxNumberSearchModels,
@@ -190,7 +172,6 @@ AdaptiveSampler::~AdaptiveSampler()
    m_valueScaling.resize(0);
    
    delete m_interp;
-   delete m_keyDB;
 }
 
 

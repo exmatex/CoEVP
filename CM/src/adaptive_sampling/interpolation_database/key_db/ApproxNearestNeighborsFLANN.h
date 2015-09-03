@@ -19,6 +19,7 @@ public:
     flann::Index<flann::L2<double>> flann_index;
     bool is_empty;
     std::vector<uint128_t> keymap;
+    std::vector<double *> points;
     
     ApproxNearestNeighborsFLANN(int dim, std::function<double *(uint128_t)> database_pull_key,
                                 int n_trees, int n_checks_default):

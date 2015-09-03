@@ -35,13 +35,20 @@ ApproxNearestNeighborsFLANN::insert(std::vector<double>& point,
 
    keymap.push_back(key);
 
-   flann::Matrix<double> pts(point.data(), 1, dim);
+   double * data = new double[dim];
+   for (int i=0; i<dim; ++i) {
+      data[i] = point[i];
+   }
+
+   points.push_back(data);
+
+   flann::Matrix<double> pts(data, 1, dim);
    if (is_empty) {
       flann_index.buildIndex(pts);
       is_empty = false;
    }
    else {
-      flann_index.addPoints(pts);
+      flann_index.addPoints(pts,10000);
    }
 
    return id;
@@ -64,33 +71,6 @@ ApproxNearestNeighborsFLANN::knn_helper(std::vector<double> const& x,
    else {
       flann::Matrix<double> query((double *)x.data(), 1, dim);
             
-#if 0
-      // "Preallocated" option.  I don't know if we can use this since
-      // I can't figure out how to know how many neighbors are actually found
-      // (so we assume k here, which obviously can't be the case until
-      // enough points are added).
-
-      std::vector<int> raw_indices(k);
-      flann::Matrix<int> indices(raw_indices.data(), 1, k);
-            
-      std::vector<double> raw_dists(k);
-      flann::Matrix<double> mdists(raw_dists.data(), 1, k);
-            
-      flann_index.knnSearch(query, indices, mdists, k, flann::SearchParams(n_checks));
-
-      ids.resize(k);
-      keys.resize(k);
-      dists.resize(k);
-      for (int i = 0; i < k; i++) {
-         ids[i]  = indices[0][i];
-         keys[i]  = keymap[(size_t)indices[0][i]];
-         dists[i] = mdists[0][i];
-      }
-
-#else
-
-      // "Non-preallocated" option
-
       std::vector< std::vector<int> > indices;
       std::vector< std::vector<double> > mdists;
 
@@ -106,12 +86,10 @@ ApproxNearestNeighborsFLANN::knn_helper(std::vector<double> const& x,
          keys[i] = keymap[(size_t)ids[i]];
          if (keys[i] == uint128_t_undefined) {
             std::cout << "FLANN returned deleted model " << ids[i] << std::endl;
+            exit(1);
          }
          dists[i] = mdists[0][i];
       }
-
-#endif
-
    }
 }
 
@@ -130,6 +108,8 @@ ApproxNearestNeighborsFLANN::knn(std::vector<double> const& x,
 uint128_t
 ApproxNearestNeighborsFLANN::getKey(int id)
 {
+   assert(id >= 0 && id < keymap.size());
+
    return keymap[id];
 }
 
@@ -137,13 +117,14 @@ ApproxNearestNeighborsFLANN::getKey(int id)
 void
 ApproxNearestNeighborsFLANN::remove(int id)
 {
-   assert(id >= 0 && id < keymap.size());
+   assert(id >= 0 && id < keymap.size() && id < points.size());
 
    flann_index.removePoint(id);
 
    keymap[id] = uint128_t_undefined;
-}
 
+   delete points[id];
+}
 
 
 #endif

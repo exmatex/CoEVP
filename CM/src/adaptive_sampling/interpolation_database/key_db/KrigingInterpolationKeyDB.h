@@ -34,8 +34,6 @@
 
 #include "ApproxNearestNeighbors.h"
 
-#define uint128_t unsigned __int128
-
 namespace std {
 
    // Defining a hash function in order to use uint128_t as a key

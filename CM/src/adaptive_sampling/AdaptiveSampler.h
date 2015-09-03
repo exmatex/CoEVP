@@ -4,13 +4,11 @@
 #include <key_db/KrigingInterpolationKeyDB.h>
 #include <key_db/ApproxNearestNeighborsMTree.h>
 #include <key_db/ApproxNearestNeighborsFLANN.h>
-#include <vector>
 
 #include "FineScale.h"
 
 using namespace krigalg;
 using namespace krigcpl;
-
 
 class AdaptiveSampler
 {
@@ -97,9 +95,8 @@ class AdaptiveSampler
 
    KrigingInterpolationKeyDB* m_interp;
 
-   InterpolationModelDataBase m_modelDB;
-   DB* m_keyDB;
    ApproxNearestNeighbors* m_ann;
+   InterpolationModelDataBase m_modelDB;
 
    std::vector<double> m_pointScaling;
    std::vector<double> m_valueScaling;
