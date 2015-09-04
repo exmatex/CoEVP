@@ -28,9 +28,9 @@ using namespace std;
 using namespace std;
 #endif
 
-#ifndef included_DB
-#include <base/DB.h>
-#endif
+//#ifndef included_DB
+//#include <base/DB.h>
+//#endif
 #ifndef included_MTreeDataStore
 #include "MTreeDataStore.h"
 #endif
@@ -105,7 +105,7 @@ class MTreeSearchResult;
  */
 
 class MTree
-   : public DB
+//   : public DB
 {
 public:
    friend class MTreeNode;
@@ -745,6 +745,19 @@ private:
 
    vector<int> d_number_nodes_in_level;
    vector<MTreeLevelStatistic*> d_level_statistics;
+
+   /*
+    * String name of DB used mainly in printing and error reporting
+    */
+   string d_db_name;
+
+   /*
+    * Error checking and reporing members; set in constructor
+    * but can be changed via member functions.
+    * Note: error checking is turned off by default.
+    */
+   bool     d_do_error_checking;
+   ostream* d_error_log_stream;
 
 };
 

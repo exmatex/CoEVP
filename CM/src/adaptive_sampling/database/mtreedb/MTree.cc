@@ -107,7 +107,10 @@ using namespace std;
 MTree::MTree(const string& tree_name,
              ostream* error_log_stream,
              bool do_error_checking)
-   : DB(tree_name, error_log_stream, do_error_checking),
+   : //DB(tree_name, error_log_stream, do_error_checking),
+   d_db_name(tree_name),
+   d_do_error_checking(do_error_checking),
+   d_error_log_stream(error_log_stream),
      d_max_node_entries(DEFAULT_MAX_NODE_ENTRIES),
      d_root_node_promotion_method(MTreeNode::MIN_OVERLAP_PROMOTION),
      d_node_promotion_method(MTreeNode::MAX_SPREAD_DISTANCE_PROMOTION),

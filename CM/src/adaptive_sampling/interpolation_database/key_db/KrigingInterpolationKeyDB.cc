@@ -83,7 +83,6 @@ Additional BSD Notice
 #include <kriging/SecondMoment.h>
 
 #include <base/ResponsePoint.h>
-#include <kriging_db/DBKrigingModelObject.h>
 
 #include "ApproxNearestNeighbors.h"
 
@@ -93,7 +92,6 @@ Additional BSD Notice
 
 #include <murmur3/MurmurHash3.h>
 
-#include "DBKeyObject.h"
 
 #define STRING_DIGITS 16
 #define MURMUR_SEED 42
@@ -1278,6 +1276,7 @@ uint128_t saved_model_key;
       // print kriging point statistics
       //
 
+#if 0
       inline void
       outputKrigingModelStats(std::ostream & outputStream,
 			      const DB  &    keyDB,
@@ -1287,6 +1286,7 @@ uint128_t saved_model_key;
 	return;
 
       }
+#endif
 
       //
       // read the contents of the data store and insert into the tree
@@ -1494,12 +1494,12 @@ uint128_t saved_model_key;
       // output kriging models position data
       //
 
+#if 0
       void
       outputKrigingModelPositionData(const std::string & fileName,
 				     DB                & keyDB)
       {
 
-#if 0
          if (typeid(keyDB) == typeid(MTree)) {
 
             //
@@ -1608,11 +1608,11 @@ uint128_t saved_model_key;
             // with databases other than MTree
 
          }
-#endif
 
          return;
 	
       }
+#endif
     }
 
     // Object class member definitions start here
