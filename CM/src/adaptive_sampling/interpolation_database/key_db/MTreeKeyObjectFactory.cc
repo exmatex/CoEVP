@@ -70,7 +70,7 @@ namespace krigcpl {
     //
 
     template<>
-    DBObjectPtr 
+    MTreeObjectPtr 
     MTreeKeyObjectFactory<std::string>::allocateObject(toolbox::Database& db) const
     {
 	
@@ -81,10 +81,10 @@ namespace krigcpl {
        MTreeKeyObject<std::string> * keyObjectPtr = new MTreeKeyObject<std::string>;
 
       //
-      // return DBObjectPtr
+      // return MTreeObjectPtr
       // 
 
-      return DBObjectPtr(keyObjectPtr);
+      return MTreeObjectPtr(keyObjectPtr);
     }
 
 }

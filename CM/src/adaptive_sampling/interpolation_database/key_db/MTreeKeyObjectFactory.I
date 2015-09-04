@@ -103,12 +103,12 @@ namespace krigcpl {
     //
 
     template <typename T>
-    DBObjectPtr 
+    MTreeObjectPtr 
     MTreeKeyObjectFactory<T>::allocateObject(toolbox::Database& db) const
     {
 
       (void)db;
-      DBObjectPtr dummy;
+      MTreeObjectPtr dummy;
       return(dummy);
       
     }

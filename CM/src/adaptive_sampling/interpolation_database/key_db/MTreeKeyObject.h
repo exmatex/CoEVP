@@ -9,7 +9,7 @@
 #ifndef included_krigcpl_MTreeKeyObject_h
 #define included_krigcpl_MTreeKeyObject_h
 
-#include <base/DBObject.h>
+#include <mtreedb/MTreeObject.h>
 
 namespace krigcpl {
 
@@ -18,7 +18,7 @@ namespace krigcpl {
      */
 
     template <typename T>
-    class MTreeKeyObject : public DBObject
+    class MTreeKeyObject : public MTreeObject
     {
       
     public:
@@ -42,7 +42,7 @@ namespace krigcpl {
        * @brief Concrete virtual method to create and return smart
        * pointer to a (deep) copy of this object.
        */
-      DBObjectPtr makeCopy() const;
+      MTreeObjectPtr makeCopy() const;
 
       /*!
        * @brief Concrete virtual method to write data members to given

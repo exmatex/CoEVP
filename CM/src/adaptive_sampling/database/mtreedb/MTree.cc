@@ -151,7 +151,7 @@ MTree::~MTree()
 
 void MTree::initializeCreate(const string& directory_name,
                              const string& file_prefix,
-                             const DBObjectFactory& obj_factory)
+                             const MTreeObjectFactory& obj_factory)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
    assert(!directory_name.empty());
@@ -179,7 +179,7 @@ void MTree::initializeCreate(const string& directory_name,
 
 void MTree::initializeOpen(const string& directory_name,
                            const string& file_prefix,
-                           const DBObjectFactory& obj_factory)
+                           const MTreeObjectFactory& obj_factory)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
    assert(!directory_name.empty());
@@ -251,7 +251,7 @@ void MTree::setMaxNodeEntries(int max_entries)
 *************************************************************************
 */
  
-void MTree::insertObject(DBObject& object,
+void MTree::insertObject(MTreeObject& object,
                          const MTreePoint& point,
                          double radius)
 {
@@ -335,9 +335,9 @@ void MTree::insertObject(DBObject& object,
 *************************************************************************
 */
 
-DBObjectPtr MTree::getObject(int object_id) const
+MTreeObjectPtr MTree::getObject(int object_id) const
 {
-   DBObjectPtr ret_object( d_data_store.getObjectCopy(object_id) );
+   MTreeObjectPtr ret_object( d_data_store.getObjectCopy(object_id) );
    return(ret_object);
 }
 

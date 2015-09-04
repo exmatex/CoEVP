@@ -16,8 +16,8 @@
 #ifndef included_MTreeEntry
 #include "MTreeEntry.h"
 #endif
-#ifndef included_DBObjectFactory
-#include <base/DBObjectFactory.h>
+#ifndef included_MTreeObjectFactory
+#include "MTreeObjectFactory.h"
 #endif
 #ifndef included_MTreeDataStore
 #include "MTreeDataStore.h"
@@ -59,7 +59,7 @@ public:
    /*!
     * Return const reference to data object associated with search result.
     */
-   const DBObject& getDataObject() const;
+   const MTreeObject& getDataObject() const;
 
    /*!
     * Return distance of result to query point.
@@ -137,7 +137,7 @@ private:
    MTreePointPtr   d_query_point;
    double          d_distance_to_query_point;
 
-   DBObjectPtr  d_data_object;
+   MTreeObjectPtr  d_data_object;
    int             d_data_object_id;
    MTreePointPtr   d_data_object_point;
    double          d_data_object_radius;

@@ -19,8 +19,8 @@ using namespace std;
 #ifndef included_MTreeKey
 #include "MTreeKey.h"
 #endif
-#ifndef included_DBObject
-#include <base/DBObject.h>
+#ifndef included_MTreeObject
+#include "MTreeObject.h"
 #endif
 
 class MTreeEntry;

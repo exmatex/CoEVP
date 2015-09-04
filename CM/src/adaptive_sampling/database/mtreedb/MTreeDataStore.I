@@ -164,7 +164,7 @@ bool MTreeDataStore::LeafNodeInfo::getInMemory() const
 */
 
 inline
-MTreeDataStore::ObjectInfo::ObjectInfo(DBObjectPtr object)
+MTreeDataStore::ObjectInfo::ObjectInfo(MTreeObjectPtr object)
 :
    d_object_ptr(object),
    d_owner_leaf_node_id( MTreeNode::getUndefinedId() ),
@@ -182,7 +182,7 @@ MTreeDataStore::ObjectInfo::~ObjectInfo()
 }
 
 inline
-DBObjectPtr MTreeDataStore::ObjectInfo::getObject() const 
+MTreeObjectPtr MTreeDataStore::ObjectInfo::getObject() const 
 { 
    return d_object_ptr; 
 }
@@ -194,7 +194,7 @@ void MTreeDataStore::ObjectInfo::resetObjectPtr()
 }
 
 inline 
-void MTreeDataStore::ObjectInfo::setObjectPtr(DBObjectPtr obj) 
+void MTreeDataStore::ObjectInfo::setObjectPtr(MTreeObjectPtr obj) 
 { 
    d_object_ptr = obj; 
 }

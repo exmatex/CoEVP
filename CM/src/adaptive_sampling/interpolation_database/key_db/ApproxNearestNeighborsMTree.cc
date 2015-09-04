@@ -101,7 +101,7 @@ ApproxNearestNeighborsMTree::getKey(int id)
 {
    uint128_t key;
 
-   const DBObjectPtr mtree_object_ptr = m_tree->getObject(id);
+   const MTreeObjectPtr mtree_object_ptr = m_tree->getObject(id);
 
    if (mtree_object_ptr == NULL) {
       key = uint128_t_undefined;

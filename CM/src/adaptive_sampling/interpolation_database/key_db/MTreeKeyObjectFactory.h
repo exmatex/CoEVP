@@ -9,8 +9,8 @@
 #ifndef included_krigcpl_MTreeKeyObjectFactory_h
 #define included_krigcpl_MTreeKeyObjectFactory_h
 
-#include <base/DBObject.h>
-#include <base/DBObjectFactory.h>
+#include <mtreedb/MTreeObject.h>
+#include <mtreedb/MTreeObjectFactory.h>
 
 namespace krigcpl {
 
@@ -19,7 +19,7 @@ namespace krigcpl {
      */
 
    template <typename T>
-      class MTreeKeyObjectFactory : public DBObjectFactory {
+      class MTreeKeyObjectFactory : public MTreeObjectFactory {
       
     public:
       
@@ -40,10 +40,10 @@ namespace krigcpl {
        *
        * @param db Handle to a database.
        *
-       * @return Pointer to DBObject.
+       * @return Pointer to MTreeObject.
        */
       
-      DBObjectPtr allocateObject(toolbox::Database& db) const;
+      MTreeObjectPtr allocateObject(toolbox::Database& db) const;
 
     private:
       // The following are not implemented
@@ -55,7 +55,7 @@ namespace krigcpl {
     //
     // template specializations
     //
-   template<> DBObjectPtr 
+   template<> MTreeObjectPtr 
       MTreeKeyObjectFactory<std::string>::allocateObject(toolbox::Database& db) const;
 
 }

@@ -94,7 +94,7 @@ inline
 MTreeSearchResult::MTreeSearchResult()
 :
    d_distance_to_query_point( -MTreePoint::getMaxDistance() ),
-   d_data_object_id( DBObject::getUndefinedId() ),
+   d_data_object_id( MTreeObject::getUndefinedId() ),
    d_data_object_radius( -MTreePoint::getMaxDistance() ),
    d_is_valid_result(false)
 {
@@ -137,7 +137,7 @@ MTreeSearchResult::operator=(const MTreeSearchResult& rhs)
 */
 
 inline
-const DBObject& MTreeSearchResult::getDataObject() const
+const MTreeObject& MTreeSearchResult::getDataObject() const
 {
    return( *(d_data_object.get()) );
 }

@@ -105,11 +105,11 @@ namespace krigcpl {
     //
     
     template <typename T>
-    DBObjectPtr 
+    MTreeObjectPtr 
     MTreeKeyObject<T>::makeCopy() const
     {
 	
-      return DBObjectPtr(new MTreeKeyObject(_keyObject));
+      return MTreeObjectPtr(new MTreeKeyObject(_keyObject));
 	
     }
     

@@ -28,9 +28,6 @@ using namespace std;
 using namespace std;
 #endif
 
-//#ifndef included_DB
-//#include <base/DB.h>
-//#endif
 #ifndef included_MTreeDataStore
 #include "MTreeDataStore.h"
 #endif
@@ -40,8 +37,8 @@ using namespace std;
 #ifndef included_MTreeNode
 #include "MTreeNode.h"
 #endif
-#ifndef included_DBObject
-#include <base/DBObject.h>
+#ifndef included_MtreeObject
+#include "MTreeObject.h"
 #endif
 #ifndef included_MTreeSearchResult
 #include "MTreeSearchResult.h"
@@ -98,7 +95,7 @@ class MTreeSearchResult;
  * -# Destroy the tree by calling the dtor explicitly or letting the
  *               tree go out of scope.
  * 
- * @see DBObject
+ * @see MTreeObject
  * @see MTreePoint
  * @see MTreeNode
  * @see MTreeDataStore
@@ -148,7 +145,7 @@ public:
     */
    virtual void initializeCreate(const string& directory_name,
                                  const string& file_prefix,
-                                 const DBObjectFactory& obj_factory);
+                                 const MTreeObjectFactory& obj_factory);
 
    /*!
     * Initialize MTree to state contained in existing data files.
@@ -171,7 +168,7 @@ public:
     */
    virtual void initializeOpen(const string& directory_name,
                                const string& file_prefix,
-                               const DBObjectFactory& obj_factory);
+                               const MTreeObjectFactory& obj_factory);
 
    /*!
     * Finalize MTree index structure.
@@ -283,7 +280,7 @@ public:
     *                assertion checking is on, assertion will result if 
     *                value is less than 0.
     */
-   virtual void insertObject(DBObject& object,
+   virtual void insertObject(MTreeObject& object,
                              const MTreePoint& point,
                              double radius);
    
@@ -294,7 +291,7 @@ public:
     *                If this is not a valid id for an object indexed by
     *                the tree, the method will return a null pointer.
     */ 
-   virtual DBObjectPtr getObject(int object_id) const;
+   virtual MTreeObjectPtr getObject(int object_id) const;
 
    /*!
     * Delete object from tree. 
