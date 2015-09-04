@@ -64,7 +64,7 @@ ApproxNearestNeighborsMTree::knn(std::vector<double> const& x,
       point[i] = x[i];
    }
 
-   std::vector<DBSearchResult> searchResults;
+   std::vector<MTreeSearchResult> searchResults;
 
    m_tree->searchKNN(searchResults,
                      point,

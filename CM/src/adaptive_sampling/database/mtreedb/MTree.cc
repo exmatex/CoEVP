@@ -502,7 +502,7 @@ void MTree::deleteObject(int object_id)
 *************************************************************************
 */
 
-void MTree::searchKNN(vector<DBSearchResult>& results,
+void MTree::searchKNN(vector<MTreeSearchResult>& results,
                       const MTreePoint& query_point,
                       int k_neighbors,
                       bool make_safe)
@@ -649,7 +649,7 @@ void MTree::searchKNN(vector<DBSearchResult>& results,
 *************************************************************************
 */
 #if 0
-void MTree::searchRange(list<DBSearchResult>& results,
+void MTree::searchRange(list<MTreeSearchResult>& results,
                         const MTreePoint& query_point,
                         double radius,
                         bool make_safe)

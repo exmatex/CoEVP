@@ -85,14 +85,85 @@ Additional BSD Notice
 /*
 *************************************************************************
 *                                                                       *
-* Default ctor.                                                         *
+* Default ctor, copy ctor, and copy assignment operator.                *
 *                                                                       *
 *************************************************************************
 */
 
 inline
 MTreeSearchResult::MTreeSearchResult()
+:
+   d_distance_to_query_point( -MTreePoint::getMaxDistance() ),
+   d_data_object_id( DBObject::getUndefinedId() ),
+   d_data_object_radius( -MTreePoint::getMaxDistance() ),
+   d_is_valid_result(false)
 {
+}
+
+inline
+MTreeSearchResult::MTreeSearchResult(const MTreeSearchResult& result)
+:
+   d_query_point(result.d_query_point),
+   d_distance_to_query_point(result.d_distance_to_query_point),
+   d_data_object(result.d_data_object),
+   d_data_object_id(result.d_data_object_id),
+   d_data_object_point(result.d_data_object_point),
+   d_data_object_radius(result.d_data_object_radius),
+   d_is_valid_result(result.d_is_valid_result)
+{
+}
+
+inline 
+MTreeSearchResult& 
+MTreeSearchResult::operator=(const MTreeSearchResult& rhs)
+{
+   d_query_point = rhs.d_query_point;
+   d_distance_to_query_point = rhs.d_distance_to_query_point;
+   d_data_object = rhs.d_data_object;
+   d_data_object_id = rhs.d_data_object_id;
+   d_data_object_point = rhs.d_data_object_point;
+   d_data_object_radius = rhs.d_data_object_radius;
+   d_is_valid_result = rhs.d_is_valid_result;
+
+   return(*this);
+}
+
+/*
+*************************************************************************
+*                                                                       *
+* Accessory functions to get data members.                              * 
+*                                                                       *
+*************************************************************************
+*/
+
+inline
+const DBObject& MTreeSearchResult::getDataObject() const
+{
+   return( *(d_data_object.get()) );
+}
+
+inline 
+double MTreeSearchResult::getDistanceToQueryPoint() const
+{
+   return( d_distance_to_query_point );
+}
+
+inline
+const MTreePoint& MTreeSearchResult::getDataObjectPoint() const
+{
+   return( *(d_data_object_point.get()) );
+}
+
+inline 
+double MTreeSearchResult::getDataObjectRadius() const
+{
+   return( d_data_object_radius );
+}
+
+inline
+const MTreePoint& MTreeSearchResult::getQueryPoint() const
+{
+   return( *(d_query_point.get()) );
 }
 
 /*
@@ -124,15 +195,14 @@ int MTreeSearchResult::operator< (const MTreeSearchResult& rhs) const
 inline 
 MTreeSearchResult::MTreeSearchResult(MTreePointPtr query_point,
                                      MTreeEntryPtr entry)
+:
+   d_query_point(query_point),
+   d_distance_to_query_point(MTreePoint::getMaxDistance()),
+   d_data_object_id(entry->getDataObjectId()),
+   d_data_object_point(entry->getPoint()),
+   d_data_object_radius(entry->getRadius()),
+   d_is_valid_result(true)
 {
-
-   d_query_point = query_point;
-   d_distance_to_query_point = MTreePoint::getMaxDistance();
-   d_data_object_id = entry->getDataObjectId();
-   d_data_object_point = entry->getPoint();
-   d_data_object_radius = entry->getRadius();
-   d_is_valid_result = true;
-
 #ifdef DEBUG_CHECK_ASSERTIONS
    assert(query_point.get());
    assert(entry.get());
@@ -159,13 +229,11 @@ void MTreeSearchResult::setDistanceToQueryPoint(double distance)
    d_distance_to_query_point = distance;
 }
 
-#if 0
 inline
 bool MTreeSearchResult::isValidResult() const
 {
    return( d_is_valid_result );
 }
-#endif
 
 
 #ifdef DEBUG_NO_INLINE

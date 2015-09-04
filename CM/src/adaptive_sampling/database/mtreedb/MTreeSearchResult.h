@@ -10,11 +10,8 @@
 #ifndef included_MTreeSearchResult
 #define included_MTreeSearchResult
 
-#ifndef included_DBSearchResult
-#include <base/DBSearchResult.h>
-#endif
 #ifndef included_MTreePoint
-#include <base/MTreePoint.h>
+#include "MTreePoint.h"
 #endif
 #ifndef included_MTreeEntry
 #include "MTreeEntry.h"
@@ -34,7 +31,6 @@
  */
 
 class MTreeSearchResult
-  : public DBSearchResult
 {
 public:
    friend class MTree;
@@ -48,7 +44,7 @@ public:
    /*!
     * Copy ctor for a MTree search result.
     */
-   //   MTreeSearchResult(const MTreeSearchResult& result);
+   MTreeSearchResult(const MTreeSearchResult& result);
  
    /*!
     * Dtor for MTree search result objects.
@@ -56,11 +52,41 @@ public:
    virtual ~MTreeSearchResult();
 
    /*!
+    * MTree search result copy assignment operator.
+    */
+   MTreeSearchResult& operator=(const MTreeSearchResult& rhs); 
+
+   /*!
+    * Return const reference to data object associated with search result.
+    */
+   const DBObject& getDataObject() const;
+
+   /*!
+    * Return distance of result to query point.
+    */
+   double getDistanceToQueryPoint() const;
+
+   /*!
+    * Return const reference to point representing data object.
+    */
+   const MTreePoint& getDataObjectPoint() const;
+
+   /*!
+    * Return radius of data object.
+    */
+   double getDataObjectRadius() const;
+
+   /*!
+    * Return const reference to query point associated with search result.
+    */
+   const MTreePoint& getQueryPoint() const;
+
+   /*!
     * Less than operator to compare search results based on 
     * distance to query point.  This is used by the STL list
     * function sort() for sorting results of range search.
     */
-   virtual int operator< (const MTreeSearchResult& rhs) const;
+   int operator< (const MTreeSearchResult& rhs) const;
    
 private:
    /*
@@ -92,7 +118,7 @@ private:
     * Private function to determine whether result object
     * contains a valid data object description (called by MTree).
     */
-   //   virtual bool isValidResult() const;
+   bool isValidResult() const;
  
    /*
     * Private function to set object protection.
@@ -108,7 +134,15 @@ private:
    void finalizeSearchResult(MTreeDataStore& data_store,
                              bool make_safe);
 
+   MTreePointPtr   d_query_point;
+   double          d_distance_to_query_point;
 
+   DBObjectPtr  d_data_object;
+   int             d_data_object_id;
+   MTreePointPtr   d_data_object_point;
+   double          d_data_object_radius;
+
+   bool            d_is_valid_result;
 };
 
 #ifndef DEBUG_NO_INLINE

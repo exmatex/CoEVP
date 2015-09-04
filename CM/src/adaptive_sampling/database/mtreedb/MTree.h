@@ -343,7 +343,7 @@ public:
     *                any data object in a search result, future database
     *                operations may produce unexpected behavior.
     */
-   virtual void searchKNN(vector<DBSearchResult>& results,
+   virtual void searchKNN(vector<MTreeSearchResult>& results,
                           const MTreePoint& query_point,
                           int k_neighbors,
                           bool make_safe = false);
@@ -382,7 +382,7 @@ public:
     *                any data object in a search result, future database
     *                operations may produce unexpected behavior.
     */
-   virtual void searchRange(list<DBSearchResult>& results,
+   virtual void searchRange(list<MTreeSearchResult>& results,
                             const MTreePoint& query_point,
                             double radius,
                             bool make_safe = false);
