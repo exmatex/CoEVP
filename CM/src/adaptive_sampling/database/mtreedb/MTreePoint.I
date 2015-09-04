@@ -1,4 +1,4 @@
-// DO-NOT-DELETE revisionify.begin() 
+/* DO-NOT-DELETE revisionify.begin() */
 /*
 
                             Copyright (c) 2014.
@@ -61,55 +61,48 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-// DO-NOT-DELETE revisionify.end() 
+/* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MetricSpacePoint.cc
+// File:        MTreePoint.I
 // 
 // 
 // 
 // Description: Abstract base class for points that represent entries in a metric space.
 //
 
-#ifndef included_MetricSpacePoint_C
-#define included_MetricSpacePoint_C
-
-#include "MetricSpacePoint.h"
-
-#ifdef DEBUG_CHECK_ASSERTIONS
-#ifndef included_cassert
-#define included_cassert
-#include <cassert>
+#ifdef DEBUG_NO_INLINE
+#define inline
 #endif
-#endif
+
+
+inline 
+MTreePoint::MTreePoint()
+{
+}
+
+inline 
+MTreePoint::~MTreePoint()
+{
+}
+
+inline
+double MTreePoint::computeDistanceTo(MTreePointPtr other) const
+{
+   return( computeDistanceTo( *(other.get()) ) );
+}
+
+inline
+ostream& MTreePoint::print(ostream& stream) const
+{
+   stream << "No printClassData method supplied for MTreePoint base class" << endl;
+   return(stream);
+}
+
 
 #ifdef DEBUG_NO_INLINE
-#include "MetricSpacePoint.I"
+#undef inline
 #endif
 
-/*
-*************************************************************************
-*                                                                       *
-* Initialization, set/unset functions for static members.               *
-*                                                                       *
-*************************************************************************
-*/
-
-double MetricSpacePoint::s_max_distance = 999999.0;
-
-double MetricSpacePoint::getMaxDistance() 
-{
-   return(s_max_distance);
-}
-
-void MetricSpacePoint::setMaxDistance(double max_dist)
-{
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(max_dist > 0.0);
-#endif
-   s_max_distance = max_dist;
-}
-
-#endif
 
 
 

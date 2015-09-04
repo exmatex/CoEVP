@@ -84,7 +84,7 @@ Additional BSD Notice
 */
 
 inline 
-MTreeQuery::MTreeQuery(MetricSpacePointPtr query_point,
+MTreeQuery::MTreeQuery(MTreePointPtr query_point,
                        double query_radius,
                        MTree* tree)
 :
@@ -106,7 +106,7 @@ MTreeQuery::MTreeQuery(const MTreeQuery& query)
 }
 
 inline
-MetricSpacePointPtr MTreeQuery::getPoint() const
+MTreePointPtr MTreeQuery::getPoint() const
 {
    return( d_query_point );
 }

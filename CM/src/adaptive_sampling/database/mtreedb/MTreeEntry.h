@@ -196,7 +196,7 @@ public:
    /*!
     * Return point of this entry.
     */
-   MetricSpacePointPtr getPoint() const;
+   MTreePointPtr getPoint() const;
 
    //@}
 

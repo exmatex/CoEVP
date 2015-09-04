@@ -1,8 +1,8 @@
 #ifndef included_krigcpl_ResponsePoint
 #define included_krigcpl_ResponsePoint
 
-#ifndef included_MetricSpacePoint
-#include <base/MetricSpacePoint.h>
+#ifndef included_MTreePoint
+#include "mtreedb/MTreePoint.h"
 #endif
 
 #ifndef included_krigalg_Point
@@ -20,16 +20,16 @@ namespace krigcpl {
  *        of the response function; i.e., where the reponse is evaluated.  
  * 
  *        ResponsePoint provides an concrete implementation of the 
- *        MetricSpacePoint base class from which it is inherited.  
+ *        MTreePoint base class from which it is inherited.  
  *        Most ResponsePoint functionality is inherited from the 
  *        krigalg::Point class.
  * 
- * @see MetricSpacePoint
+ * @see MTreePoint
  * @see krigalg::Point
  */
 
 class ResponsePoint :
-   public MetricSpacePoint,
+   public MTreePoint,
    public krigalg::Point 
 {
 public:
@@ -67,7 +67,7 @@ public:
     * Ceate and return smart pointer to a (deep) copy of this response 
     * point object.
     */
-   MetricSpacePointPtr makeCopy() const;
+   MTreePointPtr makeCopy() const;
 
    /*!
     * Compute and return distance between this reponse point object and 
@@ -98,9 +98,9 @@ private:
 
    /*!
     * Implementation of pure virtual distance function declared in 
-    * MetricSpacePoint base class.
+    * MTreePoint base class.
     */
-   double computeDistanceTo(const MetricSpacePoint& other_pt) const;
+   double computeDistanceTo(const MTreePoint& other_pt) const;
 
    /*!
     * Print response point object data to the specified output stream.

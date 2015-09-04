@@ -194,9 +194,9 @@ double MTreeNodeStat::getCoveringRadius() const
    return( radius );
 }
 
-MetricSpacePointPtr MTreeNodeStat::getCenterPoint() const
+MTreePointPtr MTreeNodeStat::getCenterPoint() const
 {
-   MetricSpacePointPtr point;
+   MTreePointPtr point;
    if ( !d_node->isRoot() ) {
       point = d_node->getParentEntry()->getPoint();
    }

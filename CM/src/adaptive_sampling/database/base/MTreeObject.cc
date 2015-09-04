@@ -1,4 +1,4 @@
-/* DO-NOT-DELETE revisionify.begin() */
+// DO-NOT-DELETE revisionify.begin() 
 /*
 
                             Copyright (c) 2014.
@@ -61,115 +61,66 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-/* DO-NOT-DELETE revisionify.end() */
+// DO-NOT-DELETE revisionify.end() 
 //
-// File:        MTreeSearchResult.I
-// Package:     MTree database
+// File:        MTreeObject.cc
 // 
 // 
 // 
-// Description: Container for single data object resulting from MTree search
+// Description: Abstract base class for database objects.
 //
 
-#ifdef DEBUG_CHECK_ASSERTIONS
-#ifndef included_cassert
-#define included_cassert
-#include <cassert>
-#endif
-#endif
+#ifndef included_MTreeObject_C
+#define included_MTreeObject_C
+
+#include "MTreeObject.h"
 
 #ifdef DEBUG_NO_INLINE
-#define inline
+#include "MTreeObject.I"
 #endif
 
 /*
 *************************************************************************
 *                                                                       *
-* Default ctor.                                                         *
+* Initialization of and access to static data members.                  * 
 *                                                                       *
 *************************************************************************
 */
 
-inline
-MTreeSearchResult::MTreeSearchResult()
+int MTreeObject::s_undefined_object_id = -1;
+
+int MTreeObject::getUndefinedId()
+{
+   return( s_undefined_object_id );
+}
+
+/*
+*************************************************************************
+*                                                                       *
+* Dtor for MTreeObject class.                                           * 
+*                                                                       *
+*************************************************************************
+*/
+
+MTreeObject::~MTreeObject()
 {
 }
 
 /*
 *************************************************************************
 *                                                                       *
-* Less-than comparison operator for STL list sort() method.             *
+* Write data object id to database and call virtual method to write     *
+* concrete object data members to database.                             *
 *                                                                       *
 *************************************************************************
 */
 
-inline
-int MTreeSearchResult::operator< (const MTreeSearchResult& rhs) const
+void MTreeObject::writeToDatabase(toolbox::Database& db) const
 {
-   int ret_val = 0;
-   if ( d_distance_to_query_point < rhs.d_distance_to_query_point ) {
-      ret_val = 1;
-   }
-   return( ret_val );
+   db.putInteger("d_object_id", d_object_id);
+   putToDatabase(db);
 }
 
-/*
-*************************************************************************
-*                                                                       *
-* Private ctor for MTree search result.                                 *
-*                                                                       *
-*************************************************************************
-*/
-
-inline 
-MTreeSearchResult::MTreeSearchResult(MTreePointPtr query_point,
-                                     MTreeEntryPtr entry)
-{
-
-   d_query_point = query_point;
-   d_distance_to_query_point = MTreePoint::getMaxDistance();
-   d_data_object_id = entry->getDataObjectId();
-   d_data_object_point = entry->getPoint();
-   d_data_object_radius = entry->getRadius();
-   d_is_valid_result = true;
-
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(query_point.get());
-   assert(entry.get());
-#endif
-}
-
-/*
-*************************************************************************
-*                                                                       *
-* Private accessory functions to set data members.                      * 
-*                                                                       *
-*************************************************************************
-*/
-
-inline
-void MTreeSearchResult::setQueryPoint(MTreePointPtr query_point) 
-{
-   d_query_point = query_point;
-}
-
-inline
-void MTreeSearchResult::setDistanceToQueryPoint(double distance)
-{
-   d_distance_to_query_point = distance;
-}
-
-#if 0
-inline
-bool MTreeSearchResult::isValidResult() const
-{
-   return( d_is_valid_result );
-}
-#endif
-
-
-#ifdef DEBUG_NO_INLINE
-#undef inline
 #endif
 
 

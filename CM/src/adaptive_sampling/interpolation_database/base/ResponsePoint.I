@@ -92,7 +92,7 @@ namespace krigcpl {
 inline 
 ResponsePoint::ResponsePoint()
 : 
-MetricSpacePoint(), 
+   MTreePoint(), 
 krigalg::Point()
 {
 }
@@ -100,7 +100,7 @@ krigalg::Point()
 inline 
 ResponsePoint::ResponsePoint(int dimension)
 : 
-MetricSpacePoint(), 
+   MTreePoint(), 
 krigalg::Point(dimension)
 {
 }
@@ -108,7 +108,7 @@ krigalg::Point(dimension)
 inline
 ResponsePoint::ResponsePoint(int dimension, double value)
 :
-MetricSpacePoint(),
+   MTreePoint(),
 krigalg::Point(dimension, value)
 {
 }
@@ -117,7 +117,7 @@ inline
 ResponsePoint::ResponsePoint(int            dimension,
                              const double * coordinates)
   :
-  MetricSpacePoint(),
+   MTreePoint(),
   krigalg::Point(dimension, coordinates)
 {
 }
@@ -125,7 +125,7 @@ ResponsePoint::ResponsePoint(int            dimension,
 inline
 ResponsePoint::ResponsePoint(const ResponsePoint& response_pt)
 :
-MetricSpacePoint(),
+   MTreePoint(),
 krigalg::Point(response_pt.size())
 {
    mtl::copy(response_pt, *this);
@@ -137,9 +137,9 @@ ResponsePoint::~ResponsePoint()
 }
 
 inline
-MetricSpacePointPtr ResponsePoint::makeCopy() const
+MTreePointPtr ResponsePoint::makeCopy() const
 {
-   return( MetricSpacePointPtr( new ResponsePoint(*this) ) );
+   return( MTreePointPtr( new ResponsePoint(*this) ) );
 }
 
 inline
@@ -150,7 +150,7 @@ double ResponsePoint::distance(const ResponsePoint& other_pt) const
 
 inline
 double ResponsePoint::computeDistanceTo(
-   const MetricSpacePoint& other_pt) const
+   const MTreePoint& other_pt) const
 {
    const ResponsePoint* t_other = 
       dynamic_cast< const ResponsePoint* >(&other_pt);

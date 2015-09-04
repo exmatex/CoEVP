@@ -63,20 +63,12 @@ Additional BSD Notice
 */
 /* DO-NOT-DELETE revisionify.end() */
 //
-// File:        MTreeSearchResult.I
-// Package:     MTree database
+// File:        MTreeObject.I
 // 
 // 
 // 
-// Description: Container for single data object resulting from MTree search
+// Description: Abstract base class for database objects
 //
-
-#ifdef DEBUG_CHECK_ASSERTIONS
-#ifndef included_cassert
-#define included_cassert
-#include <cassert>
-#endif
-#endif
 
 #ifdef DEBUG_NO_INLINE
 #define inline
@@ -85,87 +77,56 @@ Additional BSD Notice
 /*
 *************************************************************************
 *                                                                       *
-* Default ctor.                                                         *
-*                                                                       *
-*************************************************************************
-*/
-
-inline
-MTreeSearchResult::MTreeSearchResult()
-{
-}
-
-/*
-*************************************************************************
-*                                                                       *
-* Less-than comparison operator for STL list sort() method.             *
-*                                                                       *
-*************************************************************************
-*/
-
-inline
-int MTreeSearchResult::operator< (const MTreeSearchResult& rhs) const
-{
-   int ret_val = 0;
-   if ( d_distance_to_query_point < rhs.d_distance_to_query_point ) {
-      ret_val = 1;
-   }
-   return( ret_val );
-}
-
-/*
-*************************************************************************
-*                                                                       *
-* Private ctor for MTree search result.                                 *
+* Default ctor for database object base class.                          *
 *                                                                       *
 *************************************************************************
 */
 
 inline 
-MTreeSearchResult::MTreeSearchResult(MTreePointPtr query_point,
-                                     MTreeEntryPtr entry)
+MTreeObject::MTreeObject()
+:  d_object_id( MTreeObject::getUndefinedId() )
 {
-
-   d_query_point = query_point;
-   d_distance_to_query_point = MTreePoint::getMaxDistance();
-   d_data_object_id = entry->getDataObjectId();
-   d_data_object_point = entry->getPoint();
-   d_data_object_radius = entry->getRadius();
-   d_is_valid_result = true;
-
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(query_point.get());
-   assert(entry.get());
-#endif
 }
 
 /*
 *************************************************************************
 *                                                                       *
-* Private accessory functions to set data members.                      * 
+* Default virtual print method.                                         *
 *                                                                       *
 *************************************************************************
 */
 
 inline
-void MTreeSearchResult::setQueryPoint(MTreePointPtr query_point) 
+ostream& MTreeObject::print(ostream& stream) const
 {
-   d_query_point = query_point;
+   stream << "No printClassData method supplied for derived MTreeObject class." << endl;
+   stream << "d_object_id = " << d_object_id << endl;
+   return(stream);
+}
+
+/*
+*************************************************************************
+*                                                                       *
+* Accessory functions to get and set object identifier.                 *
+*                                                                       *
+*************************************************************************
+*/
+
+inline
+int MTreeObject::getObjectId() const
+{
+   return( d_object_id );
 }
 
 inline
-void MTreeSearchResult::setDistanceToQueryPoint(double distance)
+void MTreeObject::setObjectId(int id)
 {
-   d_distance_to_query_point = distance;
-}
-
-#if 0
-inline
-bool MTreeSearchResult::isValidResult() const
-{
-   return( d_is_valid_result );
-}
+#ifdef DEBUG_CHECK_ASSERTIONS
+   assert(d_object_id == MTreeObject::getUndefinedId());
+   assert(id >= 0);
 #endif
+   d_object_id = id;
+}
 
 
 #ifdef DEBUG_NO_INLINE

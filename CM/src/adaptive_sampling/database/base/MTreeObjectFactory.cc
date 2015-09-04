@@ -1,4 +1,4 @@
-/* DO-NOT-DELETE revisionify.begin() */
+// DO-NOT-DELETE revisionify.begin() 
 /*
 
                             Copyright (c) 2014.
@@ -61,115 +61,44 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-/* DO-NOT-DELETE revisionify.end() */
+// DO-NOT-DELETE revisionify.end() 
 //
-// File:        MTreeSearchResult.I
-// Package:     MTree database
+// File:        MTreeObjectFactory.h
 // 
 // 
 // 
-// Description: Container for single data object resulting from MTree search
+// Description: Abstract base class for database object factory.
 //
 
-#ifdef DEBUG_CHECK_ASSERTIONS
-#ifndef included_cassert
-#define included_cassert
-#include <cassert>
-#endif
-#endif
+#ifndef included_MTreeObjectFactory_C
+#define included_MTreeObjectFactory_C
 
-#ifdef DEBUG_NO_INLINE
-#define inline
-#endif
+#include "MTreeObjectFactory.h"
 
 /*
 *************************************************************************
 *                                                                       *
-* Default ctor.                                                         *
+* Default ctor and dtor for MTreeObjectFactory class and default        *
+* implementation of clone method.                                       *  
 *                                                                       *
 *************************************************************************
 */
 
-inline
-MTreeSearchResult::MTreeSearchResult()
+MTreeObjectFactory::MTreeObjectFactory()
 {
 }
 
-/*
-*************************************************************************
-*                                                                       *
-* Less-than comparison operator for STL list sort() method.             *
-*                                                                       *
-*************************************************************************
-*/
-
-inline
-int MTreeSearchResult::operator< (const MTreeSearchResult& rhs) const
+MTreeObjectFactory::~MTreeObjectFactory()
 {
-   int ret_val = 0;
-   if ( d_distance_to_query_point < rhs.d_distance_to_query_point ) {
-      ret_val = 1;
-   }
-   return( ret_val );
 }
 
-/*
-*************************************************************************
-*                                                                       *
-* Private ctor for MTree search result.                                 *
-*                                                                       *
-*************************************************************************
-*/
-
-inline 
-MTreeSearchResult::MTreeSearchResult(MTreePointPtr query_point,
-                                     MTreeEntryPtr entry)
+MTreeObjectPtr 
+MTreeObjectFactory::cloneObject(const MTreeObject& object) const
 {
-
-   d_query_point = query_point;
-   d_distance_to_query_point = MTreePoint::getMaxDistance();
-   d_data_object_id = entry->getDataObjectId();
-   d_data_object_point = entry->getPoint();
-   d_data_object_radius = entry->getRadius();
-   d_is_valid_result = true;
-
-#ifdef DEBUG_CHECK_ASSERTIONS
-   assert(query_point.get());
-   assert(entry.get());
-#endif
+   return( object.makeCopy() );
 }
 
-/*
-*************************************************************************
-*                                                                       *
-* Private accessory functions to set data members.                      * 
-*                                                                       *
-*************************************************************************
-*/
 
-inline
-void MTreeSearchResult::setQueryPoint(MTreePointPtr query_point) 
-{
-   d_query_point = query_point;
-}
-
-inline
-void MTreeSearchResult::setDistanceToQueryPoint(double distance)
-{
-   d_distance_to_query_point = distance;
-}
-
-#if 0
-inline
-bool MTreeSearchResult::isValidResult() const
-{
-   return( d_is_valid_result );
-}
-#endif
-
-
-#ifdef DEBUG_NO_INLINE
-#undef inline
 #endif
 
 

@@ -99,7 +99,7 @@ class MTreeSearchResult;
  *               tree go out of scope.
  * 
  * @see DBObject
- * @see MetricSpacePoint
+ * @see MTreePoint
  * @see MTreeNode
  * @see MTreeDataStore
  */
@@ -284,7 +284,7 @@ public:
     *                value is less than 0.
     */
    virtual void insertObject(DBObject& object,
-                             const MetricSpacePoint& point,
+                             const MTreePoint& point,
                              double radius);
    
    /*!
@@ -344,7 +344,7 @@ public:
     *                operations may produce unexpected behavior.
     */
    virtual void searchKNN(vector<DBSearchResult>& results,
-                          const MetricSpacePoint& query_point,
+                          const MTreePoint& query_point,
                           int k_neighbors,
                           bool make_safe = false);
 #if 0
@@ -383,7 +383,7 @@ public:
     *                operations may produce unexpected behavior.
     */
    virtual void searchRange(list<DBSearchResult>& results,
-                            const MetricSpacePoint& query_point,
+                            const MTreePoint& query_point,
                             double radius,
                             bool make_safe = false);
 #endif

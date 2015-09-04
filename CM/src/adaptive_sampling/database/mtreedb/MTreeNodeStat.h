@@ -10,8 +10,8 @@
 #ifndef included_MTreeNodeStat
 #define included_MTreeNodeStat
 
-#ifndef included_MetricSpacePoint
-#include <base/MetricSpacePoint.h>
+#ifndef included_MTreePoint
+#include "MTreePoint.h"
 #endif
 #ifndef included_MTreeNode
 #include "MTreeNode.h"
@@ -29,7 +29,7 @@ using namespace std;
  * statistical informatio for a single MTree node.
  * 
  * @see MTreeNode 
- * @see MetricSpacePoint 
+ * @see MTreePoint 
  */
 
 class MTreeNodeStat
@@ -102,7 +102,7 @@ public:
     * this MTreeNodeStat.  Note: if node is root of tree, it has no 
     * center point and a null pointer is returned.
     */
-   MetricSpacePointPtr getCenterPoint() const;
+   MTreePointPtr getCenterPoint() const;
 
    /*!
     * Return total number of data objects in all leaf nodes of node

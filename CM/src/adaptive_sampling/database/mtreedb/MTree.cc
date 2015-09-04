@@ -252,7 +252,7 @@ void MTree::setMaxNodeEntries(int max_entries)
 */
  
 void MTree::insertObject(DBObject& object,
-                         const MetricSpacePoint& point,
+                         const MTreePoint& point,
                          double radius)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
@@ -503,7 +503,7 @@ void MTree::deleteObject(int object_id)
 */
 
 void MTree::searchKNN(vector<DBSearchResult>& results,
-                      const MetricSpacePoint& query_point,
+                      const MTreePoint& query_point,
                       int k_neighbors,
                       bool make_safe)
 {
@@ -518,7 +518,7 @@ void MTree::searchKNN(vector<DBSearchResult>& results,
        * and queue of nodes to search.
        */
 
-      const double max_dist = MetricSpacePoint::getMaxDistance();
+      const double max_dist = MTreePoint::getMaxDistance();
       const int    klast    = k_neighbors - 1;
 
       MTreeQuery query( query_point.makeCopy(), max_dist, this );
@@ -650,7 +650,7 @@ void MTree::searchKNN(vector<DBSearchResult>& results,
 */
 #if 0
 void MTree::searchRange(list<DBSearchResult>& results,
-                        const MetricSpacePoint& query_point,
+                        const MTreePoint& query_point,
                         double radius,
                         bool make_safe)
 {

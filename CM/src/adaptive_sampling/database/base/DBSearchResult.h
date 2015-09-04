@@ -9,8 +9,8 @@
 #ifndef included_DBSearchResult
 #define included_DBSearchResult
 
-#ifndef included_MetricSpacePoint
-#include <base/MetricSpacePoint.h>
+#ifndef included_MTreePoint
+#include <mtreedb/MTreePoint.h>
 #endif
 #ifndef included_DBObjectFactory
 #include <base/DBObjectFactory.h>
@@ -20,7 +20,7 @@
  * @brief DBSearchResult is a container for information about
  * a single data object retrieved from a DB during a search. 
  * 
- * @see MetricSpacePoint 
+ * @see MTreePoint 
  */
 
 class DBSearchResult
@@ -68,7 +68,7 @@ public:
    /*!
     * Return const reference to point representing data object.
     */
-   virtual const MetricSpacePoint& getDataObjectPoint() const;
+   virtual const MTreePoint& getDataObjectPoint() const;
 
    /*!
     * Return radius of data object.
@@ -78,7 +78,7 @@ public:
    /*!
     * Return const reference to query point associated with search result.
     */
-   virtual const MetricSpacePoint& getQueryPoint() const;
+   virtual const MTreePoint& getQueryPoint() const;
 
    bool isValidResult() const {return d_is_valid_result;}
 
@@ -91,9 +91,9 @@ protected:
    DBObjectPtr     d_data_object;
    double          d_data_object_radius;
    bool            d_is_valid_result;
-   MetricSpacePointPtr   d_query_point;
+   MTreePointPtr   d_query_point;
    int             d_data_object_id;
-   MetricSpacePointPtr   d_data_object_point;
+   MTreePointPtr   d_data_object_point;
 
 private:
 };

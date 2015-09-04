@@ -13,8 +13,8 @@
 #ifndef included_DBSearchResult
 #include <base/DBSearchResult.h>
 #endif
-#ifndef included_MetricSpacePoint
-#include <base/MetricSpacePoint.h>
+#ifndef included_MTreePoint
+#include <base/MTreePoint.h>
 #endif
 #ifndef included_MTreeEntry
 #include "MTreeEntry.h"
@@ -30,7 +30,7 @@
  * @brief MTreeSearchResult is a container for information about
  * a single data object retrieved from an MTree during a search. 
  * 
- * @see MetricSpacePoint 
+ * @see MTreePoint 
  */
 
 class MTreeSearchResult
@@ -74,13 +74,13 @@ private:
     * checking is on, an assertion is thrown if a null pointer 
     * is passed.
     */
-   MTreeSearchResult(MetricSpacePointPtr query_point,
+   MTreeSearchResult(MTreePointPtr query_point,
                      MTreeEntryPtr entry);
 
    /*!
     * Private function to set query point (called by MTree).
     */
-   void setQueryPoint(MetricSpacePointPtr query_point);
+   void setQueryPoint(MTreePointPtr query_point);
 
    /*
     * Private function to set distance of result to query point 

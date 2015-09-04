@@ -92,9 +92,9 @@ Additional BSD Notice
 inline
 DBSearchResult::DBSearchResult()
    :
-   d_distance_to_query_point( -MetricSpacePoint::getMaxDistance() ),
+   d_distance_to_query_point( -MTreePoint::getMaxDistance() ),
    d_data_object_id( DBObject::getUndefinedId() ),
-   d_data_object_radius( -MetricSpacePoint::getMaxDistance() ),
+   d_data_object_radius( -MTreePoint::getMaxDistance() ),
    d_is_valid_result(false)
 {
 }
@@ -148,7 +148,7 @@ double DBSearchResult::getDistanceToQueryPoint() const
 }
 
 inline
-const MetricSpacePoint& DBSearchResult::getDataObjectPoint() const
+const MTreePoint& DBSearchResult::getDataObjectPoint() const
 {
    return( *(d_data_object_point.get()) );
 }
@@ -160,7 +160,7 @@ double DBSearchResult::getDataObjectRadius() const
 }
 
 inline
-const MetricSpacePoint& DBSearchResult::getQueryPoint() const
+const MTreePoint& DBSearchResult::getQueryPoint() const
 {
    return( *(d_query_point.get()) );
 }

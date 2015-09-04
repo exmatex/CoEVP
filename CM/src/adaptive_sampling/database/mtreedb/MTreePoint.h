@@ -1,5 +1,5 @@
-#ifndef included_MetricSpacePoint
-#define included_MetricSpacePoint
+#ifndef included_MTreePoint
+#define included_MTreePoint
 
 #ifndef included_iostream
 #define included_iostream
@@ -11,16 +11,15 @@ using namespace std;
 #include "toolbox/database/Database.h"
 #endif
 
-
-class MetricSpacePoint;
-typedef std::shared_ptr<MetricSpacePoint> MetricSpacePointPtr;
+class MTreePoint;
+typedef std::shared_ptr<MTreePoint> MTreePointPtr;
 
 /*!
- * @brief MetricSpacePoint is an abstract base class declaring the interface for 
+ * @brief MTreePoint is an abstract base class declaring the interface for 
  * points (i.e., feature vectors) of a metric space.  
  */
 
-class MetricSpacePoint 
+class MTreePoint 
 {
 public:
    /*!
@@ -52,24 +51,24 @@ public:
    /*!
     * Default ctor for a metric space point object.
     */
-   MetricSpacePoint();
+   MTreePoint();
 
    /*!
     * Virtual dtor for metric space point objects.
     */
-   virtual ~MetricSpacePoint();
+   virtual ~MTreePoint();
 
    /*!
     * Pure virtual method to create and return smart pointer to a 
     * (deep) copy of this point object.
     */
-   virtual MetricSpacePointPtr makeCopy() const = 0;
+   virtual MTreePointPtr makeCopy() const = 0;
 
    /*!
     * Pure virtual method to compute and return distance between this point 
     * and another point given as a const reference.
     */ 
-   virtual double computeDistanceTo(const MetricSpacePoint& other) const = 0;
+   virtual double computeDistanceTo(const MTreePoint& other) const = 0;
 
    /*!
     * Pure virtual method to put point data to given database object.
@@ -83,11 +82,11 @@ public:
 
    /*!
     * Method to compute and return distance between this point 
-    * and another point given as an MetricSpacePointPtr.  Method is for
-    * convenience and calls computeDistanceTo(const MetricSpacePoint& other) 
+    * and another point given as an MTreePointPtr.  Method is for
+    * convenience and calls computeDistanceTo(const MTreePoint& other) 
     * version.
     */ 
-   double computeDistanceTo(MetricSpacePointPtr other) const;
+   double computeDistanceTo(MTreePointPtr other) const;
 
    /*!
     * Virtual method to print concrete point object data to the specified 
@@ -97,8 +96,8 @@ public:
 
 private:
    // The following are not implemented
-   MetricSpacePoint(const MetricSpacePoint&);
-   MetricSpacePoint& operator=(const MetricSpacePoint&);
+   MTreePoint(const MTreePoint&);
+   MTreePoint& operator=(const MTreePoint&);
 
    static double s_max_distance;
 
@@ -106,6 +105,6 @@ private:
 
 
 #ifndef DEBUG_NO_INLINE
-#include "MetricSpacePoint.I"
+#include "MTreePoint.I"
 #endif
 #endif
