@@ -61,6 +61,7 @@ Additional BSD Notice
 
 */
 
+#include <cstdlib>
 #include <cstring>
 #include "ElastoViscoPlasticity.h"
 #include "xtensor.h"
