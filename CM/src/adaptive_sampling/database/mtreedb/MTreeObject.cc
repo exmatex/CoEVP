@@ -1,4 +1,4 @@
-/* DO-NOT-DELETE revisionify.begin() */
+// DO-NOT-DELETE revisionify.begin() 
 /*
 
                             Copyright (c) 2014.
@@ -61,113 +61,66 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-/* DO-NOT-DELETE revisionify.end() */
+// DO-NOT-DELETE revisionify.end() 
 //
-// File:        DBSearchResult.I
+// File:        MTreeObject.cc
 // 
 // 
 // 
-// Description: Container for single data object resulting from DB search
+// Description: Abstract base class for database objects.
 //
 
-#ifdef DEBUG_CHECK_ASSERTIONS
-#ifndef included_cassert
-#define included_cassert
-#include <cassert>
-#endif
-#endif
+#ifndef included_MTreeObject_C
+#define included_MTreeObject_C
+
+#include "MTreeObject.h"
 
 #ifdef DEBUG_NO_INLINE
-#define inline
+#include "MTreeObject.I"
 #endif
 
 /*
 *************************************************************************
 *                                                                       *
-* Default ctor, copy ctor, and copy assignment operator.                *
+* Initialization of and access to static data members.                  * 
 *                                                                       *
 *************************************************************************
 */
 
-inline
-DBSearchResult::DBSearchResult()
-   :
-   d_distance_to_query_point( -MetricSpacePoint::getMaxDistance() ),
-   d_data_object_id( DBObject::getUndefinedId() ),
-   d_data_object_radius( -MetricSpacePoint::getMaxDistance() ),
-   d_is_valid_result(false)
-{
-}
+int MTreeObject::s_undefined_object_id = -1;
 
-inline
-DBSearchResult::DBSearchResult(const DBSearchResult& result)
-   :
-   d_query_point(result.d_query_point),
-   d_distance_to_query_point(result.d_distance_to_query_point),
-   d_data_object(result.d_data_object),
-   d_data_object_id(result.d_data_object_id),
-   d_data_object_point(result.d_data_object_point),
-   d_data_object_radius(result.d_data_object_radius),
-   d_is_valid_result(result.d_is_valid_result)
+int MTreeObject::getUndefinedId()
 {
-}
-
-inline 
-DBSearchResult& 
-DBSearchResult::operator=(const DBSearchResult& rhs)
-{
-   d_query_point = rhs.d_query_point;
-   d_distance_to_query_point = rhs.d_distance_to_query_point;
-   d_data_object = rhs.d_data_object;
-   d_data_object_id = rhs.d_data_object_id;
-   d_data_object_point = rhs.d_data_object_point;
-   d_data_object_radius = rhs.d_data_object_radius;
-   d_is_valid_result = rhs.d_is_valid_result;
-
-   return(*this);
+   return( s_undefined_object_id );
 }
 
 /*
 *************************************************************************
 *                                                                       *
-* Accessory functions to get data members.                              * 
+* Dtor for MTreeObject class.                                           * 
 *                                                                       *
 *************************************************************************
 */
 
-inline
-const DBObject& DBSearchResult::getDataObject() const
+MTreeObject::~MTreeObject()
 {
-   return( *(d_data_object.get()) );
 }
 
-inline 
-double DBSearchResult::getDistanceToQueryPoint() const
+/*
+*************************************************************************
+*                                                                       *
+* Write data object id to database and call virtual method to write     *
+* concrete object data members to database.                             *
+*                                                                       *
+*************************************************************************
+*/
+
+void MTreeObject::writeToDatabase(toolbox::Database& db) const
 {
-   return( d_distance_to_query_point );
+   db.putInteger("d_object_id", d_object_id);
+   putToDatabase(db);
 }
 
-inline
-const MetricSpacePoint& DBSearchResult::getDataObjectPoint() const
-{
-   return( *(d_data_object_point.get()) );
-}
-
-inline 
-double DBSearchResult::getDataObjectRadius() const
-{
-   return( d_data_object_radius );
-}
-
-inline
-const MetricSpacePoint& DBSearchResult::getQueryPoint() const
-{
-   return( *(d_query_point.get()) );
-}
-
-
-#ifdef DEBUG_NO_INLINE
-#undef inline
 #endif
 
 

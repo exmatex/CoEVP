@@ -63,59 +63,47 @@ Additional BSD Notice
 */
 /* DO-NOT-DELETE revisionify.end() */
 //
-// File:        DBKrigingModelObjectFactory.I
-// Package:     kriging coupler
+// File:        MTreePoint.I
 // 
-// Revision:    $Revision$
-// Modified:    $Date$
-// Description: DB model object factory
+// 
+// 
+// Description: Abstract base class for points that represent entries in a metric space.
 //
 
-#include "kriging_db/DBKrigingModelObject.h"
+#ifdef DEBUG_NO_INLINE
+#define inline
+#endif
 
-namespace krigcpl {
 
-    //
-    // Constructor.
-    //
-
-    template <typename T>
-    DBKrigingModelObjectFactory<T>::DBKrigingModelObjectFactory()
-    {
-
-      return;
-      
-    }
-
-    //
-    // Destructor.
-    //
-
-    template <typename T>
-    DBKrigingModelObjectFactory<T>::~DBKrigingModelObjectFactory()
-    {
-
-      return;
-
-    }
-
-    //
-    // Allocate object.
-    //
-
-    template <typename T>
-    //    mtreedb::DBObjectPtr 
-    DBObjectPtr 
-    DBKrigingModelObjectFactory<T>::allocateObject(toolbox::Database& db) const
-    {
-
-      (void)db;
-      //      mtreedb::DBObjectPtr dummy;
-      DBObjectPtr dummy;
-      return(dummy);
-      
-    }
-
+inline 
+MTreePoint::MTreePoint()
+{
 }
+
+inline 
+MTreePoint::~MTreePoint()
+{
+}
+
+inline
+double MTreePoint::computeDistanceTo(MTreePointPtr other) const
+{
+   return( computeDistanceTo( *(other.get()) ) );
+}
+
+inline
+ostream& MTreePoint::print(ostream& stream) const
+{
+   stream << "No printClassData method supplied for MTreePoint base class" << endl;
+   return(stream);
+}
+
+
+#ifdef DEBUG_NO_INLINE
+#undef inline
+#endif
+
+
+
 
 

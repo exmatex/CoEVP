@@ -38,11 +38,11 @@ using namespace std;
 #endif
 #endif
 
-#ifndef included_DBObject
-#include <base/DBObject.h>
+#ifndef included_MTreeObject
+#include "MTreeObject.h"
 #endif
-#ifndef included_DBObjectFactory
-#include <base/DBObjectFactory.h>
+#ifndef included_MTreeObjectFactory
+#include "MTreeObjectFactory.h"
 #endif
 
 #ifndef NULL
@@ -87,8 +87,8 @@ typedef std::shared_ptr<MTreeEntry> MTreeEntryPtr;
  * 
  * @see MTree
  * @see MTreeNode
- * @see DBObject
- * @see DBObjectFactory
+ * @see MTreeObject
+ * @see MTreeObjectFactory
  */
 
 class MTreeDataStore
@@ -136,7 +136,7 @@ public:
     * pointer will throw an assertion.
     */ 
    void create(MTree* mtree,
-               const DBObjectFactory* obj_factory,
+               const MTreeObjectFactory* obj_factory,
                const string& directory_name,
                const string& file_prefix);
 
@@ -166,7 +166,7 @@ public:
     * an unrecoverable error will result.
     */ 
    void open(MTree* mtree,
-             const DBObjectFactory* obj_factory,
+             const MTreeObjectFactory* obj_factory,
              const string& directory_name,
              const string& file_prefix); 
 
@@ -243,7 +243,7 @@ public:
     * @param object  Reference to object to be added.  The reference
     *                is non-const since method sets object identifier.
     */
-   void addObject(DBObject& object);
+   void addObject(MTreeObject& object);
 
    /*!
     * Remove object from data store.
@@ -272,7 +272,7 @@ public:
     * 
     * @param  object_id  Integer identifier of data object.
     */
-   DBObjectPtr getObjectCopy(int object_id);
+   MTreeObjectPtr getObjectCopy(int object_id);
 
    /*!
     * Return pointer to data object in store with given identifier.
@@ -286,7 +286,7 @@ public:
     * routine to not modify the data object returned.  If it is
     * altered in any way, then unexpected behavior can result.
     */
-   DBObjectPtr getObjectPtr(int object_id);
+   MTreeObjectPtr getObjectPtr(int object_id);
 
    /*!
     * Get node owning object with given identifier. 
@@ -559,15 +559,15 @@ private:
    class ObjectInfo
    {
       public:
-         ObjectInfo(DBObjectPtr object);
+         ObjectInfo(MTreeObjectPtr object);
 
          ~ObjectInfo();
 
-         DBObjectPtr getObject() const;
+         MTreeObjectPtr getObject() const;
 
          void resetObjectPtr();
 
-         void setObjectPtr(DBObjectPtr obj);
+         void setObjectPtr(MTreeObjectPtr obj);
 
          void setOwnerLeafNodeInfo(int leaf_node_id,
                                    int entry_position);
@@ -590,7 +590,7 @@ private:
          ObjectInfo(const ObjectInfo&);
          ObjectInfo& operator = (const ObjectInfo&);
 
-         DBObjectPtr d_object_ptr;
+         MTreeObjectPtr d_object_ptr;
          int    d_owner_leaf_node_id;
          int    d_owner_leaf_node_entry_position;
          bool   d_in_file;
@@ -638,7 +638,7 @@ private:
           OBJECT_FILE_VECTOR_ALLOCATION_CHUNK = 50 };
 
    MTree* d_mtree;
-   const DBObjectFactory* d_object_factory;
+   const MTreeObjectFactory* d_object_factory;
 
    bool      d_is_initialized;
    bool      d_is_open;

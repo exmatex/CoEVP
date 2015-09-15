@@ -1,15 +1,15 @@
 //
-// File:        DBKeyObject.h
+// File:        MTreeKeyObject.h
 // 
 // Revision:    $Revision$
 // Modified:    $Date$
 // Description: DB key object
 //
 
-#ifndef included_krigcpl_DBKeyObject_h
-#define included_krigcpl_DBKeyObject_h
+#ifndef included_krigcpl_MTreeKeyObject_h
+#define included_krigcpl_MTreeKeyObject_h
 
-#include <base/DBObject.h>
+#include <mtreedb/MTreeObject.h>
 
 namespace krigcpl {
 
@@ -18,31 +18,31 @@ namespace krigcpl {
      */
 
     template <typename T>
-    class DBKeyObject : public DBObject
+    class MTreeKeyObject : public MTreeObject
     {
       
     public:
 
-      DBKeyObject() {;}
+      MTreeKeyObject() {;}
 
       /*!
-       * @brief Constructor for the DBKeyObject.
+       * @brief Constructor for the MTreeKeyObject.
        * 
        * @param keyObject A handle to a key object to be stored on 
        *                    in a DB.
        */
-      DBKeyObject(const T & keyObject);
+      MTreeKeyObject(const T & keyObject);
 
       /*!
-       * @brief Destructor for the DBKeyObject.
+       * @brief Destructor for the MTreeKeyObject.
        */
-      virtual ~DBKeyObject();
+      virtual ~MTreeKeyObject();
 
       /*!
        * @brief Concrete virtual method to create and return smart
        * pointer to a (deep) copy of this object.
        */
-      DBObjectPtr makeCopy() const;
+      MTreeObjectPtr makeCopy() const;
 
       /*!
        * @brief Concrete virtual method to write data members to given
@@ -66,8 +66,8 @@ namespace krigcpl {
       //
       // not implemented
       //
-      DBKeyObject(const DBKeyObject &);
-      const DBKeyObject & operator=(const DBKeyObject &);
+      MTreeKeyObject(const MTreeKeyObject &);
+      const MTreeKeyObject & operator=(const MTreeKeyObject &);
 
       //
       // data
@@ -78,6 +78,6 @@ namespace krigcpl {
 
 }
 
-#include "DBKeyObject.I"
+#include "MTreeKeyObject.I"
 
-#endif // included_krigcpl_DBKeyObject_h
+#endif // included_krigcpl_MTreeKeyObject_h

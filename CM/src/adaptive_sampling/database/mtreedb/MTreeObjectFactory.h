@@ -1,16 +1,16 @@
 //
-// File:        DBObjectFactory.h
+// File:        MTreeObjectFactory.h
 // 
 // 
 // 
 // Description: Abstract base class for database object factory.
 //
 
-#ifndef included_DBObjectFactory
-#define included_DBObjectFactory
+#ifndef included_MTreeObjectFactory
+#define included_MTreeObjectFactory
 
-#ifndef included_DBObject
-#include "DBObject.h"
+#ifndef included_MTreeObject
+#include "MTreeObject.h"
 #endif
 
 #ifndef included_toolbox_Database
@@ -19,7 +19,7 @@
 
 
 /*!
- * @brief DBObjectFactory is an abstract base class used to allocate 
+ * @brief MTreeObjectFactory is an abstract base class used to allocate 
  *        database objects and a concrete instance must be provided
  *        for database objects.
  *
@@ -28,39 +28,39 @@
  * be constructed without knowing the concrete type specifically.
  */
 
-class DBObjectFactory
+class MTreeObjectFactory
 {
 public:
 
    /*!
-    * DBObjectFactory default ctor.
+    * MTreeObjectFactory default ctor.
     */
-   DBObjectFactory();
+   MTreeObjectFactory();
 
    /*!
-    * Virtual dtor for DBObjectFactory.
+    * Virtual dtor for MTreeObjectFactory.
     */
-   virtual ~DBObjectFactory();
+   virtual ~MTreeObjectFactory();
 
    /*!
     * Pure virtual method to create and return smart pointer to a
     * new data object and set its data members from the contents of
     * the given database. 
     */
-   virtual DBObjectPtr allocateObject(toolbox::Database& db) const = 0;
+   virtual MTreeObjectPtr allocateObject(toolbox::Database& db) const = 0;
 
    /*!
     * Virtual method to create an exact copy of the given data object
     * and return smart pointer to the copy.  
     *
-    * The default implementation calls the DBObject method makeCopy().
+    * The default implementation calls the MtreeObject method makeCopy().
     */
-   virtual DBObjectPtr cloneObject(const DBObject& object) const;
+   virtual MTreeObjectPtr cloneObject(const MTreeObject& object) const;
 
 private:
    // The following are not implemented
-   DBObjectFactory(const DBObjectFactory&);
-   void operator=(const DBObjectFactory&);
+   MTreeObjectFactory(const MTreeObjectFactory&);
+   void operator=(const MTreeObjectFactory&);
 
 };
 

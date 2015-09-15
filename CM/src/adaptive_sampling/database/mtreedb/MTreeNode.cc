@@ -334,7 +334,7 @@ MTreeNode::searchBestSubtreeForInsert(MTreeEntryPtr new_entry) const
              * doesn't apply.  Thus, we cannot conclude that the regions 
              * defined by the test entry and the new entry do not intersect.
              */
-            dist_penalty += rad_sum - MetricSpacePoint::getMaxDistance(); 
+            dist_penalty += rad_sum - MTreePoint::getMaxDistance(); 
          }
 
          if ( (best_penalty < toolbox::MathUtilities<double>::getMax()) &&
@@ -365,7 +365,7 @@ MTreeNode::searchBestSubtreeForInsert(MTreeEntryPtr new_entry) const
              * We set tpenalty so that it will be assigned to the nearest
              * such entry.
              */     
-            tpenalty = tdistance - MetricSpacePoint::getMaxDistance();
+            tpenalty = tdistance - MTreePoint::getMaxDistance();
          }
 
       }
@@ -903,7 +903,7 @@ bool MTreeNode::promoteTwo(MTreeEntryPtr& entry1,
 
       case MIN_OVERLAP_PROMOTION: {
 
-         double min_overlap = -MetricSpacePoint::getMaxDistance();
+         double min_overlap = -MTreePoint::getMaxDistance();
  
          for (int ie1 = 0; ie1 < num_entries; ++ie1) {
             MTreeEntryPtr entry1(d_entries[ie1]);

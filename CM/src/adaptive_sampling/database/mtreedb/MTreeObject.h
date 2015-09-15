@@ -1,13 +1,13 @@
 //
-// File:        DBObject.h
+// File:        MTreeObject.h
 // 
 // 
 // 
 // Description: Abstract base class for database objects.
 //
 
-#ifndef included_DBObject
-#define included_DBObject
+#ifndef included_MTreeObject
+#define included_MTreeObject
 
 #ifndef included_toolbox_Database
 #include "toolbox/database/Database.h"
@@ -20,11 +20,11 @@ using namespace std;
 #endif
 
 
-class DBObject;
-typedef std::shared_ptr<DBObject> DBObjectPtr;
+class MTreeObject;
+typedef std::shared_ptr<MTreeObject> MTreeObjectPtr;
 
 /*!
- * @brief DBObject is an abstract base class from which all database
+ * @brief MTreeObject is an abstract base class from which all database
  *        objects must be derived.
  *
  * By default, an object has an undefined object id.  For safety, and 
@@ -33,7 +33,7 @@ typedef std::shared_ptr<DBObject> DBObjectPtr;
  * is added to the data store.  The setObjectId() method is declared private.
  */
 
-class DBObject
+class MTreeObject
 {
 public:
    friend class MTreeDataStore;
@@ -47,18 +47,18 @@ public:
    /*!
     * Database object ctor.
     */
-   DBObject();
+   MTreeObject();
 
    /*!
     * Virtual dtor for database objects.
     */
-   virtual ~DBObject();
+   virtual ~MTreeObject();
 
    /*!
     * Pure virtual method to create and return smart pointer to a
     * (deep) copy of this object.
     */
-   virtual DBObjectPtr makeCopy() const = 0;
+   virtual MTreeObjectPtr makeCopy() const = 0;
 
    /*!
     * Pure virtual method to write data members to given database.
@@ -78,8 +78,8 @@ public:
 
 private:
    // The following are not implemented
-   DBObject(const DBObject&);
-   void operator=(const DBObject&);
+   MTreeObject(const MTreeObject&);
+   void operator=(const MTreeObject&);
 
    /*
     * Set object id to given integer value.  Generally, this method must only
@@ -99,6 +99,6 @@ private:
 };
 
 #ifndef DEBUG_NO_INLINE
-#include "DBObject.I"
+#include "MTreeObject.I"
 #endif
 #endif

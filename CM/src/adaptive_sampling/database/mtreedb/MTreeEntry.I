@@ -212,7 +212,7 @@ double MTreeEntry::getRadius() const
 }
 
 inline
-MetricSpacePointPtr MTreeEntry::getPoint() const
+MTreePointPtr MTreeEntry::getPoint() const
 {
    return( d_key.getPoint() );
 }

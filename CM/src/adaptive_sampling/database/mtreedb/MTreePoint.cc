@@ -1,4 +1,4 @@
-/* DO-NOT-DELETE revisionify.begin() */
+// DO-NOT-DELETE revisionify.begin() 
 /*
 
                             Copyright (c) 2014.
@@ -61,24 +61,54 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-/* DO-NOT-DELETE revisionify.end() */
+// DO-NOT-DELETE revisionify.end() 
 //
-// File:        DB.I
-// Description: DB structure class.
+// File:        MTreePoint.cc
+// 
+// 
+// 
+// Description: Abstract base class for points that represent entries in a metric space.
 //
 
-#ifdef DEBUG_NO_INLINE
-#define inline
+#ifndef included_MTreePoint_C
+#define included_MTreePoint_C
+
+#include "MTreePoint.h"
+
+#ifdef DEBUG_CHECK_ASSERTIONS
+#ifndef included_cassert
+#define included_cassert
+#include <cassert>
+#endif
 #endif
 
-inline
-string DB::getName() const
+#ifdef DEBUG_NO_INLINE
+#include "MTreePoint.I"
+#endif
+
+/*
+*************************************************************************
+*                                                                       *
+* Initialization, set/unset functions for static members.               *
+*                                                                       *
+*************************************************************************
+*/
+
+double MTreePoint::s_max_distance = 999999.0;
+
+double MTreePoint::getMaxDistance() 
 {
-   return(d_db_name);
+   return(s_max_distance);
 }
 
-#ifdef DEBUG_NO_INLINE
-#undef inline
+void MTreePoint::setMaxDistance(double max_dist)
+{
+#ifdef DEBUG_CHECK_ASSERTIONS
+   assert(max_dist > 0.0);
+#endif
+   s_max_distance = max_dist;
+}
+
 #endif
 
 

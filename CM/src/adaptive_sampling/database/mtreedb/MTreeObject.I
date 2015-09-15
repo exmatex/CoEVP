@@ -1,4 +1,4 @@
-// DO-NOT-DELETE revisionify.begin() 
+/* DO-NOT-DELETE revisionify.begin() */
 /*
 
                             Copyright (c) 2014.
@@ -61,61 +61,77 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-// DO-NOT-DELETE revisionify.end() 
+/* DO-NOT-DELETE revisionify.end() */
 //
-// File:        DB.cc
-// Description: DB structure class.
+// File:        MTreeObject.I
+// 
+// 
+// 
+// Description: Abstract base class for database objects
 //
-
-#ifndef included_DB_C
-#define included_DB_C
-
-#include "DB.h"
-
-#ifdef DEBUG_CHECK_ASSERTIONS
-#ifndef included_cassert
-#define included_cassert
-#include <cassert>
-#endif
-#endif
-
-#include "toolbox/base/Utilities.h"
-#include "toolbox/base/MathUtilities.h"
-
 
 #ifdef DEBUG_NO_INLINE
-#include "DB.I"
+#define inline
 #endif
 
 /*
 *************************************************************************
 *                                                                       *
-* DB ctor and dtor.                                                     *
+* Default ctor for database object base class.                          *
 *                                                                       *
 *************************************************************************
 */
 
-DB::DB(const string& db_name,
-       ostream* error_log_stream,
-       bool do_error_checking)
-   : d_db_name(db_name),
-     d_error_log_stream(error_log_stream),
-     d_do_error_checking(do_error_checking)
+inline 
+MTreeObject::MTreeObject()
+:  d_object_id( MTreeObject::getUndefinedId() )
+{
+}
+
+/*
+*************************************************************************
+*                                                                       *
+* Default virtual print method.                                         *
+*                                                                       *
+*************************************************************************
+*/
+
+inline
+ostream& MTreeObject::print(ostream& stream) const
+{
+   stream << "No printClassData method supplied for derived MTreeObject class." << endl;
+   stream << "d_object_id = " << d_object_id << endl;
+   return(stream);
+}
+
+/*
+*************************************************************************
+*                                                                       *
+* Accessory functions to get and set object identifier.                 *
+*                                                                       *
+*************************************************************************
+*/
+
+inline
+int MTreeObject::getObjectId() const
+{
+   return( d_object_id );
+}
+
+inline
+void MTreeObject::setObjectId(int id)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
-   assert(!db_name.empty());
-   if (do_error_checking) {
-      assert(error_log_stream != (ostream*)NULL);
-   }
+   assert(d_object_id == MTreeObject::getUndefinedId());
+   assert(id >= 0);
 #endif
+   d_object_id = id;
 }
 
-DB::~DB()
-{
-}
 
+#ifdef DEBUG_NO_INLINE
+#undef inline
 #endif
-
 
 
 

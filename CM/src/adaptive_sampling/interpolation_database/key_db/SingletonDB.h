@@ -23,8 +23,9 @@ class SingletonDB {
     return instance;
   }
 
-  void  push(const uint128_t &key, const std::vector<double>& buf);
+  void  push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length);
   std::vector<double> pull(const uint128_t &key);
+  std::vector<double> pull_key(const uint128_t &key);
 
 private:
   redisContext*   redis;
@@ -35,6 +36,8 @@ private:
   //  This technique requires C++11 (can do a C++03 version too)
   SingletonDB(SingletonDB const&)    = delete;
   void operator=(SingletonDB const&) = delete;
+
+  redisReply *pull_data(const uint128_t &key);
 };
 
 

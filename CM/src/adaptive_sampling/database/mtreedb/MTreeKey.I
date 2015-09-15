@@ -106,7 +106,7 @@ MTreeKey::MTreeKey(const MTreeKey& key)
 
 inline
 MTreeKey::MTreeKey(
-   const MetricSpacePointPtr point,
+   const MTreePointPtr point,
    double radius,
    double dist2parent)
 :
@@ -143,7 +143,7 @@ MTreeKey& MTreeKey::operator=(const MTreeKey& rhs)
 */
 
 inline 
-const MetricSpacePointPtr MTreeKey::getPoint() const 
+const MTreePointPtr MTreeKey::getPoint() const 
 {
    return(d_point);
 }

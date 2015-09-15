@@ -61,6 +61,7 @@ Additional BSD Notice
 
 */
 
+#include <cstdlib>
 #include <cstring>
 #include "ElastoViscoPlasticity.h"
 #include "xtensor.h"
@@ -98,6 +99,7 @@ ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&    global,
       int valueDimension           = m_plasticity_model->valueDimension();
       int maxKrigingModelSize      = 6;
       int maxNumberSearchModels    = 4;
+      //      int maxNumberSearchModels    = 1;
       double theta                 = 5.e2;
       double meanErrorFactor       = 1.;
       double tolerance             = 5.e-4;

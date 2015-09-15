@@ -100,7 +100,7 @@ MTreeEntry::MTreeEntry(const MTreeKey& key)
   d_my_node_id(MTreeNode::getUndefinedId()),
   d_my_position_in_node(-1),
   d_subtree_node_id(MTreeNode::getUndefinedId()),
-  d_data_object_id(DBObject::getUndefinedId())
+  d_data_object_id(MTreeObject::getUndefinedId())
 {
 }
 
@@ -156,7 +156,7 @@ void MTreeEntry::setSubtreeNode(MTreeNodePtr subtree)
    d_entry_type = ROUTING_ENTRY;
    d_subtree_node = subtree;
    d_subtree_node_id = subtree->getNodeId();
-   d_data_object_id = DBObject::getUndefinedId();
+   d_data_object_id = MTreeObject::getUndefinedId();
 }
 
 void MTreeEntry::setDataObjectId(int object_id)
@@ -240,7 +240,7 @@ bool MTreeEntry::checkConsistency(MTreeNodePtr my_node,
          entry_is_consistent = false;
       }
 
-      if ( d_data_object_id == DBObject::getUndefinedId() ) {
+      if ( d_data_object_id == MTreeObject::getUndefinedId() ) {
          stream << "MTREE ENTRY ERROR: "
                 << "Data object id not set for leaf node entry!" << endl;
          entry_is_consistent = false;
@@ -262,7 +262,7 @@ bool MTreeEntry::checkConsistency(MTreeNodePtr my_node,
          entry_is_consistent = false;
       }
 
-      if ( d_data_object_id != DBObject::getUndefinedId() ) {
+      if ( d_data_object_id != MTreeObject::getUndefinedId() ) {
          stream << "MTREE ENTRY ERROR: "
                 << "Data object id defined for non-leaf node entry!"
                 << endl;

@@ -1,4 +1,4 @@
-/* DO-NOT-DELETE revisionify.begin() */
+// DO-NOT-DELETE revisionify.begin() 
 /*
 
                             Copyright (c) 2014.
@@ -61,99 +61,46 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-/* DO-NOT-DELETE revisionify.end() */
+// DO-NOT-DELETE revisionify.end() 
 //
-// File:        DBKeyObject.cc
+// File:        MTreeObjectFactory.h
 // 
-// Revision:    $Revision$
-// Modified:    $Date$
-// Description: Implementation of the DBKeyObject.
+// 
+// 
+// Description: Abstract base class for database object factory.
 //
 
-#include <iostream>
+#ifndef included_MTreeObjectFactory_C
+#define included_MTreeObjectFactory_C
 
-namespace krigcpl {
+#include "MTreeObjectFactory.h"
 
-    //
-    // construction
-    //
+/*
+*************************************************************************
+*                                                                       *
+* Default ctor and dtor for MTreeObjectFactory class and default        *
+* implementation of clone method.                                       *  
+*                                                                       *
+*************************************************************************
+*/
 
-    template<typename T>
-    inline
-    DBKeyObject<T>::DBKeyObject(const T & keyObject)
-      : _keyObject(keyObject)
-    {
-
-      return;
-
-    }
-
-    //
-    // destruction
-    //
-
-    template <typename T>
-    DBKeyObject<T>::~DBKeyObject()
-    {
-
-      return;
-
-    }
-
-    //
-    // deep copy
-    //
-    
-    template <typename T>
-    DBObjectPtr 
-    DBKeyObject<T>::makeCopy() const
-    {
-	
-      return DBObjectPtr(new DBKeyObject(_keyObject));
-	
-    }
-    
-    //
-    // DB insertion
-    //
-    
-    template <typename T>
-    void 
-    DBKeyObject<T>::putToDatabase(toolbox::Database& db) const
-    { 
-
-       //      _keyObject->putToDatabase(db);
-      return;
-      
-    }
-
-    //
-    // output
-    //
-    
-    template <typename T>
-    ostream & 
-    DBKeyObject<T>::print(ostream & stream) const
-    {
-	
-      stream << "   object id = " << getObjectId() << std::endl;
-      //      stream << "   key = " << *_keyObject << std::endl;
-
-      return stream;
-    }
-
-    //
-    // get object
-    //
-
-    template <typename T>
-    inline T
-    DBKeyObject<T>::getKey() const
-    {
-	
-      return _keyObject;
-
-    }
+MTreeObjectFactory::MTreeObjectFactory()
+{
 }
+
+MTreeObjectFactory::~MTreeObjectFactory()
+{
+}
+
+MTreeObjectPtr 
+MTreeObjectFactory::cloneObject(const MTreeObject& object) const
+{
+   return( object.makeCopy() );
+}
+
+
+#endif
+
+
 
 

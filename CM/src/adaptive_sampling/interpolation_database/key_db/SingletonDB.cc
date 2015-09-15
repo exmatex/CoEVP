@@ -24,12 +24,14 @@ static std::string uint128_to_string(const uint128_t &in){
 }
       
 //  Will eventually be something like add_points
-void  SingletonDB::push(const uint128_t &key, const std::vector<double>& buf) {
+void  SingletonDB::push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length) {
   redisReply* reply;
   unsigned long sz = buf.size();
   std::string skey=uint128_to_string(key);
-  reply = (redisReply *)redisCommand(redis, "SADD %s %b%b",
-                                     skey.c_str(), &sz, sizeof(unsigned long),
+  reply = (redisReply *)redisCommand(redis, "SADD %s %b%b%b",
+                                     skey.c_str(),
+				     &sz, sizeof(unsigned long),
+				     &key_length, sizeof(unsigned long),
                                      &buf[0], buf.size()*sizeof(double));
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
@@ -39,9 +41,7 @@ void  SingletonDB::push(const uint128_t &key, const std::vector<double>& buf) {
   freeReplyObject(reply);
 }
 
-
-//  Will eventually be something like get_points
-std::vector<double> SingletonDB::pull(const uint128_t &key) {
+redisReply *SingletonDB::pull_data(const uint128_t &key) {
   redisReply* reply;
   std::string skey=uint128_to_string(key);
   reply = (redisReply *)redisCommand(redis, "SMEMBERS %s", skey.c_str());
@@ -57,14 +57,29 @@ std::vector<double> SingletonDB::pull(const uint128_t &key) {
     throw std::runtime_error("Number of redis reply elements wrong, got: "
                              + std::to_string(reply->elements));
   }
+  return reply;
+}
+
+std::vector<double> SingletonDB::pull(const uint128_t &key) {
+  redisReply* reply=pull_data(key);
   unsigned long *sz = (unsigned long *)(reply->element)[0]->str;
-  double *raw=(double *)(sz+1);
+  double *raw=(double *)(sz+2);
   std::vector<double> packedContainer;
   packedContainer.assign(raw, raw + *sz);
   freeReplyObject(reply);
   return packedContainer;
 }
 
+std::vector<double> SingletonDB::pull_key(const uint128_t &key) {
+  redisReply* reply=pull_data(key);
+  unsigned long *sz = (unsigned long *)(reply->element)[0]->str;
+  unsigned long *key_l = sz+1;
+  double *raw=(double *)(sz+2);
+  std::vector<double> packedContainer;
+  packedContainer.assign(raw, raw + *key_l);
+  freeReplyObject(reply);
+  return packedContainer;
+}
 //  Open a connection to redis (and retain the connection).
 //  If the databse is already populated, zero it out.  Existing entries will screw up
 //  CoEVP.

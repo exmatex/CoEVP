@@ -1,3 +1,4 @@
+/* DO-NOT-DELETE revisionify.begin() */
 /*
 
                             Copyright (c) 2014.
@@ -60,31 +61,58 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
+/* DO-NOT-DELETE revisionify.end() */
+//
+// File:        MTreeKeyObjectFactory.I
+// 
+// Revision:    $Revision$
+// Modified:    $Date$
+// Description: DB model object factory
+//
 
-#include "DBKeyObjectFactory.h"
+#include "MTreeKeyObject.h"
 
 namespace krigcpl {
 
     //
-    // Allocate database key
+    // Constructor.
     //
 
-    template<>
-    DBObjectPtr 
-    DBKeyObjectFactory<std::string>::allocateObject(toolbox::Database& db) const
+    template <typename T>
+    MTreeKeyObjectFactory<T>::MTreeKeyObjectFactory()
     {
-	
-      //
-      // instantiate DBKeyObject
-      //
 
-       DBKeyObject<std::string> * keyObjectPtr = new DBKeyObject<std::string>;
+      return;
+      
+    }
 
-      //
-      // return DBObjectPtr
-      // 
+    //
+    // Destructor.
+    //
 
-      return DBObjectPtr(keyObjectPtr);
+    template <typename T>
+    MTreeKeyObjectFactory<T>::~MTreeKeyObjectFactory()
+    {
+
+      return;
+
+    }
+
+    //
+    // Allocate object.
+    //
+
+    template <typename T>
+    MTreeObjectPtr 
+    MTreeKeyObjectFactory<T>::allocateObject(toolbox::Database& db) const
+    {
+
+      (void)db;
+      MTreeObjectPtr dummy;
+      return(dummy);
+      
     }
 
 }
+
+

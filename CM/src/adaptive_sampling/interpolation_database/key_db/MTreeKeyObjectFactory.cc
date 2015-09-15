@@ -1,4 +1,3 @@
-// DO-NOT-DELETE revisionify.begin() 
 /*
 
                             Copyright (c) 2014.
@@ -61,68 +60,31 @@ Additional BSD Notice
    advertising or product endorsement purposes.
 
 */
-// DO-NOT-DELETE revisionify.end() 
-//
-// File:        DBObject.cc
-// 
-// 
-// 
-// Description: Abstract base class for database objects.
-//
 
-#ifndef included_DBObject_C
-#define included_DBObject_C
+#include "MTreeKeyObjectFactory.h"
 
-#include "DBObject.h"
+namespace krigcpl {
 
-#ifdef DEBUG_NO_INLINE
-#include "DBObject.I"
-#endif
+    //
+    // Allocate database key
+    //
 
-/*
-*************************************************************************
-*                                                                       *
-* Initialization of and access to static data members.                  * 
-*                                                                       *
-*************************************************************************
-*/
+    template<>
+    MTreeObjectPtr 
+    MTreeKeyObjectFactory<std::string>::allocateObject(toolbox::Database& db) const
+    {
+	
+      //
+      // instantiate DBKeyObject
+      //
 
-int DBObject::s_undefined_object_id = -1;
+       MTreeKeyObject<std::string> * keyObjectPtr = new MTreeKeyObject<std::string>;
 
-int DBObject::getUndefinedId()
-{
-   return( s_undefined_object_id );
+      //
+      // return MTreeObjectPtr
+      // 
+
+      return MTreeObjectPtr(keyObjectPtr);
+    }
+
 }
-
-/*
-*************************************************************************
-*                                                                       *
-* Dtor for DBObject class.                                           * 
-*                                                                       *
-*************************************************************************
-*/
-
-DBObject::~DBObject()
-{
-}
-
-/*
-*************************************************************************
-*                                                                       *
-* Write data object id to database and call virtual method to write     *
-* concrete object data members to database.                             *
-*                                                                       *
-*************************************************************************
-*/
-
-void DBObject::writeToDatabase(toolbox::Database& db) const
-{
-   db.putInteger("d_object_id", d_object_id);
-   putToDatabase(db);
-}
-
-#endif
-
-
-
-
