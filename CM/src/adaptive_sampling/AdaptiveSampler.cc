@@ -221,6 +221,11 @@ AdaptiveSampler::sample( std::vector<double>&       value,
             std::cout << ", " << local_point[i];
          }
          std::cout << ")";
+         std::cout << ", value : (" << local_value[0];
+         for (int i=1; i<m_valueDimension; ++i) {
+            std::cout << ", " << local_value[i];
+         }
+         std::cout << ")";
 
          std::cout << " Error estimate: " << error_estimate;
          std::cout << " Used: " << interpolationSuccess << endl; 
@@ -241,6 +246,12 @@ AdaptiveSampler::sample( std::vector<double>&       value,
          std::cout << ", value : (" << value[0] / m_valueScaling[0];
          for (int i=1; i<m_valueDimension; ++i) {
             std::cout << ", " << value[i] / m_valueScaling[i];
+         }
+         std::cout << ")";
+
+         std::cout << ", gradient : (" << value[m_valueDimension];
+         for (int i=1; i<m_valueDimension; ++i) {
+            std::cout << ", " << value[i+m_valueDimension];
          }
          std::cout << ")" << std::endl;
 #endif
@@ -289,6 +300,14 @@ AdaptiveSampler::sample( std::vector<double>&       value,
          std::cout << ")";
 
          std::cout << ", value : (" << value[0] / m_valueScaling[0];
+         for (int i=1; i<m_valueDimension; ++i) {
+            std::cout << ", " << value[i] / m_valueScaling[i];
+         }
+         std::cout << ")";
+         std::vector<double> tmp_value;
+         tmp_value.resize(value_length);
+         fineScaleModel.evaluate(point, tmp_value);
+         std::cout << ", true value : (" << value[0] / m_valueScaling[0];
          for (int i=1; i<m_valueDimension; ++i) {
             std::cout << ", " << value[i] / m_valueScaling[i];
          }
