@@ -250,7 +250,7 @@ AdaptiveSampler::sample( std::vector<double>&       value,
          std::cout << ")";
 
          std::cout << ", gradient : (" << value[m_valueDimension];
-         for (int i=1; i<m_valueDimension; ++i) {
+         for (int i=m_valueDimension+1; i<m_valueAllocated; ++i) {
             std::cout << ", " << value[i+m_valueDimension];
          }
          std::cout << ")" << std::endl;
@@ -312,6 +312,9 @@ AdaptiveSampler::sample( std::vector<double>&       value,
             std::cout << ", " << value[i] / m_valueScaling[i];
          }
          std::cout << ")" << std::endl;
+
+         std::cout << " Error estimate: " << error_estimate;
+         std::cout << " Used: " << interpolationSuccess << endl; 
 #endif
 #if 0
       // For debugging: override the interpolant with the true fine-scale

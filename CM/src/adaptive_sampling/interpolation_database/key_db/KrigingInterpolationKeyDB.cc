@@ -1883,6 +1883,17 @@ namespace krigcpl {
            const InterpolationModelPtr hintKrigingModel = _modelDB[dbObject.getKey()];
 #endif
 	
+#ifdef FSTRACE
+       std::cout << "Using krigging model with id " << uint128_to_string(dbObject.getKey()) << std::endl;
+       vector<Point> model_points = hintKrigingModel->getPoints();
+       for (int i=0; i<model_points.size(); i++){
+         std::cout << "point " << i << " coordinates";
+         for (int j=0; j<model_points[i].size(); j++) {
+           std::cout << " " << model_points[i][j];
+         }
+         std::cout << std::endl;
+       }
+#endif
 	  //
 	  // check if can interpolate; need a valid model for this
 	  //
