@@ -137,18 +137,18 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
    }
    else {
 
-      m_interp = new KrigingInterpolationKeyDB( m_pointDimension,
-                                                m_valueDimension,
-                                                modelFactory,
-                                                *m_ann,
-                                                m_modelDB,
-                                                m_maxKrigingModelSize,
-                                                m_maxNumberSearchModels,
-                                                true,
-                                                m_meanErrorFactor,
-                                                m_tolerance,
-                                                m_maxQueryPointModelDistance,
-                                                600000000 );
+      m_interp = new KrigingDataBase( m_pointDimension,
+                                      m_valueDimension,
+                                      modelFactory,
+                                      *m_ann,
+                                      m_modelDB,
+                                      m_maxKrigingModelSize,
+                                      m_maxNumberSearchModels,
+                                      true,
+                                      m_meanErrorFactor,
+                                      m_tolerance,
+                                      m_maxQueryPointModelDistance,
+                                      600000000 );
    }
 
    // Add the gradient scaling from the point and value scaling

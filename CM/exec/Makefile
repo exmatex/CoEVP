@@ -71,7 +71,7 @@ TENSOR_DEPS = $(TENSOR_SRC:.cc=.d)
 
 AS_LOC       = ../src/adaptive_sampling
 INTERPDB_LOC = $(AS_LOC)/interpolation_database
-INTERPDB_SRC = $(shell ls $(INTERPDB_LOC)/base/*.cc $(INTERPDB_LOC)/key_db/*.cc)
+INTERPDB_SRC = $(shell ls $(INTERPDB_LOC)/base/*.cc $(INTERPDB_LOC)/kriging_database/*.cc)
 INTERP_LOC   = $(AS_LOC)/interpolation
 INTERP_SRC   = $(shell ls $(INTERP_LOC)/*/*.cc)
 DB_LOC       = $(AS_LOC)/database

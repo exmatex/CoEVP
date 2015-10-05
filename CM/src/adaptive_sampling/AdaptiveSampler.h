@@ -1,9 +1,9 @@
 #ifndef ADAPTIVESAMPLER_INCLUDED
 #define ADAPTIVESAMPLER_INCLUDED
 
-#include <key_db/KrigingInterpolationKeyDB.h>
-#include <key_db/ApproxNearestNeighborsMTree.h>
-#include <key_db/ApproxNearestNeighborsFLANN.h>
+#include <kriging_database/KrigingDataBase.h>
+#include <kriging_database/ApproxNearestNeighborsMTree.h>
+#include <kriging_database/ApproxNearestNeighborsFLANN.h>
 
 #include "FineScale.h"
 
@@ -93,7 +93,7 @@ class AdaptiveSampler
 
    double valueMaxNorm( const std::vector<double>& value ) const;
 
-   KrigingInterpolationKeyDB* m_interp;
+   KrigingDataBase* m_interp;
 
    ApproxNearestNeighbors* m_ann;
    InterpolationModelDataBase m_modelDB;
