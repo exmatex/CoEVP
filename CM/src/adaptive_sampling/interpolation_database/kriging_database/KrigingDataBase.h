@@ -1,13 +1,13 @@
 //
-// File:        KrigingInterpolationKeyDB.h
+// File:        KrigingDataBase.h
 // 
 // Revision:    $Revision$
 // Modified:    $Date$
 // Description: Kriging interpolation using a keyed database.
 //
 
-#ifndef included_krigcpl_KrigingInterpolationKeyDB_h
-#define included_krigcpl_KrigingInterpolationKeyDB_h
+#ifndef included_krigcpl_KrigingDataBase_h
+#define included_krigcpl_KrigingDataBase_h
 
 #include <unordered_map>
 
@@ -62,7 +62,7 @@ namespace krigcpl {
      * kriging as the interpolation model
      */
 
-    class KrigingInterpolationKeyDB :
+    class KrigingDataBase :
       public InterpolationDataBase {
 
     public:
@@ -89,18 +89,18 @@ namespace krigcpl {
        *                                   interpolation is still attempted. 
        * @param agingThreshold Time threshold for object aging.
        */
-      KrigingInterpolationKeyDB(int    pointDimension,
-                                int    valueDimension,
-                                const krigalg::InterpolationModelFactoryPointer  & modelFactory,
-                                ApproxNearestNeighbors& ann,
-                                InterpolationModelDataBase& modelDB,
-                                int    maxKrigingModelSize,
-                                int    maxNumberSearchModels,
-                                bool   useHint,
-                                double meanErrorFactor,
-                                double tolerance,
-                                double maxQueryPointModelDistance,
-                                int    agingThreshold);
+      KrigingDataBase(int    pointDimension,
+                      int    valueDimension,
+                      const krigalg::InterpolationModelFactoryPointer  & modelFactory,
+                      ApproxNearestNeighbors& ann,
+                      InterpolationModelDataBase& modelDB,
+                      int    maxKrigingModelSize,
+                      int    maxNumberSearchModels,
+                      bool   useHint,
+                      double meanErrorFactor,
+                      double tolerance,
+                      double maxQueryPointModelDistance,
+                      int    agingThreshold);
       /*!
        * Construction.
        * 
@@ -126,25 +126,25 @@ namespace krigcpl {
        *                           of disk DB data.
        * @param fileName File name to be used for seeding the database.
        */
-      KrigingInterpolationKeyDB(int    pointDimension,
-                                int    valueDimension,
-                                const krigalg::InterpolationModelFactoryPointer  & modelFactory,
-                                ApproxNearestNeighbors& ann,
-                                InterpolationModelDataBase& modelDB,
-                                int    maxKrigingModelSize,
-                                int    maxNumberSearchModels,
-                                bool   useHint,
-                                double meanErrorFactor,
-                                double tolerance,
-                                double maxQueryPointModelDistance,
-                                int    agingThreshold,
-                                const std::string & directoryName,
-                                const std::string & fileName);
+      KrigingDataBase(int    pointDimension,
+                      int    valueDimension,
+                      const krigalg::InterpolationModelFactoryPointer  & modelFactory,
+                      ApproxNearestNeighbors& ann,
+                      InterpolationModelDataBase& modelDB,
+                      int    maxKrigingModelSize,
+                      int    maxNumberSearchModels,
+                      bool   useHint,
+                      double meanErrorFactor,
+                      double tolerance,
+                      double maxQueryPointModelDistance,
+                      int    agingThreshold,
+                      const std::string & directoryName,
+                      const std::string & fileName);
       
       /*!
        * Destruction.
        */
-      ~KrigingInterpolationKeyDB();
+      ~KrigingDataBase();
 
       /*!
        * Compute interpolated value at a point.
@@ -275,8 +275,8 @@ namespace krigcpl {
 
     private:
       // Not implemented
-      KrigingInterpolationKeyDB(const KrigingInterpolationKeyDB &);
-      const KrigingInterpolationKeyDB & operator=(const KrigingInterpolationKeyDB&);
+      KrigingDataBase(const KrigingDataBase &);
+      const KrigingDataBase & operator=(const KrigingDataBase&);
 
       //
       // data
@@ -319,4 +319,4 @@ namespace krigcpl {
 
 }
 
-#endif // included_krigcpl_KrigingInterpolationKeyDB_h
+#endif // included_krigcpl_KrigingDataBase_h

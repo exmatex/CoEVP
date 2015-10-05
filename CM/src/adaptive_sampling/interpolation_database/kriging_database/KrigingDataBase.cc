@@ -63,7 +63,7 @@ Additional BSD Notice
 */
 // DO-NOT-DELETE revisionify.end() 
 //
-// File:        KrigingInterpolationKeyDB.cc
+// File:        KrigingDataBase.cc
 // 
 // Revision:    $Revision$
 // Modified:    $Date$
@@ -78,18 +78,12 @@ Additional BSD Notice
 
 #include <fstream>
 
-#include "KrigingInterpolationKeyDB.h"
-
+#include "KrigingDataBase.h"
 #include <kriging/SecondMoment.h>
-
 #include <base/ResponsePoint.h>
-
 #include "ApproxNearestNeighbors.h"
-
 #include <mtreedb/MTree.h>
-
 #include <toolbox/database/HDFDatabase.h>
-
 #include <murmur3/MurmurHash3.h>
 
 
@@ -1621,18 +1615,18 @@ uint128_t saved_model_key;
     // construction/destruction
     //
 
-    KrigingInterpolationKeyDB::KrigingInterpolationKeyDB(int pointDimension,
-                                                         int valueDimension,
-                                                         const InterpolationModelFactoryPointer  & modelFactory,
-                                                         ApproxNearestNeighbors& ann,
-                                                         InterpolationModelDataBase& modelDB,
-                                                         int    maxKrigingModelSize,
-                                                         int    maxNumberSearchModels,
-                                                         bool   useHint,
-                                                         double meanErrorFactor,
-                                                         double tolerance,
-                                                         double maxQueryPointModelDistance,
-                                                         int    agingThreshold )
+    KrigingDataBase::KrigingDataBase(int pointDimension,
+                                     int valueDimension,
+                                     const InterpolationModelFactoryPointer  & modelFactory,
+                                     ApproxNearestNeighbors& ann,
+                                     InterpolationModelDataBase& modelDB,
+                                     int    maxKrigingModelSize,
+                                     int    maxNumberSearchModels,
+                                     bool   useHint,
+                                     double meanErrorFactor,
+                                     double tolerance,
+                                     double maxQueryPointModelDistance,
+                                     int    agingThreshold )
       : InterpolationDataBase(pointDimension,
 			      valueDimension),
 	_modelFactory(modelFactory),
@@ -1653,20 +1647,20 @@ uint128_t saved_model_key;
       
     }
 
-    KrigingInterpolationKeyDB::KrigingInterpolationKeyDB(int pointDimension,
-                                                         int valueDimension,
-                                                         const InterpolationModelFactoryPointer  & modelFactory,
-                                                         ApproxNearestNeighbors& ann,
-                                                         InterpolationModelDataBase& modelDB,
-                                                         int    maxKrigingModelSize,
-                                                         int    maxNumberSearchModels,
-                                                         bool   useHint,
-                                                         double meanErrorFactor,
-                                                         double tolerance,
-                                                         double maxQueryPointModelDistance,
-                                                         int    agingThreshold,
-                                                         const std::string & directoryName,
-                                                         const std::string & fileName)
+    KrigingDataBase::KrigingDataBase(int pointDimension,
+                                     int valueDimension,
+                                     const InterpolationModelFactoryPointer  & modelFactory,
+                                     ApproxNearestNeighbors& ann,
+                                     InterpolationModelDataBase& modelDB,
+                                     int    maxKrigingModelSize,
+                                     int    maxNumberSearchModels,
+                                     bool   useHint,
+                                     double meanErrorFactor,
+                                     double tolerance,
+                                     double maxQueryPointModelDistance,
+                                     int    agingThreshold,
+                                     const std::string & directoryName,
+                                     const std::string & fileName)
        : InterpolationDataBase(pointDimension,
                                valueDimension,
                                fileName),
@@ -1699,7 +1693,7 @@ uint128_t saved_model_key;
       
     }
 
-    KrigingInterpolationKeyDB::~KrigingInterpolationKeyDB()
+    KrigingDataBase::~KrigingDataBase()
     {
 
       return;
@@ -1713,11 +1707,11 @@ uint128_t saved_model_key;
     // Version 1 (no derivatives)
 
     bool
-    KrigingInterpolationKeyDB::interpolate(double            * value,
-                                           int               & hint,
-                                           const double      * point,
-                                           std::vector<bool> & flags,
-                                           double            & error_estimate)
+    KrigingDataBase::interpolate(double            * value,
+                                 int               & hint,
+                                 const double      * point,
+                                 std::vector<bool> & flags,
+                                 double            & error_estimate)
     {
 
       //
@@ -1962,12 +1956,12 @@ uint128_t saved_model_key;
     // Version 2
 
     bool 
-    KrigingInterpolationKeyDB::interpolate(double            * value,
-                                           double            * gradient,
-                                           int               & hint,
-                                           const double      * point,
-                                           std::vector<bool> & flags,
-                                           double            & error_estimate)
+    KrigingDataBase::interpolate(double            * value,
+                                 double            * gradient,
+                                 int               & hint,
+                                 const double      * point,
+                                 std::vector<bool> & flags,
+                                 double            & error_estimate)
     {
 
       //
@@ -2215,11 +2209,11 @@ uint128_t saved_model_key;
     }
 
     double
-    KrigingInterpolationKeyDB::interpolateSpecificModel(double            * value,
-                                                        double            * gradient,
-                                                        int               & model,
-                                                        const double      * point,
-                                                        std::vector<bool> & flags)
+    KrigingDataBase::interpolateSpecificModel(double            * value,
+                                              double            * gradient,
+                                              int               & model,
+                                              const double      * point,
+                                              std::vector<bool> & flags)
     {
        double errorEstimate;
 
@@ -2331,11 +2325,11 @@ uint128_t saved_model_key;
     //
 
     void 
-    KrigingInterpolationKeyDB::insert(int               & hint,
-                                      const double      * point,
-                                      const double      * value,
-                                      const double      * gradient,
-                                      std::vector<bool> & flags)
+    KrigingDataBase::insert(int               & hint,
+                            const double      * point,
+                            const double      * value,
+                            const double      * gradient,
+                            std::vector<bool> & flags)
     {
 
       //
@@ -2587,7 +2581,7 @@ uint128_t saved_model_key;
     //
 
     int
-    KrigingInterpolationKeyDB::getNumberStatistics() const
+    KrigingDataBase::getNumberStatistics() const
     {
 
       return 2;
@@ -2599,8 +2593,8 @@ uint128_t saved_model_key;
     //
 
     void
-    KrigingInterpolationKeyDB::getStatistics(double * stats,
-                                             int      size) const
+    KrigingDataBase::getStatistics(double * stats,
+                                   int      size) const
     {
       switch(size) {
 
@@ -2627,7 +2621,7 @@ uint128_t saved_model_key;
     //
 
     std::vector<std::string>
-    KrigingInterpolationKeyDB::getStatisticsNames() const
+    KrigingDataBase::getStatisticsNames() const
     {
 
       std::vector<std::string> names;
@@ -2644,7 +2638,7 @@ uint128_t saved_model_key;
     //
 
     void
-    KrigingInterpolationKeyDB::printDBStats(std::ostream & outputStream)
+    KrigingDataBase::printDBStats(std::ostream & outputStream)
     {
       //
       // get number of statistics
@@ -2702,7 +2696,7 @@ uint128_t saved_model_key;
     //
 
     void
-    KrigingInterpolationKeyDB::swapOutObjects() const
+    KrigingDataBase::swapOutObjects() const
     {
 #if 0
        if (typeid(_keyDB) == typeid(MTree)) {
@@ -2713,7 +2707,7 @@ uint128_t saved_model_key;
           // with databases other than MTree
        }
 #else
-       cout << "KrigingInterpolationKeyDB::swapOutObjects(): Figure out why this is being called" << endl;
+       cout << "KrigingDataBase::swapOutObjects(): Figure out why this is being called" << endl;
        exit(1);
 #endif
 
