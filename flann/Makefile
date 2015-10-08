@@ -5,7 +5,11 @@ FLANN_LIB=$(FLANN_DIR)/lib/libflann_cpp.so
 all: ${FLANN_LIB}
 
 $(FLANN_DIR).tar.gz:
+ifeq (, $(shell which curl))
 	wget -O $@ https://github.com/mariusmuja/flann/archive/${FLANN_PV}-src.tar.gz
+else
+	curl -o $@ -L https://github.com/mariusmuja/flann/archive/${FLANN_PV}-src.tar.gz
+endif
 
 $(FLANN_LIB): ${FLANN_DIR}.tar.gz
 	tar -xzvf $<
