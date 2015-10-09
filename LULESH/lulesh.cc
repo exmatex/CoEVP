@@ -67,8 +67,11 @@ Additional BSD Notice
 #include <stdlib.h>
 #include <sstream>
 
+//  Command line option parsing (using Sriram code from old days)
+#include "cmdLineParser.h"
+int  sampling = 0;    //  By default, no adaptive sampling (but compiled in)
+
 #define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
-#define USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
@@ -2580,7 +2583,6 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
                       NULL);
    delete [] zd ;
 
-#ifdef USE_ADAPTIVE_SAMPLING
    Real_t *num_as_models = new double[domain.numElem()] ;
    Int_t numModels, numPairs;
    for (int ei=0; ei < domain.numElem(); ++ei) {
@@ -2608,7 +2610,6 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
                       NULL);
 
    delete [] as_efficiency;
-#endif
 
    if (ok != 0) {
       printf("Error writing out viz file - rank %d\n", myRank);
@@ -2625,12 +2626,13 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
   int *varTypes;
   int ok = 0;
   // Make sure this list matches what's written out above
-#ifdef USE_ADAPTIVE_SAMPLING
+  // All variables related to adaptive sampling MUST come AFTER the others
   char vars[][14] = {"p","e","v","volo","q","speed","xd","yd","zd","num_as_models","as_efficiency"};
-#else
-  char vars[][10] = {"p","e","v","volo","q","speed","xd","yd","zd"};
-#endif
-  int numvars = sizeof(vars)/sizeof(vars[0]);
+  //  This is kinda hacky--find a cleaner way to handle this.
+  if (sampling)
+    int numvars = 14;
+  else
+    int numvars = 10;
 
   // Reset to the root directory of the silo file
   DBSetDir(db, "/");
@@ -2857,6 +2859,23 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
 
 void Lulesh::go(int argc, char *argv[])
 {
+  //  Parse command line optoins
+  int  help   = 0;
+  
+  addArg("help",   'h', 0, 'i',  &(help),     0, "print this message");
+  addArg("sample", 's', 0, 'i',  &(sampling), 0, "use adaptive sampling");
+
+  processArgs(argc,argv);
+  
+  if (help) {
+    printArgs();
+    freeArgs();
+    exit(1);
+  } 
+  if (sampling) 
+    printf("Using adaptive sampling...\n");
+  freeArgs();
+
    Index_t edgeElems = 16 ;
    int heightElems = 26 ;
    Index_t edgeNodes = edgeElems+1 ;
@@ -3397,11 +3416,11 @@ void Lulesh::go(int argc, char *argv[])
    exit(0) ;
 #endif
 
-#ifdef USE_ADAPTIVE_SAMPLING
-   bool use_adaptive_sampling = true;
-#else
-   bool use_adaptive_sampling = false;
-#endif
+   //#ifdef USE_ADAPTIVE_SAMPLING
+   //bool use_adaptive_sampling = true;
+   //#else
+   //bool use_adaptive_sampling = false;
+   //#endif
 
    ConstitutiveGlobal cm_global;
 
@@ -3509,7 +3528,7 @@ void Lulesh::go(int argc, char *argv[])
 
          size_t state_size;
          domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, L, bulk_modulus, shear_modulus, eos_model,
-                                                                  plasticity_model, use_adaptive_sampling, state_size));
+                                                                  plasticity_model, sampling, state_size));
          domain.cm_state(i) = operator new(state_size);
          domain.cm(i)->getState(domain.cm_state(i));
       }
@@ -3568,7 +3587,7 @@ void Lulesh::go(int argc, char *argv[])
       fflush(stdout);
 
 #ifdef PRINT_PERFORMANCE_DIAGNOSTICS
-      if ( use_adaptive_sampling ) {
+      if ( sampling ) {
 
          int total_samples = 0;
          int total_interpolations = 0;
@@ -3584,7 +3603,7 @@ void Lulesh::go(int argc, char *argv[])
 #endif
 
 #ifdef WRITE_FSM_EVAL_COUNT
-      if ( use_adaptive_sampling ) {
+      if ( sampling ) {
          Int_t num_fsm_evals = domain.cm(fsm_count_elem)->getNumSamples()
             - domain.cm(fsm_count_elem)->getNumSuccessfulInterpolations() ;
          fsm_count_file << domain.time() << "  " << num_fsm_evals - cumulative_fsm_count << endl;
@@ -3597,7 +3616,7 @@ void Lulesh::go(int argc, char *argv[])
    fsm_count_file.close();
 #endif   
 
-   if ( use_adaptive_sampling ) {
+   if ( sampling ) {
 
       Int_t minNumModels = 10000000;
       Int_t maxNumModels = 0;
