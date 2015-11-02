@@ -2627,12 +2627,13 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
   int ok = 0;
   // Make sure this list matches what's written out above
   // All variables related to adaptive sampling MUST come AFTER the others
-  char vars[][14] = {"p","e","v","volo","q","speed","xd","yd","zd","num_as_models","as_efficiency"};
+  char vars[][11] = {"p","e","v","volo","q","speed","xd","yd","zd","num_as_models","as_efficiency"};
   //  This is kinda hacky--find a cleaner way to handle this.
+  int numvars;
   if (sampling)
-    int numvars = 14;
+    numvars = 11;
   else
-    int numvars = 10;
+    numvars = 9;
 
   // Reset to the root directory of the silo file
   DBSetDir(db, "/");
