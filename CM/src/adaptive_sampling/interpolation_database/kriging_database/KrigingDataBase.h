@@ -11,13 +11,8 @@
 
 #include <unordered_map>
 
-#ifdef STRING_MODELS
 #ifdef REDIS
-#define REDIS_PORT 6379
-#define REDIS_HOST "localhost"
-#include <hiredis.h>
 #include "SingletonDB.h"
-#endif
 #endif
 
 #ifndef included_krigcpl_InterpolationDataBase_h
@@ -47,9 +42,7 @@ namespace std {
             }
       };
 
-#ifdef STRING_MODELS
-   typedef std::unordered_map<uint128_t, std::string> InterpolationModelDataBase;
-#else
+#ifndef REDIS
    typedef std::unordered_map<uint128_t, krigalg::InterpolationModelPtr> InterpolationModelDataBase;
 #endif
 
@@ -93,7 +86,9 @@ namespace krigcpl {
                       int    valueDimension,
                       const krigalg::InterpolationModelFactoryPointer  & modelFactory,
                       ApproxNearestNeighbors& ann,
+#ifndef REDIS
                       InterpolationModelDataBase& modelDB,
+#endif
                       int    maxKrigingModelSize,
                       int    maxNumberSearchModels,
                       bool   useHint,
@@ -130,7 +125,9 @@ namespace krigcpl {
                       int    valueDimension,
                       const krigalg::InterpolationModelFactoryPointer  & modelFactory,
                       ApproxNearestNeighbors& ann,
+#ifndef REDIS
                       InterpolationModelDataBase& modelDB,
+#endif
                       int    maxKrigingModelSize,
                       int    maxNumberSearchModels,
                       bool   useHint,
@@ -289,7 +286,9 @@ namespace krigcpl {
       krigalg::InterpolationModelFactoryPointer _modelFactory;
 
       ApproxNearestNeighbors&     _ann;
+#ifndef REDIS
       InterpolationModelDataBase& _modelDB;
+#endif
 
       int    _maxKrigingModelSize;
       int    _maxNumberSearchModels;
