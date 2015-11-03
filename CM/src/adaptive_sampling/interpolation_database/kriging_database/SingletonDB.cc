@@ -62,6 +62,7 @@ redisReply *SingletonDB::pull_data(const uint128_t &key) {
 
 std::vector<double> SingletonDB::pull(const uint128_t &key) {
   redisReply* reply=pull_data(key);
+  //TODO what should we do with the second elemet?
   unsigned long *sz = (unsigned long *)(reply->element)[0]->str;
   double *raw=(double *)(sz+2);
   std::vector<double> packedContainer;
