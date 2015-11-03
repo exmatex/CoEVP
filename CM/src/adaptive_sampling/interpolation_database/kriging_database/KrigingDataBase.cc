@@ -114,20 +114,6 @@ uint128_t saved_model_key;
         SingletonDB& db = SingletonDB::getInstance();
         return(db.pull(key));
       }
-#else
-       void buildKey(string& key, std::vector<double> data, int keyDigits)
-       {
-          //Build format
-          for (int i = 0; i < data.size(); i++)
-             {
-                char format[32];
-                //                sprintf(format, "%%.%dlf:", keyDigits);
-                sprintf(format, "%%.%de:", keyDigits);
-                char fBuff[1024];
-                sprintf(fBuff, format, data[i]);
-                key += fBuff;
-             }
-       }
 #endif
 
        uint128_t getKeyHash(const ResponsePoint& point)
@@ -224,16 +210,8 @@ uint128_t saved_model_key;
 
            uint128_t model_key = keys[0];
 
-#ifdef STRING_MODELS
 #ifdef REDIS
            std::vector<double> packedContainer = redisToModel(model_key);
-#else
-           std::string& model_string = modelDB[model_key];
-
-           std::vector<double> packedContainer;
-           unpackKey(model_string, packedContainer);
-#endif
-
            closestKrigingModel = modelFactory->build();
            closestKrigingModel->unpack(packedContainer);
 #else
@@ -493,16 +471,8 @@ uint128_t saved_model_key;
 
               uint128_t model_key = keys[iter];
 
-#ifdef STRING_MODELS
 #ifdef REDIS
               std::vector<double> packedContainer = redisToModel(model_key);
-#else
-              std::string& model_key_string = modelDB[model_key];
-
-              std::vector<double> packedContainer;
-              unpackKey(model_key_string, packedContainer);
-#endif
-
               InterpolationModelPtr krigingModel = _modelFactory->build();
               krigingModel->unpack(packedContainer);
 #else
@@ -612,16 +582,8 @@ uint128_t saved_model_key;
               
               uint128_t model_key = keys[iter];
 
-#ifdef STRING_MODELS
 #ifdef REDIS
               std::vector<double> packedContainer = redisToModel(model_key);
-#else
-              std::string& model_key_string = modelDB[model_key];
-
-              std::vector<double> packedContainer;
-              unpackKey(model_key_string, packedContainer);
-#endif
-
               InterpolationModelPtr krigingModel = _modelFactory->build();
               krigingModel->unpack(packedContainer);
 #else
@@ -675,16 +637,8 @@ uint128_t saved_model_key;
 
            uint128_t model_key = keys[0];
 
-#ifdef STRING_MODELS
 #ifdef REDIS
            std::vector<double> packedContainer = redisToModel(model_key);
-#else
-           std::string& model_key_string = modelDB[model_key];
-
-           std::vector<double> packedContainer;
-           unpackKey(model_key_string, packedContainer);
-#endif
-
            InterpolationModelPtr krigingModel = _modelFactory->build();
            krigingModel->unpack(packedContainer);
 #else
@@ -1183,18 +1137,10 @@ uint128_t saved_model_key;
 
         // Insert the interpolation model into the interpolation model database
 
-#ifdef STRING_MODELS
+#ifdef REDIS
         std::vector<double> packedContainer;
         krigingModel->pack(point, packedContainer);
-
-#ifdef REDIS
         modelToRedis(model_key, packedContainer, point.size());
-#else
-        std::string model_key_string;
-        buildKey(model_key_string, packedContainer, STRING_DIGITS);
-        
-        modelDB.insert( std::make_pair(model_key, model_key_string) );
-#endif
 #else
         modelDB.insert( std::make_pair(model_key, krigingModel) );
 #endif
@@ -1440,18 +1386,10 @@ uint128_t saved_model_key;
 
             // Insert the interpolation model into the interpolation model database
 
-#ifdef STRING_MODELS
+#ifdef REDIS
             std::vector<double> packedContainer;
             krigingModelPtr->pack(point, packedContainer);
-
-#ifdef REDIS
             modelToRedis(model_key, packedContainer, point.size());
-#else
-            std::string model_key_string;
-            buildKey(model_key_string, packedContainer, STRING_DIGITS);
-        
-            modelDB.insert( std::make_pair(model_key, model_key_string) );
-#endif
 #else
             //            modelDB.insert( std::make_pair<std::string, InterpolationModelPtr>(model_key, krigingModelPtr) );
             modelDB.insert( std::make_pair(model_key, krigingModelPtr) );
@@ -1756,16 +1694,8 @@ uint128_t saved_model_key;
 
          } else {
 
-#ifdef STRING_MODELS
 #ifdef REDIS
             std::vector<double> packedContainer = redisToModel(model_key);
-#else
-            std::string& model_key_string = _modelDB[model_key];
-
-            std::vector<double> packedContainer;
-            unpackKey(model_key_string, packedContainer);
-#endif
-
             InterpolationModelPtr hintKrigingModel = _modelFactory->build();
             hintKrigingModel->unpack(packedContainer);
 #else
@@ -2005,16 +1935,8 @@ uint128_t saved_model_key;
 
 	} else {
     
-#ifdef STRING_MODELS
 #ifdef REDIS
-	  std::vector<double> packedContainer = redisToModel(model_key);
-#else
-           std::string& model_key_string = _modelDB[model_key];
-
-           std::vector<double> packedContainer;
-           unpackKey(model_key_string, packedContainer);
-#endif
-
+           std::vector<double> packedContainer = redisToModel(model_key);
            InterpolationModelPtr hintKrigingModel = _modelFactory->build();
            hintKrigingModel->unpack(packedContainer);
 #else
@@ -2260,16 +2182,8 @@ uint128_t saved_model_key;
 
        } else {
    
-#ifdef STRING_MODELS
 #ifdef REDIS
-	  std::vector<double> packedContainer = redisToModel(model_key);
-#else
-           std::string& model_key_string = _modelDB[model_key];
-
-           std::vector<double> packedContainer;
-           unpackKey(model_key_string, packedContainer);
-#endif
-
+           std::vector<double> packedContainer = redisToModel(model_key);
            InterpolationModelPtr hintKrigingModel = _modelFactory->build();
            hintKrigingModel->unpack(packedContainer);
 #else
@@ -2400,16 +2314,8 @@ uint128_t saved_model_key;
 
          uint128_t model_key = _ann.getKey(hint);
 
-#ifdef STRING_MODELS
 #ifdef REDIS
-	  std::vector<double> packedContainer = redisToModel(model_key);
-#else
-        std::string& model_key_string = _modelDB[model_key];
-
-        std::vector<double> packedContainer;
-        unpackKey(model_key_string, packedContainer);
-#endif
-
+        std::vector<double> packedContainer = redisToModel(model_key);
         InterpolationModelPtr krigingModel = _modelFactory->build();
         krigingModel->unpack(packedContainer);
 #else
@@ -2516,18 +2422,10 @@ uint128_t saved_model_key;
 
             // Insert the interpolation model into the interpolation model database
 
-#ifdef STRING_MODELS
+#ifdef REDIS
             std::vector<double> packedContainer;
             krigingModel->pack(centerMassRP, packedContainer);
-
-#ifdef REDIS
             modelToRedis(new_model_key, packedContainer, centerMassRP.size());
-#else
-            std::string new_model_key_string;
-            buildKey(new_model_key_string, packedContainer, STRING_DIGITS);
-        
-            _modelDB.insert( std::make_pair(new_model_key, new_model_key_string) );
-#endif
 #else
             _modelDB.insert( std::make_pair(new_model_key, krigingModel) );
 #endif

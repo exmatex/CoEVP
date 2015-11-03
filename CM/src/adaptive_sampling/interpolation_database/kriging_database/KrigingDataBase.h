@@ -11,13 +11,8 @@
 
 #include <unordered_map>
 
-#ifdef STRING_MODELS
 #ifdef REDIS
-#define REDIS_PORT 6379
-#define REDIS_HOST "localhost"
-#include <hiredis.h>
 #include "SingletonDB.h"
-#endif
 #endif
 
 #ifndef included_krigcpl_InterpolationDataBase_h
@@ -47,11 +42,7 @@ namespace std {
             }
       };
 
-#ifdef STRING_MODELS
-   typedef std::unordered_map<uint128_t, std::string> InterpolationModelDataBase;
-#else
    typedef std::unordered_map<uint128_t, krigalg::InterpolationModelPtr> InterpolationModelDataBase;
-#endif
 
 }
 
