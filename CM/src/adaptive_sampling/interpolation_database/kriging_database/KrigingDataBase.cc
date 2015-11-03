@@ -164,7 +164,9 @@ uint128_t saved_model_key;
       findClosestCoKrigingModel(const ResponsePoint        & point,
                                 ApproxNearestNeighbors     & ann,
                                 krigalg::InterpolationModelFactoryPointer modelFactory,
+#ifndef REDIS
                                 InterpolationModelDataBase & modelDB,
+#endif
 				double                       maxQueryPointModelDistance)
       {
 
@@ -424,7 +426,9 @@ uint128_t saved_model_key;
 			     const ResponsePoint &        point,
                              ApproxNearestNeighbors     & ann,
                              //			     DB &                         krigingModels,
-                             InterpolationModelDataBase & modelDB,
+#ifndef REDIS
+			     InterpolationModelDataBase & modelDB,
+#endif
                              const InterpolationModelFactoryPointer& _modelFactory,
 			     double                       tolerance,
 			     double                       meanErrorFactor,
@@ -529,7 +533,9 @@ uint128_t saved_model_key;
 			     const ResponsePoint &        point,
                              ApproxNearestNeighbors     & ann,
                              //			     DB &                         krigingModels,
+#ifndef REDIS
                              InterpolationModelDataBase & modelDB,
+#endif
                              const InterpolationModelFactoryPointer& _modelFactory,
 			     double                       tolerance,
 			     double                       meanErrorFactor,
@@ -1073,7 +1079,10 @@ uint128_t saved_model_key;
       //
 
        void
-       addNewModel(InterpolationModelDataBase &             modelDB,
+       addNewModel(
+#ifndef REDIS
+		   InterpolationModelDataBase &             modelDB,
+#endif
                    ApproxNearestNeighbors&                  ann,
                    const InterpolationModelFactoryPointer & _modelFactory,
                    int &                                    objectId,
@@ -1235,7 +1244,9 @@ uint128_t saved_model_key;
       std::pair<int, int>
       initializeModelDBFromFile(
                                 ApproxNearestNeighbors&                  ann,
+#ifndef REDIS
                                 InterpolationModelDataBase &             modelDB,
+#endif
 				const InterpolationModelFactoryPointer & _modelFactory,
 				const std::string &                      directoryName,
 				const std::string &                      prefix)
@@ -1557,7 +1568,9 @@ uint128_t saved_model_key;
                                      int valueDimension,
                                      const InterpolationModelFactoryPointer  & modelFactory,
                                      ApproxNearestNeighbors& ann,
+#ifndef REDIS
                                      InterpolationModelDataBase& modelDB,
+#endif
                                      int    maxKrigingModelSize,
                                      int    maxNumberSearchModels,
                                      bool   useHint,
@@ -1575,7 +1588,9 @@ uint128_t saved_model_key;
 	_tolerance(tolerance),
 	_maxQueryPointModelDistance(maxQueryPointModelDistance),
         _ann(ann),
-        _modelDB(modelDB),
+#ifndef REDIS
+	_modelDB(modelDB),
+#endif
 	_numberKrigingModels(0),
 	_numberPointValuePairs(0),
 	_agingThreshold(agingThreshold)
@@ -1589,7 +1604,9 @@ uint128_t saved_model_key;
                                      int valueDimension,
                                      const InterpolationModelFactoryPointer  & modelFactory,
                                      ApproxNearestNeighbors& ann,
+#ifndef REDIS
                                      InterpolationModelDataBase& modelDB,
+#endif
                                      int    maxKrigingModelSize,
                                      int    maxNumberSearchModels,
                                      bool   useHint,
@@ -1610,7 +1627,9 @@ uint128_t saved_model_key;
          _tolerance(tolerance),
          _maxQueryPointModelDistance(maxQueryPointModelDistance),
          _ann(ann),
+#ifndef REDIS
          _modelDB(modelDB),
+#endif
          _numberKrigingModels(0),
          _numberPointValuePairs(0),
          _agingThreshold(agingThreshold)
@@ -1619,7 +1638,9 @@ uint128_t saved_model_key;
        const std::pair<int, int> kriginigModelsStats =
           initializeModelDBFromFile(
                                     _ann,
+#ifndef REDIS
                                     _modelDB,
+#endif
                                     _modelFactory,
                                     directoryName,
                                     fileName);
@@ -1760,7 +1781,9 @@ uint128_t saved_model_key;
 	  closestKrigingModelData = findClosestCoKrigingModel(queryPoint,
                                                               _ann,
                                                               _modelFactory,
+#ifndef REDIS
                                                               _modelDB,
+#endif
 							      _maxQueryPointModelDistance);
       
 	InterpolationModelPtr closestKrigingModel = 
@@ -1822,7 +1845,9 @@ uint128_t saved_model_key;
 	  bestKrigingModelData = findBestCoKrigingModel(canInterpolateFlag,
 							queryPoint,
                                                         _ann,
+#ifndef REDIS
                                                         _modelDB,
+#endif
                                                         _modelFactory,
 							_tolerance,
 							_meanErrorFactor,
@@ -1997,7 +2022,9 @@ uint128_t saved_model_key;
 	  closestKrigingModelData = findClosestCoKrigingModel(queryPoint,
                                                               _ann,
                                                               _modelFactory,
+#ifndef REDIS
                                                               _modelDB,
+#endif
 							      _maxQueryPointModelDistance);
       
 	InterpolationModelPtr closestKrigingModel = 
@@ -2061,7 +2088,9 @@ uint128_t saved_model_key;
 	  bestKrigingModelData = findBestCoKrigingModel(canInterpolateFlag,
 							queryPoint,
                                                         _ann,
+#ifndef REDIS
                                                         _modelDB,
+#endif
                                                         _modelFactory,
 							_tolerance,
 							_meanErrorFactor,
@@ -2290,7 +2319,10 @@ uint128_t saved_model_key;
 	// create and add new model
 	//
 
-         addNewModel(_modelDB,
+         addNewModel(
+#ifndef REDIS
+                     _modelDB,
+#endif
                      _ann,
                      _modelFactory,
                      hint, 
@@ -2330,7 +2362,10 @@ uint128_t saved_model_key;
 
 	if (krigingModel->getNumberPoints() == _maxKrigingModelSize) {
 
-           addNewModel(_modelDB,
+           addNewModel(
+#ifndef REDIS
+                       _modelDB,
+#endif
                        _ann,
                        _modelFactory,
                        hint, 
@@ -2399,7 +2434,12 @@ uint128_t saved_model_key;
 
             _ann.remove(hint);
 
+#ifdef REDIS
+            SingletonDB& db = SingletonDB::getInstance();
+            db.erase(model_key);
+#else
             _modelDB.erase(model_key);
+#endif
 	    
 	    //
 	    // insert updated kriging model into database
@@ -2436,7 +2476,10 @@ uint128_t saved_model_key;
 	    // point insertion failed-add new model
 	    //
 
-             addNewModel(_modelDB,
+             addNewModel(
+#ifndef REDIS
+                         _modelDB,
+#endif
                          _ann,
                          _modelFactory,
                          hint, 

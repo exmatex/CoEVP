@@ -41,6 +41,19 @@ void  SingletonDB::push(const uint128_t &key, const std::vector<double>& buf, co
   freeReplyObject(reply);
 }
 
+void  SingletonDB::erase(const uint128_t &key){
+  redisReply* reply;
+  std::string skey=uint128_to_string(key);
+  reply = (redisReply *)redisCommand(redis, "DEL %s", skey.c_str());
+
+  if (!reply) {
+    throw std::runtime_error("No connection to redis server, please start one on host'"
+                             + std::string(REDIS_HOST) + "' and port "
+                             + std::to_string(REDIS_PORT));
+  }
+  freeReplyObject(reply);
+}
+
 redisReply *SingletonDB::pull_data(const uint128_t &key) {
   redisReply* reply;
   std::string skey=uint128_to_string(key);

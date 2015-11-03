@@ -42,7 +42,9 @@ namespace std {
             }
       };
 
+#ifndef REDIS
    typedef std::unordered_map<uint128_t, krigalg::InterpolationModelPtr> InterpolationModelDataBase;
+#endif
 
 }
 
@@ -84,7 +86,9 @@ namespace krigcpl {
                       int    valueDimension,
                       const krigalg::InterpolationModelFactoryPointer  & modelFactory,
                       ApproxNearestNeighbors& ann,
+#ifndef REDIS
                       InterpolationModelDataBase& modelDB,
+#endif
                       int    maxKrigingModelSize,
                       int    maxNumberSearchModels,
                       bool   useHint,
@@ -121,7 +125,9 @@ namespace krigcpl {
                       int    valueDimension,
                       const krigalg::InterpolationModelFactoryPointer  & modelFactory,
                       ApproxNearestNeighbors& ann,
+#ifndef REDIS
                       InterpolationModelDataBase& modelDB,
+#endif
                       int    maxKrigingModelSize,
                       int    maxNumberSearchModels,
                       bool   useHint,
@@ -280,7 +286,9 @@ namespace krigcpl {
       krigalg::InterpolationModelFactoryPointer _modelFactory;
 
       ApproxNearestNeighbors&     _ann;
+#ifndef REDIS
       InterpolationModelDataBase& _modelDB;
+#endif
 
       int    _maxKrigingModelSize;
       int    _maxNumberSearchModels;

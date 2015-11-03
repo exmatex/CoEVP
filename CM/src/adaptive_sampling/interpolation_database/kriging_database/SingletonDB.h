@@ -24,6 +24,7 @@ class SingletonDB {
   }
 
   void  push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length);
+  void  erase(const uint128_t &key);
   std::vector<double> pull(const uint128_t &key);
   std::vector<double> pull_key(const uint128_t &key);
 

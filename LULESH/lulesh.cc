@@ -69,7 +69,7 @@ Additional BSD Notice
 
 //  Command line option parsing (using Sriram code from old days)
 #include "cmdLineParser.h"
-int  sampling = 0;    //  By default, no adaptive sampling (but compiled in)
+int  sampling = 1;    //  By default, no adaptive sampling (but compiled in)
 
 #define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
