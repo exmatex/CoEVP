@@ -41,6 +41,19 @@ void  SingletonDB::push(const uint128_t &key, const std::vector<double>& buf, co
   freeReplyObject(reply);
 }
 
+void  SingletonDB::erase(const uint128_t &key){
+  redisReply* reply;
+  std::string skey=uint128_to_string(key);
+  reply = (redisReply *)redisCommand(redis, "DEL %s", skey.c_str());
+
+  if (!reply) {
+    throw std::runtime_error("No connection to redis server, please start one on host'"
+                             + std::string(REDIS_HOST) + "' and port "
+                             + std::to_string(REDIS_PORT));
+  }
+  freeReplyObject(reply);
+}
+
 redisReply *SingletonDB::pull_data(const uint128_t &key) {
   redisReply* reply;
   std::string skey=uint128_to_string(key);
@@ -62,6 +75,7 @@ redisReply *SingletonDB::pull_data(const uint128_t &key) {
 
 std::vector<double> SingletonDB::pull(const uint128_t &key) {
   redisReply* reply=pull_data(key);
+  //TODO what should we do with the second elemet?
   unsigned long *sz = (unsigned long *)(reply->element)[0]->str;
   double *raw=(double *)(sz+2);
   std::vector<double> packedContainer;

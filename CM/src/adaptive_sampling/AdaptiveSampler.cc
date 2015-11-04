@@ -141,7 +141,9 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
                                       m_valueDimension,
                                       modelFactory,
                                       *m_ann,
+#ifndef REDIS
                                       m_modelDB,
+#endif
                                       m_maxKrigingModelSize,
                                       m_maxNumberSearchModels,
                                       true,
