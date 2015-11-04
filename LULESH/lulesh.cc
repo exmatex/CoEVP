@@ -79,6 +79,7 @@ Additional BSD Notice
 int showMeMonoQ = 0 ;
 #define CONNECTIVITY_DEBUGGING 1
 #define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
+//#define VISIT_DATA_INTERVAL 100  // Set this to 100 for VisIt data writing
 //#undef USE_ADAPTIVE_SAMPLING
 #undef PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
