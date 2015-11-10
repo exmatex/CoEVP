@@ -20,6 +20,7 @@ LAPACK_LOC =
 BLAS_LOC =
 
 CXX = mpic++
+#CXX = mpig++
 CXXFLAGS = -g -O3 -fopenmp
 
 ###### CONFIGURATION END ############
@@ -55,7 +56,7 @@ endif
 LAPACK += -lblas
 
 lulesh: lulesh_main.cc lulesh.cc $(CM_LIB)
-	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) $+ $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LAPACK) -lm -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) $+ $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LAPACK) -lm -lz -o $@
 
 clean:
 	rm -f *~ lulesh

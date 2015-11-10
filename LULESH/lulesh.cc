@@ -3142,7 +3142,7 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
    delete [] nodeList ;
 
 
-   char *fname[] = { "lxim", "lxip", "letam", "letap", "lzetam", "lzetap" } ;
+   char fname[][10] = { "lxim", "lxip", "letam", "letap", "lzetam", "lzetap" } ;
    Index_t *eList = new int[domain.numElem()] ;
 
    for (int i=0; i<6; ++i) {
@@ -3626,11 +3626,12 @@ void Lulesh::go(int argc, char *argv[])
          if (domain.numSlices() != 1) {
             domain.planeNodeIds[planeNodes++] = nidx ;
          }
-         for (Index_t col=xBegin; col<(xEnd+1); ++col) {
+         for (Index_t col=xBegin; col<(xEnd+1); ++col)
 #else
          tx = Real_t(0.) ;
-         for (Index_t col=0; col<heightNodes; ++col) {
+         for (Index_t col=0; col<heightNodes; ++col)
 #endif
+         {
             domain.x(nidx) = tx ;
             domain.y(nidx) = ty ;
             domain.z(nidx) = tz ;
@@ -3677,12 +3678,13 @@ void Lulesh::go(int argc, char *argv[])
             domain.planeNodeIds[planeNodes++] = nidx ;
          }
 
-         for (Index_t col=xBegin; col<(xEnd+1); ++col) {
+         for (Index_t col=xBegin; col<(xEnd+1); ++col)
 #else
          tx = Real_t(0.) ;
 
-         for (Index_t col=0; col<heightNodes; ++col) {
+         for (Index_t col=0; col<heightNodes; ++col)
 #endif
+         {
             domain.x(nidx) = tx ;
             domain.y(nidx) = ty ;
             domain.z(nidx) = tz ;
@@ -3726,12 +3728,13 @@ void Lulesh::go(int argc, char *argv[])
             domain.planeNodeIds[planeNodes++] = nidx ;
          }
 
-         for (Index_t col=xBegin; col<(xEnd+1); ++col) {
+         for (Index_t col=xBegin; col<(xEnd+1); ++col)
 #else
          tx = Real_t(0.) ;
 
-         for (Index_t col=0; col<heightNodes; ++col) {
+         for (Index_t col=0; col<heightNodes; ++col)
 #endif
+         {
             domain.x(nidx) = tx ;
             domain.y(nidx) = ty ;
             domain.z(nidx) = tz ;

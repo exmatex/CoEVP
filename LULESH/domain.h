@@ -174,8 +174,8 @@ public:
 
       m_p.resize(size, Real_t(0.)) ;
       m_q.resize(size, Real_t(0.)) ;
-      m_ql.resize(size) ;
-      m_qq.resize(size) ;
+      m_ql.resize(size, Real_t(0.)) ;
+      m_qq.resize(size, Real_t(0.)) ;
 
       m_v.resize(size, 1.0) ;
       m_volo.resize(size) ;
