@@ -16,14 +16,22 @@ HDF5_LOC =
 LAPACK_LOC =
 BLAS_LOC =
 
+FLANN_LOC =
+#FLANN_LOC = ../flann/flann/src/cpp
+
 CXX = g++
-CXXFLAGS = -O3
+CXXFLAGS = -std=c++0x -O3
 
 ###### CONFIGURATION END ############
 
 CM_LIB = ../CM/lib/libcm.a
 
 INCLUDE_DIRS = -I../CM/include
+
+ifneq ($(strip $(FLANN_LOC)),)
+INCLUDE_DIRS +=  -I$(FLANN_LOC) -I$(FLANN_LOC)/flann
+CXXFLAGS += -DFLANN
+endif
 
 SILO_LIB =
 ifneq ($(strip $(SILO_LOC)),)

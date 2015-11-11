@@ -67,17 +67,17 @@ Additional BSD Notice
 #include <kriging/GaussianDerivativeCorrelationModel.h>
 #include <kriging/MultivariateDerivativeKrigingModelFactory.h>
 
-
-AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
-                                  const int                  valueDimension,
-                                  const std::vector<double>& pointScaling,
-                                  const std::vector<double>& valueScaling,
-                                  const int                  maxKrigingModelSize,
-                                  const int                  maxNumberSearchModels,
-                                  const double               theta,
-                                  const double               meanErrorFactor,
-                                  const double               tolerance,
-                                  const double               maxQueryPointModelDistance )
+AdaptiveSampler::AdaptiveSampler( const int                     pointDimension,
+                                  const int                     valueDimension,
+                                  const std::vector<double>&    pointScaling,
+                                  const std::vector<double>&    valueScaling,
+                                  const int                     maxKrigingModelSize,
+                                  const int                     maxNumberSearchModels,
+                                  const double                  theta,
+                                  const double                  meanErrorFactor,
+                                  const double                  tolerance,
+                                  const double                  maxQueryPointModelDistance,
+                                  ApproxNearestNeighbors*       ann )
    : m_pointDimension(pointDimension),
      m_valueDimension(valueDimension),
      m_pointScaling(pointScaling),
@@ -89,6 +89,7 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
      m_meanErrorFactor(meanErrorFactor),
      m_tolerance(tolerance),
      m_maxQueryPointModelDistance(maxQueryPointModelDistance),
+     m_ann(ann),
      m_printed_num_interp_models(0),
      m_printed_num_pairs(0),
      m_num_samples(0),
@@ -100,7 +101,6 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
      m_value_norm_max(0.),
      m_verbose(false)
 {
-
    DerivativeRegressionModelPointer 
       regressionModel(new LinearDerivativeRegressionModel);
 
@@ -110,25 +110,6 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
    MultivariateDerivativeKrigingModelFactoryPointer 
       modelFactory(new MultivariateDerivativeKrigingModelFactory(regressionModel,
                                                                  correlationModel));
-
-   // Construct the approximate nearest neighbor search object
-
-#ifdef FLANN
-   int n_trees = 1;         // input this from somewhere
-   int n_checks = 20;       // input this from somewhere
-
-   m_ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(m_pointDimension,
-                                                                     n_trees,
-                                                                     n_checks));
-#else
-   std::string mtreeDirectoryName = ".";
-
-   m_ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(m_pointDimension,
-                                                                     "kriging_model_database",
-                                                                     mtreeDirectoryName,
-                                                                     &(std::cout),
-                                                                     false));
-#endif
 
    bool db_from_file = false;  // FIX THIS (input from somewhere)
 

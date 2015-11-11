@@ -10,7 +10,8 @@
 #define included_MTreeObject
 
 #ifndef included_toolbox_Database
-#include "toolbox/database/Database.h"
+//#include "toolbox/database/Database.h"
+#include "Database.h"
 #endif
 
 #ifndef included_iostream

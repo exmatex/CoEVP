@@ -16,7 +16,8 @@ using namespace std;
 #define included_String
 #endif
 #ifndef included_toolbox_IOStream
-#include "toolbox/stream/IOStream.h"
+//#include "toolbox/stream/IOStream.h"
+#include "IOStream.h"
 #endif
 
 #ifndef included_sys_types

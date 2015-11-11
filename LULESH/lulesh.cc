@@ -72,7 +72,7 @@ Additional BSD Notice
 int  sampling = 1;    //  By default, no adaptive sampling (but compiled in)
 
 #define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
-#undef PRINT_PERFORMANCE_DIAGNOSTICS
+#define PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
 #undef WRITE_CHECKPOINT
@@ -87,6 +87,13 @@ int  sampling = 1;    //  By default, no adaptive sampling (but compiled in)
 // Constitutive model options
 #include "IdealGas.h"
 #include "ElastoViscoPlasticity.h"
+
+// Approximate nearest neighbor search options
+#ifdef FLANN
+#include "ApproxNearestNeighborsFLANN.h"
+#else
+#include "ApproxNearestNeighborsMTree.h"
+#endif
 
 // Fine scale model options
 #include "Taylor.h"        // the fine-scale plasticity model
@@ -2627,7 +2634,7 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
   int ok = 0;
   // Make sure this list matches what's written out above
   // All variables related to adaptive sampling MUST come AFTER the others
-  char vars[][11] = {"p","e","v","volo","q","speed","xd","yd","zd","num_as_models","as_efficiency"};
+  char vars[][14] = {"p","e","v","volo","q","speed","xd","yd","zd","num_as_models","as_efficiency"};
   //  This is kinda hacky--find a cleaner way to handle this.
   int numvars;
   if (sampling)
@@ -2696,16 +2703,17 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
 
   for(int v=0; v < numvars; ++v) {
     for(int i = 0; i < numRanks; i++) {
-      delete multivarObjs[v][i];
+      delete [] multivarObjs[v][i];
     }
-    delete multivarObjs[v];
+    delete [] multivarObjs[v];
   }
 
   // Clean up
   for(int i=0 ; i<numRanks ; i++) {
-    delete multimeshObjs[i];
-    delete multimatObjs[i];
+    delete [] multimeshObjs[i];
+    delete [] multimatObjs[i];
   }
+
   delete [] multimeshObjs;
   delete [] multimatObjs;
   delete [] multivarObjs;
@@ -3527,8 +3535,29 @@ void Lulesh::go(int argc, char *argv[])
          L(3,2) = D[3] + W[0];  // dyddz
          L(3,3) = D[2];         // dzddz
 
+         int point_dimension = plasticity_model->pointDimension();
+         ApproxNearestNeighbors* ann;
+
+#ifdef FLANN
+
+         int n_trees = 1;         // input this from somewhere
+         int n_checks = 20;       // input this from somewhere
+
+         ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension,
+                                                                         n_trees,
+                                                                         n_checks));
+#else
+         std::string mtreeDirectoryName = ".";
+         
+         ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
+                                                                         "kriging_model_database",
+                                                                         mtreeDirectoryName,
+                                                                         &(std::cout),
+                                                                         false));
+#endif
+
          size_t state_size;
-         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, L, bulk_modulus, shear_modulus, eos_model,
+         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, L, bulk_modulus, shear_modulus, eos_model,
                                                                   plasticity_model, sampling, state_size));
          domain.cm_state(i) = operator new(state_size);
          domain.cm(i)->getState(domain.cm_state(i));

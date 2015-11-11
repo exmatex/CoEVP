@@ -425,7 +425,6 @@ uint128_t saved_model_key;
       findBestCoKrigingModel(bool &                       canInterpolateFlag,
 			     const ResponsePoint &        point,
                              ApproxNearestNeighbors     & ann,
-                             //			     DB &                         krigingModels,
 #ifndef REDIS
 			     InterpolationModelDataBase & modelDB,
 #endif
@@ -532,7 +531,6 @@ uint128_t saved_model_key;
       findBestCoKrigingModel(bool &                       canInterpolateFlag,
 			     const ResponsePoint &        point,
                              ApproxNearestNeighbors     & ann,
-                             //			     DB &                         krigingModels,
 #ifndef REDIS
                              InterpolationModelDataBase & modelDB,
 #endif

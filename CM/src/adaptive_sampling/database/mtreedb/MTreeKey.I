@@ -72,7 +72,8 @@ Additional BSD Notice
 //
 
 #ifndef included_toolbox_MathUtilities
-#include "toolbox/base/MathUtilities.h"
+//#include "toolbox/base/MathUtilities.h"
+#include "MathUtilities.h"
 #endif
 
 #ifdef DEBUG_NO_INLINE

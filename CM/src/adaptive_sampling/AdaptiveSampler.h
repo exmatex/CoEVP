@@ -2,8 +2,9 @@
 #define ADAPTIVESAMPLER_INCLUDED
 
 #include <kriging_database/KrigingDataBase.h>
-#include <kriging_database/ApproxNearestNeighborsMTree.h>
-#include <kriging_database/ApproxNearestNeighborsFLANN.h>
+#include <kriging_database/ApproxNearestNeighbors.h>
+//#include <kriging_database/ApproxNearestNeighborsMTree.h>
+//#include <kriging_database/ApproxNearestNeighborsFLANN.h>
 
 #include "FineScale.h"
 
@@ -14,16 +15,17 @@ class AdaptiveSampler
 {
  public:
 
-   AdaptiveSampler( const int                  pointDimension,
-                    const int                  valueDimension,
-                    const std::vector<double>& pointScaling,
-                    const std::vector<double>& valueScaling,
-                    const int                  maxKrigingModelSize,
-                    const int                  maxNumberSearchModels,
-                    const double               theta,
-                    const double               meanErrorFactor,
-                    const double               tolerance,
-                    const double               maxQueryPointModelDistance );
+   AdaptiveSampler( const int                     pointDimension,
+                    const int                     valueDimension,
+                    const std::vector<double>&    pointScaling,
+                    const std::vector<double>&    valueScaling,
+                    const int                     maxKrigingModelSize,
+                    const int                     maxNumberSearchModels,
+                    const double                  theta,
+                    const double                  meanErrorFactor,
+                    const double                  tolerance,
+                    const double                  maxQueryPointModelDistance,
+                    ApproxNearestNeighbors*       ann );
 
    ~AdaptiveSampler();
 
