@@ -2904,6 +2904,15 @@ void Lulesh::UpdateStressForElems()
       }
    }
 
+#if defined(COEVP_MPI)
+   {
+      int g_max_nonlinear_iters ;
+      MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
+                    MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
+      max_nonlinear_iters = g_max_nonlinear_iters ;
+   }
+#endif
+
    // The maximum number of Newton iterations required is an indicaton of
    // fast time scales in the fine-scale model.  If the number of iterations
    // becomes large, we need to reduce the timestep.  It it becomes small,
@@ -4052,8 +4061,12 @@ void Lulesh::go(int argc, char *argv[])
    domain.lxip(domElems-1) = domElems-1 ;
 
    for (Index_t i=0; i<heightElems; ++i) {
+      /* These are unused dummy values at boundaries */
+      /* They are initialized for Visualization purposes only */
       domain.letam(i) = i ; 
+#if 0
       domain.letap(domElems-heightElems+i) = domElems-heightElems+i ;
+#endif
    }
    for (Index_t i=heightElems; i<domElems; ++i) {
       domain.letam(i) = i-heightElems ;
@@ -4075,6 +4088,7 @@ void Lulesh::go(int argc, char *argv[])
                          coreElems*edgeElems*heightElems +
                          (coreElems-1)*heightElems - heightElems +
                          plane*(coreElems-1)*heightElems + col ;
+
          domain.letap(coreElems*edgeElems*heightElems +
                       (coreElems-1)*heightElems - heightElems +
                       plane*(coreElems-1)*heightElems + col)  =
@@ -4086,9 +4100,12 @@ void Lulesh::go(int argc, char *argv[])
 
    /* Create connectivity for lzetam, lzetap */
    for (Index_t i=0; i<edgeElems*heightElems; ++i) {
+      /* these are dummmy values for visualization only */
       domain.lzetam(i) = i ;
+#if 0
       domain.lzetap(domElems-edgeElems*heightElems+i) =
                             domElems-edgeElems*heightElems+i ;
+#endif
    }
    for (Index_t i=edgeElems*heightElems;
         i<coreElems*edgeElems*heightElems+(coreElems-1)*heightElems; ++i) {
@@ -4101,19 +4118,21 @@ void Lulesh::go(int argc, char *argv[])
    }
    /* set lzetam and lzetap for Z wing elements, minus notch plane */
    for (int i=coreElems*edgeElems*heightElems;
+        i < coreElems*edgeElems*heightElems+(coreElems-1)*heightElems;
+        ++i) {
+      domain.lzetap(i) = i + (coreElems-1)*heightElems ;
+   }
+   for (int i=coreElems*edgeElems*heightElems+(coreElems-1)*heightElems;
         i<coreElems*edgeElems*heightElems + (coreElems-1)*wingElems*heightElems;
         ++i) {
       domain.lzetam(i) = i - (coreElems-1)*heightElems ;
       domain.lzetap(i) = i + (coreElems-1)*heightElems ;
    }
-   /* patch lzetam */
-   for (int i=coreElems*edgeElems*heightElems;
-        i<coreElems*edgeElems*heightElems + (coreElems-1)*heightElems; ++i) {
-      domain.lzetam(i) = i - edgeElems*heightElems ;
-   }
    /* set lzetam, lzetap for notch plane */
    for (int i=domElems-wingElems*heightElems; i<domElems; ++i) {
-      domain.lzetam(i) = i - heightElems ;
+      if (i >= domElems-wingElems*heightElems + heightElems) {
+         domain.lzetam(i) = i - heightElems ;
+      }
       domain.lzetap(i) = i + heightElems ;
    }
    /* patch lzetap for notch plane row of elements */
@@ -4133,17 +4152,33 @@ void Lulesh::go(int argc, char *argv[])
 
 #if defined(COEVP_MPI)
 
-   if (domain.sliceLoc() != 0) {
-      /* adjust lxim() */
-      for (int i=0; i<domain.commElems(); ++i) {
-         domain.lxim(domain.planeElemIds[i]) = domElems+i ;
+   if (domain.numSlices() > 1) {
+      if (domain.sliceLoc() == 0) {
+         for (int i=0; i<domain.commElems(); ++i) {
+            /* adjust lxip() to point at (end of) com buffer data */
+            domain.lxip(domain.planeElemIds[i]+domain.sliceHeight()-1)
+               = domElems+i;
+         }
       }
-   }
-   if (domain.sliceLoc() != domain.numSlices()-1) {
-      /* adjust lxip() */
-      int tmpOffSet = (domain.numSlices() == 2 || domain.sliceLoc() == 0) ? 0 : domain.commElems() ;
-      for (int i=0; i<domain.commElems(); ++i) {
-         domain.lxip(domain.planeElemIds[i]+domain.sliceHeight()-1) = domElems+tmpOffSet+i;
+      else if (domain.sliceLoc() == domain.numSlices()-1) {
+         /* adjust lxim() to point at (end of) comm buffer data */
+         for (int i=0; i<domain.commElems(); ++i) {
+            domain.lxim(domain.planeElemIds[i]) = domElems+i ;
+         }
+      }
+      else /* two messages recevied */ {
+         /* "plane below" data goes at end of buffer */
+         int endOfBuffer = domElems ;
+         for (int i=0; i<domain.commElems(); ++i) {
+            domain.lxim(domain.planeElemIds[i]) = endOfBuffer+i ;
+         }
+         /* "plane above" data goes after "plane below" data */
+         endOfBuffer += domain.commElems() ;
+         for (int i=0; i<domain.commElems(); ++i) {
+            /* adjust lxip() to point at (end of) com buffer data */
+            domain.lxip(domain.planeElemIds[i]+domain.sliceHeight()-1)
+               = endOfBuffer+i;
+         }
       }
    }
 
