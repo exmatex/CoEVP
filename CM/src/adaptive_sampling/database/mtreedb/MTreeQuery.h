@@ -10,8 +10,8 @@
 #ifndef included_MTreeQuery
 #define included_MTreeQuery
 
-#ifndef included_MetricSpacePoint
-#include <base/MetricSpacePoint.h>
+#ifndef included_MTreePoint
+#include "MTreePoint.h"
 #endif
 #ifndef included_MTreeEntry
 #include "MTreeEntry.h"
@@ -35,7 +35,7 @@ public:
     * (no error checking), sets grade to zero, and caches
     * pointer to MTree (for statistics gathering).
     */
-   MTreeQuery(MetricSpacePointPtr query_point,
+   MTreeQuery(MTreePointPtr query_point,
               double query_radius,
               MTree* tree);
 
@@ -52,7 +52,7 @@ public:
    /*!
     * Return query point. 
     */
-   MetricSpacePointPtr getPoint() const;
+   MTreePointPtr getPoint() const;
 
    /*!
     * Return query grade. 
@@ -85,7 +85,7 @@ private:
    MTreeQuery();
    void operator=(const MTreeQuery&);
    
-   MetricSpacePointPtr   d_query_point;
+   MTreePointPtr   d_query_point;
    double          d_radius;
    double          d_grade;
    MTree*          d_tree;

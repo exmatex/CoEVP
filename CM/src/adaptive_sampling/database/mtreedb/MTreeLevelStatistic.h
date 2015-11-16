@@ -10,8 +10,8 @@
 #ifndef included_MTreeLevelStatistic
 #define included_MTreeLevelStatistic
 
-#ifndef included_MetricSpacePoint
-#include <base/MetricSpacePoint.h>
+#ifndef included_MTreePoint
+#include <mtreedb/MTreePoint.h>
 #endif
 #ifndef included_MTreeNode
 #include "MTreeNode.h"
@@ -33,7 +33,7 @@ class MTreeNodeStat;
  * @brief MTreeLevelStatistic is a simple class for storing
  * statistics for a single MTree level.
  * 
- * @see MetricSpacePoint 
+ * @see MTreePoint 
  */
 
 class MTreeLevelStatistic

@@ -67,20 +67,17 @@ Additional BSD Notice
 #include <kriging/GaussianDerivativeCorrelationModel.h>
 #include <kriging/MultivariateDerivativeKrigingModelFactory.h>
 
-#include <mtreedb/MTree.h>
-
-#include "interpolation_database/kriging_db/DBKrigingModelObjectFactory.h"
-
-AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
-                                  const int                  valueDimension,
-                                  const std::vector<double>& pointScaling,
-                                  const std::vector<double>& valueScaling,
-                                  const int                  maxKrigingModelSize,
-                                  const int                  maxNumberSearchModels,
-                                  const double               theta,
-                                  const double               meanErrorFactor,
-                                  const double               tolerance,
-                                  const double               maxQueryPointModelDistance )
+AdaptiveSampler::AdaptiveSampler( const int                     pointDimension,
+                                  const int                     valueDimension,
+                                  const std::vector<double>&    pointScaling,
+                                  const std::vector<double>&    valueScaling,
+                                  const int                     maxKrigingModelSize,
+                                  const int                     maxNumberSearchModels,
+                                  const double                  theta,
+                                  const double                  meanErrorFactor,
+                                  const double                  tolerance,
+                                  const double                  maxQueryPointModelDistance,
+                                  ApproxNearestNeighbors*       ann )
    : m_pointDimension(pointDimension),
      m_valueDimension(valueDimension),
      m_pointScaling(pointScaling),
@@ -92,6 +89,7 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
      m_meanErrorFactor(meanErrorFactor),
      m_tolerance(tolerance),
      m_maxQueryPointModelDistance(maxQueryPointModelDistance),
+     m_ann(ann),
      m_printed_num_interp_models(0),
      m_printed_num_pairs(0),
      m_num_samples(0),
@@ -103,7 +101,6 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
      m_value_norm_max(0.),
      m_verbose(false)
 {
-
    DerivativeRegressionModelPointer 
       regressionModel(new LinearDerivativeRegressionModel);
 
@@ -114,19 +111,6 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
       modelFactory(new MultivariateDerivativeKrigingModelFactory(regressionModel,
                                                                  correlationModel));
 
-   // Construct the key database
-
-   m_keyDB = (DB*)(new MTree("kriging_model_database", &(std::cout), false));
-
-   std::string mtreeDirectoryName = ".";
-
-   m_keyDB->initializeCreate(mtreeDirectoryName + "/" 
-                          "kriging_model_database",
-                          "krigcpl",
-                          *(new DBKrigingModelObjectFactory<InterpolationModel>));
-      
-   ((MTree*)m_keyDB)->setMaxNodeEntries(12);
-     
    bool db_from_file = false;  // FIX THIS (input from somewhere)
 
    if ( db_from_file ) {
@@ -134,18 +118,20 @@ AdaptiveSampler::AdaptiveSampler( const int                  pointDimension,
    }
    else {
 
-      m_interp = new KrigingInterpolationKeyDB( m_pointDimension,
-                                                m_valueDimension,
-                                                modelFactory,
-                                                *m_keyDB,
-                                                m_modelDB,
-                                                m_maxKrigingModelSize,
-                                                m_maxNumberSearchModels,
-                                                true,
-                                                m_meanErrorFactor,
-                                                m_tolerance,
-                                                m_maxQueryPointModelDistance,
-                                                600000000 );
+      m_interp = new KrigingDataBase( m_pointDimension,
+                                      m_valueDimension,
+                                      modelFactory,
+                                      *m_ann,
+#ifndef REDIS
+                                      m_modelDB,
+#endif
+                                      m_maxKrigingModelSize,
+                                      m_maxNumberSearchModels,
+                                      true,
+                                      m_meanErrorFactor,
+                                      m_tolerance,
+                                      m_maxQueryPointModelDistance,
+                                      600000000 );
    }
 
    // Add the gradient scaling from the point and value scaling
@@ -169,7 +155,6 @@ AdaptiveSampler::~AdaptiveSampler()
    m_valueScaling.resize(0);
    
    delete m_interp;
-   delete m_keyDB;
 }
 
 

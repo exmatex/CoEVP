@@ -7,21 +7,23 @@ COEVP_MPI = ON
 # locations.  These macros can be left undefined if visualization is not required.
 
 #SILO_LOC = /usr/local/tools/silo-4.8
-#SILO_LOC = 
+SILO_LOC = 
 
 # HDF5 library location (www.hdfgroup.org/HDF5).  This macro can
 # be undefined if visualization is not required.
-HDF5_LOC = /usr/local/tools/hdf5-intel-serial-1.8.8
-#HDF5_LOC = 
+#HDF5_LOC = /usr/local/tools/hdf5-intel-serial-1.8.8
+HDF5_LOC = 
 
 # BLAS and LAPACK library locations.  It may not be necessary
 # to specify these depending upon the linker defaults
 LAPACK_LOC =
 BLAS_LOC =
 
+FLANN_LOC =
+#FLANN_LOC = ../flann/flann/src/cpp
+
 CXX = mpic++
-#CXX = mpig++
-CXXFLAGS = -g -O3 -fopenmp
+CXXFLAGS = -std=c++0x -g -O3 -fopenmp
 
 ###### CONFIGURATION END ############
 
@@ -31,6 +33,11 @@ INCLUDE_DIRS = -I. -I../CM/include
 
 ifneq ($(strip $(COEVP_MPI)),)
 CXXFLAGS += -DCOEVP_MPI
+endif
+
+ifneq ($(strip $(FLANN_LOC)),)
+INCLUDE_DIRS +=  -I$(FLANN_LOC) -I$(FLANN_LOC)/flann
+CXXFLAGS += -DFLANN
 endif
 
 SILO_LIB =
@@ -55,8 +62,8 @@ LAPACK += -L$(BLAS_LOC)
 endif
 LAPACK += -lblas
 
-lulesh: lulesh_main.cc lulesh.cc $(CM_LIB)
-	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) $+ $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LAPACK) -lm -lz -o $@
+lulesh: lulesh_main.cc lulesh.cc cmdLineParser.c $(CM_LIB)
+	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) $+ $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LAPACK) -lm -o $@
 
 clean:
 	rm -f *~ lulesh

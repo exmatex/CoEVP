@@ -10,14 +10,12 @@ class IdealGas
 {
  public:
 
-   IdealGas( const double gamma,
-             const bool use_adaptive_sampling = false );
+   IdealGas( ConstitutiveGlobal&     global,
+             ApproxNearestNeighbors* ann,
+             const double            gamma,
+             const bool              use_adaptive_sampling = false );
 
-   virtual void advance( const double delta_t ) {};
-
-   virtual void setNewVelocityGradient( const Tensor2Gen& L_new ) {};
-
-   virtual void setVolumeChange( const double volume_change ) {};
+   virtual ConstitutiveData advance( const double delta_t, const Tensor2Gen& L_new, const double, void* state );
 
    virtual Tensor2Sym stress( const double compression,
                               const double e,
@@ -32,6 +30,13 @@ class IdealGas
    virtual double soundSpeedSquared( const double reference_density,
                                      const double relativeVolume,
                                      const double energy ) const;
+
+   virtual size_t getStateSize() const {return 0;}
+
+   virtual void getState( void* buffer ) const {};
+
+   virtual void setState( void* buffer ) {};
+
  private:
    
    const GammaLawGas m_eos;

@@ -230,7 +230,7 @@ using namespace std;
     virtual void putToDatabase(toolbox::Database & db) const = 0;
     virtual void getFromDatabase(toolbox::Database & db) = 0;
     
-    virtual void pack(std::vector<double> & packedContainer) const = 0;
+    virtual void pack(const Point& pack, std::vector<double> & packedContainer) const = 0;
     virtual void unpack(const std::vector<double> & packedContainer) = 0;
 
 

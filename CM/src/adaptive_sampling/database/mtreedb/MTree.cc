@@ -107,7 +107,10 @@ using namespace std;
 MTree::MTree(const string& tree_name,
              ostream* error_log_stream,
              bool do_error_checking)
-   : DB(tree_name, error_log_stream, do_error_checking),
+   : //DB(tree_name, error_log_stream, do_error_checking),
+   d_db_name(tree_name),
+   d_do_error_checking(do_error_checking),
+   d_error_log_stream(error_log_stream),
      d_max_node_entries(DEFAULT_MAX_NODE_ENTRIES),
      d_root_node_promotion_method(MTreeNode::MIN_OVERLAP_PROMOTION),
      d_node_promotion_method(MTreeNode::MAX_SPREAD_DISTANCE_PROMOTION),
@@ -148,7 +151,7 @@ MTree::~MTree()
 
 void MTree::initializeCreate(const string& directory_name,
                              const string& file_prefix,
-                             const DBObjectFactory& obj_factory)
+                             const MTreeObjectFactory& obj_factory)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
    assert(!directory_name.empty());
@@ -176,7 +179,7 @@ void MTree::initializeCreate(const string& directory_name,
 
 void MTree::initializeOpen(const string& directory_name,
                            const string& file_prefix,
-                           const DBObjectFactory& obj_factory)
+                           const MTreeObjectFactory& obj_factory)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
    assert(!directory_name.empty());
@@ -248,8 +251,8 @@ void MTree::setMaxNodeEntries(int max_entries)
 *************************************************************************
 */
  
-void MTree::insertObject(DBObject& object,
-                         const MetricSpacePoint& point,
+void MTree::insertObject(MTreeObject& object,
+                         const MTreePoint& point,
                          double radius)
 {
 #ifdef DEBUG_CHECK_ASSERTIONS
@@ -332,9 +335,9 @@ void MTree::insertObject(DBObject& object,
 *************************************************************************
 */
 
-DBObjectPtr MTree::getObject(int object_id) const
+MTreeObjectPtr MTree::getObject(int object_id) const
 {
-   DBObjectPtr ret_object( d_data_store.getObjectCopy(object_id) );
+   MTreeObjectPtr ret_object( d_data_store.getObjectCopy(object_id) );
    return(ret_object);
 }
 
@@ -499,8 +502,8 @@ void MTree::deleteObject(int object_id)
 *************************************************************************
 */
 
-void MTree::searchKNN(vector<DBSearchResult>& results,
-                      const MetricSpacePoint& query_point,
+void MTree::searchKNN(vector<MTreeSearchResult>& results,
+                      const MTreePoint& query_point,
                       int k_neighbors,
                       bool make_safe)
 {
@@ -515,7 +518,7 @@ void MTree::searchKNN(vector<DBSearchResult>& results,
        * and queue of nodes to search.
        */
 
-      const double max_dist = MetricSpacePoint::getMaxDistance();
+      const double max_dist = MTreePoint::getMaxDistance();
       const int    klast    = k_neighbors - 1;
 
       MTreeQuery query( query_point.makeCopy(), max_dist, this );
@@ -645,9 +648,9 @@ void MTree::searchKNN(vector<DBSearchResult>& results,
 *                                                                       *
 *************************************************************************
 */
-
-void MTree::searchRange(list<DBSearchResult>& results,
-                        const MetricSpacePoint& query_point,
+#if 0
+void MTree::searchRange(list<MTreeSearchResult>& results,
+                        const MTreePoint& query_point,
                         double radius,
                         bool make_safe)
 {
@@ -696,6 +699,7 @@ void MTree::searchRange(list<DBSearchResult>& results,
 
    }
 }
+#endif
 
 /*
 *************************************************************************

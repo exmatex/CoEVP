@@ -64,9 +64,12 @@ Additional BSD Notice
 #include "IdealGas.h"
 
 
-IdealGas::IdealGas( const double gamma,
-                    const bool   use_adaptive_sampling )
-   : m_eos(gamma),
+IdealGas::IdealGas( ConstitutiveGlobal&     global,
+                    ApproxNearestNeighbors* ann,
+                    const double            gamma,
+                    const bool              use_adaptive_sampling )
+   : Constitutive(global),
+     m_eos(gamma),
      m_fine_scale_model(2,1)
 {
 
@@ -86,8 +89,23 @@ IdealGas::IdealGas( const double gamma,
 
       enableAdaptiveSampling( pointDimension, valueDimension, pointScaling, valueScaling,
                               maxKrigingModelSize, maxNumberSearchModels, theta, meanErrorFactor,
-                              tolerance, maxQueryPointModelDistance );
+                              tolerance, maxQueryPointModelDistance, ann );
    }
+}
+
+
+ConstitutiveData
+IdealGas::advance( const double      delta_t,
+                   const Tensor2Gen& L_new,
+                   const             double,
+                   void*             state )
+{
+   ConstitutiveData return_data;
+   return_data.sigma_prime = stressDeviator();
+   getModelInfo(return_data.num_models, return_data.num_point_value_pairs);
+   return_data.num_Newton_iters = 0;
+
+   return return_data;
 }
 
 

@@ -31,7 +31,7 @@ MTreeDataStore::writeObjects(const DataPredicate & predicate)
 	    // get object pointer
 	    //
 
-	    DBObjectPtr objectPointer = getObjectPtr(object_id);
+	    MTreeObjectPtr objectPointer = getObjectPtr(object_id);
 
 	    //
 	    // write object if predicate is true

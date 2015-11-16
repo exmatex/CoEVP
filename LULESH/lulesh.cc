@@ -78,9 +78,12 @@ Additional BSD Notice
 
 int showMeMonoQ = 0 ;
 #define CONNECTIVITY_DEBUGGING 1
+//  Command line option parsing (using Sriram code from old days)
+#include "cmdLineParser.h"
+int  sampling = 1;    //  By default, no adaptive sampling (but compiled in)
+
 #define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
-#undef USE_ADAPTIVE_SAMPLING
-#undef PRINT_PERFORMANCE_DIAGNOSTICS
+#define PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
 #undef WRITE_CHECKPOINT
@@ -95,6 +98,13 @@ int showMeMonoQ = 0 ;
 // Constitutive model options
 #include "IdealGas.h"
 #include "ElastoViscoPlasticity.h"
+
+// Approximate nearest neighbor search options
+#ifdef FLANN
+#include "ApproxNearestNeighborsFLANN.h"
+#else
+#include "ApproxNearestNeighborsMTree.h"
+#endif
 
 // Fine scale model options
 #include "Taylor.h"        // the fine-scale plasticity model
@@ -1907,8 +1917,8 @@ void Lulesh::CalcKinematicsForElems( Index_t numElem, Real_t dt )
     L(3,2) = D[3] + W[0];  // dyddz
     L(3,3) = D[2];         // dzddz
 
-    domain.cm(k)->setNewVelocityGradient( L );
-    domain.cm(k)->setVolumeChange( relativeVolume/domain.v(k) );
+    domain.cm_vel_grad(k) = L;
+    domain.cm_vol_chng(k) = relativeVolume/domain.v(k);
 
     Real_t dt2 = Real_t(0.5) * dt;
     for ( Index_t j=0 ; j<8 ; ++j )
@@ -2869,23 +2879,21 @@ void Lulesh::UpdateStressForElems()
 #endif
       for (Index_t k=0; k<numElem; ++k) {
 
-         // advance constitutive model
-         domain.cm(k)->advance(domain.deltatime());
+         ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
+                                                          domain.cm_vel_grad(k),
+                                                          domain.cm_vol_chng(k),
+                                                          domain.cm_state(k));
 
-         const ElastoViscoPlasticity* cm = (ElastoViscoPlasticity*)domain.cm(k);
-
-         int num_iters = cm->numNewtonIterations();
+         int num_iters = cm_data.num_Newton_iters;
          if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
 
 #if 0
          if (num_iters > MAX_NONLINEAR_ITER) {
-            Int_t numModels, numPairs;
-            domain.cm(k)->getModelInfo(numModels, numPairs);
-            cout << "numModels = " << numModels << ", numPairs = " << numPairs << endl;
+            cout << "numModels = " << cm_data.num_models << ", numPairs = " << cm_data.num_point_value_pairs << endl;
          }
 #endif
 
-         Tensor2Sym sigma_prime = domain.cm(k)->stressDeviator();
+         const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
 
          domain.sx(k) = sigma_prime(1,1);
          domain.sy(k) = sigma_prime(2,2);
@@ -3104,7 +3112,6 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
                       NULL);
    delete [] nodalmass ;
 
-#ifdef USE_ADAPTIVE_SAMPLING
    Real_t *num_as_models = new double[domain.numElem()] ;
    Int_t numModels, numPairs;
    for (int ei=0; ei < domain.numElem(); ++ei) {
@@ -3132,7 +3139,6 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
                       NULL);
 
    delete [] as_efficiency;
-#endif
 
 #ifdef CONNECTIVITY_DEBUGGING
    Index_t *nodeList = new int[domain.numElem()] ;
@@ -3211,11 +3217,8 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
   int *varTypes;
   int ok = 0;
   // Make sure this list matches what's written out above
-  char vars[][16] = {"p","e","v","volo","q","speed","xd","yd","zd","nodalmass"
-
-#ifdef USE_ADAPTIVE_SAMPLING
-                    ,"num_as_models","as_efficiency"
-#endif
+  // All variables related to adaptive sampling MUST come AFTER the others
+  char vars[][14] = {"p","e","v","volo","q","speed","xd","yd","zd","num_as_models","as_efficiency"
 #ifdef CONNECTIVITY_DEBUGGING
                     ,"node_conn0", "node_conn1", "node_conn2", "node_conn3",
                      "node_conn4", "node_conn5", "node_conn6", "node_conn7",
@@ -3223,8 +3226,16 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
                      "elembc"
 #endif
   };
-
-  int numvars = sizeof(vars)/sizeof(vars[0]);
+  
+  //  This is kinda hacky--find a cleaner way to handle this.
+  int numvars;
+  if (sampling)
+    numvars = 11;
+  else
+    numvars = 9;
+#ifdef CONNECTIVITY_DEBUGGING
+  numvars = 26;
+#endif
 
   // Reset to the root directory of the silo file
   DBSetDir(db, "/");
@@ -3297,6 +3308,7 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
     delete [] multimeshObjs[i];
     delete [] multimatObjs[i];
   }
+
   delete [] multimeshObjs;
   delete [] multimatObjs;
   delete [] multivarObjs;
@@ -3456,8 +3468,25 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
 
 void Lulesh::go(int argc, char *argv[])
 {
-   Index_t gheightElems = 26 ;
+  //  Parse command line optoins
+  int  help   = 0;
+  
+  addArg("help",   'h', 0, 'i',  &(help),     0, "print this message");
+  addArg("sample", 's', 0, 'i',  &(sampling), 0, "use adaptive sampling");
+
+  processArgs(argc,argv);
+  
+  if (help) {
+    printArgs();
+    freeArgs();
+    exit(1);
+  } 
+  if (sampling) 
+    printf("Using adaptive sampling...\n");
+  freeArgs();
+
    Index_t edgeElems = 16 ;
+   Index_t gheightElems = 26 ;
 // Index_t gheightElems = 8 ;
 // Index_t edgeElems = 4 ;
    Index_t edgeNodes = edgeElems+1 ;
@@ -4275,11 +4304,13 @@ void Lulesh::go(int argc, char *argv[])
    exit(0) ;
 #endif
 
-#ifdef USE_ADAPTIVE_SAMPLING
-   bool use_adaptive_sampling = true;
-#else
-   bool use_adaptive_sampling = false;
-#endif
+   //#ifdef USE_ADAPTIVE_SAMPLING
+   //bool use_adaptive_sampling = true;
+   //#else
+   //bool use_adaptive_sampling = false;
+   //#endif
+
+   ConstitutiveGlobal cm_global;
 
 #ifdef _OPENMP
 #pragma omp parallel for
@@ -4386,8 +4417,32 @@ void Lulesh::go(int argc, char *argv[])
          L(3,2) = D[3] + W[0];  // dyddz
          L(3,3) = D[2];         // dzddz
 
-         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(L, bulk_modulus, shear_modulus, eos_model,
-                                                                  plasticity_model, use_adaptive_sampling));
+         int point_dimension = plasticity_model->pointDimension();
+         ApproxNearestNeighbors* ann;
+
+#ifdef FLANN
+
+         int n_trees = 1;         // input this from somewhere
+         int n_checks = 20;       // input this from somewhere
+
+         ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension,
+                                                                         n_trees,
+                                                                         n_checks));
+#else
+         std::string mtreeDirectoryName = ".";
+         
+         ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
+                                                                         "kriging_model_database",
+                                                                         mtreeDirectoryName,
+                                                                         &(std::cout),
+                                                                         false));
+#endif
+
+         size_t state_size;
+         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, L, bulk_modulus, shear_modulus, eos_model,
+                                                                  plasticity_model, sampling, state_size));
+         domain.cm_state(i) = operator new(state_size);
+         domain.cm(i)->getState(domain.cm_state(i));
       }
    }
 
@@ -4461,7 +4516,7 @@ void Lulesh::go(int argc, char *argv[])
       }
 
 #ifdef PRINT_PERFORMANCE_DIAGNOSTICS
-      if ( use_adaptive_sampling ) {
+      if ( sampling ) {
 
          int total_samples = 0;
          int total_interpolations = 0;
@@ -4477,7 +4532,7 @@ void Lulesh::go(int argc, char *argv[])
 #endif
 
 #ifdef WRITE_FSM_EVAL_COUNT
-      if ( use_adaptive_sampling ) {
+      if ( sampling ) {
          Int_t num_fsm_evals = domain.cm(fsm_count_elem)->getNumSamples()
             - domain.cm(fsm_count_elem)->getNumSuccessfulInterpolations() ;
          fsm_count_file << domain.time() << "  " << num_fsm_evals - cumulative_fsm_count << endl;
@@ -4490,7 +4545,7 @@ void Lulesh::go(int argc, char *argv[])
    fsm_count_file.close();
 #endif   
 
-   if ( use_adaptive_sampling ) {
+   if ( sampling ) {
 
       Int_t minNumModels = 10000000;
       Int_t maxNumModels = 0;

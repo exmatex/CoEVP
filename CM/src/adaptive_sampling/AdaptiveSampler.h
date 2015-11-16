@@ -1,29 +1,31 @@
 #ifndef ADAPTIVESAMPLER_INCLUDED
 #define ADAPTIVESAMPLER_INCLUDED
 
-#include <key_db/KrigingInterpolationKeyDB.h>
-#include <vector>
+#include <kriging_database/KrigingDataBase.h>
+#include <kriging_database/ApproxNearestNeighbors.h>
+//#include <kriging_database/ApproxNearestNeighborsMTree.h>
+//#include <kriging_database/ApproxNearestNeighborsFLANN.h>
 
 #include "FineScale.h"
 
 using namespace krigalg;
 using namespace krigcpl;
 
-
 class AdaptiveSampler
 {
  public:
 
-   AdaptiveSampler( const int                  pointDimension,
-                    const int                  valueDimension,
-                    const std::vector<double>& pointScaling,
-                    const std::vector<double>& valueScaling,
-                    const int                  maxKrigingModelSize,
-                    const int                  maxNumberSearchModels,
-                    const double               theta,
-                    const double               meanErrorFactor,
-                    const double               tolerance,
-                    const double               maxQueryPointModelDistance );
+   AdaptiveSampler( const int                     pointDimension,
+                    const int                     valueDimension,
+                    const std::vector<double>&    pointScaling,
+                    const std::vector<double>&    valueScaling,
+                    const int                     maxKrigingModelSize,
+                    const int                     maxNumberSearchModels,
+                    const double                  theta,
+                    const double                  meanErrorFactor,
+                    const double                  tolerance,
+                    const double                  maxQueryPointModelDistance,
+                    ApproxNearestNeighbors*       ann );
 
    ~AdaptiveSampler();
 
@@ -93,10 +95,12 @@ class AdaptiveSampler
 
    double valueMaxNorm( const std::vector<double>& value ) const;
 
-   KrigingInterpolationKeyDB* m_interp;
+   KrigingDataBase* m_interp;
 
+   ApproxNearestNeighbors* m_ann;
+#ifndef REDIS
    InterpolationModelDataBase m_modelDB;
-   DB* m_keyDB;
+#endif
 
    std::vector<double> m_pointScaling;
    std::vector<double> m_valueScaling;

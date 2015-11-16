@@ -12,7 +12,7 @@ CXX = g++
 # Specify compiler options (optimization level, debugging options, etc.)
 #
 
-CXXFLAGS = -g -O3
+CXXFLAGS = -O3 -g
 
 #
 # Specify the location of the BLAS and LAPACK libraries.  Depending upon the
@@ -69,19 +69,23 @@ TENSOR_DEPS = $(TENSOR_SRC:.cc=.d)
 
 # Adaptive sampling
 
-AS_LOC       = ../src/adaptive_sampling
-INTERPDB_LOC = $(AS_LOC)/interpolation_database
-INTERPDB_SRC = $(shell ls $(INTERPDB_LOC)/base/*.cc $(INTERPDB_LOC)/key_db/*.cc)
-INTERP_LOC   = $(AS_LOC)/interpolation
-INTERP_SRC   = $(shell ls $(INTERP_LOC)/*/*.cc)
-DB_LOC       = $(AS_LOC)/database
-DB_SRC       = $(shell ls $(DB_LOC)/base/*.cc $(DB_LOC)/mtreedb/*.cc)
-UTILS_LOC    = $(AS_LOC)/utils
-UTILS_SRC    = $(shell ls $(UTILS_LOC)/toolbox/*/*.cc)
-MTL_LOC      = $(AS_LOC)/mtl_headers
-AS_SRC       = $(AS_LOC)/AdaptiveSampler.cc $(INTERPDB_SRC) $(INTERP_SRC) $(DB_SRC) $(UTILS_SRC)
-AS_OBJS      = $(AS_SRC:.cc=.o)
-AS_DEPS      = $(AS_SRC:.cc=.d)
+AS_LOC        = ../src/adaptive_sampling
+INTERPDB_LOC  = $(AS_LOC)/interpolation_database
+INTERPDB_SRC  = $(shell ls $(INTERPDB_LOC)/base/*.cc $(INTERPDB_LOC)/kriging_database/*.cc)
+INTERPDB_INCL = $(shell ls $(INTERPDB_LOC)/kriging_database/*.h)
+INTERP_LOC    = $(AS_LOC)/interpolation
+INTERP_SRC    = $(shell ls $(INTERP_LOC)/*/*.cc)
+DB_LOC        = $(AS_LOC)/database
+DB_SRC        = $(shell ls $(DB_LOC)/mtreedb/*.cc)
+DB_INCL       = $(shell ls $(DB_LOC)/mtreedb/*.h $(DB_LOC)/mtreedb/*.I)
+UTILS_LOC     = $(AS_LOC)/utils
+UTILS_SRC     = $(shell ls $(UTILS_LOC)/toolbox/*/*.cc $(UTILS_LOC)/murmur3/*.cc)
+UTILS_INCL    = $(shell ls $(UTILS_LOC)/toolbox/base/*.h $(UTILS_LOC)/toolbox/base/*.I $(UTILS_LOC)/toolbox/database/*.h $(UTILS_LOC)/toolbox/database/*.I $(UTILS_LOC)/toolbox/stream/*.h $(UTILS_LOC)/toolbox/stream/*.I)
+MTL_LOC       = $(AS_LOC)/mtl_headers
+AS_SRC        = $(AS_LOC)/AdaptiveSampler.cc $(INTERPDB_SRC) $(INTERP_SRC) $(DB_SRC) $(UTILS_SRC)
+AS_OBJS       = $(AS_SRC:.cc=.o)
+AS_DEPS       = $(AS_SRC:.cc=.d)
+AS_LOC        = ../src/adaptive_sampling
 
 # Constitutive models
 
@@ -119,12 +123,26 @@ KINTEST2_DEPS = kintest2.d
 
 CMLIB_SRC  = $(CM_SRC) $(EOS_SRC) $(FS_SRC) $(AS_SRC) $(TENSOR_SRC)
 CMLIB_OBJS = $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
-CMLIB_INCL = $(CM_INCL) $(EOS_INCL) $(FS_INCL) $(TENSOR_INCL)
+CMLIB_INCL = $(INTERPDB_INCL) $(DB_INCL) $(UTILS_INCL) $(CM_INCL) $(EOS_INCL) $(FS_INCL) $(TENSOR_INCL)
 
 CXXFLAGS += -std=c++0x
-CXXFLAGS += -I$(AS_LOC) -I$(MTL_LOC) -I$(INTERPDB_LOC) -I$(INTERP_LOC) -I$(DB_LOC) -I$(UTILS_LOC)
+CXXFLAGS += -I$(AS_LOC) -I$(MTL_LOC) -I$(INTERPDB_LOC) -I$(INTERPDB_LOC)/kriging_database -I$(INTERP_LOC)
+CXXFLAGS += -I$(DB_LOC) -I$(DB_LOC)/mtreedb -I$(UTILS_LOC) -I$(UTILS_LOC)/toolbox/base
+CXXFLAGS += -I$(UTILS_LOC)/toolbox/database -I$(UTILS_LOC)/toolbox/stream
 CXXFLAGS += -I$(TENSOR_LOC) -I$(CM_LOC) -I$(EOS_LOC) -I$(FS_LOC)
 CXXFLAGS += -DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN
+
+ifeq ($(REDIS), yes)
+REDIS_LOC = ../../redis/hiredis
+CXXFLAGS += -DSTRING_MODELS -DREDIS -I$(REDIS_LOC)
+REDIS_LIBS = $(REDIS_LOC)/libhiredis.a
+endif
+
+ifeq ($(FLANN), yes)
+FLANN_LOC = ../../flann/flann/src/cpp
+CXXFLAGS += -DFLANN -I$(FLANN_LOC)
+FLANN_LIBS = $(FLANN_LOC)/../../lib/libflann_s.a
+endif
 
 MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 
@@ -137,7 +155,7 @@ kintest2: $(KINTEST2_OBJS)
 	$(CXX) $(CXXFLAGS) $(KINTEST2_OBJS) $(LIBS) -o kintest2
 
 libcm:  $(CMLIB_OBJS)
-	ar crs libcm.a $(CMLIB_OBJS)
+	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
 	cp $(CMLIB_INCL) ../include
 	mv libcm.a ../lib
 

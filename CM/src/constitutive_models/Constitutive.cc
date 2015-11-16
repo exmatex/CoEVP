@@ -64,7 +64,6 @@ Additional BSD Notice
 #include "Constitutive.h"
 #include "AdaptiveSampler.h"
 
-
 Constitutive::~Constitutive()
 {
    if ( adaptiveSamplingEnabled() ) {
@@ -82,16 +81,17 @@ Constitutive::adaptiveSamplingEnabled() const
 
 
 void
-Constitutive::enableAdaptiveSampling( const int                  pointDimension,
-                                      const int                  valueDimension,
-                                      const std::vector<double>& pointScaling,
-                                      const std::vector<double>& valueScaling,
-                                      const int                  maxKrigingModelSize,
-                                      const int                  maxNumberSearchModels,
-                                      const double               theta,
-                                      const double               meanErrorFactor,
-                                      const double               tolerance,
-                                      const double               maxQueryPointModelDistance )
+Constitutive::enableAdaptiveSampling( const int                     pointDimension,
+                                      const int                     valueDimension,
+                                      const std::vector<double>&    pointScaling,
+                                      const std::vector<double>&    valueScaling,
+                                      const int                     maxKrigingModelSize,
+                                      const int                     maxNumberSearchModels,
+                                      const double                  theta,
+                                      const double                  meanErrorFactor,
+                                      const double                  tolerance,
+                                      const double                  maxQueryPointModelDistance,
+                                      ApproxNearestNeighbors*       ann )
 {
    m_sampler = new AdaptiveSampler( pointDimension,
                                     valueDimension,
@@ -102,7 +102,8 @@ Constitutive::enableAdaptiveSampling( const int                  pointDimension,
                                     theta,
                                     meanErrorFactor,
                                     tolerance,
-                                    maxQueryPointModelDistance );
+                                    maxQueryPointModelDistance,
+                                    ann );
 
    // This variable remembers the index of the most recently used interpolation model
    m_hint = -1;
@@ -256,4 +257,3 @@ Constitutive::getValueNormMax() const
 
    return max;
 }
-

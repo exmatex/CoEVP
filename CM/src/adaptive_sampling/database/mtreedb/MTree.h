@@ -28,9 +28,6 @@ using namespace std;
 using namespace std;
 #endif
 
-#ifndef included_DB
-#include <base/DB.h>
-#endif
 #ifndef included_MTreeDataStore
 #include "MTreeDataStore.h"
 #endif
@@ -40,8 +37,8 @@ using namespace std;
 #ifndef included_MTreeNode
 #include "MTreeNode.h"
 #endif
-#ifndef included_DBObject
-#include <base/DBObject.h>
+#ifndef included_MtreeObject
+#include "MTreeObject.h"
 #endif
 #ifndef included_MTreeSearchResult
 #include "MTreeSearchResult.h"
@@ -98,14 +95,14 @@ class MTreeSearchResult;
  * -# Destroy the tree by calling the dtor explicitly or letting the
  *               tree go out of scope.
  * 
- * @see DBObject
- * @see MetricSpacePoint
+ * @see MTreeObject
+ * @see MTreePoint
  * @see MTreeNode
  * @see MTreeDataStore
  */
 
 class MTree
-   : public DB
+//   : public DB
 {
 public:
    friend class MTreeNode;
@@ -148,7 +145,7 @@ public:
     */
    virtual void initializeCreate(const string& directory_name,
                                  const string& file_prefix,
-                                 const DBObjectFactory& obj_factory);
+                                 const MTreeObjectFactory& obj_factory);
 
    /*!
     * Initialize MTree to state contained in existing data files.
@@ -171,7 +168,7 @@ public:
     */
    virtual void initializeOpen(const string& directory_name,
                                const string& file_prefix,
-                               const DBObjectFactory& obj_factory);
+                               const MTreeObjectFactory& obj_factory);
 
    /*!
     * Finalize MTree index structure.
@@ -283,8 +280,8 @@ public:
     *                assertion checking is on, assertion will result if 
     *                value is less than 0.
     */
-   virtual void insertObject(DBObject& object,
-                             const MetricSpacePoint& point,
+   virtual void insertObject(MTreeObject& object,
+                             const MTreePoint& point,
                              double radius);
    
    /*!
@@ -294,7 +291,7 @@ public:
     *                If this is not a valid id for an object indexed by
     *                the tree, the method will return a null pointer.
     */ 
-   virtual DBObjectPtr getObject(int object_id) const;
+   virtual MTreeObjectPtr getObject(int object_id) const;
 
    /*!
     * Delete object from tree. 
@@ -343,11 +340,11 @@ public:
     *                any data object in a search result, future database
     *                operations may produce unexpected behavior.
     */
-   virtual void searchKNN(vector<DBSearchResult>& results,
-                          const MetricSpacePoint& query_point,
+   virtual void searchKNN(vector<MTreeSearchResult>& results,
+                          const MTreePoint& query_point,
                           int k_neighbors,
                           bool make_safe = false);
-
+#if 0
    /*!
     * Search tree for all data objects within given distance of given 
     * query point.
@@ -382,10 +379,11 @@ public:
     *                any data object in a search result, future database
     *                operations may produce unexpected behavior.
     */
-   virtual void searchRange(list<DBSearchResult>& results,
-                            const MetricSpacePoint& query_point,
+   virtual void searchRange(list<MTreeSearchResult>& results,
+                            const MTreePoint& query_point,
                             double radius,
                             bool make_safe = false);
+#endif
 
    //@}
   
@@ -744,6 +742,19 @@ private:
 
    vector<int> d_number_nodes_in_level;
    vector<MTreeLevelStatistic*> d_level_statistics;
+
+   /*
+    * String name of DB used mainly in printing and error reporting
+    */
+   string d_db_name;
+
+   /*
+    * Error checking and reporing members; set in constructor
+    * but can be changed via member functions.
+    * Note: error checking is turned off by default.
+    */
+   bool     d_do_error_checking;
+   ostream* d_error_log_stream;
 
 };
 

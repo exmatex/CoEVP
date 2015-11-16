@@ -16,16 +16,16 @@
 using namespace std;
 #endif
 
-#ifndef included_MetricSpacePoint
-#include <base/MetricSpacePoint.h>
+#ifndef included_MTreePoint
+#include "MTreePoint.h"
 #endif
 
 /*!
  * @brief MTreeKey maintains the representation of the metric space region 
  * associated with each MTreeEntry in an MTree structure.  The metric space 
- * region is defined by a center point (an MetricSpacePoint object) and a radius.
+ * region is defined by a center point (an MTreePoint object) and a radius.
  * 
- * @see MetricSpacePoint
+ * @see MTreePoint
  */
 
 class MTreeKey
@@ -50,7 +50,7 @@ public:
    /*!
     * MTree key ctor that specifies all data members.
     */
-   MTreeKey(const MetricSpacePointPtr point,
+   MTreeKey(const MTreePointPtr point,
             double radius, 
             double dist2parent = getUndefinedDistanceToParent());
 
@@ -65,10 +65,10 @@ public:
    MTreeKey& operator=(const MTreeKey& rhs);
 
    /*!
-    * Return const pointer to MetricSpacePoint associated with this 
+    * Return const pointer to MTreePoint associated with this 
     * key object.
     */
-   const MetricSpacePointPtr getPoint() const;
+   const MTreePointPtr getPoint() const;
 
    /*!
     * Return radius of region associated with this key object.
@@ -116,7 +116,7 @@ private:
     * Center point of metric space region defined by key;
     * null by default
     */
-   MetricSpacePointPtr  d_point;
+   MTreePointPtr  d_point;
 
    /*
     * Radius of metric space region defined by key;

@@ -72,7 +72,8 @@ Additional BSD Notice
 //
 
 #ifndef included_toolbox_MathUtilities
-#include "toolbox/base/MathUtilities.h"
+//#include "toolbox/base/MathUtilities.h"
+#include "MathUtilities.h"
 #endif
 
 #ifdef DEBUG_NO_INLINE
@@ -106,7 +107,7 @@ MTreeKey::MTreeKey(const MTreeKey& key)
 
 inline
 MTreeKey::MTreeKey(
-   const MetricSpacePointPtr point,
+   const MTreePointPtr point,
    double radius,
    double dist2parent)
 :
@@ -143,7 +144,7 @@ MTreeKey& MTreeKey::operator=(const MTreeKey& rhs)
 */
 
 inline 
-const MetricSpacePointPtr MTreeKey::getPoint() const 
+const MTreePointPtr MTreeKey::getPoint() const 
 {
    return(d_point);
 }

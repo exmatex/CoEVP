@@ -1,25 +1,33 @@
 #ifndef _CONSTITUTIVE_
 #define _CONSTITUTIVE_
 
+#include <cstring>
+#include "ConstitutiveGlobal.h"
+#include "ApproxNearestNeighbors.h"
 #include "FineScale.h"
 #include "tensor.h"
 
 class AdaptiveSampler;
 
+struct ConstitutiveData
+{
+   Tensor2Sym  sigma_prime;
+   int         num_models;
+   int         num_point_value_pairs;
+   int         num_Newton_iters;
+};
+
 class Constitutive
 {
  public:
 
-   Constitutive()
-      : m_sampler(NULL), m_finescale_verbose(false) {;}
+   Constitutive( ConstitutiveGlobal& global)
+      : m_global(&global), m_sampler(NULL), m_finescale_verbose(false) {;}
 
    ~Constitutive();
 
-   virtual void advance( const double delta_t ) = 0;
-
-   virtual void setNewVelocityGradient( const Tensor2Gen& L_new ) = 0;
-
-   virtual void setVolumeChange( const double volume_change ) = 0;
+   //   virtual void advance( const double delta_t ) = 0;
+   virtual ConstitutiveData advance( const double delta_t, const Tensor2Gen& L_new, const double, void* state ) = 0;
 
    virtual Tensor2Sym stress( const double compression,
                               const double e,
@@ -34,6 +42,12 @@ class Constitutive
                                      const double relativeVolume,
                                      const double energy ) const = 0;
 
+   virtual size_t getStateSize() const = 0;
+
+   virtual void getState( void* buffer ) const = 0;
+
+   virtual void setState( void* buffer ) = 0;
+
    void enableAdaptiveSampling( const int                  pointDimension,
                                 const int                  valueDimension,
                                 const std::vector<double>& pointScaling,
@@ -43,7 +57,8 @@ class Constitutive
                                 const double               theta,
                                 const double               meanErrorFactor,
                                 const double               tolerance,
-                                const double               maxQueryPointModelDistance );
+                                const double               maxQueryPointModelDistance,
+                                ApproxNearestNeighbors*    ann );
 
    void sample( const FineScale&           fine_scale_model,
                 const std::vector<double>& point,
@@ -79,13 +94,36 @@ class Constitutive
 
    mutable double m_error_estimate;
 
+ protected:
+   
+   template <class T>
+   inline void pushObjectToBuffer( void**     buffer,
+                                   const T&   data ) const
+   {
+      size_t object_size = sizeof(T);
+      memcpy(*buffer, &data, object_size);
+      *buffer = ((char*)(*buffer)) + object_size;
+   };
+
+   template <class T>
+   inline void popObjectFromBuffer( void** buffer,
+                                    T&     data )
+   {
+      size_t object_size = sizeof(T);
+      memcpy(&data, *buffer, object_size);
+      *buffer = ((char*)(*buffer)) + object_size;
+   };
+
  private:
 
    mutable bool m_finescale_verbose;
 
    AdaptiveSampler* m_sampler;
 
+   ConstitutiveGlobal* m_global;
+
 };
+
 
 #endif
 

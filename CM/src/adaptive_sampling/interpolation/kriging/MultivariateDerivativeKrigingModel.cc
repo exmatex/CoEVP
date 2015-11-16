@@ -1915,7 +1915,8 @@ namespace krigalg {
     //
 
     void
-    MultivariateDerivativeKrigingModel::pack(std::vector<double> & packedContainer) const 
+    MultivariateDerivativeKrigingModel::pack(const Point&          point,
+                                             std::vector<double> & packedContainer) const 
     {
 
       //
@@ -1932,16 +1933,27 @@ namespace krigalg {
       packedContainer.clear();
 
       //
-      // store size data
+      // store size data and centroid
       //
 
-      const int numberPoints      = getNumberPoints();
-      const int numberPointValues = getNumberValues();
+      int point_size = getPointDimension();
+      assert(point_size == point.size());
+
+      packedContainer.push_back(point_size);
+
+      for (int i=0; i<point_size; ++i) {
+         packedContainer.push_back(point[i]);
+      }
+
+      packedContainer.push_back(getValueDimension());
+
+      const int numberPoints = getNumberPoints();
 
       packedContainer.push_back(numberPoints);
+
+      const int numberPointValues = getNumberValues();
+
       packedContainer.push_back(numberPointValues);
-      packedContainer.push_back(getPointDimension());
-      packedContainer.push_back(getValueDimension());
 
       //
       // store point/value data
@@ -2072,13 +2084,20 @@ namespace krigalg {
       int currentOffset = 0;
       
       //
-      // get size data
+      // get size data and centroid (which isn't saved)
       //
 
-      const int numberPoints      = (int)packedContainer[currentOffset++];
-      const int numberPointValues = (int)packedContainer[currentOffset++];
       const int pointDimension    = (int)packedContainer[currentOffset++];
+
+      for (int i=0; i<pointDimension; ++i) {
+         double dummy = packedContainer[currentOffset++];
+      }
+
       const int valueDimension    = (int)packedContainer[currentOffset++];
+
+      const int numberPoints      = (int)packedContainer[currentOffset++];
+
+      const int numberPointValues = (int)packedContainer[currentOffset++];
 
       //
       // clear _points and _values
