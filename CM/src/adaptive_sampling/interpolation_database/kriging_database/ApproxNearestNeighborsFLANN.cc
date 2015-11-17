@@ -123,8 +123,6 @@ ApproxNearestNeighborsFLANN::remove(int id)
 
    keymap[id] = uint128_t_undefined;
 
-   delete points[id];
+   delete [] points[id];
 }
-
-
 #endif
