@@ -336,7 +336,8 @@ namespace krigalg {
 
 	std::pair<Matrix, bool> inverseData = inverse(tranposeXinverseVX);
 
-	assert(inverseData.second == true);
+        assert(inverseData.second == true);
+
 	_matrixInverseXVX = inverseData.first;
 	
 
@@ -1063,7 +1064,7 @@ namespace krigalg {
 
 	if (!inverseData.second) {
 
-           //	   std::cout << "Inverse failed, point will not be inserted." << std::endl;
+           //           std::cout << "Inverse failed, point will not be inserted." << std::endl;
 	   
 	   return false;
 
@@ -1076,6 +1077,17 @@ namespace krigalg {
 
 	const double vConditionNumber = 
 	  mtl::one_norm(V)*mtl::one_norm(matrixInverseV);
+
+        if ( std::isnan(vConditionNumber) ) {
+
+#if 0
+ 	  std::cout << "Condition number is NaN: point will not bee inserted."
+ 		    << std::endl;
+#endif
+	  
+	  return false;
+
+        }
 
         const double maxConditionNumber = 1.0e10;
 	
