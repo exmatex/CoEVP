@@ -64,9 +64,10 @@ Additional BSD Notice
 #include "IdealGas.h"
 
 
-IdealGas::IdealGas( ConstitutiveGlobal& global,
-                    const double        gamma,
-                    const bool          use_adaptive_sampling )
+IdealGas::IdealGas( ConstitutiveGlobal&     global,
+                    ApproxNearestNeighbors* ann,
+                    const double            gamma,
+                    const bool              use_adaptive_sampling )
    : Constitutive(global),
      m_eos(gamma),
      m_fine_scale_model(2,1)
@@ -88,7 +89,7 @@ IdealGas::IdealGas( ConstitutiveGlobal& global,
 
       enableAdaptiveSampling( pointDimension, valueDimension, pointScaling, valueScaling,
                               maxKrigingModelSize, maxNumberSearchModels, theta, meanErrorFactor,
-                              tolerance, maxQueryPointModelDistance );
+                              tolerance, maxQueryPointModelDistance, ann );
    }
 }
 

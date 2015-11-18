@@ -66,14 +66,16 @@ Additional BSD Notice
 #include "ElastoViscoPlasticity.h"
 #include "xtensor.h"
 
-ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&    global,
-                                              const Tensor2Gen&      L,
-                                              const double           bulk_modulus,
-                                              const double           shear_modulus,
-                                              const EOS*             eos_model,
-                                              const Plasticity*      plasticity_model,
-                                              const bool             use_adaptive_sampling,
-                                              size_t&                state_size )
+
+ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&           global,
+                                              ApproxNearestNeighbors*       ann, 
+                                              const Tensor2Gen&             L,
+                                              const double                  bulk_modulus,
+                                              const double                  shear_modulus,
+                                              const EOS*                    eos_model,
+                                              const Plasticity*             plasticity_model,
+                                              const bool                    use_adaptive_sampling,
+                                              size_t&                       state_size )
    : Constitutive(global),
      m_D_old(sym(L)),
      m_W_old(skew(L)),
@@ -99,7 +101,6 @@ ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&    global,
       int valueDimension           = m_plasticity_model->valueDimension();
       int maxKrigingModelSize      = 6;
       int maxNumberSearchModels    = 4;
-      //      int maxNumberSearchModels    = 1;
       double theta                 = 5.e2;
       double meanErrorFactor       = 1.;
       double tolerance             = 5.e-4;
@@ -111,7 +112,7 @@ ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&    global,
 
       enableAdaptiveSampling( pointDimension, valueDimension, pointScaling, valueScaling,
                               maxKrigingModelSize, maxNumberSearchModels, theta, meanErrorFactor,
-                              tolerance, maxQueryPointModelDistance );
+                              tolerance, maxQueryPointModelDistance, ann );
 
       m_tol = tolerance;
    }

@@ -10,9 +10,10 @@ class IdealGas
 {
  public:
 
-   IdealGas( ConstitutiveGlobal& global,
-             const double        gamma,
-             const bool          use_adaptive_sampling = false );
+   IdealGas( ConstitutiveGlobal&     global,
+             ApproxNearestNeighbors* ann,
+             const double            gamma,
+             const bool              use_adaptive_sampling = false );
 
    virtual ConstitutiveData advance( const double delta_t, const Tensor2Gen& L_new, const double, void* state );
 

@@ -97,6 +97,13 @@ int showMeMonoQ = 0 ;
 #include "IdealGas.h"
 #include "ElastoViscoPlasticity.h"
 
+// Approximate nearest neighbor search options
+#ifdef FLANN
+#include "ApproxNearestNeighborsFLANN.h"
+#else
+#include "ApproxNearestNeighborsMTree.h"
+#endif
+
 // Fine scale model options
 #include "Taylor.h"        // the fine-scale plasticity model
 
@@ -3337,6 +3344,7 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
     delete [] multimeshObjs[i];
     delete [] multimatObjs[i];
   }
+
   delete [] multimeshObjs;
   delete [] multimatObjs;
   delete [] multivarObjs;
@@ -4427,9 +4435,30 @@ void Lulesh::ConstructFineScaleModel(bool use_adaptive_sampling)
          L(3,2) = D[3] + W[0];  // dyddz
          L(3,3) = D[2];         // dzddz
 
+         int point_dimension = plasticity_model->pointDimension();
+         ApproxNearestNeighbors* ann;
+
+#ifdef FLANN
+
+         int n_trees = 1;         // input this from somewhere
+         int n_checks = 20;       // input this from somewhere
+
+         ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension,
+                                                                         n_trees,
+                                                                         n_checks));
+#else
+         std::string mtreeDirectoryName = ".";
+         
+         ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
+                                                                         "kriging_model_database",
+                                                                         mtreeDirectoryName,
+                                                                         &(std::cout),
+                                                                         false));
+#endif
+
          size_t state_size;
 
-         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, L, bulk_modulus, shear_modulus, eos_model,
+         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, L, bulk_modulus, shear_modulus, eos_model,
                                                                   plasticity_model, use_adaptive_sampling, state_size));
 
          domain.cm_state(i) = operator new(state_size);

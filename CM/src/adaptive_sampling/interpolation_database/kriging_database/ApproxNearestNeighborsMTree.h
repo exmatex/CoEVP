@@ -2,7 +2,8 @@
 #define included_ApproxNearestNeighborsMTree_h
 
 #include "ApproxNearestNeighbors.h"
-#include "mtreedb/MTree.h"
+//#include "mtreedb/MTree.h"
+#include "MTree.h"
 
 /*
   MTree KNN interface

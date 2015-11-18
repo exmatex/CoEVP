@@ -48,7 +48,7 @@ ApproxNearestNeighborsFLANN::insert(std::vector<double>& point,
       is_empty = false;
    }
    else {
-      flann_index.addPoints(pts,10000);
+      flann_index.addPoints(pts,1000000);
    }
 
    return id;
@@ -123,8 +123,6 @@ ApproxNearestNeighborsFLANN::remove(int id)
 
    keymap[id] = uint128_t_undefined;
 
-   delete points[id];
+   delete [] points[id];
 }
-
-
 #endif

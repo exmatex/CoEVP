@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include "ConstitutiveGlobal.h"
+#include "ApproxNearestNeighbors.h"
 #include "FineScale.h"
 #include "tensor.h"
 
@@ -56,7 +57,8 @@ class Constitutive
                                 const double               theta,
                                 const double               meanErrorFactor,
                                 const double               tolerance,
-                                const double               maxQueryPointModelDistance );
+                                const double               maxQueryPointModelDistance,
+                                ApproxNearestNeighbors*    ann );
 
    void sample( const FineScale&           fine_scale_model,
                 const std::vector<double>& point,

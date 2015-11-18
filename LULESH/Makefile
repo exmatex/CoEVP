@@ -20,7 +20,10 @@ LAPACK_LOC =
 BLAS_LOC =
 
 CXX = mpic++
-CXXFLAGS = -g -O3 -fopenmp
+CXXFLAGS = -g -O3 -fopenmp -std=c++0x -O3
+
+FLANN_LOC =
+#FLANN_LOC = ../flann/flann/src/cpp
 
 ###### CONFIGURATION END ############
 
@@ -30,6 +33,11 @@ INCLUDE_DIRS = -I. -I../CM/include
 
 ifneq ($(strip $(COEVP_MPI)),)
 CXXFLAGS += -DCOEVP_MPI
+endif
+
+ifneq ($(strip $(FLANN_LOC)),)
+INCLUDE_DIRS +=  -I$(FLANN_LOC) -I$(FLANN_LOC)/flann
+CXXFLAGS += -DFLANN
 endif
 
 SILO_LIB =
