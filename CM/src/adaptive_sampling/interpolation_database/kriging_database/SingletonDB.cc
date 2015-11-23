@@ -101,11 +101,31 @@ std::vector<double> SingletonDB::pull_key(const uint128_t &key) {
 SingletonDB::SingletonDB() {
   std::cout << "Connecting to redis in SingletonDB..." << std::endl;
   redis = redisConnect(REDIS_HOST, REDIS_PORT);
+  this->redisServerHandle = nullptr;
   if (redis != NULL && redis->err) {
-    throw std::runtime_error("Error connecting to redis, please start one on host'"
+    //Attempt to spawn redis-server
+    std::cout << "Attempting to spawn redis in SingletonDB..." << std::endl;
+    this->redisServerHandle = popen(REDIS_SERVER, "r");
+    bool serverNotReady = true;
+    char buffer[256];
+    while(serverNotReady)
+    {
+      char * crashedIfNull = fgets(buffer, 256, this->redisServerHandle);
+      std::string lineStr(buffer);
+      size_t portIndex = lineStr.find(" port 6379");
+      if(crashedIfNull == nullptr || portIndex != std::string::npos)
+      {
+        serverNotReady = false;
+      }
+    }
+    //Try again
+    redis = redisConnect(REDIS_HOST, REDIS_PORT);
+    if (redis != NULL && redis->err) {
+      throw std::runtime_error("Error connecting to redis, please start one on host'"
                              + std::string(REDIS_HOST) + "' and port "
                              + std::to_string(REDIS_PORT));
-  }    
+    }
+  }
   redisReply *reply = (redisReply *) redisCommand(redis, "DBSIZE");
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
@@ -135,6 +155,12 @@ SingletonDB::~SingletonDB() {
     throw std::runtime_error("Wrong redis return type");
   }
   std::cout << reply->str << std::endl;
+  if(this->redisServerHandle != nullptr)
+  {
+    std::cout << "Closing redis server in SingletonDB..." << std::endl;
+    redisReply * reply = (redisReply *) redisCommand(redis, "SHUTDOWN");
+    pclose(this->redisServerHandle);
+  }
   redisFree(redis);
 }
 
