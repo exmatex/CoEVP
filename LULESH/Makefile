@@ -19,11 +19,12 @@ HDF5_LOC =
 LAPACK_LOC =
 BLAS_LOC =
 
-FLANN_LOC =
-#FLANN_LOC = ../flann/flann/src/cpp
+#FLANN_LOC =
+FLANN_LOC = ../flann/flann/src/cpp
 
 CXX = g++
-CXXFLAGS = -std=c++0x -g -O3 -fopenmp
+#CXXFLAGS = -std=c++0x -g -O3 -fopenmp
+CXXFLAGS = -std=c++0x -g -O3
 
 ###### CONFIGURATION END ############
 
@@ -38,7 +39,7 @@ endif
 
 ifneq ($(strip $(FLANN_LOC)),)
 INCLUDE_DIRS +=  -I$(FLANN_LOC) -I$(FLANN_LOC)/flann
-CXXFLAGS += -DFLANN
+#CXXFLAGS += -DFLANN
 endif
 
 SILO_LIB =

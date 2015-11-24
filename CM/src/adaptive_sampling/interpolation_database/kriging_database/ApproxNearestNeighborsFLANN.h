@@ -3,7 +3,6 @@
 #include <functional>
 #include "ApproxNearestNeighbors.h"
 
-#ifdef FLANN
 #include <flann/flann.hpp>
 /*
  Generic KNN interface
@@ -46,5 +45,4 @@ public:
 
     void knn_helper(std::vector<double> const& x, int k, int n_checks, std::vector<int> &ids, std::vector<uint128_t> &keys, std::vector<double> &dists);
 };
-#endif
 #endif

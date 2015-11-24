@@ -1,7 +1,5 @@
 #include "ApproxNearestNeighborsFLANN.h"
 
-#ifdef FLANN
-
 void
 ApproxNearestNeighborsFLANN::insert(std::vector<uint128_t> const& keys)
 {
@@ -125,4 +123,3 @@ ApproxNearestNeighborsFLANN::remove(int id)
 
    delete [] points[id];
 }
-#endif
