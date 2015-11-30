@@ -1,8 +1,10 @@
 #ifndef ADAPTIVESAMPLER_INCLUDED
 #define ADAPTIVESAMPLER_INCLUDED
 
-#include <kriging_database/KrigingDataBase.h>
-#include <kriging_database/ApproxNearestNeighbors.h>
+#include <KrigingDataBase.h>
+//#include <kriging_database/KrigingDataBase.h>
+#include <ApproxNearestNeighbors.h>
+//#include <kriging_database/ApproxNearestNeighbors.h>
 //#include <kriging_database/ApproxNearestNeighborsMTree.h>
 //#include <kriging_database/ApproxNearestNeighborsFLANN.h>
 
@@ -69,7 +71,8 @@ class AdaptiveSampler
 
    void setVerbose(const bool verbose) const {m_verbose = verbose;}
 
- private:
+ //private:
+ public:
 
    void verifyInterpolationAccuracy( const std::vector<double>& point,
                                      const std::vector<double>& value,

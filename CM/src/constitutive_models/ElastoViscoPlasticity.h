@@ -48,9 +48,11 @@ class ElastoViscoPlasticity
 
       int numNewtonIterations() const {return m_num_iters;}
 
-   private:
+   //private:
+   public:
 
-      inline Tensor2Sym tauBarPrime( const double      a,
+      //inline Tensor2Sym tauBarPrime( const double      a,
+      Tensor2Sym tauBarPrime( const double      a,
                                      const Tensor2Sym& Vbar_prime ) const;
 
       inline double a(double J) const {return pow(J,1./3.);}

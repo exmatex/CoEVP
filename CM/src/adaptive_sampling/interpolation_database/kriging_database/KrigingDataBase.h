@@ -16,11 +16,13 @@
 #endif
 
 #ifndef included_krigcpl_InterpolationDataBase_h
-#include "base/InterpolationDataBase.h"
+#include "InterpolationDataBase.h"
+//#include "base/InterpolationDataBase.h"
 #endif 
 
 #ifndef included_krigalg_InterpolationModelFactory_h
-#include <base/InterpolationModelFactory.h>
+#include <InterpolationModelFactory.h>
+//#include <base/InterpolationModelFactory.h>
 #endif
 
 //#ifndef included_base_DB
@@ -281,7 +283,7 @@ namespace krigcpl {
 
     public:
 
-    protected:
+//    protected:
       
       krigalg::InterpolationModelFactoryPointer _modelFactory;
 

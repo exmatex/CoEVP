@@ -4,10 +4,11 @@
 #include <cstring>
 #include "ConstitutiveGlobal.h"
 #include "ApproxNearestNeighbors.h"
+#include "AdaptiveSampler.h"
 #include "FineScale.h"
 #include "tensor.h"
 
-class AdaptiveSampler;
+//class AdaptiveSampler;
 
 struct ConstitutiveData
 {
@@ -114,7 +115,8 @@ class Constitutive
       *buffer = ((char*)(*buffer)) + object_size;
    };
 
- private:
+ //private:
+ public:
 
    mutable bool m_finescale_verbose;
 
