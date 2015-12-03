@@ -160,6 +160,7 @@ kintest2: $(KINTEST2_OBJS)
 libcm:  $(CMLIB_OBJS)
 	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
 	cp $(CMLIB_INCL) ../include
+	mkdir -p ../include/mtl
 	cp $(MTL_INCL) ../include/mtl
 	mv libcm.a ../lib
 
