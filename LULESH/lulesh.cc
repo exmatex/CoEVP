@@ -3609,7 +3609,7 @@ void Lulesh::go(int argc, char *argv[])
       (planeMin + planeMax) *
        domain.maxPlaneSize() * MAX_FIELDS_PER_MPI_COMM ;
 
-   if (comBufSize > 0) { // SMM
+   if (comBufSize > 0) {
       domain.commDataSend = new Real_t[comBufSize] ;
       domain.commDataRecv = new Real_t[comBufSize] ;
       /* prevent floating point exceptions */
