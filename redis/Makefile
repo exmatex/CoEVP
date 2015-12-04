@@ -32,8 +32,8 @@ $(HIREDIS_LIB): hiredis-${HIREDIS_PV}.tar.gz
 	ln -s hiredis-${HIREDIS_PV} hiredis
 
 clean:
-	rm -rf redis-${REDIS_PV}
-	rm -rf hiredis-${HIREDIS_PV}
+	rm -rf redis-${REDIS_PV} redis
+	rm -rf hiredis-${HIREDIS_PV} hiredis
 
 clean-tar:
 		rm -rf *.tar.gz

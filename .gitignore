@@ -1,7 +1,3 @@
-CMakeFiles
-CMakeCache.txt
-Makefile
-cmake_install.cmake
 libcm.a
 liblulesh_core.a
 lulesh
@@ -11,6 +7,7 @@ build
 *.o
 *.d
 CM/include/*.h
+CM/include/*.I
 dump.rdb
 redis/hiredis
 redis/redis

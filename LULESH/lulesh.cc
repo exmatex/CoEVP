@@ -69,7 +69,10 @@ Additional BSD Notice
 
 //  Command line option parsing (using Sriram code from old days)
 #include "cmdLineParser.h"
-int  sampling = 1;    //  By default, no adaptive sampling (but compiled in)
+int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
+int  flanning = 0;              //  By default, do not use FLANN for nearest neighbor search
+int  flann_n_trees = 1;         // Default can be overridden using command line
+int  flann_n_checks = 20;       // Default can be overridden using command line
 
 #define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
 #define PRINT_PERFORMANCE_DIAGNOSTICS
@@ -89,11 +92,8 @@ int  sampling = 1;    //  By default, no adaptive sampling (but compiled in)
 #include "ElastoViscoPlasticity.h"
 
 // Approximate nearest neighbor search options
-#ifdef FLANN
 #include "ApproxNearestNeighborsFLANN.h"
-#else
 #include "ApproxNearestNeighborsMTree.h"
-#endif
 
 // Fine scale model options
 #include "Taylor.h"        // the fine-scale plasticity model
@@ -2874,8 +2874,11 @@ void Lulesh::go(int argc, char *argv[])
   //  Parse command line optoins
   int  help   = 0;
   
-  addArg("help",   'h', 0, 'i',  &(help),     0, "print this message");
-  addArg("sample", 's', 0, 'i',  &(sampling), 0, "use adaptive sampling");
+  addArg("help",     'h', 0, 'i',  &(help),           0, "print this message");
+  addArg("sample",   's', 0, 'i',  &(sampling),       0, "use adaptive sampling");
+  addArg("flann",    'f', 0, 'i',  &(flanning),       0, "use FLANN library");
+  addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),  0, "number of FLANN trees");
+  addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks), 0, "number of FLANN checks");
 
   processArgs(argc,argv);
   
@@ -2886,6 +2889,11 @@ void Lulesh::go(int argc, char *argv[])
   } 
   if (sampling) 
     printf("Using adaptive sampling...\n");
+  if (flanning) {
+    printf("Using FLANN library...\n");
+    printf("   flann_n_trees: %d\n", flann_n_trees);
+    printf("   flann_n_checks: %d\n", flann_n_checks);
+  }
   freeArgs();
 
    Index_t edgeElems = 16 ;
@@ -3428,12 +3436,6 @@ void Lulesh::go(int argc, char *argv[])
    exit(0) ;
 #endif
 
-   //#ifdef USE_ADAPTIVE_SAMPLING
-   //bool use_adaptive_sampling = true;
-   //#else
-   //bool use_adaptive_sampling = false;
-   //#endif
-
    ConstitutiveGlobal cm_global;
 
    for (Index_t i=0; i<domElems; ++i) {
@@ -3541,24 +3543,20 @@ void Lulesh::go(int argc, char *argv[])
          int point_dimension = plasticity_model->pointDimension();
          ApproxNearestNeighbors* ann;
 
+         if (flanning) {
 #ifdef FLANN
-
-         int n_trees = 1;         // input this from somewhere
-         int n_checks = 20;       // input this from somewhere
-
-         ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension,
-                                                                         n_trees,
-                                                                         n_checks));
+           ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension, flann_n_trees, flann_n_checks));
 #else
-         std::string mtreeDirectoryName = ".";
-         
-         ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
-                                                                         "kriging_model_database",
-                                                                         mtreeDirectoryName,
-                                                                         &(std::cout),
-                                                                         false));
+          throw std::runtime_error("FLANN not compiled in"); 
 #endif
-
+         } else {
+           std::string mtreeDirectoryName = ".";
+           ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
+                                                                           "kriging_model_database",
+                                                                           mtreeDirectoryName,
+                                                                           &(std::cout),
+                                                                           false));
+         }
          size_t state_size;
          domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, L, bulk_modulus, shear_modulus, eos_model,
                                                                   plasticity_model, sampling, state_size));
