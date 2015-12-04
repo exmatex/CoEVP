@@ -4430,8 +4430,6 @@ void Lulesh::go(int argc, char *argv[])
 
          //#ifdef FLANN
          if (flanning) {
-            cout << "using FLANN" << endl;
-            exit(1);
            ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension, flann_n_trees, flann_n_checks));
          } else {
            //#else
