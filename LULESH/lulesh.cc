@@ -3115,18 +3115,19 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
                       NULL);
    delete [] nodalmass ;
 
-   Real_t *num_as_models = new double[domain.numElem()] ;
-   Int_t numModels, numPairs;
-   for (int ei=0; ei < domain.numElem(); ++ei) {
-      domain.cm(ei)->getModelInfo(numModels, numPairs);
-      num_as_models[ei] = Real_t(numModels) ;
-   }
-   ok += DBPutUcdvar1(db, "num_as_models", "mesh", (float*) num_as_models,
-                      domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
-                      NULL);
-   delete [] num_as_models ;
-
    if (sampling) {
+
+      Real_t *num_as_models = new double[domain.numElem()] ;
+      Int_t numModels, numPairs;
+      for (int ei=0; ei < domain.numElem(); ++ei) {
+         domain.cm(ei)->getModelInfo(numModels, numPairs);
+         num_as_models[ei] = Real_t(numModels) ;
+      }
+      ok += DBPutUcdvar1(db, "num_as_models", "mesh", (float*) num_as_models,
+                         domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                         NULL);
+      delete [] num_as_models ;
+
       Real_t *as_efficiency = new double[domain.numElem()] ;
       for (int ei=0; ei < domain.numElem(); ++ei) {
          Int_t numSuccessful = domain.cm(ei)->getNumSuccessfulInterpolations() ;
