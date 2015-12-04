@@ -85,7 +85,7 @@ int  flanning = 0;              //  By default, do not use FLANN for nearest nei
 int  flann_n_trees = 1;         // Default can be overridden using command line
 int  flann_n_checks = 20;       // Default can be overridden using command line
 
-#define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
+#define VISIT_DATA_INTERVAL 20  // Set this to 0 to disable VisIt data writing
 #define PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
@@ -3126,22 +3126,24 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
                       NULL);
    delete [] num_as_models ;
 
-   Real_t *as_efficiency = new double[domain.numElem()] ;
-   for (int ei=0; ei < domain.numElem(); ++ei) {
-      Int_t numSuccessful = domain.cm(ei)->getNumSuccessfulInterpolations() ;
-      Int_t numSamples = domain.cm(ei)->getNumSamples() ;
-      if ( numSamples > 0 ) {
-         as_efficiency[ei] = Real_t(numSuccessful) / Real_t(numSamples) ;
-      }
-      else {
-         as_efficiency[ei] = Real_t(1.) ;
-      }
-   }
-   ok += DBPutUcdvar1(db, "as_efficiency", "mesh", (float*) as_efficiency,
-                      domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
-                      NULL);
+   if (sampling) {
+      Real_t *as_efficiency = new double[domain.numElem()] ;
+      for (int ei=0; ei < domain.numElem(); ++ei) {
+         Int_t numSuccessful = domain.cm(ei)->getNumSuccessfulInterpolations() ;
+         Int_t numSamples = domain.cm(ei)->getNumSamples() ;
+         if ( numSamples > 0 ) {
+            as_efficiency[ei] = Real_t(numSuccessful) / Real_t(numSamples) ;
+         }
+         else {
+            as_efficiency[ei] = Real_t(1.) ;
+         }
+         n      }
+      ok += DBPutUcdvar1(db, "as_efficiency", "mesh", (float*) as_efficiency,
+                         domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                         NULL);
 
-   delete [] as_efficiency;
+      delete [] as_efficiency;
+   }
 
 #ifdef CONNECTIVITY_DEBUGGING
    Index_t *nodeList = new int[domain.numElem()] ;
@@ -4427,6 +4429,8 @@ void Lulesh::go(int argc, char *argv[])
 
          //#ifdef FLANN
          if (flanning) {
+            cout << "using FLANN" << endl;
+            exit(1);
            ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension, flann_n_trees, flann_n_checks));
          } else {
            //#else
