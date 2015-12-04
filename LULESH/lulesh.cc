@@ -3631,7 +3631,8 @@ void Lulesh::Initialize(int myRank, int numRanks)
       (planeMin + planeMax) *
        domain.maxPlaneSize() * MAX_FIELDS_PER_MPI_COMM ;
 
-   if (comBufSize != 0) {
+   //if (comBufSize != 0) {
+   if (comBufSize > 0) {
       domain.commDataSend = new Real_t[comBufSize] ;
       domain.commDataRecv = new Real_t[comBufSize] ;
       /* prevent floating point exceptions */
