@@ -4496,7 +4496,7 @@ void Lulesh::go(int argc, char *argv[])
 
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
-#if VISIT_DATA_INTERVAL!=0
+#if VISIT_DATA_INTERVAL!=0 && defined(COEVP_MPI)
       char meshName[64] ;
       if (domain.cycle() % VISIT_DATA_INTERVAL == 0) {
          DumpDomain(&domain, domain.sliceLoc(), domain.numSlices()) ;
@@ -4605,7 +4605,7 @@ void Lulesh::go(int argc, char *argv[])
 
    }
 
-#if VISIT_DATA_INTERVAL!=0
+#if VISIT_DATA_INTERVAL!=0 && defined(COEVP_MPI)
    if (domain.cycle() % VISIT_DATA_INTERVAL != 0) {
       DumpDomain(&domain, domain.sliceLoc(), domain.numSlices()) ;
    }
