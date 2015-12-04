@@ -3137,7 +3137,7 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
          else {
             as_efficiency[ei] = Real_t(1.) ;
          }
-         n      }
+      }
       ok += DBPutUcdvar1(db, "as_efficiency", "mesh", (float*) as_efficiency,
                          domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
                          NULL);
