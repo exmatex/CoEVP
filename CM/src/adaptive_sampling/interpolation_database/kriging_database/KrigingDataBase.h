@@ -11,10 +11,6 @@
 
 #include <unordered_map>
 
-#ifdef REDIS
-#include "SingletonDB.h"
-#endif
-
 #ifndef included_krigcpl_InterpolationDataBase_h
 #include "base/InterpolationDataBase.h"
 #endif 
@@ -29,6 +25,8 @@
 
 #include "ApproxNearestNeighbors.h"
 
+#include "ModelDatabase.h"
+
 namespace std {
 
    // Defining a hash function in order to use uint128_t as a key
@@ -42,9 +40,6 @@ namespace std {
             }
       };
 
-#ifndef REDIS
-   typedef std::unordered_map<uint128_t, krigalg::InterpolationModelPtr> InterpolationModelDataBase;
-#endif
 
 }
 
@@ -86,9 +81,6 @@ namespace krigcpl {
                       int    valueDimension,
                       const krigalg::InterpolationModelFactoryPointer  & modelFactory,
                       ApproxNearestNeighbors& ann,
-#ifndef REDIS
-                      InterpolationModelDataBase& modelDB,
-#endif
                       int    maxKrigingModelSize,
                       int    maxNumberSearchModels,
                       bool   useHint,
@@ -125,9 +117,6 @@ namespace krigcpl {
                       int    valueDimension,
                       const krigalg::InterpolationModelFactoryPointer  & modelFactory,
                       ApproxNearestNeighbors& ann,
-#ifndef REDIS
-                      InterpolationModelDataBase& modelDB,
-#endif
                       int    maxKrigingModelSize,
                       int    maxNumberSearchModels,
                       bool   useHint,
@@ -286,9 +275,7 @@ namespace krigcpl {
       krigalg::InterpolationModelFactoryPointer _modelFactory;
 
       ApproxNearestNeighbors&     _ann;
-#ifndef REDIS
-      InterpolationModelDataBase& _modelDB;
-#endif
+      ModelDatabase * _modelDB; ///TODO: Make this a reference if it won't be problematic
 
       int    _maxKrigingModelSize;
       int    _maxNumberSearchModels;
