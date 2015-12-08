@@ -23,6 +23,10 @@ class Taylor
       virtual void getScalingsForSampling( vector<double>& input_scaling,
                                            vector<double>& output_scaling ) const;
 
+      virtual void advance( const double delta_t, void* state) const {};
+
+      virtual size_t getStateSize() const {return 0;}
+
    private:
 
       double m_D_0;      // Reference strain rate

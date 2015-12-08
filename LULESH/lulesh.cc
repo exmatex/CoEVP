@@ -103,11 +103,8 @@ int  flann_n_checks = 20;       // Default can be overridden using command line
 #include "ElastoViscoPlasticity.h"
 
 // Approximate nearest neighbor search options
-//#ifdef FLANN
 #include "ApproxNearestNeighborsFLANN.h"
-//#else
 #include "ApproxNearestNeighborsMTree.h"
-//#endif
 
 // Fine scale model options
 #include "Taylor.h"        // the fine-scale plasticity model
@@ -4142,6 +4139,7 @@ void Lulesh::go(int argc, char *argv[])
    }
 
    /* Create connectivity for lzetam, lzetap */
+#ifdef OLD_LZETA_CONNECTIVITY
    for (Index_t i=0; i<edgeElems*heightElems; ++i) {
       /* these are dummmy values for visualization only */
       domain.lzetam(i) = i ;
@@ -4187,6 +4185,48 @@ void Lulesh::go(int argc, char *argv[])
                     coreElems*edgeElems*heightElems - wingElems*heightElems -
                     heightElems + col ;
    }
+#else
+   for (Index_t i=0; i<edgeElems*heightElems; ++i) {
+      domain.lzetam(i) = i ;
+      domain.lzetap(domElems-edgeElems*heightElems+i) =
+                            domElems-edgeElems*heightElems+i ;
+   }
+   for (Index_t i=edgeElems*heightElems;
+        i<coreElems*edgeElems*heightElems; ++i) {
+      domain.lzetam(i) = i - edgeElems*heightElems ;
+      domain.lzetap(i-edgeElems*heightElems) = i ;
+   }
+   /* patch lzetap to connect Y wing to Z wing */
+   for (int i=domElems - wingElems*heightElems; i<domElems; ++i) {
+      domain.lzetap(coreElems*edgeElems*heightElems - (domElems - i)) = i ;
+   }
+   /* set lzetam and lzetap for Z wing elements, minus notch plane */
+   for (int i=coreElems*edgeElems*heightElems;
+        i<coreElems*edgeElems*heightElems + (coreElems-1)*wingElems*heightElems;
+        ++i) {
+      domain.lzetam(i) = i - (coreElems-1)*heightElems ;
+      domain.lzetap(i) = i + (coreElems-1)*heightElems ;
+   }
+   /* patch lzetam */
+   for (int i=coreElems*edgeElems*heightElems;
+        i<coreElems*edgeElems*heightElems + (coreElems-1)*heightElems; ++i) {
+      domain.lzetam(i) = i - edgeElems*heightElems ;
+   }
+   /* set lzetam, lzetap for notch plane */
+   for (int i=domElems-wingElems*heightElems; i<domElems; ++i) {
+      domain.lzetam(i) = i - heightElems ;
+      domain.lzetap(i) = i + heightElems ;
+   }
+   /* patch lzetap for notch plane row of elements */
+   for (int col=0; col<heightElems; ++col) {
+      domain.lzetap(coreElems*edgeElems*heightElems -
+                    wingElems*heightElems - heightElems + col) =
+                       domElems - wingElems*heightElems + col ;
+      domain.lzetam(domElems - wingElems*heightElems + col) =
+                    coreElems*edgeElems*heightElems - wingElems*heightElems -
+                    heightElems + col ;
+   }
+#endif
 
    /* set up boundary condition information */
    for (Index_t i=0; i<domElems; ++i) {
@@ -4428,11 +4468,13 @@ void Lulesh::go(int argc, char *argv[])
          int point_dimension = plasticity_model->pointDimension();
          ApproxNearestNeighbors* ann;
 
-         //#ifdef FLANN
          if (flanning) {
+#ifdef FLANN
            ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension, flann_n_trees, flann_n_checks));
+#else
+          throw std::runtime_error("FLANN not compiled in"); 
+#endif
          } else {
-           //#else
            std::string mtreeDirectoryName = ".";
            ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
                                                                            "kriging_model_database",
@@ -4440,7 +4482,6 @@ void Lulesh::go(int argc, char *argv[])
                                                                            &(std::cout),
                                                                            false));
          }
-         //#endif
          size_t state_size;
          domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, L, bulk_modulus, shear_modulus, eos_model,
                                                                   plasticity_model, sampling, state_size));

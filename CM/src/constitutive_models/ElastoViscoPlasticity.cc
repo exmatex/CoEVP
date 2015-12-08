@@ -180,7 +180,7 @@ ElastoViscoPlasticity::soundSpeedSquared( const double reference_density,
 ConstitutiveData
 ElastoViscoPlasticity::advance( const double delta_t, const Tensor2Gen& L_new, const double volume_change, void* state )
 {
-   setState(state);
+   void* plasticity_model_state = setState(state);
 
    m_D_new = sym(L_new);
    m_W_new = skew(L_new);
@@ -212,6 +212,9 @@ ElastoViscoPlasticity::advance( const double delta_t, const Tensor2Gen& L_new, c
    Tensor2Sym Dbar_prime;
    Tensor2Gen Wbar_new;
    updateVbar_prime( m_Vbar_prime, Dprime_new, R, a(J), delta_t, Vbar_prime, Dbar_prime, Wbar_new );
+
+   // Advance the fine-scale model
+   m_plasticity_model->advance(delta_t, plasticity_model_state);
 
    // Update the internal state in preparation for the next call
 
@@ -838,14 +841,15 @@ ElastoViscoPlasticity::getStateSize() const
       sizeof(m_volume_change) +
       sizeof(m_tol) +
       sizeof(m_K) +
-      sizeof(m_G);
+      sizeof(m_G) +
+      m_plasticity_model->getStateSize();
 }
 
 
 void
 ElastoViscoPlasticity::getState( void* state ) const
 {
-   // Each of the following "put" calls bumps this local pointer
+   // Each of the following "push" calls bumps this local pointer
    void* buffer = state;
 
    pushObjectToBuffer<double>(&buffer, m_Delta_max);
@@ -867,10 +871,19 @@ ElastoViscoPlasticity::getState( void* state ) const
    pushObjectToBuffer<double>(&buffer, m_G);
 }
 
-void
+
+void*
 ElastoViscoPlasticity::setState( void* state )
 {
-   // Each of the following "put" calls bumps this local pointer
+   // This function initializes the class state from data contained
+   // in a buffer pointed to by the passed argument.  Any newly
+   // added class members must therefore also be added here.
+   // The fine-scale model state is assumed to reside at the
+   // end of the passed buffer (i.e., after all of this classes'
+   // state being unpacked here) at the address contained in
+   // the returned pointer.
+
+   // Each of the following "pop" calls bumps this local pointer
    void* buffer = state;
 
    popObjectFromBuffer<double>(&buffer, m_Delta_max);
@@ -890,4 +903,6 @@ ElastoViscoPlasticity::setState( void* state )
    popObjectFromBuffer<double>(&buffer, m_tol);
    popObjectFromBuffer<double>(&buffer, m_K);
    popObjectFromBuffer<double>(&buffer, m_G);
+
+   return buffer;
 }

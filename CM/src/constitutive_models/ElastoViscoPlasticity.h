@@ -44,7 +44,7 @@ class ElastoViscoPlasticity
 
       virtual void getState( void* buffer ) const;
 
-      virtual void setState( void* buffer );
+      virtual void* setState( void* buffer );
 
       int numNewtonIterations() const {return m_num_iters;}
 

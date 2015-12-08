@@ -17,6 +17,10 @@ class AddPair
    
       virtual void evaluate( const std::vector<double>& points,
                              std::vector<double>&       values ) const;
+
+      virtual void advance( const double delta_t, void* state) const {};
+
+      virtual size_t getStateSize() const {return 0;}
 };
 
 #endif

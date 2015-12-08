@@ -134,7 +134,8 @@ CXXFLAGS += -DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN
 
 ifeq ($(REDIS), yes)
 REDIS_LOC = ../../redis/hiredis
-CXXFLAGS += -DREDIS -I$(REDIS_LOC)
+REDIS_SERVER = $(realpath ../../redis/redis/src/redis-server)
+CXXFLAGS += -DREDIS -I$(REDIS_LOC) -DREDIS_SERVER=\"${REDIS_SERVER}\"
 REDIS_LIBS = $(REDIS_LOC)/libhiredis.a
 endif
 

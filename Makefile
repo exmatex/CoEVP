@@ -2,11 +2,21 @@
 
 all: lulesh
 
-lulesh: libcm
-	${MAKE} -C LULESH
+FLANN=yes
+ifeq ($(FLANN),yes)
+FLANN_LOC=../flann/flann/src/cpp
+libcm: flann
+endif
+REDIS=yes
+ifeq ($(REDIS),yes)
+libcm: redis
+endif
 
-libcm: redis flann
-	${MAKE} -C CM/exec REDIS=yes FLANN=yes
+lulesh: libcm
+	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC)
+
+libcm:
+	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN)
 
 redis:
 	${MAKE} -C redis
