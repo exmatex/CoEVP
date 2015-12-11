@@ -77,15 +77,16 @@ Additional BSD Notice
 #endif
 
 int showMeMonoQ = 0 ;
-#define CONNECTIVITY_DEBUGGING 1
 //  Command line option parsing (using Sriram code from old days)
 #include "cmdLineParser.h"
 int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
 int  flanning = 0;              //  By default, do not use FLANN for nearest neighbor search
 int  flann_n_trees = 1;         // Default can be overridden using command line
 int  flann_n_checks = 20;       // Default can be overridden using command line
+int  file_parts = 0;
+int  debug_topology = 0;
 
-#define VISIT_DATA_INTERVAL 20  // Set this to 0 to disable VisIt data writing
+#define VISIT_DATA_INTERVAL 40  // Set this to 0 to disable VisIt data writing
 #define PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
@@ -2737,7 +2738,7 @@ void Lulesh::LagrangeElements()
   CalcLagrangeElements(deltatime) ;
 
   /* Calculate Q.  (Monotonic q option requires communication) */
-  CalcQForElems() ;
+  // CalcQForElems() ;
 
   ApplyMaterialPropertiesForElems() ;
 
@@ -2933,9 +2934,16 @@ void Lulesh::UpdateStressForElems()
       if (finescale_dt_modifier > 1.) finescale_dt_modifier = 1.;
    }
 
+#if 0
+   MPI_Barrier(MPI_COMM_WORLD) ;
+
 #if defined(PRINT_PERFORMANCE_DIAGNOSTICS) && defined(LULESH_SHOW_PROGRESS)
    cout << "   finescale_dt_modifier = " << finescale_dt_modifier << endl;
    cout << "   Max nonlinear iterations = " << max_nonlinear_iters << endl;
+   cout.flush() ;
+#endif
+
+   MPI_Barrier(MPI_COMM_WORLD) ;
 #endif
 }
 
@@ -2949,40 +2957,78 @@ extern "C" {
 }
 #endif
 
-#define MAX_LEN_SAMI_HEADER  10
-
-#define SAMI_HDR_NUMBRICK     0
-#define SAMI_HDR_NUMNODES     3
-#define SAMI_HDR_NUMMATERIAL  4
-#define SAMI_HDR_INDEX_START  6
-#define SAMI_HDR_MESHDIM      7
-
-#define MAX_ADJACENCY  14  /* must be 14 or greater */
-
 static void
-DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
+DumpDomainToVisit(DBfile *db, Domain& domain, int myRank,
+                  int beginPlane, int endPlane)
 {
    int ok = 0;
+   int numElem    = domain.numElem() ;
+   int numNode    = domain.numNode() ;
+   int planeElems = numElem / domain.sliceHeight() ;
+   int planeNodes = numNode / (domain.sliceHeight()+1) ;
+
+   int *inodeMap = new int[numNode] ; /* maps actual nodeID to 'local' nodeID */
+
+   if ((endPlane-beginPlane) != domain.sliceHeight() ) {
+      numElem = planeElems * (endPlane-beginPlane) ;
+      numNode = planeNodes * ((endPlane+1)-beginPlane) ;
+   }
+
+   int *elemMap = new int[numElem] ; /* maps 'local' elemID to actual elemID */
+   int *nodeMap = new int[numNode] ; /* maps 'local' nodeID to actual nodeID */
+
+   {
+      int eOffset = 0 ;
+      int ei = 0 ;
+      for (int e=0; e<planeElems; ++e) {
+         for (int p=beginPlane; p<endPlane; ++p) {
+            elemMap[ei++] = eOffset + p ;
+         }
+         eOffset += domain.sliceHeight() ;
+      }
+
+      // if (ei != numElem) {
+      //    exit(-1) ;
+      // }
+   }
+
+   {
+      int nOffset = 0 ;
+      int ni = 0 ;
+      for (int n=0; n<planeNodes; ++n) {
+         for (int p=beginPlane; p<endPlane+1; ++p) {
+            nodeMap[ni] = nOffset + p ;
+            inodeMap[nOffset + p] = ni ; 
+            ++ni ;
+         }
+         nOffset += domain.sliceHeight()+1 ;
+      }
+
+      // if (ni != numNode) {
+      //    exit(-1) ;
+      // }
+   }
+
 
    /* Create an option list that will give some hints to VisIt for
- *     * printing out the cycle and time in the annotations */
+      printing out the cycle and time in the annotations */
    DBoptlist *optlist;
 
 
    /* Write out the mesh connectivity in fully unstructured format */
    int shapetype[1] = {DB_ZONETYPE_HEX};
    int shapesize[1] = {8};
-   int shapecnt[1] = {domain.numElem()};
-   int *conn = new int[domain.numElem()*8] ;
+   int shapecnt[1] = {numElem};
+   int *conn = new int[numElem*8] ;
    int ci = 0 ;
-   for (int ei=0; ei < domain.numElem(); ++ei) {
-      Index_t *elemToNode = domain.nodelist(ei) ;
+   for (int ei=0; ei < numElem; ++ei) {
+      Index_t *elemToNode = domain.nodelist(elemMap[ei]) ;
       for (int ni=0; ni < 8; ++ni) {
-         conn[ci++] = elemToNode[ni] ;
+         conn[ci++] = inodeMap[elemToNode[ni]] ;
       }
    }
-   ok += DBPutZonelist2(db, "connectivity", domain.numElem(), 3,
-                        conn, domain.numElem()*8,
+   ok += DBPutZonelist2(db, "connectivity", numElem, 3,
+                        conn, numElem*8,
                         0,0,0, /* Not carrying ghost zones */
                         shapetype, shapesize, shapecnt,
                         1, NULL);
@@ -2991,19 +3037,19 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
    /* Write out the mesh coordinates associated with the mesh */
    const char* coordnames[3] = {"X", "Y", "Z"};
    Real_t *coords[3] ;
-   coords[0] = new double[domain.numNode()] ;
-   coords[1] = new double[domain.numNode()] ;
-   coords[2] = new double[domain.numNode()] ;
-   for (int ni=0; ni < domain.numNode() ; ++ni) {
-      coords[0][ni] = domain.x(ni) ;
-      coords[1][ni] = domain.y(ni) ;
-      coords[2][ni] = domain.z(ni) ;
+   coords[0] = new double[numNode] ;
+   coords[1] = new double[numNode] ;
+   coords[2] = new double[numNode] ;
+   for (int ni=0; ni < numNode ; ++ni) {
+      coords[0][ni] = domain.x(nodeMap[ni]) ;
+      coords[1][ni] = domain.y(nodeMap[ni]) ;
+      coords[2][ni] = domain.z(nodeMap[ni]) ;
    }
    optlist = DBMakeOptlist(2);
    ok += DBAddOption(optlist, DBOPT_DTIME, &domain.time());
    ok += DBAddOption(optlist, DBOPT_CYCLE, &domain.cycle());
    ok += DBPutUcdmesh(db, "mesh", 3, (char**)&coordnames[0], (float**)coords,
-                      domain.numNode(), domain.numElem(), "connectivity",
+                      numNode, numElem, "connectivity",
                       0, DB_DOUBLE, optlist);
    ok += DBFreeOptlist(optlist);
    delete [] coords[2] ;
@@ -3012,10 +3058,10 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
 
    /* Write out the materials */
    int matnums = 1 ;
-   int dims = domain.numElem() ; // No mixed elements
-   int *regNumList = new int[domain.numElem()] ;
+   int dims = numElem ; // No mixed elements
+   int *regNumList = new int[numElem] ;
 
-   for (int ei=0; ei<domain.numElem(); ++ei) {
+   for (int ei=0; ei<numElem; ++ei) {
       regNumList[ei] = 1 ;
    }
 
@@ -3026,89 +3072,89 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
 
    /* Write out pressure, energy, relvol, q */
 
-   Real_t *e = new double[domain.numElem()] ;
-   for (int ei=0; ei < domain.numElem(); ++ei) {
-      e[ei] = domain.e(ei) ;
+   Real_t *e = new double[numElem] ;
+   for (int ei=0; ei < numElem; ++ei) {
+      e[ei] = domain.e(elemMap[ei]) ;
    }
    ok += DBPutUcdvar1(db, "e", "mesh", (float*) e,
-                      domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                      numElem, NULL, 0, DB_DOUBLE, DB_ZONECENT,
                       NULL);
    delete [] e ;
 
 
-   Real_t *p = new double[domain.numElem()] ;
-   for (int ei=0; ei < domain.numElem(); ++ei) {
-      p[ei] = domain.p(ei) ;
+   Real_t *p = new double[numElem] ;
+   for (int ei=0; ei < numElem; ++ei) {
+      p[ei] = domain.p(elemMap[ei]) ;
    }
    ok += DBPutUcdvar1(db, "p", "mesh", (float*) p,
-                      domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                      numElem, NULL, 0, DB_DOUBLE, DB_ZONECENT,
                       NULL);
    delete [] p ;
 
-   Real_t *v = new double[domain.numElem()] ;
-   for (int ei=0; ei < domain.numElem(); ++ei) {
-      v[ei] = domain.v(ei) ;
+   Real_t *v = new double[numElem] ;
+   for (int ei=0; ei < numElem; ++ei) {
+      v[ei] = domain.v(elemMap[ei]) ;
    }
    ok += DBPutUcdvar1(db, "v", "mesh", (float*) v,
-                      domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                      numElem, NULL, 0, DB_DOUBLE, DB_ZONECENT,
                       NULL);
    delete [] v ;
 
-   Real_t *volo = new double[domain.numElem()] ;
-   for (int ei=0; ei < domain.numElem(); ++ei) {
-      volo[ei] = domain.volo(ei) ;
+   Real_t *volo = new double[numElem] ;
+   for (int ei=0; ei < numElem; ++ei) {
+      volo[ei] = domain.volo(elemMap[ei]) ;
    }
    ok += DBPutUcdvar1(db, "volo", "mesh", (float*) volo,
-                      domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                      numElem, NULL, 0, DB_DOUBLE, DB_ZONECENT,
                       NULL);
    delete [] volo ;
 
-   Real_t *q = new double[domain.numElem()] ;
-   for (int ei=0; ei < domain.numElem(); ++ei) {
-      q[ei] = domain.q(ei) ;
+   Real_t *q = new double[numElem] ;
+   for (int ei=0; ei < numElem; ++ei) {
+      q[ei] = domain.q(elemMap[ei]) ;
    }
    ok += DBPutUcdvar1(db, "q", "mesh", (float*) q,
-                      domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                      numElem, NULL, 0, DB_DOUBLE, DB_ZONECENT,
                       NULL);
    delete [] q ;
 
    /* Write out nodal speed, velocities */
-   Real_t *zd    = new double[domain.numNode()];
-   Real_t *yd    = new double[domain.numNode()];
-   Real_t *xd    = new double[domain.numNode()];
-   Real_t *speed = new double[domain.numNode()];
-   Real_t *nodalmass = new double[domain.numNode()];
-   for(int ni=0 ; ni < domain.numNode() ; ++ni) {
-      xd[ni]    = domain.xd(ni);
-      yd[ni]    = domain.yd(ni);
-      zd[ni]    = domain.zd(ni);
+   Real_t *zd    = new double[numNode];
+   Real_t *yd    = new double[numNode];
+   Real_t *xd    = new double[numNode];
+   Real_t *speed = new double[numNode];
+   Real_t *nodalmass = new double[numNode];
+   for(int ni=0 ; ni < numNode ; ++ni) {
+      xd[ni]    = domain.xd(nodeMap[ni]);
+      yd[ni]    = domain.yd(nodeMap[ni]);
+      zd[ni]    = domain.zd(nodeMap[ni]);
       speed[ni] = sqrt((xd[ni]*xd[ni])+(yd[ni]*yd[ni])+(zd[ni]*zd[ni]));
-      nodalmass[ni] = domain.nodalMass(ni) ;
+      nodalmass[ni] = domain.nodalMass(nodeMap[ni]) ;
    }
 
    ok += DBPutUcdvar1(db, "speed", "mesh", (float*)speed,
-                      domain.numNode(), NULL, 0, DB_DOUBLE, DB_NODECENT,
+                      numNode, NULL, 0, DB_DOUBLE, DB_NODECENT,
                       NULL);
    delete [] speed;
 
 
    ok += DBPutUcdvar1(db, "xd", "mesh", (float*) xd,
-                      domain.numNode(), NULL, 0, DB_DOUBLE, DB_NODECENT,
+                      numNode, NULL, 0, DB_DOUBLE, DB_NODECENT,
                       NULL);
    delete [] xd ;
 
    ok += DBPutUcdvar1(db, "yd", "mesh", (float*) yd,
-                      domain.numNode(), NULL, 0, DB_DOUBLE, DB_NODECENT,
+                      numNode, NULL, 0, DB_DOUBLE, DB_NODECENT,
                       NULL);
    delete [] yd ;
 
    ok += DBPutUcdvar1(db, "zd", "mesh", (float*) zd,
-                      domain.numNode(), NULL, 0, DB_DOUBLE, DB_NODECENT,
+                      numNode, NULL, 0, DB_DOUBLE, DB_NODECENT,
                       NULL);
    delete [] zd ;
 
    ok += DBPutUcdvar1(db, "nodalmass", "mesh", (float*) nodalmass,
-                      domain.numNode(), NULL, 0, DB_DOUBLE, DB_NODECENT,
+                      numNode, NULL, 0, DB_DOUBLE, DB_NODECENT,
                       NULL);
    delete [] nodalmass ;
 
@@ -3143,67 +3189,70 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
       delete [] as_efficiency;
    }
 
-#ifdef CONNECTIVITY_DEBUGGING
-   Index_t *nodeList = new int[domain.numElem()] ;
+   if (debug_topology) {
+      Index_t *nodeList = new int[domain.numElem()] ;
 
-   for (int i=0 ; i<8; ++i) {
-      char fieldName[40] ;
-      sprintf(fieldName, "node_conn%d", i) ;
-      for (Index_t j=0; j<domain.numElem(); ++j) {
-         nodeList[j] = domain.nodelist(j)[i] ;
-      }
-      ok += DBPutUcdvar1(db, fieldName, "mesh", (int*) nodeList,
-                      domain.numElem(), NULL, 0, DB_INT, DB_ZONECENT,
-                      NULL);
-   }
-
-   delete [] nodeList ;
-
-
-   char fname[][10] = { "lxim", "lxip", "letam", "letap", "lzetam", "lzetap" } ;
-   Index_t *eList = new int[domain.numElem()] ;
-
-   for (int i=0; i<6; ++i) {
-      for (Index_t j=0; j<domain.numElem(); ++j) {
-         switch (i) {
-            case 0:
-               eList[j] = domain.lxim(j) ;
-               break ;
-            case 1:
-               eList[j] = domain.lxip(j) ;
-               break ;
-            case 2:
-               eList[j] = domain.letam(j) ;
-               break ;
-            case 3:
-               eList[j] = domain.letap(j) ;
-               break ;
-            case 4:
-               eList[j] = domain.lzetam(j) ;
-               break ;
-            case 5:
-               eList[j] = domain.lzetap(j) ;
-               break ;
+      for (int i=0 ; i<8; ++i) {
+         char fieldName[40] ;
+         sprintf(fieldName, "node_conn%d", i) ;
+         for (Index_t j=0; j<domain.numElem(); ++j) {
+            nodeList[j] = domain.nodelist(j)[i] ;
          }
-      }
-      ok += DBPutUcdvar1(db, fname[i], "mesh", (int*) eList,
+         ok += DBPutUcdvar1(db, fieldName, "mesh", (int*) nodeList,
                          domain.numElem(), NULL, 0, DB_INT, DB_ZONECENT,
                          NULL);
+      }
+
+      delete [] nodeList ;
+
+
+      char fname[][10] = { "lxim", "lxip", "letam", "letap", "lzetam", "lzetap" } ;
+      Index_t *eList = new int[domain.numElem()] ;
+
+      for (int i=0; i<6; ++i) {
+         for (Index_t j=0; j<domain.numElem(); ++j) {
+            switch (i) {
+               case 0:
+                  eList[j] = domain.lxim(j) ;
+                  break ;
+               case 1:
+                  eList[j] = domain.lxip(j) ;
+                  break ;
+               case 2:
+                  eList[j] = domain.letam(j) ;
+                  break ;
+               case 3:
+                  eList[j] = domain.letap(j) ;
+                  break ;
+               case 4:
+                  eList[j] = domain.lzetam(j) ;
+                  break ;
+               case 5:
+                  eList[j] = domain.lzetap(j) ;
+                  break ;
+            }
+         }
+         ok += DBPutUcdvar1(db, fname[i], "mesh", (int*) eList,
+                            domain.numElem(), NULL, 0, DB_INT, DB_ZONECENT,
+                            NULL);
+      }
+      delete [] eList ;
+
+      Index_t *eBC = new int[domain.numElem()] ;
+
+      for (Index_t i=0; i<domain.numElem(); ++i) {
+         eBC[i] = domain.elemBC(i) ;
+      }
+      ok += DBPutUcdvar1(db, "elembc", "mesh", (int*) eBC,
+                         domain.numElem(), NULL, 0, DB_INT, DB_ZONECENT,
+                         NULL);
+
+      delete [] eBC ;
    }
-   delete [] eList ;
 
-   Index_t *eBC = new int[domain.numElem()] ;
-
-   for (Index_t i=0; i<domain.numElem(); ++i) {
-      eBC[i] = domain.elemBC(i) ;
-   }
-   ok += DBPutUcdvar1(db, "elembc", "mesh", (int*) eBC,
-                      domain.numElem(), NULL, 0, DB_INT, DB_ZONECENT,
-                      NULL);
-
-   delete [] eBC ;
-
-#endif
+   delete [] nodeMap ;
+   delete [] elemMap ;
+   delete [] inodeMap ;
 
    if (ok != 0) {
       printf("Error writing out viz file - rank %d\n", myRank);
@@ -3221,24 +3270,28 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
   int ok = 0;
   // Make sure this list matches what's written out above
   // All variables related to adaptive samplig MUST come AFTER the others
-  char vars[][14] = {"p","e","v","volo","q","speed","xd","yd","zd","num_as_models","as_efficiency"
-#ifdef CONNECTIVITY_DEBUGGING
-                    ,"node_conn0", "node_conn1", "node_conn2", "node_conn3",
-                     "node_conn4", "node_conn5", "node_conn6", "node_conn7",
-                     "lxim", "lxip", "letam", "letap", "lzetam", "lzetap",
-                     "elembc"
-#endif
+  char const *vars[] = {"p","e","v","volo","q","speed","xd","yd","zd",
+                        "num_as_models","as_efficiency",
+                        "node_conn0", "node_conn1", "node_conn2", "node_conn3",
+                        "node_conn4", "node_conn5", "node_conn6", "node_conn7",
+                        "lxim", "lxip", "letam", "letap", "lzetam", "lzetap",
+                        "elembc"
   };
   
   //  This is kinda hacky--find a cleaner way to handle this.
-  int numvars;
-  if (sampling)
-    numvars = 11;
-  else
-    numvars = 9;
-#ifdef CONNECTIVITY_DEBUGGING
-  numvars = 26;
-#endif
+  int numvars = 9 ;
+  if (sampling) {
+    numvars += 2 ;
+  }
+  if (debug_topology) {
+     /* hack */
+     if (!sampling) {
+        for (int i=0; i<15; ++i) {
+           vars[numvars+i] = vars[numvars+i+2] ;
+        }
+     }
+     numvars += 15 ;
+  }
 
   // Reset to the root directory of the silo file
   DBSetDir(db, "/");
@@ -3325,7 +3378,7 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
 
 
 void DumpToVisit(Domain& domain, char *baseName, char *meshName,
-                 int myRank, int numRanks)
+                 int myRank, int numRanks, int beginPlane, int endPlane)
 {
   DBfile *db;
 
@@ -3337,7 +3390,7 @@ void DumpToVisit(Domain& domain, char *baseName, char *meshName,
      sprintf(subdirName, "data_%d", myRank);
      DBMkDir(db, subdirName);
      DBSetDir(db, subdirName);
-     DumpDomainToVisit(db, domain, myRank);
+     DumpDomainToVisit(db, domain, myRank, beginPlane, endPlane);
      if (myRank == 0) {
         DumpMultiblockObjects(db, baseName, numRanks);
      }
@@ -3348,123 +3401,50 @@ void DumpToVisit(Domain& domain, char *baseName, char *meshName,
   }
 }
 
-
-
-void DumpSAMI(Domain *domain, char *name)
-{
-   DBfile *fp ;
-   int headerLen = MAX_LEN_SAMI_HEADER ;
-   int headerInfo[MAX_LEN_SAMI_HEADER];
-   char varName[] = "brick_nd0";
-   char coordName[] = "x";
-   char symmName[] = "symm_bcx";
-   int version = 121 ;
-   int numElem = int(domain->numElem()) ;
-   int numNode = int(domain->numNode()) ;
-   int count ;
-
-   int *materialID ;
-   int *nodeConnect ;
-   double *nodeCoord ;
-
-   if ((fp = DBCreate(name, DB_CLOBBER, DB_LOCAL,
-                  NULL, DB_HDF5X)) == NULL)
-   {
-      printf("Couldn't create file %s\n", name) ;
-      exit(-1) ;
-   }
-
-   for (int i=0; i<MAX_LEN_SAMI_HEADER; ++i) {
-      headerInfo[i] = 0 ;
-   }
-   headerInfo[SAMI_HDR_NUMBRICK]    = numElem ;
-   headerInfo[SAMI_HDR_NUMNODES]    = numNode ;
-   headerInfo[SAMI_HDR_NUMMATERIAL] = 1 ;
-   headerInfo[SAMI_HDR_INDEX_START] = 1 ;
-   headerInfo[SAMI_HDR_MESHDIM]     = 3 ;
-
-   DBWrite(fp, "mesh_data", headerInfo, &headerLen, 1, DB_INT) ;
-
-   count = 1 ;
-   DBWrite(fp, "version", &version, &count, 1, DB_INT) ;
-
-   nodeConnect = new int[numElem] ;
-
-   for (Index_t i=0; i<8; ++i)
-   {
-      for (Index_t j=0; j<numElem; ++j) {
-         Index_t *nl = domain->nodelist(j) ;
-         nodeConnect[j] = int(nl[i]) + 1 ;
-      }
-      varName[8] = '0' + i;
-      DBWrite(fp, varName, nodeConnect, &numElem, 1, DB_INT) ;
-   }
-
-   delete [] nodeConnect ;
-
-   nodeCoord = new double[numNode] ;
-
-   for (Index_t i=0; i<3; ++i)
-   {
-      for (Index_t j=0; j<numNode; ++j) {
-         Real_t coordVal ;
-         switch(i) {
-            case 0: coordVal = double(domain->x(j)) ; break ;
-            case 1: coordVal = double(domain->y(j)) ; break ;
-            case 2: coordVal = double(domain->z(j)) ; break ;
-         }
-         nodeCoord[j] = coordVal ;
-      }
-      coordName[0] = 'x' + i ;
-      DBWrite(fp, coordName, nodeCoord, &numNode, 1, DB_DOUBLE) ;
-   }
-
-   delete [] nodeCoord ;
-
-   materialID = new int[numElem] ;
-
-   for (Index_t i=0; i<numElem; ++i)
-      materialID[i] = 1 ;
-
-   DBWrite(fp, "brick_material", materialID, &numElem, 1, DB_INT) ;
-
-   delete [] materialID ;
-
-   DBClose(fp);
-}
-
-void DumpDomain(Domain *domain, int myRank, int numProcs)
+void DumpDomain(Domain *domain, int myRank, int numProcs, int fileParts)
 {
    char baseName[64] ;
    char meshName[64] ;
 
-   sprintf(baseName, "taylor_%d.silo", int(domain->cycle())) ;
+   /* set default slice information */
+   int beginRank  = myRank ;
+   int endRank    = myRank + 1 ;
+   int beginPlane = 0 ;
+   int endPlane   = domain->sliceHeight() ;
 
-   if (myRank == 0) {
-      sprintf(meshName, "%s", baseName) ;
+
+   if (fileParts != 0) {
+      beginRank = 0 ;
+      endRank   = fileParts ;
+      numProcs  = fileParts ;
    }
-   else {
-      sprintf(meshName, "%s.%03d", baseName, myRank) ;
-   }
 
-   DumpToVisit(*domain, baseName, meshName, myRank, numProcs) ;
-   // DumpSAMI(domain, meshName) ;
+   for (int rank = beginRank ; rank <endRank; ++rank) {
 
-#if 0
-   if ((myRank == 0) && (numProcs > 1)) {
-      FILE *fp ;
-      sprintf(meshName, "%s.visit", baseName) ;
-      if ((fp = fopen(meshName, "w")) == NULL) {
-         printf("Could not create file %s\n", meshName) ;
-         exit(-10) ;
+      if (fileParts != 0) {
+         Index_t chunkSize = domain->sliceHeight() / fileParts ;
+         Index_t remainder = domain->sliceHeight() % fileParts ;
+         if (rank < remainder) {
+            beginPlane = (chunkSize+1)*rank ;
+            endPlane   = beginPlane + (chunkSize+1) ;
+         }
+         else {
+            beginPlane = (chunkSize+1)*remainder + (rank - remainder)*chunkSize ;
+            endPlane   = beginPlane + chunkSize ;
+         }
       }
-      fprintf(fp, "!NBLOCKS %d\n%s\n", numProcs, baseName) ;
-      for (int i=1; i<numProcs; ++i) {
-         fprintf(fp, "%s.%d\n", baseName, i) ;
+
+      sprintf(baseName, "taylor_%d.silo", int(domain->cycle())) ;
+
+      if (rank == 0) {
+         sprintf(meshName, "%s", baseName) ;
       }
-      fclose(fp) ;
+      else {
+         sprintf(meshName, "%s.%03d", baseName, rank) ;
+      }
+
+      DumpToVisit(*domain, baseName, meshName, rank, numProcs, beginPlane, endPlane) ;
    }
-#endif
 }
 
 #endif
@@ -3479,6 +3459,8 @@ void Lulesh::go(int argc, char *argv[])
   addArg("flann",    'f', 0, 'i',  &(flanning),       0, "use FLANN library");
   addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),  0, "number of FLANN trees");
   addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks), 0, "number of FLANN checks");
+  addArg("parts",    'p', 1, 'i',  &(file_parts),     0, "number of file parts");
+  addArg("debug",    'd', 0, 'i',  &(debug_topology), 0, "add debug info to SILO");
 
   processArgs(argc,argv);
   
@@ -3956,8 +3938,6 @@ void Lulesh::go(int argc, char *argv[])
    sprintf(name, "checkConn.sami") ;
 #endif
 
-// DumpSAMI(&domain, name) ;
-   
    /* initialize material parameters */
    //   domain.dtfixed() = Real_t(-1.0e-7) ;
    //   domain.deltatime() = Real_t(1.0e-7) ;
@@ -4023,8 +4003,6 @@ void Lulesh::go(int argc, char *argv[])
          domain.nodalMass(idx) += volume / Real_t(8.0) ;
       }
    }
-
-   // DumpSAMI(&domain, name) ;
 
 #if defined(COEVP_MPI)
    CommRecv(&domain, MSG_COMM_SBN, 1, domain.commNodes()) ;
@@ -4354,7 +4332,6 @@ void Lulesh::go(int argc, char *argv[])
       int numRanks = 1;
       DumpDomain(&domain, myRank, numRanks) ;
    }
-   // DumpSAMI(&domain, "newMesh.sami") ;
    exit(0) ;
 #endif
 
@@ -4540,7 +4517,8 @@ void Lulesh::go(int argc, char *argv[])
 #if VISIT_DATA_INTERVAL!=0 && defined(COEVP_MPI)
       char meshName[64] ;
       if (domain.cycle() % VISIT_DATA_INTERVAL == 0) {
-         DumpDomain(&domain, domain.sliceLoc(), domain.numSlices()) ;
+         DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(),
+                   ((domain.numSlices() == 1) ? file_parts : 0) ) ;
       }
 #endif
       TimeIncrement() ;
@@ -4648,7 +4626,8 @@ void Lulesh::go(int argc, char *argv[])
 
 #if VISIT_DATA_INTERVAL!=0 && defined(COEVP_MPI)
    if (domain.cycle() % VISIT_DATA_INTERVAL != 0) {
-      DumpDomain(&domain, domain.sliceLoc(), domain.numSlices()) ;
+      DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(), 
+                 ((domain.numSlices() == 1) ? file_parts : 0) ) ;
    }
 #endif
 
