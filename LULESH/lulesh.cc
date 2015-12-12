@@ -2738,7 +2738,7 @@ void Lulesh::LagrangeElements()
   CalcLagrangeElements(deltatime) ;
 
   /* Calculate Q.  (Monotonic q option requires communication) */
-  // CalcQForElems() ;
+  CalcQForElems() ;
 
   ApplyMaterialPropertiesForElems() ;
 
