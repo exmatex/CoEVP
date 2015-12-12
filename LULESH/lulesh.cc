@@ -3160,21 +3160,21 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank,
 
    if (sampling) {
 
-      Real_t *num_as_models = new double[domain.numElem()] ;
+      Real_t *num_as_models = new double[numElem] ;
       Int_t numModels, numPairs;
-      for (int ei=0; ei < domain.numElem(); ++ei) {
-         domain.cm(ei)->getModelInfo(numModels, numPairs);
+      for (int ei=0; ei < numElem; ++ei) {
+         domain.cm(elemMap[ei])->getModelInfo(numModels, numPairs);
          num_as_models[ei] = Real_t(numModels) ;
       }
       ok += DBPutUcdvar1(db, "num_as_models", "mesh", (float*) num_as_models,
-                         domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                         numElem, NULL, 0, DB_DOUBLE, DB_ZONECENT,
                          NULL);
       delete [] num_as_models ;
 
-      Real_t *as_efficiency = new double[domain.numElem()] ;
-      for (int ei=0; ei < domain.numElem(); ++ei) {
-         Int_t numSuccessful = domain.cm(ei)->getNumSuccessfulInterpolations() ;
-         Int_t numSamples = domain.cm(ei)->getNumSamples() ;
+      Real_t *as_efficiency = new double[numElem] ;
+      for (int ei=0; ei < numElem; ++ei) {
+         Int_t numSuccessful = domain.cm(elemMap[ei])->getNumSuccessfulInterpolations() ;
+         Int_t numSamples = domain.cm(elemMap[ei])->getNumSamples() ;
          if ( numSamples > 0 ) {
             as_efficiency[ei] = Real_t(numSuccessful) / Real_t(numSamples) ;
          }
@@ -3183,23 +3183,23 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank,
          }
       }
       ok += DBPutUcdvar1(db, "as_efficiency", "mesh", (float*) as_efficiency,
-                         domain.numElem(), NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                         numElem, NULL, 0, DB_DOUBLE, DB_ZONECENT,
                          NULL);
 
       delete [] as_efficiency;
    }
 
    if (debug_topology) {
-      Index_t *nodeList = new int[domain.numElem()] ;
+      Index_t *nodeList = new int[numElem] ;
 
       for (int i=0 ; i<8; ++i) {
          char fieldName[40] ;
          sprintf(fieldName, "node_conn%d", i) ;
-         for (Index_t j=0; j<domain.numElem(); ++j) {
-            nodeList[j] = domain.nodelist(j)[i] ;
+         for (Index_t j=0; j<numElem; ++j) {
+            nodeList[j] = inodeMap[domain.nodelist(elemMap[j])[i]] ;
          }
          ok += DBPutUcdvar1(db, fieldName, "mesh", (int*) nodeList,
-                         domain.numElem(), NULL, 0, DB_INT, DB_ZONECENT,
+                         numElem, NULL, 0, DB_INT, DB_ZONECENT,
                          NULL);
       }
 
@@ -3207,44 +3207,44 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank,
 
 
       char fname[][10] = { "lxim", "lxip", "letam", "letap", "lzetam", "lzetap" } ;
-      Index_t *eList = new int[domain.numElem()] ;
+      Index_t *eList = new int[numElem] ;
 
       for (int i=0; i<6; ++i) {
-         for (Index_t j=0; j<domain.numElem(); ++j) {
+         for (Index_t j=0; j<numElem; ++j) {
             switch (i) {
                case 0:
-                  eList[j] = domain.lxim(j) ;
+                  eList[j] = domain.lxim(elemMap[j]) ;
                   break ;
                case 1:
-                  eList[j] = domain.lxip(j) ;
+                  eList[j] = domain.lxip(elemMap[j]) ;
                   break ;
                case 2:
-                  eList[j] = domain.letam(j) ;
+                  eList[j] = domain.letam(elemMap[j]) ;
                   break ;
                case 3:
-                  eList[j] = domain.letap(j) ;
+                  eList[j] = domain.letap(elemMap[j]) ;
                   break ;
                case 4:
-                  eList[j] = domain.lzetam(j) ;
+                  eList[j] = domain.lzetam(elemMap[j]) ;
                   break ;
                case 5:
-                  eList[j] = domain.lzetap(j) ;
+                  eList[j] = domain.lzetap(elemMap[j]) ;
                   break ;
             }
          }
          ok += DBPutUcdvar1(db, fname[i], "mesh", (int*) eList,
-                            domain.numElem(), NULL, 0, DB_INT, DB_ZONECENT,
+                            numElem, NULL, 0, DB_INT, DB_ZONECENT,
                             NULL);
       }
       delete [] eList ;
 
-      Index_t *eBC = new int[domain.numElem()] ;
+      Index_t *eBC = new int[numElem] ;
 
-      for (Index_t i=0; i<domain.numElem(); ++i) {
-         eBC[i] = domain.elemBC(i) ;
+      for (Index_t i=0; i<numElem; ++i) {
+         eBC[i] = domain.elemBC(elemMap[i]) ;
       }
       ok += DBPutUcdvar1(db, "elembc", "mesh", (int*) eBC,
-                         domain.numElem(), NULL, 0, DB_INT, DB_ZONECENT,
+                         numElem, NULL, 0, DB_INT, DB_ZONECENT,
                          NULL);
 
       delete [] eBC ;
@@ -4117,7 +4117,7 @@ void Lulesh::go(int argc, char *argv[])
    }
 
    /* Create connectivity for lzetam, lzetap */
-#ifdef OLD_LZETA_CONNECTIVITY
+#ifndef OLD_LZETA_CONNECTIVITY
    for (Index_t i=0; i<edgeElems*heightElems; ++i) {
       /* these are dummmy values for visualization only */
       domain.lzetam(i) = i ;
