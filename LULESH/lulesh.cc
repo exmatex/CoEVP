@@ -3332,7 +3332,7 @@ void Lulesh::go(int argc, char *argv[])
    }
 
    /* Create connectivity for lzetam, lzetap */
-#ifdef OLD_LZETA_CONNECTIVITY
+#ifndef OLD_LZETA_CONNECTIVITY
    for (Index_t i=0; i<edgeElems*heightElems; ++i) {
       domain.lzetam(i) = i ;
       domain.lzetap(domElems-edgeElems*heightElems+i) =
