@@ -45,7 +45,8 @@ endif
 SILO_LIB =
 ifneq ($(strip $(SILO_LOC)),)
 INCLUDE_DIRS += -I$(SILO_LOC)/include/
-SILO_LIB += -L $(SILO_LOC)/lib -lsiloh5 
+SILO_LIB += -Wl,-rpath,$(realpath $(SILO_LOC))/lib -L $(SILO_LOC)/lib -lsiloh5
+CXXFLAGS += -DSILO 
 endif
 
 HDF5_LIB =

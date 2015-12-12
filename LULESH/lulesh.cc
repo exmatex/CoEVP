@@ -86,7 +86,7 @@ int  flann_n_checks = 20;       // Default can be overridden using command line
 int  file_parts = 0;
 int  debug_topology = 0;
 
-#define VISIT_DATA_INTERVAL 40  // Set this to 0 to disable VisIt data writing
+#define VISIT_DATA_INTERVAL 20  // Set this to 0 to disable VisIt data writing
 #define PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
@@ -2951,6 +2951,9 @@ void Lulesh::UpdateStressForElems()
 
 #ifdef __cplusplus
 extern "C" {
+#endif
+#ifndef SILO
+#error Please recompile with SILO=yes
 #endif
 #include "silo.h"
 #ifdef __cplusplus
