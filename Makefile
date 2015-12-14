@@ -1,4 +1,4 @@
-.PHONY: all clean clean-all lulesh libcm redis flann
+.PHONY: all clean clean-all lulesh libcm redis flann silo
 
 all: lulesh
 

@@ -12,7 +12,7 @@ endif
 
 $(SILO_LIB): silo-${SILO_PV}.tar.gz
 	tar -xzvf $<
-	cd silo-${SILO_PV} && ./configure --prefix=${PWD}/silo --with-hdf5=/usr/include,/usr/lib --enable-shared
+	cd silo-${SILO_PV} && ./configure --prefix=$(CURDIR)/silo --with-hdf5=/usr/include,/usr/lib --enable-shared
 	make -C silo-${SILO_PV}
 	make -C silo-${SILO_PV} install
 
