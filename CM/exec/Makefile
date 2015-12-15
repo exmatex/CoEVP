@@ -116,9 +116,6 @@ FS_DEPS = $(FS_SRC:.cc=.d)
 KINTEST_OBJS = kintest.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
 KINTEST_DEPS = kintest.d
 
-KINTEST2_OBJS = kintest2.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
-KINTEST2_DEPS = kintest2.d
-
 # Constitutive model library
 
 CMLIB_SRC  = $(CM_SRC) $(EOS_SRC) $(FS_SRC) $(AS_SRC) $(TENSOR_SRC)
@@ -151,9 +148,6 @@ default: libcm
 
 kintest: $(KINTEST_OBJS)
 	$(CXX) $(CXXFLAGS) $(KINTEST_OBJS) $(LIBS) -o kintest
-
-kintest2: $(KINTEST2_OBJS)
-	$(CXX) $(CXXFLAGS) $(KINTEST2_OBJS) $(LIBS) -o kintest2
 
 libcm:  $(CMLIB_OBJS)
 	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
