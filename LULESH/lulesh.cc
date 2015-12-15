@@ -65,6 +65,7 @@ Additional BSD Notice
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdexcept>
 #include <sstream>
 
 //  Command line option parsing (using Sriram code from old days)
