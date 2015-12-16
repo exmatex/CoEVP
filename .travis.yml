@@ -23,3 +23,7 @@ cache:
 
 compiler:
   - gcc
+
+notifications:
+  email:
+    - tabasco-dev@lanl.gov  
