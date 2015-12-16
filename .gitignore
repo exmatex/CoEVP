@@ -11,6 +11,9 @@ build
 *.o
 *.d
 CM/include/*.h
+CM/include/*.I
+CM/include/mtl/*.h
+CM/include/mtl/*.I
 dump.rdb
 redis/hiredis
 redis/redis
