@@ -46,7 +46,7 @@ HDF5_LIB += -Wl,-rpath,$(HDF5_LOC)/lib -L $(HDF5_LOC)/lib -lhdf5
 endif
 
 LAPACK = $(shell pkg-config --silence-errors --libs lapack blas || true)
-ifeq ($(strip $(SILO_LOC)),)
+ifeq ($(strip $(LAPACK)),)
 ifneq ($(strip $(LAPACK_LOC)),)
 LAPACK += -L$(LAPACK_LOC)
 endif
