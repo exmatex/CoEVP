@@ -96,6 +96,11 @@ int  flann_n_checks = 20;       // Default can be overridden using command line
 #include "ApproxNearestNeighborsFLANN.h"
 #include "ApproxNearestNeighborsMTree.h"
 
+// Database options
+#include "ModelDatabase.h"
+#include "ModelDB_HashMap.h"
+#include "ModelDB_SingletonDB.h"
+
 // Fine scale model options
 #include "Taylor.h"        // the fine-scale plasticity model
 
@@ -2913,6 +2918,19 @@ void Lulesh::go(int argc, char *argv[])
 
    /* ... */
 
+   /*************************************/
+   /* Initialize ModelDB Interface      */
+   /*************************************/
+   ModelDatabase * modelDB = nullptr;
+   if(sampling)
+   {
+#ifdef REDIS
+      modelDB = new ModelDB_SingletonDB();
+#else
+      modelDB = new ModelDB_HashMap();
+#endif
+   }
+
    /**************************************/
    /*   Initialize Taylor cylinder mesh  */
    /**************************************/
@@ -3605,7 +3623,7 @@ void Lulesh::go(int argc, char *argv[])
                                                                            false));
          }
          size_t state_size;
-         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, L, bulk_modulus, shear_modulus, eos_model,
+         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, modelDB, L, bulk_modulus, shear_modulus, eos_model,
                                                                   plasticity_model, sampling, state_size));
          domain.cm_state(i) = operator new(state_size);
          domain.cm(i)->getState(domain.cm_state(i));

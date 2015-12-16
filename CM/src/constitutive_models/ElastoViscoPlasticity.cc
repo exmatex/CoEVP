@@ -69,6 +69,7 @@ Additional BSD Notice
 
 ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&           global,
                                               ApproxNearestNeighbors*       ann, 
+                                              ModelDatabase*          modelDB,
                                               const Tensor2Gen&             L,
                                               const double                  bulk_modulus,
                                               const double                  shear_modulus,
@@ -112,7 +113,7 @@ ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&           glob
 
       enableAdaptiveSampling( pointDimension, valueDimension, pointScaling, valueScaling,
                               maxKrigingModelSize, maxNumberSearchModels, theta, meanErrorFactor,
-                              tolerance, maxQueryPointModelDistance, ann );
+                              tolerance, maxQueryPointModelDistance, ann, modelDB);
 
       m_tol = tolerance;
    }

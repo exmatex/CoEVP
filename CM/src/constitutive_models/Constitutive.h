@@ -6,6 +6,7 @@
 #include "ApproxNearestNeighbors.h"
 #include "FineScale.h"
 #include "tensor.h"
+#include "ModelDatabase.h"
 
 class AdaptiveSampler;
 
@@ -58,7 +59,8 @@ class Constitutive
                                 const double               meanErrorFactor,
                                 const double               tolerance,
                                 const double               maxQueryPointModelDistance,
-                                ApproxNearestNeighbors*    ann );
+                                ApproxNearestNeighbors*    ann,
+                                ModelDatabase*             modelDB);
 
    void sample( const FineScale&           fine_scale_model,
                 const std::vector<double>& point,

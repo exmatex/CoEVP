@@ -12,6 +12,7 @@ class IdealGas
 
    IdealGas( ConstitutiveGlobal&     global,
              ApproxNearestNeighbors* ann,
+             ModelDatabase*          modelDB,
              const double            gamma,
              const bool              use_adaptive_sampling = false );
 

@@ -2,6 +2,10 @@
 
 #include "ModelDB_SingletonDB.h"
 
+#include "base/ResponsePoint.h"
+#include "base/InterpolationModelFactory.h"
+#include "base/InterpolationModel.h"
+
 #include <iostream>
 
 ModelDB_SingletonDB::ModelDB_SingletonDB()

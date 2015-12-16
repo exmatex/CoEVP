@@ -66,6 +66,7 @@ Additional BSD Notice
 
 IdealGas::IdealGas( ConstitutiveGlobal&     global,
                     ApproxNearestNeighbors* ann,
+                    ModelDatabase*          modelDB,
                     const double            gamma,
                     const bool              use_adaptive_sampling )
    : Constitutive(global),
@@ -89,7 +90,7 @@ IdealGas::IdealGas( ConstitutiveGlobal&     global,
 
       enableAdaptiveSampling( pointDimension, valueDimension, pointScaling, valueScaling,
                               maxKrigingModelSize, maxNumberSearchModels, theta, meanErrorFactor,
-                              tolerance, maxQueryPointModelDistance, ann );
+                              tolerance, maxQueryPointModelDistance, ann, modelDB);
    }
 }
 

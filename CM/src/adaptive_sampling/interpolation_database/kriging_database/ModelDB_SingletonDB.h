@@ -14,7 +14,6 @@
 #include "ModelDatabase.h"
 #include "KrigingDataBase.h"
 #include "SingletonDB.h"
-#include "base/InterpolationModelFactory.h"
 
 
 class ModelDB_SingletonDB : public ModelDatabase {

@@ -14,6 +14,7 @@ class ElastoViscoPlasticity
 
       ElastoViscoPlasticity( ConstitutiveGlobal&     global,
                              ApproxNearestNeighbors* ann,
+                             ModelDatabase*          modelDB,
                              const Tensor2Gen&       L,
                              const double            bulk_modulus,
                              const double            shear_modulus,
