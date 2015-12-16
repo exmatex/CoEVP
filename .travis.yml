@@ -10,12 +10,19 @@ addons:
       - libhdf5-serial-dev #for silo
       - liblapack-dev
       - libblas-dev
+      - libopenmpi-dev
+      - openmpi-bin
+
+env:
+  matrix: 
+    - COEVP_MPI=no 
+    - COEVP_MPI=yes 
 
 before_script:
   - export PATH="/usr/lib/ccache:$PATH"
 
 script:
-  - make -j2
+  - make -j2 COEVP_MPI=${COEVP_MPI}
 
 cache:
   directories:

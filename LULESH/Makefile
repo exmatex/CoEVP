@@ -32,7 +32,7 @@ CM_LIB = ../CM/lib/libcm.a
 
 INCLUDE_DIRS = -I. -I../CM/include
 
-ifneq ($(strip $(COEVP_MPI)),)
+ifeq ($(COEVP_MPI), yes)
 CXXFLAGS += -DCOEVP_MPI
 CXX= mpic++
 endif
