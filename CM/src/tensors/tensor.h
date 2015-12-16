@@ -826,6 +826,7 @@ Tensor2Sym log( const Tensor2Sym &S );
 
 double norm( const Tensor1 &a );
 double norm( const Tensor2 &A );
+double norm( const Tensor2Sym &A );
 double trace( const Tensor2 &A );
 double det( const Tensor2 &A );
 

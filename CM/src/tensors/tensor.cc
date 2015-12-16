@@ -773,6 +773,16 @@ double norm( const Tensor2 &A )
     return sqrt(sqn);
 }
 
+double norm( const Tensor2Sym &A )
+{
+    double sqn(0);
+    for ( size_t i=1; i<4; i++ )
+       for ( size_t j=1; j<4; j++ )
+          sqn += A(i,j)*A(i,j);
+
+    return sqrt(sqn);
+}
+
 double trace( const Tensor2 &A )
 {
    return A(1,1)+A(2,2)+A(3,3);
