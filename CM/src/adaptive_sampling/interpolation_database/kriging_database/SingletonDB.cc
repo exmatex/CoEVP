@@ -17,6 +17,7 @@
 #include <string>
 #include <assert.h>
 #include <stdexcept>
+#include <unistd.h>
 
 static std::string uint128_to_string(const uint128_t &in){
    uint64_t *in64 = (uint64_t *)&in; 
@@ -105,7 +106,11 @@ SingletonDB::SingletonDB() {
   if (redis != NULL && redis->err) {
     //Attempt to spawn redis-server
     std::cout << "Attempting to spawn redis in SingletonDB..." << std::endl;
-    this->redisServerHandle = popen(REDIS_SERVER, "r");
+    char cmdBuffer[256];
+    char hostBuffer[256];
+    gethostname(hostBuffer, 256);
+    sprintf(cmdBuffer, "%s --port %d --dbfilename %s.rdb", REDIS_SERVER, REDIS_PORT, hostBuffer);
+    this->redisServerHandle = popen(cmdBuffer, "r");
     bool serverNotReady = true;
     char buffer[256];
     while(serverNotReady)
