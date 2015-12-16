@@ -66,6 +66,7 @@ Additional BSD Notice
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdexcept>
 #include <sstream>
 
 #if defined(COEVP_MPI)

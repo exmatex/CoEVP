@@ -9,8 +9,17 @@ file:
 
 To build a minimal set of features one can use:
 
-     make REDIS=no FLANN=no SILO-no
+     make REDIS=no FLANN=no SILO=no
 
 which will enable building of the redis backend, the libflann based neighbor search and
-silo output files.
+silo output files. 
 
+To use a system redis, libflann or libsilo use:
+
+     make REDIS_LOC=/path/to/hiredis FLANN_LOC=/path/to/flann SILO_LOC=/path/to/silo
+
+To run lulesh use:
+
+     LULESH/luslesh
+
+and see use the "--help" option for help.
