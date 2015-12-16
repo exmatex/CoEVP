@@ -132,7 +132,7 @@ CXXFLAGS += -DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN
 ifeq ($(REDIS), yes)
 REDIS_LOC = ../../redis/hiredis
 REDIS_SERVER = $(realpath ../../redis/redis/src/redis-server)
-CXXFLAGS += -DSTRING_MODELS -DREDIS -I$(REDIS_LOC) -DREDIS_SERVER=\"${REDIS_SERVER}\"
+CXXFLAGS += -DREDIS -I$(REDIS_LOC) -DREDIS_SERVER=\"${REDIS_SERVER}\"
 REDIS_LIBS = $(REDIS_LOC)/libhiredis.a
 endif
 
@@ -146,10 +146,12 @@ MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 
 default: libcm
 
+libcm: ../lib/libcm.a
+
 kintest: $(KINTEST_OBJS)
 	$(CXX) $(CXXFLAGS) $(KINTEST_OBJS) $(LIBS) -o kintest
 
-libcm:  $(CMLIB_OBJS)
+../lib/libcm.a:  $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
 	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
 	cp $(CMLIB_INCL) ../include
 	mv libcm.a ../lib
