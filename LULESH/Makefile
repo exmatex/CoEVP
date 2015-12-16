@@ -65,8 +65,32 @@ LAPACK += -L$(BLAS_LOC)
 endif
 LAPACK += -lblas
 
-lulesh: lulesh_main.cc lulesh.cc cmdLineParser.c $(CM_LIB)
-	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) $+ $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LAPACK) -lm -o $@
+CXXFLAGS += $(INCLUDE_DIRS)
+
+all: lulesh
+
+dummy: ;
+
+.cxxflags: dummy
+	@[ -f $@ ] || touch $@
+	@echo "CXXFLAGS=$(CXXFLAGS)" | cmp -s $@ - || echo "CXXFLAGS=$(CXXFLAGS)" > $@
+
+MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
+%.o: %.cc .cxxflags
+	@$(MAKEDEPEND)
+	cp $*.d.tmp $*.d
+	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' -e '/^$$/ d' -e 's/$$/ :/' < $*.d.tmp >> $*.d
+	rm -f $*.d.tmp
+	$(CXX) -c $(CXXFLAGS) -c -o $@ $< 
+
+LULESH_SRC=$(shell ls *.cc)
+LULESH_OBJS=$(LULESH_SRC:.cc=.o)
+LULESH_DEPS=$(LULESH_SRC:.cc=.d)
+
+-include $(LULESH_DEPS)
+
+lulesh: $(LULESH_OBJS) $(CM_LIB)
+	$(CXX) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LAPACK) -lm
 
 clean:
-	rm -f *~ lulesh
+	rm -f *~ lulesh $(LULESH_OBJS) $(LULESH_DEPS)

@@ -4,6 +4,7 @@ lulesh
 *~
 build
 
+.cxxflags
 *.o
 *.d
 CM/include/*.h

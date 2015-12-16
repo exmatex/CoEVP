@@ -151,12 +151,18 @@ libcm: ../lib/libcm.a
 kintest: $(KINTEST_OBJS)
 	$(CXX) $(CXXFLAGS) $(KINTEST_OBJS) $(LIBS) -o kintest
 
+dummy: ;
+
+.cxxflags: dummy
+	@[ -f $@ ] || touch $@
+	@echo "CXXFLAGS=$(CXXFLAGS)" | cmp -s $@ - || echo "CXXFLAGS=$(CXXFLAGS)" > $@
+
 ../lib/libcm.a:  $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
 	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
 	cp $(CMLIB_INCL) ../include
 	mv libcm.a ../lib
 
-%.o : %.cc
+%.o : %.cc .cxxflags
 	@$(MAKEDEPEND)
 	cp $*.d.tmp $*.d
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' -e '/^$$/ d' -e 's/$$/ :/' < $*.d.tmp >> $*.d
