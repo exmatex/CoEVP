@@ -3540,8 +3540,6 @@ void Lulesh::go(int argc, char *argv[])
 
    int heightElems = xEnd - xBegin ;
 
-   domain.sliceHeight() = heightElems ;
-
 #else
 
    int heightElems = gheightElems ;
@@ -3549,6 +3547,8 @@ void Lulesh::go(int argc, char *argv[])
    xEnd = heightElems ;
 
 #endif
+   
+   domain.sliceHeight() = heightElems ;
 
    int heightNodes = heightElems+1 ;
 

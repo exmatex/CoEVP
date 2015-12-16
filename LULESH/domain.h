@@ -364,6 +364,7 @@ public:
    Index_t&  numSymmNodesBoundary() { return m_numSymmNodesBoundary ; }
    Index_t&  numElem()            { return m_numElem ; }
    Index_t&  numNode()            { return m_numNode ; }
+   Index_t&  sliceHeight()        { return m_sliceHeight ; }
 
 #if defined(COEVP_MPI)
 
@@ -373,7 +374,6 @@ public:
 
    Index_t&  numSlices()          { return m_numSlices ; }
    Index_t&  sliceLoc()           { return m_sliceLoc ; }
-   Index_t&  sliceHeight()        { return m_sliceHeight ; }
 
    /* Communication Work space */
 
@@ -523,6 +523,7 @@ private:
 
    Index_t   m_numElem ;         /* Elements/Nodes in this domain */
    Index_t   m_numNode ;
+   Index_t   m_sliceHeight ;     /* elem height of this slice */
 
 #if defined(COEVP_MPI)
    Index_t   m_commElems ;       /* communicated elements per plane */
@@ -531,7 +532,6 @@ private:
 
    Index_t   m_numSlices ;       /* number of MPI Ranks */
    Index_t   m_sliceLoc ;        /* myRank */
-   Index_t   m_sliceHeight ;     /* elem height of this slice */
 #endif
 
 };
