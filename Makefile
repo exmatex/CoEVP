@@ -1,4 +1,4 @@
-.PHONY: all clean clean-all lulesh libcm redis flann silo
+.PHONY: all clean clean-all lulesh libcm redis flann silo test
 
 all: lulesh
 
@@ -15,10 +15,13 @@ endif
 SILO=yes
 ifeq ($(SILO),yes)
 SILO_LOC=../silo/silo
+SILODIFF=silo/silo/bin/silodiff
 libcm: silo
 endif
 
-lulesh: libcm
+lulesh: LULESH/lulesh
+
+LULESH/lulesh: libcm
 	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC)
 
 libcm:
@@ -36,8 +39,25 @@ flann:
 clean:
 	${MAKE} -C CM/exec clean
 	${MAKE} -C LULESH clean
+	rm -rf test/*.silo
 
 clean-all: clean
 	${MAKE} -C redis clean
 	${MAKE} -C flann clean
 	${MAKE} -C silo clean
+
+reference: LULESH/lulesh
+	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
+	mkdir -p test/reference
+	cd test/reference && ../../LULESH/lulesh
+
+STEPS=500
+#bit hackish, but let's assume we have $(STEPS) steps
+test/taylor_$(STEPS).silo: LULESH/lulesh
+	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
+	mkdir -p test
+	cd test && ../LULESH/lulesh
+
+test: test/taylor_$(STEPS).silo silo
+	@[ -x "$(SILODIFF)" ] || { echo "SILODIFF=$(SILODIFF) seems to be wrong" && exit 1; }
+	for i in test/*.silo; do i=`basename $$i`; $(SILODIFF) test/reference/$$i test/$$i; done
