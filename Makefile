@@ -60,4 +60,5 @@ test/taylor_$(STEPS).silo: LULESH/lulesh
 
 test: test/taylor_$(STEPS).silo silo
 	@[ -x "$(SILODIFF)" ] || { echo "SILODIFF=$(SILODIFF) seems to be wrong" && exit 1; }
-	for i in test/*.silo; do i=`basename $$i`; $(SILODIFF) test/reference/$$i test/$$i; done
+	$(SILODIFF) test/reference test > test/diff
+	@[ ! -s test/diff ] || { "Difference in files" && exit 1; }
