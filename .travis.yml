@@ -1,0 +1,29 @@
+language: cpp
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - ccache
+      - gfortan #for silo
+      - libhdf5-serial-dev #for silo
+      - liblapack-dev
+      - libblas-dev
+
+before_script:
+  - export PATH="/usr/lib/ccache:$PATH"
+
+script:
+  - make -j2
+
+cache:
+  directories:
+    - $HOME/.ccache
+
+compiler:
+  - gcc
+
+notifications:
+  email:
+    - tabasco-dev@lanl.gov  
