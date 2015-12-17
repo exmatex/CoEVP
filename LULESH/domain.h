@@ -71,6 +71,14 @@ Additional BSD Notice
 #include <string.h>
 #include <sstream>
 
+#if defined(COEVP_MPI)
+#include <mpi.h>
+#endif
+
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 // EOS options
 #include "BulkPressure.h"
 #include "MieGruneisen.h"
@@ -166,8 +174,8 @@ public:
 
       m_p.resize(size, Real_t(0.)) ;
       m_q.resize(size, Real_t(0.)) ;
-      m_ql.resize(size) ;
-      m_qq.resize(size) ;
+      m_ql.resize(size, Real_t(0.)) ;
+      m_qq.resize(size, Real_t(0.)) ;
 
       m_v.resize(size, 1.0) ;
       m_volo.resize(size) ;
@@ -194,7 +202,7 @@ public:
 
    /* Temporaries should not be initialized in bulk but */
    /* this is a runnable placeholder for now */
-   void AllocateElemTemporary(size_t size)
+   void AllocateElemTemporary(size_t size, size_t ghostSize)
    {
       m_dxx.resize(size) ;
       m_dyy.resize(size) ;
@@ -207,7 +215,7 @@ public:
       m_wyy.resize(size) ;
       m_wzz.resize(size) ;
 
-      m_delv_xi.resize(size) ;
+      m_delv_xi.resize(size + 2*ghostSize) ;
       m_delv_eta.resize(size) ;
       m_delv_zeta.resize(size) ;
 
@@ -356,6 +364,30 @@ public:
    Index_t&  numSymmNodesBoundary() { return m_numSymmNodesBoundary ; }
    Index_t&  numElem()            { return m_numElem ; }
    Index_t&  numNode()            { return m_numNode ; }
+   Index_t&  sliceHeight()        { return m_sliceHeight ; }
+
+#if defined(COEVP_MPI)
+
+   Index_t&  commElems()          { return m_commElems ; }
+   Index_t&  commNodes()          { return m_commNodes ; }
+   Index_t&  maxPlaneSize()       { return m_maxPlaneSize ; }
+
+   Index_t&  numSlices()          { return m_numSlices ; }
+   Index_t&  sliceLoc()           { return m_sliceLoc ; }
+
+   /* Communication Work space */
+
+   Real_t *commDataSend ;
+   Real_t *commDataRecv ;
+
+   Index_t *planeNodeIds ;
+   Index_t *planeElemIds ;
+
+   /* Maximum number of block neighbors */
+   MPI_Request recvRequest[2] ; /* top and bottom Z plane of nodes */
+   MPI_Request sendRequest[2] ; /* top and bottom Z plane of nodes */
+
+#endif
 
 private:
 
@@ -491,6 +523,16 @@ private:
 
    Index_t   m_numElem ;         /* Elements/Nodes in this domain */
    Index_t   m_numNode ;
+   Index_t   m_sliceHeight ;     /* elem height of this slice */
+
+#if defined(COEVP_MPI)
+   Index_t   m_commElems ;       /* communicated elements per plane */
+   Index_t   m_commNodes ;       /* communicated nodes per plane */
+   Index_t   m_maxPlaneSize ;    /* maximum communicated bytes per plane */
+
+   Index_t   m_numSlices ;       /* number of MPI Ranks */
+   Index_t   m_sliceLoc ;        /* myRank */
+#endif
 
 };
 
