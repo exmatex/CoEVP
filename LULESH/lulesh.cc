@@ -101,6 +101,7 @@ int  flann_n_checks = 20;       // Default can be overridden using command line
 #include "ModelDatabase.h"
 #include "ModelDB_HashMap.h"
 #include "ModelDB_SingletonDB.h"
+#include "SingletonDB.h"
 
 // Fine scale model options
 #include "Taylor.h"        // the fine-scale plasticity model
@@ -2931,18 +2932,22 @@ void Lulesh::go(int argc, char *argv[])
 
    /*************************************/
    /* Initialize ModelDB Interface      */
+   /* and prime SingletonDB             */
    /*************************************/
    ModelDatabase * modelDB = nullptr;
    if(sampling)
    {
       if(redising){
 #ifdef REDIS
+        SingletonDB::getInstance().setBackend(SingletonDBBackendEnum::REDIS_DB);
         modelDB = new ModelDB_SingletonDB();
 #else
         throw std::runtime_error("REDIS not compiled in"); 
 #endif
       } else {
-        modelDB = new ModelDB_HashMap();
+        SingletonDB::getInstance().setBackend(SingletonDBBackendEnum::HASHMAP_DB);
+        modelDB = new ModelDB_SingletonDB();
+        //modelDB = new ModelDB_HashMap();
       }
    }
 

@@ -14,6 +14,14 @@
 #include <hiredis.h>
 #define uint128_t unsigned __int128
 
+#include "SingletonDB_Backend.h"
+
+enum SingletonDBBackendEnum
+{
+  REDIS_DB,
+  HASHMAP_DB
+};
+
 class SingletonDB {
  public:
   
@@ -28,9 +36,10 @@ class SingletonDB {
   std::vector<double> pull(const uint128_t &key);
   std::vector<double> pull_key(const uint128_t &key);
 
+  void setBackend(SingletonDBBackendEnum dbType);
+
 private:
-  redisContext*   redis;
-  FILE * redisServerHandle;
+  SingletonDB_Backend * backend;
 
   SingletonDB();
   ~SingletonDB();
@@ -39,7 +48,6 @@ private:
   SingletonDB(SingletonDB const&)    = delete;
   void operator=(SingletonDB const&) = delete;
 
-  redisReply *pull_data(const uint128_t &key);
 };
 
 
