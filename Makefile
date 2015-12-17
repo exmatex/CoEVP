@@ -9,6 +9,7 @@ libcm: flann
 endif
 REDIS=yes
 ifeq ($(REDIS),yes)
+REDIS_LOC=../redis/hiredis
 libcm: redis
 endif
 SILO=yes
@@ -18,7 +19,7 @@ libcm: silo
 endif
 
 lulesh: libcm
-	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC)
+	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC)
 
 libcm:
 	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN)

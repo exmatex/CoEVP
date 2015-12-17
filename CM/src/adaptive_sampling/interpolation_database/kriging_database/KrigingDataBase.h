@@ -12,11 +12,11 @@
 #include <unordered_map>
 
 #ifndef included_krigcpl_InterpolationDataBase_h
-#include "base/InterpolationDataBase.h"
+#include "InterpolationDataBase.h"
 #endif 
 
 #ifndef included_krigalg_InterpolationModelFactory_h
-#include <base/InterpolationModelFactory.h>
+#include "InterpolationModelFactory.h"
 #endif
 
 //#ifndef included_base_DB

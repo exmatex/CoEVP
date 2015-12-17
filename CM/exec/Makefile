@@ -72,9 +72,10 @@ TENSOR_DEPS = $(TENSOR_SRC:.cc=.d)
 AS_LOC        = ../src/adaptive_sampling
 INTERPDB_LOC  = $(AS_LOC)/interpolation_database
 INTERPDB_SRC  = $(shell ls $(INTERPDB_LOC)/base/*.cc $(INTERPDB_LOC)/kriging_database/*.cc)
-INTERPDB_INCL = $(shell ls $(INTERPDB_LOC)/kriging_database/*.h)
+INTERPDB_INCL = $(shell ls $(INTERPDB_LOC)/kriging_database/*.h $(INTERPDB_LOC)/base/*.h)
 INTERP_LOC    = $(AS_LOC)/interpolation
 INTERP_SRC    = $(shell ls $(INTERP_LOC)/*/*.cc)
+INTERP_INCL   = $(shell ls $(INTERP_LOC)/base/*.h $(INTERP_LOC)/base/*.I)
 DB_LOC        = $(AS_LOC)/database
 DB_SRC        = $(shell ls $(DB_LOC)/mtreedb/*.cc)
 DB_INCL       = $(shell ls $(DB_LOC)/mtreedb/*.h $(DB_LOC)/mtreedb/*.I)
@@ -82,6 +83,7 @@ UTILS_LOC     = $(AS_LOC)/utils
 UTILS_SRC     = $(shell ls $(UTILS_LOC)/toolbox/*/*.cc $(UTILS_LOC)/murmur3/*.cc)
 UTILS_INCL    = $(shell ls $(UTILS_LOC)/toolbox/base/*.h $(UTILS_LOC)/toolbox/base/*.I $(UTILS_LOC)/toolbox/database/*.h $(UTILS_LOC)/toolbox/database/*.I $(UTILS_LOC)/toolbox/stream/*.h $(UTILS_LOC)/toolbox/stream/*.I)
 MTL_LOC       = $(AS_LOC)/mtl_headers
+MTL_INCL      = $(shell ls $(AS_LOC)/mtl_headers/mtl/*.h)
 AS_SRC        = $(AS_LOC)/AdaptiveSampler.cc $(INTERPDB_SRC) $(INTERP_SRC) $(DB_SRC) $(UTILS_SRC)
 AS_OBJS       = $(AS_SRC:.cc=.o)
 AS_DEPS       = $(AS_SRC:.cc=.d)
@@ -120,10 +122,10 @@ KINTEST_DEPS = kintest.d
 
 CMLIB_SRC  = $(CM_SRC) $(EOS_SRC) $(FS_SRC) $(AS_SRC) $(TENSOR_SRC)
 CMLIB_OBJS = $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
-CMLIB_INCL = $(INTERPDB_INCL) $(DB_INCL) $(UTILS_INCL) $(CM_INCL) $(EOS_INCL) $(FS_INCL) $(TENSOR_INCL)
+CMLIB_INCL = $(INTERPDB_INCL) $(DB_INCL) $(UTILS_INCL) $(CM_INCL) $(EOS_INCL) $(FS_INCL) $(TENSOR_INCL) $(INTERP_INCL)
 
 CXXFLAGS += -std=c++0x
-CXXFLAGS += -I$(AS_LOC) -I$(MTL_LOC) -I$(INTERPDB_LOC) -I$(INTERPDB_LOC)/kriging_database -I$(INTERP_LOC)
+CXXFLAGS += -I$(AS_LOC) -I$(MTL_LOC) -I$(INTERPDB_LOC) -I$(INTERPDB_LOC)/kriging_database -I$(INTERPDB_LOC)/base -I$(INTERP_LOC) -I$(INTERP_LOC)/base
 CXXFLAGS += -I$(DB_LOC) -I$(DB_LOC)/mtreedb -I$(UTILS_LOC) -I$(UTILS_LOC)/toolbox/base
 CXXFLAGS += -I$(UTILS_LOC)/toolbox/database -I$(UTILS_LOC)/toolbox/stream
 CXXFLAGS += -I$(TENSOR_LOC) -I$(CM_LOC) -I$(EOS_LOC) -I$(FS_LOC)
@@ -160,6 +162,8 @@ dummy: ;
 ../lib/libcm.a:  $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
 	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
 	cp $(CMLIB_INCL) ../include
+	mkdir -p ../include/mtl
+	cp $(MTL_INCL) ../include/mtl
 	mv libcm.a ../lib
 
 %.o : %.cc .cxxflags
