@@ -3551,6 +3551,9 @@ void Lulesh::go(int argc, char *argv[])
    int heightElems = xEnd - xBegin ;
 
 #else
+   
+   domain.sliceLoc() = 0 ;
+   domain.numSlices() = 1 ;
 
    int heightElems = gheightElems ;
    xBegin = 0 ;
@@ -4549,7 +4552,7 @@ void Lulesh::go(int argc, char *argv[])
 
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
-#if VISIT_DATA_INTERVAL!=0 && defined(COEVP_MPI)
+#if VISIT_DATA_INTERVAL!=0
       char meshName[64] ;
       if (domain.cycle() % VISIT_DATA_INTERVAL == 0) {
          DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(),
@@ -4659,7 +4662,7 @@ void Lulesh::go(int argc, char *argv[])
 
    }
 
-#if VISIT_DATA_INTERVAL!=0 && defined(COEVP_MPI)
+#if VISIT_DATA_INTERVAL!=0
    if (domain.cycle() % VISIT_DATA_INTERVAL != 0) {
       DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(), 
                  ((domain.numSlices() == 1) ? file_parts : 0) ) ;
