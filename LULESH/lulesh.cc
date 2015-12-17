@@ -2572,11 +2572,13 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
    Real_t *yd    = new double[domain.numNode()];
    Real_t *xd    = new double[domain.numNode()];
    Real_t *speed = new double[domain.numNode()];
+   Real_t *nodalmass = new double[domain.numNode()];
    for(int ni=0 ; ni < domain.numNode() ; ++ni) {
       xd[ni]    = domain.xd(ni);
       yd[ni]    = domain.yd(ni);
       zd[ni]    = domain.zd(ni);
       speed[ni] = sqrt((xd[ni]*xd[ni])+(yd[ni]*yd[ni])+(zd[ni]*zd[ni]));
+      nodalmass[ni] = domain.nodalMass(ni) ;
    }
 
    ok += DBPutUcdvar1(db, "speed", "mesh", (float*)speed,
@@ -2599,6 +2601,11 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank)
                       domain.numNode(), NULL, 0, DB_DOUBLE, DB_NODECENT,
                       NULL);
    delete [] zd ;
+
+   ok += DBPutUcdvar1(db, "nodalmass", "mesh", (float*) nodalmass,
+                      domain.numNode(), NULL, 0, DB_DOUBLE, DB_NODECENT,
+                      NULL);
+   delete [] nodalmass ;
 
    if ( sampling ) {
 
@@ -2850,10 +2857,10 @@ void DumpDomain(Domain *domain, int myRank, int numProcs)
    char baseName[64] ;
    char meshName[64] ;
 
-   sprintf(baseName, "taylor_%d.sami", int(domain->cycle())) ;
+   sprintf(baseName, "taylor_%d.silo", int(domain->cycle())) ;
 
    if (myRank == 0) {
-      sprintf(meshName, "taylor_%d.sami", int(domain->cycle())) ;
+      sprintf(meshName, "taylor_%d.silo", int(domain->cycle())) ;
    }
    else {
       sprintf(meshName, "%s.%d", baseName, myRank) ;
