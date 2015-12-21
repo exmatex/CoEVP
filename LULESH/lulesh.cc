@@ -3368,12 +3368,15 @@ void Lulesh::go(int argc, char *argv[])
    /* Create connectivity for lzetam, lzetap */
 #ifndef OLD_LZETA_CONNECTIVITY
    for (Index_t i=0; i<edgeElems*heightElems; ++i) {
+      /* these are dummmy values for visualization only */
       domain.lzetam(i) = i ;
+#if 0
       domain.lzetap(domElems-edgeElems*heightElems+i) =
                             domElems-edgeElems*heightElems+i ;
+#endif
    }
    for (Index_t i=edgeElems*heightElems;
-        i<coreElems*edgeElems*heightElems; ++i) {
+        i<coreElems*edgeElems*heightElems+(coreElems-1)*heightElems; ++i) {
       domain.lzetam(i) = i - edgeElems*heightElems ;
       domain.lzetap(i-edgeElems*heightElems) = i ;
    }
@@ -3383,19 +3386,21 @@ void Lulesh::go(int argc, char *argv[])
    }
    /* set lzetam and lzetap for Z wing elements, minus notch plane */
    for (int i=coreElems*edgeElems*heightElems;
+        i < coreElems*edgeElems*heightElems+(coreElems-1)*heightElems;
+        ++i) {
+      domain.lzetap(i) = i + (coreElems-1)*heightElems ;
+   }
+   for (int i=coreElems*edgeElems*heightElems+(coreElems-1)*heightElems;
         i<coreElems*edgeElems*heightElems + (coreElems-1)*wingElems*heightElems;
         ++i) {
       domain.lzetam(i) = i - (coreElems-1)*heightElems ;
       domain.lzetap(i) = i + (coreElems-1)*heightElems ;
    }
-   /* patch lzetam */
-   for (int i=coreElems*edgeElems*heightElems;
-        i<coreElems*edgeElems*heightElems + (coreElems-1)*heightElems; ++i) {
-      domain.lzetam(i) = i - edgeElems*heightElems ;
-   }
    /* set lzetam, lzetap for notch plane */
    for (int i=domElems-wingElems*heightElems; i<domElems; ++i) {
-      domain.lzetam(i) = i - heightElems ;
+      if (i >= domElems-wingElems*heightElems + heightElems) {
+         domain.lzetam(i) = i - heightElems ;
+      }
       domain.lzetap(i) = i + heightElems ;
    }
    /* patch lzetap for notch plane row of elements */
