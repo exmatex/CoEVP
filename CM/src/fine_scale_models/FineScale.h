@@ -19,6 +19,10 @@ class FineScale
       virtual void evaluate( const std::vector<double>& points,
                              vector<double>&            values ) const = 0;
 
+      virtual void advance( const double delta_t, void* state) const = 0;
+
+      virtual size_t getStateSize() const = 0;
+
       int pointDimension() const {return m_pointDimension;}
 
       int valueDimension() const {return m_valueDimension;}

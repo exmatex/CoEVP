@@ -35,7 +35,7 @@ class IdealGas
 
    virtual void getState( void* buffer ) const {};
 
-   virtual void setState( void* buffer ) {};
+   virtual void* setState( void* buffer ) {return NULL;}
 
  private:
    

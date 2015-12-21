@@ -47,7 +47,7 @@ class Constitutive
 
    virtual void getState( void* buffer ) const = 0;
 
-   virtual void setState( void* buffer ) = 0;
+   virtual void* setState( void* buffer ) = 0;
 
    void enableAdaptiveSampling( const int                  pointDimension,
                                 const int                  valueDimension,

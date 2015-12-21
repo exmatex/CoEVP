@@ -119,9 +119,6 @@ FS_DEPS = $(FS_SRC:.cc=.d)
 KINTEST_OBJS = kintest.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
 KINTEST_DEPS = kintest.d
 
-KINTEST2_OBJS = kintest2.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
-KINTEST2_DEPS = kintest2.d
-
 # Constitutive model library
 
 CMLIB_SRC  = $(CM_SRC) $(EOS_SRC) $(FS_SRC) $(AS_SRC) $(TENSOR_SRC)
@@ -137,7 +134,8 @@ CXXFLAGS += -DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN
 
 ifeq ($(REDIS), yes)
 REDIS_LOC = ../../redis/hiredis
-CXXFLAGS += -DSTRING_MODELS -DREDIS -I$(REDIS_LOC)
+REDIS_SERVER = $(realpath ../../redis/redis/src/redis-server)
+CXXFLAGS += -DREDIS -I$(REDIS_LOC) -DREDIS_SERVER=\"${REDIS_SERVER}\"
 REDIS_LIBS = $(REDIS_LOC)/libhiredis.a
 endif
 
@@ -151,20 +149,25 @@ MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 
 default: libcm
 
+libcm: ../lib/libcm.a
+
 kintest: $(KINTEST_OBJS)
 	$(CXX) $(CXXFLAGS) $(KINTEST_OBJS) $(LIBS) -o kintest
 
-kintest2: $(KINTEST2_OBJS)
-	$(CXX) $(CXXFLAGS) $(KINTEST2_OBJS) $(LIBS) -o kintest2
+dummy: ;
 
-libcm:  $(CMLIB_OBJS)
+.cxxflags: dummy
+	@[ -f $@ ] || touch $@
+	@echo "CXXFLAGS=$(CXXFLAGS)" | cmp -s $@ - || echo "CXXFLAGS=$(CXXFLAGS)" > $@
+
+../lib/libcm.a:  $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
 	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
 	cp $(CMLIB_INCL) ../include
 	mkdir -p ../include/mtl
 	cp $(MTL_INCL) ../include/mtl
 	mv libcm.a ../lib
 
-%.o : %.cc
+%.o : %.cc .cxxflags
 	@$(MAKEDEPEND)
 	cp $*.d.tmp $*.d
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' -e '/^$$/ d' -e 's/$$/ :/' < $*.d.tmp >> $*.d

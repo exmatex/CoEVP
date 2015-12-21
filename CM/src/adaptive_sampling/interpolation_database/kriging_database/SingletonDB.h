@@ -30,6 +30,7 @@ class SingletonDB {
 
 private:
   redisContext*   redis;
+  FILE * redisServerHandle;
 
   SingletonDB();
   ~SingletonDB();

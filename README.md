@@ -5,33 +5,25 @@ are contained in a library (cmlib.a) which is statically linked with LULESH.  To
 the library, link with LULESH and run, beginning in the directory containing this README
 file:
 
-     cd CM/exec
+     make 
 
-     gmake (builds and installs cmlib.a and header files needed by LULESH)
+To build a minimal set of features one can use:
 
-     cd ../../LULESH
+     make REDIS=no FLANN=no SILO=no
 
-     gmake   (builds LULESH)
+which will enable building of the redis backend, the libflann based neighbor search and
+silo output files. 
 
-     lulesh  (runs LULESH on the Taylor cylinder problem with the specified
-     constitutive model)
+To use a system redis, libflann or libsilo use:
 
-Additional instructions for running with adaptive sampling and the redis
-database.  To enable adaptive sampling you must edit `lulesh.cc` and define
-`USE_ADAPTIVE_SAMPLING`. There is also a slight change to the build instructions:
+     make REDIS_LOC=/path/to/hiredis FLANN_LOC=/path/to/flann SILO_LOC=/path/to/silo
 
-``` sh
-cd CM/exec
-make REDIS=yes -j10
-cd ../../LULESH
-make clean;make
-./lulesh
-```
-Before running LULESH, make sure and start a redis-server (instructions for
-doing this depend on your system environment). CoEVP will connect to redis on
-the standard address (`localhost:6379`). If CoEVP detects any data in the redis databse
-(from a previous run) it will be deleted. This is a (temporary) convenience so
-that you don't have to find and delete the `dump.rdb` file. At  the end of the
-run, CoEVP will print a summary of database statistics.
+To build an mpi version of lulesh use:
 
+     make COEVP_MPI=yes
 
+To run lulesh use:
+
+     LULESH/luslesh
+
+and see use the "--help" option for help.

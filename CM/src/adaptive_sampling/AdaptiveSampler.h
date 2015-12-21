@@ -101,9 +101,6 @@ class AdaptiveSampler
    KrigingDataBase* m_interp;
 
    ApproxNearestNeighbors* m_ann;
-#ifndef REDIS
-   InterpolationModelDataBase m_modelDB;
-#endif
 
    std::vector<double> m_pointScaling;
    std::vector<double> m_valueScaling;

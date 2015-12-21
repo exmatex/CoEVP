@@ -65,10 +65,11 @@ Additional BSD Notice
 #include "MieGruneisen.h"
 #include "Taylor.h"
 #include "ElastoViscoPlasticity.h"
+#include "ApproxNearestNeighborsMTree.h"
+#include "ApproxNearestNeighborsFLANN.h"
 
-
-
-void setVelocityGradient(Tensor2Gen& L)
+void setVelocityGradient(double      time,
+                         Tensor2Gen& L)
 {
    L = Tensor2Gen(0);
 
@@ -82,7 +83,7 @@ int
 main( int   argc,
       char *argv[] )
 {
-   // Fine-scale plasticity model
+   // Construct the fine-scale plasticity model
    double m = 1./20.;
    double g = 2.e-3;
    double D_0 = 1.e-2;
@@ -103,54 +104,65 @@ main( int   argc,
       eos_model = (EOS*)(new MieGruneisen(k1, k2, k3, Gamma));
    }
 
-   // Constitutive model
+   // Construct approximate nearest neighbor search object
+   int point_dimension = plasticity_model.pointDimension();
+   ApproxNearestNeighbors* ann;
+
+#ifdef FLANN
+   int flann_n_trees = 1;
+   int flann_n_checks = 20;
+   ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension, flann_n_trees, flann_n_checks));
+#else
+   std::string mtreeDirectoryName = ".";
+   ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
+                                                                   "kriging_model_database",
+                                                                   mtreeDirectoryName,
+                                                                   &(std::cout),
+                                                                   false));
+#endif
+
+   // Construct the constitutive model
+   bool use_adaptive_sampling = false;
    Tensor2Gen L_init;
-   setVelocityGradient(L_init);
+   setVelocityGradient(0., L_init);
+
    double K = 1.94; // Bulk modulus of Tantallum (Mbar)
    double G = 6.9e-1;  // Shear modulus of Tantallum (Mbar)
-   bool use_adaptive_sampling = false;
-   ElastoViscoPlasticity constitutive_model(L_init, K, G, eos_model, &plasticity_model, use_adaptive_sampling);
 
+   ConstitutiveGlobal cm_global;
+   size_t state_size;
+   ElastoViscoPlasticity constitutive_model(cm_global, ann, L_init, K, G, eos_model, &plasticity_model, use_adaptive_sampling, state_size);
+
+   // Allocate an opaque blob to hold the constitutive model state
+   void* state = operator new(state_size);
+   constitutive_model.getState(state);
+
+   // Set up the time integration
    double end_time = 2.e-3;
-   int num_steps = 100;
+   int num_steps = 20;
    double delta_t = end_time / num_steps;
    double time = 0.;
-
-   double old_val = 0.;
 
    for (int step=1; step<=num_steps; ++step) {
 
       // Advance the hydro, obtaining new values for the following:
       Tensor2Gen L_new;
-      setVelocityGradient(L_new);
-
-      // Set the velocity gradient at the new time
-      constitutive_model.setNewVelocityGradient(L_new);
-      constitutive_model.setVolumeChange(1.);
+      setVelocityGradient(time, L_new);
 
       // Advance the constitutive model to the new time
-      constitutive_model.advance(delta_t);
+      ConstitutiveData cm_data = constitutive_model.advance(delta_t, L_new, 1., state);
 
-      int num_iters = constitutive_model.numNewtonIterations();
-
-      //      cout << "Number of Newton iterations = " << num_iters << endl;
+      //      cout << "Number of Newton iterations = " << cm_data.num_Newton_iters << endl;
 
       // Print some interpolation statistics if adaptive sampling is being used
       constitutive_model.printNewInterpStats();
 
       // Get the new Cauchy stress and update hydro
-      Tensor2Sym sigma_bar_new(constitutive_model.stressDeviator());
-
-      //      cout << "sigma_bar_new(3,3) = " << sigma_bar_new(3,1) << endl;
-      //      cout << sigma_bar_new(3,3) << endl;
-      //      cout << (1./(2.*G))*sigma_bar_new(3,3) << endl;
-      //      cout << (1./(2.*G))*((sigma_bar_new(3,3) - old_val)) / delta_t << endl;
-
-      old_val = sigma_bar_new(3,3);
+      const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
 
       time += delta_t;
 
-      //      cout << "Step " << step << " completed, simulation time is " << time << endl;  
+      cout << "Step " << step << " completed, simulation time is " << time << endl;
    }
 }
 
