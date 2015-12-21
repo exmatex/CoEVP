@@ -2893,7 +2893,7 @@ void Lulesh::go(int argc, char *argv[])
   
   addArg("help",     'h', 0, 'i',  &(help),           0, "print this message");
   addArg("sample",   's', 0, 'i',  &(sampling),       0, "use adaptive sampling");
-  addArg("redis",    'f', 0, 'i',  &(redising),       0, "use REDIS library");
+  addArg("redis",    'r', 0, 'i',  &(redising),       0, "use REDIS library");
   addArg("flann",    'f', 0, 'i',  &(flanning),       0, "use FLANN library");
   addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),  0, "number of FLANN trees");
   addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks), 0, "number of FLANN checks");
