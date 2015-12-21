@@ -26,8 +26,8 @@ class SingletonDB {
  public:
   
   //  Return the single instance that was initialized in the private constructor.
-  static  SingletonDB&  getInstance() {
-    static  SingletonDB   instance;
+  static  SingletonDB&  getInstance(SingletonDBBackendEnum backType=HASHMAP_DB) {
+    static  SingletonDB   instance(backType);
     return instance;
   }
 
@@ -36,12 +36,10 @@ class SingletonDB {
   std::vector<double> pull(const uint128_t &key);
   std::vector<double> pull_key(const uint128_t &key);
 
-  void setBackend(SingletonDBBackendEnum dbType);
-
 private:
   SingletonDB_Backend * backend;
 
-  SingletonDB();
+  SingletonDB(SingletonDBBackendEnum backType);
   ~SingletonDB();
 
   //  This technique requires C++11 (can do a C++03 version too)

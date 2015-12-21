@@ -2939,13 +2939,13 @@ void Lulesh::go(int argc, char *argv[])
    {
       if(redising){
 #ifdef REDIS
-        SingletonDB::getInstance().setBackend(SingletonDBBackendEnum::REDIS_DB);
+        SingletonDB::getInstance(SingletonDBBackendEnum::REDIS_DB);
         modelDB = new ModelDB_SingletonDB();
 #else
         throw std::runtime_error("REDIS not compiled in"); 
 #endif
       } else {
-        SingletonDB::getInstance().setBackend(SingletonDBBackendEnum::HASHMAP_DB);
+        SingletonDB::getInstance(SingletonDBBackendEnum::HASHMAP_DB);
         modelDB = new ModelDB_SingletonDB();
         //modelDB = new ModelDB_HashMap();
       }

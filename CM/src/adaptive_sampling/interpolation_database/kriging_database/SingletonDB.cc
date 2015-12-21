@@ -30,28 +30,19 @@ std::vector<double> SingletonDB::pull_key(const uint128_t &key) {
   return this->backend->pull_key(key);
 }
 
-
-void SingletonDB::setBackend(SingletonDBBackendEnum dbType)
-{
-	if(this->backend == nullptr)
+SingletonDB::SingletonDB(SingletonDBBackendEnum backType) {
+	if(backType == REDIS_DB)
 	{
-		if(dbType == REDIS_DB)
-		{
-			this->backend = new SingletonDB_Redis();
-		}
-		else if(dbType == HASHMAP_DB)
-		{
-			this->backend = new SingletonDB_HashMap();
-		}
-		else
-		{
-			///TODO: Throw error
-		}
+		this->backend = new SingletonDB_Redis();
 	}
-}
-
-SingletonDB::SingletonDB() {
-  this->backend = nullptr;
+	else if(backType == HASHMAP_DB)
+	{
+		this->backend = new SingletonDB_HashMap();
+	}
+	else
+	{
+		///TODO: Throw error
+	}
 }
 
 //  Shutdown redis databse and print some simple info about the accumulated database.
