@@ -19,7 +19,7 @@ class ElastoViscoPlasticity
                              const double            bulk_modulus,
                              const double            shear_modulus,
                              const EOS*              eos,
-                             const Plasticity*       fine_scale_model,
+                             Plasticity*             fine_scale_model,
                              const bool              use_adaptive_sampling,
                              size_t&                 state_size );
 
@@ -134,6 +134,10 @@ class ElastoViscoPlasticity
                                   Tensor2Sym&       Dbar_prime,
                                   Tensor4LSym&      Dbar_prime_deriv ) const;
 
+      size_t getKinematicVariableStateSize() const;
+
+      void getKinematicVariableState( void* buffer ) const;
+
       double dot( const Tensor2Sym& tensor1,
                   const Tensor2Sym& tensor2 ) const;
       double norm2( const Tensor2Sym& tensor ) const {return dot(tensor,tensor);}
@@ -165,7 +169,7 @@ class ElastoViscoPlasticity
 
       const EOS* m_eos_model;   // Equation of state model
 
-      const Plasticity* m_plasticity_model;  // Fine-scale model
+      Plasticity* m_plasticity_model;  // Fine-scale model
 };
 
 #endif
