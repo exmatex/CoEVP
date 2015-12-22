@@ -2932,20 +2932,17 @@ void Lulesh::go(int argc, char *argv[])
    /*************************************/
    /* Initialize ModelDB Interface      */
    /*************************************/
-   ModelDatabase * modelDB = nullptr;
+   ModelDatabase * global_modelDB = nullptr;
    if(sampling)
    {
       if(redising){
 #ifdef REDIS
-        modelDB = new ModelDB_SingletonDB();
+        global_modelDB = new ModelDB_SingletonDB();
 #else
         throw std::runtime_error("REDIS not compiled in"); 
 #endif
-      } else {
-        modelDB = new ModelDB_HashMap();
       }
    }
-
    /**************************************/
    /*   Initialize Taylor cylinder mesh  */
    /**************************************/
@@ -3627,6 +3624,12 @@ void Lulesh::go(int argc, char *argv[])
 
          int point_dimension = plasticity_model->pointDimension();
          ApproxNearestNeighbors* ann;
+	 ModelDatabase *modelDB;
+	 if (global_modelDB) {
+	     modelDB = global_modelDB;
+	 } else {
+	     modelDB = new ModelDB_HashMap();
+	 }
 
          if (flanning) {
 #ifdef FLANN
