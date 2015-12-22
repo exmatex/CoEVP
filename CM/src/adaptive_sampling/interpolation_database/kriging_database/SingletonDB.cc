@@ -33,11 +33,15 @@ std::vector<double> SingletonDB::pull_key(const uint128_t &key) {
 SingletonDB::SingletonDB(SingletonDBBackendEnum backType) {
 	if(backType == REDIS_DB)
 	{
-		this->backend = new SingletonDB_Redis();
+		this->backend = new SingletonDB_Redis(false);
 	}
 	else if(backType == HASHMAP_DB)
 	{
 		this->backend = new SingletonDB_HashMap();
+	}
+	else if(backType == DIST_REDIS_DB)
+	{
+		this->backend = new SingletonDB_Redis(true);
 	}
 	else
 	{

@@ -73,6 +73,7 @@ Additional BSD Notice
 int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
 int  redising = 0;              //  By default, do not use FLANN for nearest neighbor search
 int  flanning = 0;              //  By default, do not use FLANN for nearest neighbor search
+int  distributed_redis = 0;       // By default, if redis is used, database entries are not shared
 int  flann_n_trees = 1;         // Default can be overridden using command line
 int  flann_n_checks = 20;       // Default can be overridden using command line
 
@@ -2896,6 +2897,7 @@ void Lulesh::go(int argc, char *argv[])
   addArg("sample",   's', 0, 'i',  &(sampling),       0, "use adaptive sampling");
   addArg("redis",    'f', 0, 'i',  &(redising),       0, "use REDIS library");
   addArg("flann",    'f', 0, 'i',  &(flanning),       0, "use FLANN library");
+  addArg("distributed_redis", 'd', 0, 'i', &(distributed_redis), 0, "use distributed REDIS via twemproxy");
   addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),  0, "number of FLANN trees");
   addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks), 0, "number of FLANN checks");
 
@@ -2908,8 +2910,11 @@ void Lulesh::go(int argc, char *argv[])
   } 
   if (sampling) 
     printf("Using adaptive sampling...\n");
-  if (redising) 
+  if (redising)  {
     printf("Using Redis library...\n");
+    if(distributed_redis) 
+        printf("Using Distributed Redis...\n");
+  }
   if (flanning) {
     printf("Using FLANN library...\n");
     printf("   flann_n_trees: %d\n", flann_n_trees);
@@ -2939,16 +2944,18 @@ void Lulesh::go(int argc, char *argv[])
    {
       if(redising){
 #ifdef REDIS
-        SingletonDB::getInstance(SingletonDBBackendEnum::REDIS_DB);
-        modelDB = new ModelDB_SingletonDB();
+        if(distributed_redis)
+          SingletonDB::getInstance(SingletonDBBackendEnum::DIST_REDIS_DB);
+        else
+          SingletonDB::getInstance(SingletonDBBackendEnum::REDIS_DB);
 #else
         throw std::runtime_error("REDIS not compiled in"); 
 #endif
       } else {
         SingletonDB::getInstance(SingletonDBBackendEnum::HASHMAP_DB);
-        modelDB = new ModelDB_SingletonDB();
         //modelDB = new ModelDB_HashMap();
       }
+      modelDB = new ModelDB_SingletonDB();
    }
 
    /**************************************/

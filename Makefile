@@ -1,4 +1,4 @@
-.PHONY: all clean clean-all lulesh libcm redis flann silo test
+.PHONY: all clean clean-all lulesh libcm redis flann twemproxy silo test
 
 all: lulesh
 
@@ -18,6 +18,10 @@ SILO_LOC=../silo/silo
 SILODIFF=silo/silo/bin/silodiff
 libcm: silo
 endif
+TWEMPROXY=yes
+ifeq ($(TWEMPROXY),yes)
+libcm: twemproxy
+endif
 
 lulesh: LULESH/lulesh
 
@@ -25,7 +29,7 @@ LULESH/lulesh: libcm
 	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC)
 
 libcm:
-	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN)
+	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN) TWEMPROXY=$(TWEMPROXY)
 
 redis:
 	${MAKE} -C redis
@@ -36,6 +40,9 @@ silo:
 flann:
 	${MAKE} -C flann
 
+twemproxy:
+	${MAKE} -C twemproxy
+
 clean:
 	${MAKE} -C CM/exec clean
 	${MAKE} -C LULESH clean
@@ -45,6 +52,7 @@ clean-all: clean
 	${MAKE} -C redis clean
 	${MAKE} -C flann clean
 	${MAKE} -C silo clean
+	${MAKE} -C twemproxy clean
 
 reference: LULESH/lulesh
 	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }

@@ -144,6 +144,11 @@ CXXFLAGS += -DFLANN -I$(FLANN_LOC)
 FLANN_LIBS = $(FLANN_LOC)/../../lib/libflann_s.a
 endif
 
+ifeq ($(TWEMPROXY), yes)
+TWEMPROXY_SERVER = $(realpath ../../twemproxy/twemproxy-master/src/nutcracker)
+CXXFLAGS += -DNUTCRACKER_SERVER=\"${TWEMPROXY_SERVER}\"
+endif
+
 MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 
 default: libcm
