@@ -3466,7 +3466,7 @@ void Lulesh::go(int argc, char *argv[])
   
   addArg("help",     'h', 0, 'i',  &(help),           0, "print this message");
   addArg("sample",   's', 0, 'i',  &(sampling),       0, "use adaptive sampling");
-  addArg("redis",    'f', 0, 'i',  &(redising),       0, "use REDIS library");
+  addArg("redis",    'r', 0, 'i',  &(redising),       0, "use REDIS library");
   addArg("flann",    'f', 0, 'i',  &(flanning),       0, "use FLANN library");
   addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),  0, "number of FLANN trees");
   addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks), 0, "number of FLANN checks");
@@ -3572,20 +3572,17 @@ void Lulesh::go(int argc, char *argv[])
    /*************************************/
    /* Initialize ModelDB Interface      */
    /*************************************/
-   ModelDatabase * modelDB = nullptr;
+   ModelDatabase * global_modelDB = nullptr;
    if(sampling)
    {
       if(redising){
 #ifdef REDIS
-        modelDB = new ModelDB_SingletonDB();
+        global_modelDB = new ModelDB_SingletonDB();
 #else
         throw std::runtime_error("REDIS not compiled in"); 
 #endif
-      } else {
-        modelDB = new ModelDB_HashMap();
       }
    }
-
    /**************************************/
    /*   Initialize Taylor cylinder mesh  */
    /**************************************/
@@ -4482,6 +4479,12 @@ void Lulesh::go(int argc, char *argv[])
 
          int point_dimension = plasticity_model->pointDimension();
          ApproxNearestNeighbors* ann;
+	 ModelDatabase *modelDB;
+	 if (global_modelDB) {
+	     modelDB = global_modelDB;
+	 } else {
+	     modelDB = new ModelDB_HashMap();
+	 }
 
          if (flanning) {
 #ifdef FLANN

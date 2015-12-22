@@ -29,6 +29,8 @@ class Plasticity
       virtual void getScalingsForSampling( vector<double>& input_scaling,
                                            vector<double>& output_scaling ) const = 0;
 
+      virtual void getState( void* state ) const = 0;
+
       void packInputVector( const Tensor2Sym& point,
                             vector<double>&   in ) const;
 
