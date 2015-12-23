@@ -66,4 +66,4 @@ lulesh: lulesh_main.cc lulesh.cc $(CM_LIB)
 	$(CXX) $(CXXFLAGS) $(INCLUDE_DIRS) $+ $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LAPACK) -lm -o $@
 
 clean:
-	rm -f *~ lulesh
+	rm -f *.o *~ lulesh
