@@ -7,11 +7,14 @@ class Lulesh {
 
 private:
 
+public:
+  // Factor to be multiply the time step by to compensate
+  // for fast time scales in the fine-scale model
+  Real_t finescale_dt_modifier;
+
   Domain domain;
 
-public:
-
-Lulesh(){}
+Lulesh(){ finescale_dt_modifier = Real_t(1.); }
 ~Lulesh(){}
 
 void CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t size,
@@ -153,6 +156,7 @@ void DumpToVisit(Domain& domain, char *baseName, char *meshName,
 void DumpSAMI(Domain *domain, char *name);
 void DumpDomain(Domain *domain, int myRank, int numProcs);
 */
+void Initialize();
 void go(int argc, char *argv[]);
 
 };

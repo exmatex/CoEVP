@@ -3459,37 +3459,9 @@ void DumpDomain(Domain *domain, int myRank, int numProcs, int fileParts)
 
 #endif
 
-void Lulesh::go(int argc, char *argv[])
-{
-  //  Parse command line optoins
-  int  help   = 0;
-  
-  addArg("help",     'h', 0, 'i',  &(help),           0, "print this message");
-  addArg("sample",   's', 0, 'i',  &(sampling),       0, "use adaptive sampling");
-  addArg("redis",    'r', 0, 'i',  &(redising),       0, "use REDIS library");
-  addArg("flann",    'f', 0, 'i',  &(flanning),       0, "use FLANN library");
-  addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),  0, "number of FLANN trees");
-  addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks), 0, "number of FLANN checks");
-  addArg("parts",    'p', 1, 'i',  &(file_parts),     0, "number of file parts");
-  addArg("debug",    'd', 0, 'i',  &(debug_topology), 0, "add debug info to SILO");
 
-  processArgs(argc,argv);
-  
-  if (help) {
-    printArgs();
-    freeArgs();
-    exit(1);
-  } 
-  if (sampling) 
-    printf("Using adaptive sampling...\n");
-  if (redising) 
-    printf("Using Redis library...\n");
-  if (flanning) {
-    printf("Using FLANN library...\n");
-    printf("   flann_n_trees: %d\n", flann_n_trees);
-    printf("   flann_n_checks: %d\n", flann_n_checks);
-  }
-  freeArgs();
+void Lulesh::Initialize()
+{
 
    Index_t edgeElems = 16 ;
    Index_t gheightElems = 26 ;
@@ -3569,20 +3541,6 @@ void Lulesh::go(int argc, char *argv[])
 
    /* ... */
 
-   /*************************************/
-   /* Initialize ModelDB Interface      */
-   /*************************************/
-   ModelDatabase * global_modelDB = nullptr;
-   if(sampling)
-   {
-      if(redising){
-#ifdef REDIS
-        global_modelDB = new ModelDB_SingletonDB();
-#else
-        throw std::runtime_error("REDIS not compiled in"); 
-#endif
-      }
-   }
    /**************************************/
    /*   Initialize Taylor cylinder mesh  */
    /**************************************/
@@ -3611,7 +3569,6 @@ void Lulesh::go(int argc, char *argv[])
    domain.numSymmNodesImpact()   = edgeNodes*coreNodes +
                                    wingNodes*(coreNodes-1) ;
 
-   domElems = domain.numElem() ;
 
 #if defined(COEVP_MPI)
 
@@ -4370,7 +4327,59 @@ void Lulesh::go(int argc, char *argv[])
    exit(0) ;
 #endif
 
-   ConstitutiveGlobal cm_global;
+}
+
+
+void Lulesh::go(int argc, char *argv[])
+{
+  //  Parse command line optoins
+  int  help   = 0;
+  
+  addArg("help",     'h', 0, 'i',  &(help),           0, "print this message");
+  addArg("sample",   's', 0, 'i',  &(sampling),       0, "use adaptive sampling");
+  addArg("redis",    'r', 0, 'i',  &(redising),       0, "use REDIS library");
+  addArg("flann",    'f', 0, 'i',  &(flanning),       0, "use FLANN library");
+  addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),  0, "number of FLANN trees");
+  addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks), 0, "number of FLANN checks");
+  addArg("parts",    'p', 1, 'i',  &(file_parts),     0, "number of file parts");
+  addArg("debug",    'd', 0, 'i',  &(debug_topology), 0, "add debug info to SILO");
+
+  processArgs(argc,argv);
+  
+  if (help) {
+    printArgs();
+    freeArgs();
+    exit(1);
+  } 
+  if (sampling) 
+    printf("Using adaptive sampling...\n");
+  if (redising) 
+    printf("Using Redis library...\n");
+  if (flanning) {
+    printf("Using FLANN library...\n");
+    printf("   flann_n_trees: %d\n", flann_n_trees);
+    printf("   flann_n_checks: %d\n", flann_n_checks);
+  }
+  freeArgs();
+   
+   /*************************************/
+   /* Initialize ModelDB Interface      */
+   /*************************************/
+   ModelDatabase * global_modelDB = nullptr;
+   if(sampling)
+   {
+      if(redising){
+#ifdef REDIS
+        global_modelDB = new ModelDB_SingletonDB();
+#else
+        throw std::runtime_error("REDIS not compiled in"); 
+#endif
+      }
+   }
+
+  Initialize( );
+  Index_t domElems = domain.numElem() ;
+  ConstitutiveGlobal cm_global;
 
 #ifdef _OPENMP
 #pragma omp parallel for
