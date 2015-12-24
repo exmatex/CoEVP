@@ -90,7 +90,7 @@ MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 	rm -f $*.d.tmp
 	$(CXX) -c $(CXXFLAGS) -c -o $@ $< 
 
-LULESH_SRC=$(shell ls *.cc)
+LULESH_SRC=$(shell ls [^x]*.cc)
 LULESH_OBJS=$(LULESH_SRC:.cc=.o)
 LULESH_DEPS=$(LULESH_SRC:.cc=.d)
 

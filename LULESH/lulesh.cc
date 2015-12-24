@@ -3460,7 +3460,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs, int fileParts)
 #endif
 
 
-void Lulesh::Initialize()
+void Lulesh::Initialize(int argc, char *argv[])
 {
 
    Index_t edgeElems = 16 ;
@@ -4377,7 +4377,7 @@ void Lulesh::go(int argc, char *argv[])
       }
    }
 
-  Initialize( );
+  Initialize(argc,argv );
   Index_t domElems = domain.numElem() ;
   ConstitutiveGlobal cm_global;
 
