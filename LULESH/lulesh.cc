@@ -3444,7 +3444,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs, int fileParts)
          }
       }
 
-      sprintf(baseName, "taylor_%d.silo", int(domain->cycle())) ;
+      sprintf(baseName, "taylor_%04d.silo", int(domain->cycle())) ;
 
       if (rank == 0) {
          sprintf(meshName, "%s", baseName) ;
