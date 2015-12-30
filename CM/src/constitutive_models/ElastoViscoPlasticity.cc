@@ -859,7 +859,7 @@ ElastoViscoPlasticity::getState( void* state ) const
 {
    getKinematicVariableState(state);
 
-   void* fine_scale_state = state + getKinematicVariableStateSize();
+   void* fine_scale_state = (char*)state + getKinematicVariableStateSize();
    m_plasticity_model->getState(fine_scale_state);
 }
 
