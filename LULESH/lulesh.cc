@@ -2894,7 +2894,7 @@ void Lulesh::go(int argc, char *argv[])
   
   addArg("help",     'h', 0, 'i',  &(help),           0, "print this message");
   addArg("sample",   's', 0, 'i',  &(sampling),       0, "use adaptive sampling");
-  addArg("redis",    'f', 0, 'i',  &(redising),       0, "use REDIS library");
+  addArg("redis",    'r', 0, 'i',  &(redising),       0, "use REDIS library");
   addArg("flann",    'f', 0, 'i',  &(flanning),       0, "use FLANN library");
   addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),  0, "number of FLANN trees");
   addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks), 0, "number of FLANN checks");
@@ -2934,23 +2934,18 @@ void Lulesh::go(int argc, char *argv[])
    /* Initialize ModelDB Interface      */
    /* and prime SingletonDB             */
    /*************************************/
-   ModelDatabase * modelDB = nullptr;
+   ModelDatabase * global_modelDB = nullptr;
    if(sampling)
    {
       if(redising){
 #ifdef REDIS
         SingletonDB::getInstance(SingletonDBBackendEnum::REDIS_DB);
-        modelDB = new ModelDB_SingletonDB();
+        global_modelDB = new ModelDB_SingletonDB();
 #else
         throw std::runtime_error("REDIS not compiled in"); 
 #endif
-      } else {
-        SingletonDB::getInstance(SingletonDBBackendEnum::HASHMAP_DB);
-        modelDB = new ModelDB_SingletonDB();
-        //modelDB = new ModelDB_HashMap();
       }
    }
-
    /**************************************/
    /*   Initialize Taylor cylinder mesh  */
    /**************************************/
@@ -3373,12 +3368,15 @@ void Lulesh::go(int argc, char *argv[])
    /* Create connectivity for lzetam, lzetap */
 #ifndef OLD_LZETA_CONNECTIVITY
    for (Index_t i=0; i<edgeElems*heightElems; ++i) {
+      /* these are dummmy values for visualization only */
       domain.lzetam(i) = i ;
+#if 0
       domain.lzetap(domElems-edgeElems*heightElems+i) =
                             domElems-edgeElems*heightElems+i ;
+#endif
    }
    for (Index_t i=edgeElems*heightElems;
-        i<coreElems*edgeElems*heightElems; ++i) {
+        i<coreElems*edgeElems*heightElems+(coreElems-1)*heightElems; ++i) {
       domain.lzetam(i) = i - edgeElems*heightElems ;
       domain.lzetap(i-edgeElems*heightElems) = i ;
    }
@@ -3388,19 +3386,21 @@ void Lulesh::go(int argc, char *argv[])
    }
    /* set lzetam and lzetap for Z wing elements, minus notch plane */
    for (int i=coreElems*edgeElems*heightElems;
+        i < coreElems*edgeElems*heightElems+(coreElems-1)*heightElems;
+        ++i) {
+      domain.lzetap(i) = i + (coreElems-1)*heightElems ;
+   }
+   for (int i=coreElems*edgeElems*heightElems+(coreElems-1)*heightElems;
         i<coreElems*edgeElems*heightElems + (coreElems-1)*wingElems*heightElems;
         ++i) {
       domain.lzetam(i) = i - (coreElems-1)*heightElems ;
       domain.lzetap(i) = i + (coreElems-1)*heightElems ;
    }
-   /* patch lzetam */
-   for (int i=coreElems*edgeElems*heightElems;
-        i<coreElems*edgeElems*heightElems + (coreElems-1)*heightElems; ++i) {
-      domain.lzetam(i) = i - edgeElems*heightElems ;
-   }
    /* set lzetam, lzetap for notch plane */
    for (int i=domElems-wingElems*heightElems; i<domElems; ++i) {
-      domain.lzetam(i) = i - heightElems ;
+      if (i >= domElems-wingElems*heightElems + heightElems) {
+         domain.lzetam(i) = i - heightElems ;
+      }
       domain.lzetap(i) = i + heightElems ;
    }
    /* patch lzetap for notch plane row of elements */
@@ -3627,6 +3627,12 @@ void Lulesh::go(int argc, char *argv[])
 
          int point_dimension = plasticity_model->pointDimension();
          ApproxNearestNeighbors* ann;
+	 ModelDatabase *modelDB;
+	 if (global_modelDB) {
+	     modelDB = global_modelDB;
+	 } else {
+	     modelDB = new ModelDB_HashMap();
+	 }
 
          if (flanning) {
 #ifdef FLANN

@@ -185,6 +185,6 @@ clean:
 	$(RM) $(TENSOR_OBJS) $(TENSOR_DEPS) $(EOS_OBJS) $(EOS_DEPS) $(KINTEST_OBJS) $(KINTEST_DEPS) *.a
 
 realclean: clean
-	$(RM) kintest ../include/* ../lib/*
+	$(RM) -r kintest ../include/* ../lib/*
 
 
