@@ -3056,6 +3056,7 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank,
       coords[2][ni] = domain.z(nodeMap[ni]) ;
    }
    optlist = DBMakeOptlist(2);
+   DBClearOptlist(optlist) ;
    ok += DBAddOption(optlist, DBOPT_DTIME, &domain.time());
    ok += DBAddOption(optlist, DBOPT_CYCLE, &domain.cycle());
    ok += DBPutUcdmesh(db, "mesh", 3, (char**)&coordnames[0], (float**)coords,
