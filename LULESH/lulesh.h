@@ -24,7 +24,7 @@ void CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
          Index_t *iset, Index_t size, Index_t offset);
 void CommSyncPosVel(Domain *domain,
          Index_t *iset, Index_t size, Index_t offset);
-void CommMonoQ(Domain *domain, Index_t size);
+void CommMonoQ(Domain *domain, Index_t *iset, Index_t size, Index_t offset);
 void TimeIncrement();
 void InitStressTermsForElems(Index_t numElem, 
          Real_t *sigxx, Real_t *sigyy, Real_t *sigzz,

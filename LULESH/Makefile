@@ -1,5 +1,8 @@
 ###### CONFIGURATION START ############
 
+# Use MPI
+COEVP_MPI =
+
 # Silo (www.hdfgroup.org/HDF5) and HDF5 (www.hdfgroup.org/HDF5) library
 # locations.  These macros can be left undefined if visualization is not required.
 
@@ -16,21 +19,27 @@ HDF5_LOC =
 LAPACK_LOC =
 BLAS_LOC =
 
-FLANN_LOC =
-#FLANN_LOC = ../flann/flann/src/cpp
+#FLANN_LOC =
+FLANN_LOC = ../flann/flann/src/cpp
 
 CXX = g++
-CXXFLAGS = -std=c++0x -O3
+#CXXFLAGS = -std=c++0x -g -O3 -fopenmp
+CXXFLAGS = -std=c++0x -g -O3
 
 ###### CONFIGURATION END ############
 
 CM_LIB = ../CM/lib/libcm.a
 
-INCLUDE_DIRS = -I../CM/include
+INCLUDE_DIRS = -I. -I../CM/include
+
+ifeq ($(COEVP_MPI), yes)
+CXXFLAGS += -DCOEVP_MPI
+CXX= mpic++
+endif
 
 ifneq ($(strip $(FLANN_LOC)),)
 INCLUDE_DIRS +=  -I$(FLANN_LOC) -I$(FLANN_LOC)/flann
-CXXFLAGS += -DFLANN
+#CXXFLAGS += -DFLANN
 endif
 
 ifneq ($(strip $(REDIS_LOC)),)
