@@ -18,6 +18,10 @@ To use a system redis, libflann or libsilo use:
 
      make REDIS_LOC=/path/to/hiredis FLANN_LOC=/path/to/flann SILO_LOC=/path/to/silo
 
+To build an mpi version of lulesh use:
+
+     make COEVP_MPI=yes
+
 To run lulesh use:
 
      LULESH/luslesh

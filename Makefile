@@ -56,7 +56,7 @@ STEPS=500
 test/taylor_$(STEPS).silo: LULESH/lulesh
 	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
 	mkdir -p test
-	cd test && ../LULESH/lulesh
+	cd test && $(MPIRUN) ../LULESH/lulesh
 
 test: test/taylor_$(STEPS).silo silo
 	@[ -x "$(SILODIFF)" ] || { echo "SILODIFF=$(SILODIFF) seems to be wrong" && exit 1; }
