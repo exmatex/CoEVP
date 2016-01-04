@@ -10,24 +10,9 @@
 #define included_ModelDB_HashMap_h
 
 #include "ModelDatabase.h"
+#include "KeyHash.h"
 
 #include <unordered_map>
-
-namespace std {
-
-   // Defining a hash function in order to use uint128_t as a key
-   // for an std::unordered_map
-   template <>
-      struct hash<uint128_t>
-      {
-         std::size_t operator()(const uint128_t& in) const
-            {
-               return (size_t)in;
-            }
-      };
-
-
-}
 
 class ModelDB_HashMap : public ModelDatabase {
 public:

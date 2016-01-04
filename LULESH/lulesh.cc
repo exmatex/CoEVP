@@ -113,6 +113,7 @@ int  debug_topology = 0;
 #include "ModelDatabase.h"
 #include "ModelDB_HashMap.h"
 #include "ModelDB_SingletonDB.h"
+#include "SingletonDB.h"
 
 // Fine scale model options
 #include "Taylor.h"        // the fine-scale plasticity model
@@ -3056,6 +3057,7 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank,
       coords[2][ni] = domain.z(nodeMap[ni]) ;
    }
    optlist = DBMakeOptlist(2);
+   DBClearOptlist(optlist) ;
    ok += DBAddOption(optlist, DBOPT_DTIME, &domain.time());
    ok += DBAddOption(optlist, DBOPT_CYCLE, &domain.cycle());
    ok += DBPutUcdmesh(db, "mesh", 3, (char**)&coordnames[0], (float**)coords,
@@ -3444,7 +3446,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs, int fileParts)
          }
       }
 
-      sprintf(baseName, "taylor_%d.silo", int(domain->cycle())) ;
+      sprintf(baseName, "taylor_%04d.silo", int(domain->cycle())) ;
 
       if (rank == 0) {
          sprintf(meshName, "%s", baseName) ;
@@ -4370,6 +4372,7 @@ void Lulesh::go(int argc, char *argv[])
    {
       if(redising){
 #ifdef REDIS
+        SingletonDB::getInstance(SingletonDBBackendEnum::REDIS_DB);
         global_modelDB = new ModelDB_SingletonDB();
 #else
         throw std::runtime_error("REDIS not compiled in"); 

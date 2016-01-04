@@ -14,12 +14,20 @@
 #include <hiredis.h>
 #define uint128_t unsigned __int128
 
+#include "SingletonDB_Backend.h"
+
+enum SingletonDBBackendEnum
+{
+  REDIS_DB,
+  HASHMAP_DB
+};
+
 class SingletonDB {
  public:
   
   //  Return the single instance that was initialized in the private constructor.
-  static  SingletonDB&  getInstance() {
-    static  SingletonDB   instance;
+  static  SingletonDB&  getInstance(SingletonDBBackendEnum backType=HASHMAP_DB) {
+    static  SingletonDB   instance(backType);
     return instance;
   }
 
@@ -29,17 +37,15 @@ class SingletonDB {
   std::vector<double> pull_key(const uint128_t &key);
 
 private:
-  redisContext*   redis;
-  FILE * redisServerHandle;
+  SingletonDB_Backend * backend;
 
-  SingletonDB();
+  SingletonDB(SingletonDBBackendEnum backType);
   ~SingletonDB();
 
   //  This technique requires C++11 (can do a C++03 version too)
   SingletonDB(SingletonDB const&)    = delete;
   void operator=(SingletonDB const&) = delete;
 
-  redisReply *pull_data(const uint128_t &key);
 };
 
 
