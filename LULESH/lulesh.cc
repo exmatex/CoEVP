@@ -81,7 +81,8 @@ int showMeMonoQ = 0 ;
 //  Command line option parsing (using Sriram code from old days)
 #include "cmdLineParser.h"
 int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
-int  redising = 0;              //  By default, do not use FLANN for nearest neighbor search
+int  redising = 0;              //  By default, do not use REDIS for database
+int  global_ns = 0;              //  By default, do not use a global earest neighbor
 int  flanning = 0;              //  By default, do not use FLANN for nearest neighbor search
 int  flann_n_trees = 1;         // Default can be overridden using command line
 int  flann_n_checks = 20;       // Default can be overridden using command line
@@ -3469,6 +3470,7 @@ void Lulesh::go(int argc, char *argv[])
   addArg("help",     'h', 0, 'i',  &(help),           0, "print this message");
   addArg("sample",   's', 0, 'i',  &(sampling),       0, "use adaptive sampling");
   addArg("redis",    'r', 0, 'i',  &(redising),       0, "use REDIS library");
+  addArg("globalns" ,'g', 0, 'i',  &(global_ns),      0, "use global neighbor search");
   addArg("flann",    'f', 0, 'i',  &(flanning),       0, "use FLANN library");
   addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),  0, "number of FLANN trees");
   addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks), 0, "number of FLANN checks");
@@ -3576,6 +3578,7 @@ void Lulesh::go(int argc, char *argv[])
    /* and prime SingletonDB             */
    /*************************************/
    ModelDatabase * global_modelDB = nullptr;
+   ApproxNearestNeighbors* global_ann = nullptr;
    if(sampling)
    {
       if(redising){
@@ -4490,20 +4493,28 @@ void Lulesh::go(int argc, char *argv[])
 	     modelDB = new ModelDB_HashMap();
 	 }
 
-         if (flanning) {
+         if (global_ann) {
+	   ann = global_ann;
+	 } else {
+           if (flanning) {
 #ifdef FLANN
-           ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension, flann_n_trees, flann_n_checks));
+             ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension, flann_n_trees, flann_n_checks));
 #else
-          throw std::runtime_error("FLANN not compiled in"); 
+            throw std::runtime_error("FLANN not compiled in"); 
 #endif
-         } else {
-           std::string mtreeDirectoryName = ".";
-           ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
-                                                                           "kriging_model_database",
-                                                                           mtreeDirectoryName,
-                                                                           &(std::cout),
-                                                                           false));
-         }
+           } else {
+             std::string mtreeDirectoryName = ".";
+             ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
+                                                                             "kriging_model_database",
+                                                                             mtreeDirectoryName,
+                                                                             &(std::cout),
+                                                                             false));
+           }
+	 }
+	 if ( global_ns && !global_ann){// only true for 1st element
+	   global_ann=ann; 
+	 }
+	    
          size_t state_size;
          domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, modelDB, L, bulk_modulus, shear_modulus, eos_model,
                                                                   plasticity_model, sampling, state_size));
