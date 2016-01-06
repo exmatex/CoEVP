@@ -50,10 +50,11 @@ get_reference:
 	mkdir -p test/reference
 	git clone https://github.com/exmatex/CoEVP_reference.git test/reference
 
+LULESH_OPTS=-p 1
 reference: LULESH/lulesh
 	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
 	mkdir -p test/reference
-	cd test/reference && ../../LULESH/lulesh
+	cd test/reference && ../../LULESH/lulesh $(LULESH_OPTS)
 
 dummy: ;
 
@@ -66,7 +67,7 @@ STEPS=0500
 test/taylor_$(STEPS).silo: LULESH/lulesh test/.mpirunflags
 	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
 	mkdir -p test
-	cd test && $(MPIRUN) ../LULESH/lulesh
+	cd test && $(MPIRUN) ../LULESH/lulesh $(LULESH_OPTS)
 
 SILODIFF_OPTS=-A 1e-8 -E _hdf5libinfo
 test: test/taylor_$(STEPS).silo silo
