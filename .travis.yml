@@ -26,7 +26,7 @@ before_script:
 script:
   - make -j2 COEVP_MPI=${COEVP_MPI} && 
     make get_reference &&
-    make test MPIRUN="${NP:+mpirun -np ${NP}}"
+    make test COEVP_MPI=${COEVP_MPI} MPIRUN="${NP:+mpirun -np ${NP}}"
 
 cache:
   directories:

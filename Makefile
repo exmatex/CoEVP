@@ -55,14 +55,21 @@ reference: LULESH/lulesh
 	mkdir -p test/reference
 	cd test/reference && ../../LULESH/lulesh
 
-STEPS=500
+dummy: ;
+
+test/.mpirunflags: dummy
+	@[ -f $@ ] || touch $@
+	@echo "MPIRUN=$(MPIRUN)" | cmp -s $@ - || echo "MPIRUN=$(MPIRUN)" > $@
+
+STEPS=0500
 #bit hackish, but let's assume we have $(STEPS) steps
-test/taylor_$(STEPS).silo: LULESH/lulesh
+test/taylor_$(STEPS).silo: LULESH/lulesh test/.mpirunflags
 	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
 	mkdir -p test
 	cd test && $(MPIRUN) ../LULESH/lulesh
 
+SILODIFF_OPTS=-A 1e-8
 test: test/taylor_$(STEPS).silo silo
 	@[ -x "$(SILODIFF)" ] || { echo "SILODIFF=$(SILODIFF) seems to be wrong" && exit 1; }
-	$(SILODIFF) test/reference test > test/diff
+	$(SILODIFF) ${SILODIFF_OPTS} test/reference test > test/diff
 	@[ ! -s test/diff ] || { echo "Difference in files" && exit 1; }
