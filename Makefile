@@ -48,7 +48,7 @@ clean-all: clean
 
 get_reference:
 	mkdir -p test/reference
-	git clone git@github.com:exmatex/CoEVP_reference.git test/reference
+	git clone https://github.com/exmatex/CoEVP_reference.git test/reference
 
 reference: LULESH/lulesh
 	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
