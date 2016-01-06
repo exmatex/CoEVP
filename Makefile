@@ -50,7 +50,7 @@ get_reference:
 	mkdir -p test/reference
 	git clone https://github.com/exmatex/CoEVP_reference.git test/reference
 
-LULESH_OPTS=-p 1
+LULESH_OPTS=-p 4
 reference: LULESH/lulesh
 	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
 	mkdir -p test/reference
