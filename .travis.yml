@@ -15,18 +15,21 @@ addons:
 
 env:
   matrix: 
-    - COEVP_MPI=no 
-    - COEVP_MPI=yes NP=1
-    - COEVP_MPI=yes NP=2
-    - COEVP_MPI=yes NP=4
+    - COEVP_MPI=no  FLANN=no  REDIS=no
+    - COEVP_MPI=no  FLANN=no  REDIS=yes
+    - COEVP_MPI=no  FLANN=yes REDIS=no
+    - COEVP_MPI=no  FLANN=yes REDIS=yes
+    - COEVP_MPI=yes FLANN=yes REDIS=yes NP=1 
+    - COEVP_MPI=yes FLANN=yes REDIS=yes NP=2 
+    - COEVP_MPI=yes FLANN=yes REDIS=yes NP=4 
 
 before_script:
   - export PATH="/usr/lib/ccache:$PATH"
 
 script:
-  - make -j2 COEVP_MPI=${COEVP_MPI} && 
+  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} && 
     make get_reference &&
-    make test COEVP_MPI=${COEVP_MPI} MPIRUN="${NP:+mpirun -np ${NP}}"
+    make test COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} MPIRUN="${NP:+mpirun -np ${NP}}"
 
 cache:
   directories:
