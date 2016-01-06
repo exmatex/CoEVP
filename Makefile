@@ -55,6 +55,7 @@ reference: LULESH/lulesh
 	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
 	mkdir -p test/reference
 	cd test/reference && ../../LULESH/lulesh $(LULESH_OPTS)
+	rm test/reference/*.silo #remove total files
 
 dummy: ;
 
