@@ -22,7 +22,9 @@ before_script:
   - export PATH="/usr/lib/ccache:$PATH"
 
 script:
-  - make -j2 COEVP_MPI=${COEVP_MPI}
+  - make -j2 COEVP_MPI=${COEVP_MPI} && 
+    make get_reference &&
+    make test
 
 cache:
   directories:
