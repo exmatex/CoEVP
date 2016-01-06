@@ -68,7 +68,7 @@ test/taylor_$(STEPS).silo: LULESH/lulesh test/.mpirunflags
 	mkdir -p test
 	cd test && $(MPIRUN) ../LULESH/lulesh
 
-SILODIFF_OPTS=-A 1e-8
+SILODIFF_OPTS=-A 1e-8 -E _hdf5libinfo
 test: test/taylor_$(STEPS).silo silo
 	@[ -x "$(SILODIFF)" ] || { echo "SILODIFF=$(SILODIFF) seems to be wrong" && exit 1; }
 	$(SILODIFF) ${SILODIFF_OPTS} test/reference test > test/diff
