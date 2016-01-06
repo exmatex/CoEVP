@@ -20,7 +20,6 @@ env:
     - COEVP_MPI=no  FLANN=yes REDIS=no
     - COEVP_MPI=no  FLANN=yes REDIS=yes
     - COEVP_MPI=yes FLANN=yes REDIS=yes NP=1 
-    - COEVP_MPI=yes FLANN=yes REDIS=yes NP=2 
     - COEVP_MPI=yes FLANN=yes REDIS=yes NP=4 
 
 before_script:
