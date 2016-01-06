@@ -72,4 +72,4 @@ SILODIFF_OPTS=-A 1e-8
 test: test/taylor_$(STEPS).silo silo
 	@[ -x "$(SILODIFF)" ] || { echo "SILODIFF=$(SILODIFF) seems to be wrong" && exit 1; }
 	$(SILODIFF) ${SILODIFF_OPTS} test/reference test > test/diff
-	@[ ! -s test/diff ] || { echo "Difference in files" && exit 1; }
+	@[ ! -s test/diff ] || { echo "Difference in files" && head -n 50 test/diff && exit 1; }
