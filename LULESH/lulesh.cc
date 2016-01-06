@@ -350,7 +350,8 @@ void Lulesh::CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
       for (Index_t fi=0 ; fi<xferFields; ++fi) {
          Real_t *destAddr = fieldData[fi] ;
          for (Index_t i=0; i<size; ++i) {
-            destAddr[iset[i]] += srcAddr[i] ;
+             destAddr[iset[i]] = srcAddr[i] + destAddr[iset[i]];
+             //destAddr[iset[i]] += srcAddr[i] ;
          }
          srcAddr += size ;
       }
@@ -362,7 +363,8 @@ void Lulesh::CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
       for (Index_t fi=0 ; fi<xferFields; ++fi) {
          Real_t *destAddr = &fieldData[fi][offset] ;
          for (Index_t i=0; i<size; ++i) {
-            destAddr[iset[i]] += srcAddr[i] ;
+             destAddr[iset[i]] = destAddr[iset[i]] + srcAddr[i];
+             //destAddr[iset[i]] += srcAddr[i] ;
          }
          srcAddr += size ;
       }
@@ -424,7 +426,7 @@ void Lulesh::CommSyncPosVel(Domain *domain,
       for (Index_t fi=0 ; fi<xferFields; ++fi) {
          Real_t *destAddr = &fieldData[fi][offset] ;
          for (Index_t i=0; i<size; ++i) {
-            destAddr[iset[i]] = srcAddr[i] ;
+            //destAddr[iset[i]] = srcAddr[i] ;
          }
          srcAddr += size ;
       }
