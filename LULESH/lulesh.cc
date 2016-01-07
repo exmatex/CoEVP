@@ -3568,6 +3568,7 @@ void Lulesh::Initialize(int argc, char *argv[])
    domain.numSymmNodesImpact()   = edgeNodes*coreNodes +
                                    wingNodes*(coreNodes-1) ;
 
+   domElems = domain.numElem() ;
 
 #if defined(COEVP_MPI)
 
