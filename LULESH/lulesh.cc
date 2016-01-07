@@ -2962,7 +2962,7 @@ void Lulesh::UpdateStressForElems()
 extern "C" {
 #endif
 #ifndef SILO
-#error Please recompile with SILO=yes
+#error VISIT_DATA_INTERVAL != 0: Please recompile with SILO=yes
 #endif
 #include "silo.h"
 #ifdef __cplusplus
