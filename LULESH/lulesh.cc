@@ -88,8 +88,8 @@ int  flann_n_trees = 1;         // Default can be overridden using command line
 int  flann_n_checks = 20;       // Default can be overridden using command line
 int  file_parts = 0;
 int  debug_topology = 0;
+int  visit_data_interval = 0; // Set this to 0 to disable VisIt data writing
 
-#define VISIT_DATA_INTERVAL 0  // Set this to 0 to disable VisIt data writing
 #define PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
@@ -2956,13 +2956,10 @@ void Lulesh::UpdateStressForElems()
 #endif
 }
 
-#if VISIT_DATA_INTERVAL != 0
+#ifdef SILO
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-#ifndef SILO
-#error VISIT_DATA_INTERVAL != 0: Please recompile with SILO=yes
 #endif
 #include "silo.h"
 #ifdef __cplusplus
@@ -3467,15 +3464,16 @@ void Lulesh::go(int argc, char *argv[])
   //  Parse command line optoins
   int  help   = 0;
   
-  addArg("help",     'h', 0, 'i',  &(help),           0, "print this message");
-  addArg("sample",   's', 0, 'i',  &(sampling),       0, "use adaptive sampling");
-  addArg("redis",    'r', 0, 'i',  &(redising),       0, "use REDIS library");
-  addArg("globalns" ,'g', 0, 'i',  &(global_ns),      0, "use global neighbor search");
-  addArg("flann",    'f', 0, 'i',  &(flanning),       0, "use FLANN library");
-  addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),  0, "number of FLANN trees");
-  addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks), 0, "number of FLANN checks");
-  addArg("parts",    'p', 1, 'i',  &(file_parts),     0, "number of file parts");
-  addArg("debug",    'd', 0, 'i',  &(debug_topology), 0, "add debug info to SILO");
+  addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
+  addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
+  addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
+  addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search");
+  addArg("flann",    'f', 0, 'i',  &(flanning),            0, "use FLANN library");
+  addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),       0, "number of FLANN trees");
+  addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks),      0, "number of FLANN checks");
+  addArg("parts",    'p', 1, 'i',  &(file_parts),          0, "number of file parts");
+  addArg("visitint", 'v', 1, 'i',  &(visit_data_interval), 0, "visit output interval");
+  addArg("debug",    'd', 0, 'i',  &(debug_topology),      0, "add debug info to SILO");
 
   processArgs(argc,argv);
   
@@ -3497,6 +3495,11 @@ void Lulesh::go(int argc, char *argv[])
     printf("Using FLANN library...\n");
     printf("   flann_n_trees: %d\n", flann_n_trees);
     printf("   flann_n_checks: %d\n", flann_n_checks);
+  }
+  if (visit_data_interval != 0){
+#ifndef SILO
+      throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
+#endif
   }
   freeArgs();
 
@@ -4575,9 +4578,9 @@ void Lulesh::go(int argc, char *argv[])
 
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
-#if VISIT_DATA_INTERVAL!=0
+#ifdef SILO
       char meshName[64] ;
-      if (domain.cycle() % VISIT_DATA_INTERVAL == 0) {
+      if ((visit_data_interval !=0) && (domain.cycle() % visit_data_interval == 0)) {
          DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(),
                    ((domain.numSlices() == 1) ? file_parts : 0) ) ;
       }
@@ -4685,8 +4688,8 @@ void Lulesh::go(int argc, char *argv[])
 
    }
 
-#if VISIT_DATA_INTERVAL!=0
-   if (domain.cycle() % VISIT_DATA_INTERVAL != 0) {
+#ifdef SILO
+   if ((visit_data_interval != 0) && (domain.cycle() % visit_data_interval != 0)) {
       DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(), 
                  ((domain.numSlices() == 1) ? file_parts : 0) ) ;
    }

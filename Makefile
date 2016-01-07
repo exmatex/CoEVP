@@ -50,7 +50,7 @@ get_reference:
 	mkdir -p test/reference
 	git clone https://github.com/exmatex/CoEVP_reference.git test/reference
 
-LULESH_OPTS=-p 4
+LULESH_OPTS=-p 4 -v 20
 reference: LULESH/lulesh
 	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
 	mkdir -p test/reference
@@ -63,9 +63,13 @@ test/.mpirunflags: dummy
 	@[ -f $@ ] || touch $@
 	@echo "MPIRUN=$(MPIRUN)" | cmp -s $@ - || echo "MPIRUN=$(MPIRUN)" > $@
 
+test/.luleshopts: dummy
+	@[ -f $@ ] || touch $@
+	@echo "LULESH_OPTS=$(LULESH_OPTS)" | cmp -s $@ - || echo "LULESH_OPTS=$(LULESH_OPTS)" > $@
+
 STEPS=0500
 #bit hackish, but let's assume we have $(STEPS) steps
-test/taylor_$(STEPS).silo: LULESH/lulesh test/.mpirunflags
+test/taylor_$(STEPS).silo: LULESH/lulesh test/.mpirunflags test/.luleshopts
 	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
 	mkdir -p test
 	cd test && $(MPIRUN) ../LULESH/lulesh $(LULESH_OPTS)
