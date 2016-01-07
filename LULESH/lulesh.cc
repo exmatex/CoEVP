@@ -81,14 +81,15 @@ int showMeMonoQ = 0 ;
 //  Command line option parsing (using Sriram code from old days)
 #include "cmdLineParser.h"
 int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
-int  redising = 0;              //  By default, do not use FLANN for nearest neighbor search
+int  redising = 0;              //  By default, do not use REDIS for database
+int  global_ns = 0;              //  By default, do not use a global earest neighbor
 int  flanning = 0;              //  By default, do not use FLANN for nearest neighbor search
 int  flann_n_trees = 1;         // Default can be overridden using command line
 int  flann_n_checks = 20;       // Default can be overridden using command line
 int  file_parts = 0;
 int  debug_topology = 0;
+int  visit_data_interval = 0; // Set this to 0 to disable VisIt data writing
 
-#define VISIT_DATA_INTERVAL 20  // Set this to 0 to disable VisIt data writing
 #define PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
 #undef WRITE_FSM_EVAL_COUNT
@@ -2955,13 +2956,10 @@ void Lulesh::UpdateStressForElems()
 #endif
 }
 
-#if VISIT_DATA_INTERVAL != 0
+#ifdef SILO
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-#ifndef SILO
-#error Please recompile with SILO=yes
 #endif
 #include "silo.h"
 #ifdef __cplusplus
@@ -3460,7 +3458,6 @@ void DumpDomain(Domain *domain, int myRank, int numProcs, int fileParts)
 }
 
 #endif
-
 
 void Lulesh::Initialize(int argc, char *argv[])
 {
@@ -4337,14 +4334,16 @@ void Lulesh::go(int argc, char *argv[])
   //  Parse command line optoins
   int  help   = 0;
   
-  addArg("help",     'h', 0, 'i',  &(help),           0, "print this message");
-  addArg("sample",   's', 0, 'i',  &(sampling),       0, "use adaptive sampling");
-  addArg("redis",    'r', 0, 'i',  &(redising),       0, "use REDIS library");
-  addArg("flann",    'f', 0, 'i',  &(flanning),       0, "use FLANN library");
-  addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),  0, "number of FLANN trees");
-  addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks), 0, "number of FLANN checks");
-  addArg("parts",    'p', 1, 'i',  &(file_parts),     0, "number of file parts");
-  addArg("debug",    'd', 0, 'i',  &(debug_topology), 0, "add debug info to SILO");
+  addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
+  addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
+  addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
+  addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search");
+  addArg("flann",    'f', 0, 'i',  &(flanning),            0, "use FLANN library");
+  addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),       0, "number of FLANN trees");
+  addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks),      0, "number of FLANN checks");
+  addArg("parts",    'p', 1, 'i',  &(file_parts),          0, "number of file parts");
+  addArg("visitint", 'v', 1, 'i',  &(visit_data_interval), 0, "visit output interval");
+  addArg("debug",    'd', 0, 'i',  &(debug_topology),      0, "add debug info to SILO");
 
   processArgs(argc,argv);
   
@@ -4353,8 +4352,13 @@ void Lulesh::go(int argc, char *argv[])
     freeArgs();
     exit(1);
   } 
-  if (sampling) 
+  if (sampling) {
     printf("Using adaptive sampling...\n");
+  } else {
+    if (redising||flanning||global_ns) {
+      throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
+    }
+  }
   if (redising) 
     printf("Using Redis library...\n");
   if (flanning) {
@@ -4362,12 +4366,18 @@ void Lulesh::go(int argc, char *argv[])
     printf("   flann_n_trees: %d\n", flann_n_trees);
     printf("   flann_n_checks: %d\n", flann_n_checks);
   }
+  if (visit_data_interval != 0){
+#ifndef SILO
+      throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
+#endif
+  }
   freeArgs();
    
    /*************************************/
    /* Initialize ModelDB Interface      */
    /*************************************/
    ModelDatabase * global_modelDB = nullptr;
+   ApproxNearestNeighbors* global_ann = nullptr;
    if(sampling)
    {
       if(redising){
@@ -4498,20 +4508,28 @@ void Lulesh::go(int argc, char *argv[])
 	     modelDB = new ModelDB_HashMap();
 	 }
 
-         if (flanning) {
+         if (global_ann) {
+	   ann = global_ann;
+	 } else {
+           if (flanning) {
 #ifdef FLANN
-           ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension, flann_n_trees, flann_n_checks));
+             ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension, flann_n_trees, flann_n_checks));
 #else
-          throw std::runtime_error("FLANN not compiled in"); 
+            throw std::runtime_error("FLANN not compiled in"); 
 #endif
-         } else {
-           std::string mtreeDirectoryName = ".";
-           ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
-                                                                           "kriging_model_database",
-                                                                           mtreeDirectoryName,
-                                                                           &(std::cout),
-                                                                           false));
-         }
+           } else {
+             std::string mtreeDirectoryName = ".";
+             ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
+                                                                             "kriging_model_database",
+                                                                             mtreeDirectoryName,
+                                                                             &(std::cout),
+                                                                             false));
+           }
+	 }
+	 if ( global_ns && !global_ann){// only true for 1st element
+	   global_ann=ann; 
+	 }
+	    
          size_t state_size;
          domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, modelDB, L, bulk_modulus, shear_modulus, eos_model,
                                                                   plasticity_model, sampling, state_size));
@@ -4567,9 +4585,9 @@ void Lulesh::go(int argc, char *argv[])
 
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
-#if VISIT_DATA_INTERVAL!=0
+#ifdef SILO
       char meshName[64] ;
-      if (domain.cycle() % VISIT_DATA_INTERVAL == 0) {
+      if ((visit_data_interval !=0) && (domain.cycle() % visit_data_interval == 0)) {
          DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(),
                    ((domain.numSlices() == 1) ? file_parts : 0) ) ;
       }
@@ -4677,8 +4695,8 @@ void Lulesh::go(int argc, char *argv[])
 
    }
 
-#if VISIT_DATA_INTERVAL!=0
-   if (domain.cycle() % VISIT_DATA_INTERVAL != 0) {
+#ifdef SILO
+   if ((visit_data_interval != 0) && (domain.cycle() % visit_data_interval != 0)) {
       DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(), 
                  ((domain.numSlices() == 1) ? file_parts : 0) ) ;
    }

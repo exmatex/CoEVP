@@ -11,7 +11,9 @@
 
 
 #include <vector>
+#ifdef REDIS
 #include <hiredis.h>
+#endif
 #define uint128_t unsigned __int128
 
 #include "SingletonDB_Backend.h"

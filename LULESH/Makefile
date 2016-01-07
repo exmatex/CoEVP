@@ -39,7 +39,7 @@ endif
 
 ifneq ($(strip $(FLANN_LOC)),)
 INCLUDE_DIRS +=  -I$(FLANN_LOC) -I$(FLANN_LOC)/flann
-#CXXFLAGS += -DFLANN
+CXXFLAGS += -DFLANN
 endif
 
 ifneq ($(strip $(REDIS_LOC)),)
