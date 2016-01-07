@@ -4330,71 +4330,11 @@ void Lulesh::Initialize(int argc, char *argv[])
 }
 
 
-void Lulesh::go(int argc, char *argv[])
+void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_modelDB, ApproxNearestNeighbors* global_ann)
 {
-  //  Parse command line optoins
-  int  help   = 0;
-  
-  addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
-  addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
-  addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
-  addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search");
-  addArg("flann",    'f', 0, 'i',  &(flanning),            0, "use FLANN library");
-  addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),       0, "number of FLANN trees");
-  addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks),      0, "number of FLANN checks");
-  addArg("parts",    'p', 1, 'i',  &(file_parts),          0, "number of file parts");
-  addArg("visitint", 'v', 1, 'i',  &(visit_data_interval), 0, "visit output interval");
-  addArg("debug",    'd', 0, 'i',  &(debug_topology),      0, "add debug info to SILO");
+   Index_t domElems = domain.numElem();
 
-  processArgs(argc,argv);
-  
-  if (help) {
-    printArgs();
-    freeArgs();
-    exit(1);
-  } 
-  if (sampling) {
-    printf("Using adaptive sampling...\n");
-  } else {
-    if (redising||flanning||global_ns) {
-      throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
-    }
-  }
-  if (redising) 
-    printf("Using Redis library...\n");
-  if (flanning) {
-    printf("Using FLANN library...\n");
-    printf("   flann_n_trees: %d\n", flann_n_trees);
-    printf("   flann_n_checks: %d\n", flann_n_checks);
-  }
-  if (visit_data_interval != 0){
-#ifndef SILO
-      throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
-#endif
-  }
-  freeArgs();
-   
-   /*************************************/
-   /* Initialize ModelDB Interface      */
-   /*************************************/
-   ModelDatabase * global_modelDB = nullptr;
-   ApproxNearestNeighbors* global_ann = nullptr;
-   if(sampling)
-   {
-      if(redising){
-#ifdef REDIS
-        SingletonDB::getInstance(SingletonDBBackendEnum::REDIS_DB);
-        global_modelDB = new ModelDB_SingletonDB();
-#else
-        throw std::runtime_error("REDIS not compiled in"); 
-#endif
-      }
-   }
-
-  Initialize(argc,argv );
-  Index_t domElems = domain.numElem() ;
-  ConstitutiveGlobal cm_global;
-
+   ConstitutiveGlobal cm_global;
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
@@ -4570,6 +4510,71 @@ void Lulesh::go(int argc, char *argv[])
    Int_t cumulative_fsm_count = 0;
 #endif   
 
+}
+
+void Lulesh::go(int argc, char *argv[])
+{
+  //  Parse command line optoins
+  int  help   = 0;
+  
+  addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
+  addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
+  addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
+  addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search");
+  addArg("flann",    'f', 0, 'i',  &(flanning),            0, "use FLANN library");
+  addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),       0, "number of FLANN trees");
+  addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks),      0, "number of FLANN checks");
+  addArg("parts",    'p', 1, 'i',  &(file_parts),          0, "number of file parts");
+  addArg("visitint", 'v', 1, 'i',  &(visit_data_interval), 0, "visit output interval");
+  addArg("debug",    'd', 0, 'i',  &(debug_topology),      0, "add debug info to SILO");
+
+  processArgs(argc,argv);
+  
+  if (help) {
+    printArgs();
+    freeArgs();
+    exit(1);
+  } 
+  if (sampling) {
+    printf("Using adaptive sampling...\n");
+  } else {
+    if (redising||flanning||global_ns) {
+      throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
+    }
+  }
+  if (redising) 
+    printf("Using Redis library...\n");
+  if (flanning) {
+    printf("Using FLANN library...\n");
+    printf("   flann_n_trees: %d\n", flann_n_trees);
+    printf("   flann_n_checks: %d\n", flann_n_checks);
+  }
+  if (visit_data_interval != 0){
+#ifndef SILO
+      throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
+#endif
+  }
+  freeArgs();
+   
+   /*************************************/
+   /* Initialize ModelDB Interface      */
+   /*************************************/
+   ModelDatabase * global_modelDB = nullptr;
+   ApproxNearestNeighbors* global_ann = nullptr;
+   if(sampling)
+   {
+      if(redising){
+#ifdef REDIS
+        SingletonDB::getInstance(SingletonDBBackendEnum::REDIS_DB);
+        global_modelDB = new ModelDB_SingletonDB();
+#else
+        throw std::runtime_error("REDIS not compiled in"); 
+#endif
+      }
+   }
+
+  Initialize(argc,argv );
+  ConstructFineScaleModel(sampling,global_modelDB,global_ann);
 #if defined(COEVP_MPI)
    Real_t *fieldData = &domain.nodalMass(0) ;
    CommSend(&domain, MSG_COMM_SBN, 1, &fieldData,
@@ -4614,6 +4619,7 @@ void Lulesh::go(int argc, char *argv[])
 
          int total_samples = 0;
          int total_interpolations = 0;
+         Index_t domElems = domain.numElem() ;
          for (int i=0; i<domElems; ++i) {
             total_samples += domain.cm(i)->getNumSamples();
             total_interpolations += domain.cm(i)->getNumSuccessfulInterpolations();
@@ -4651,6 +4657,7 @@ void Lulesh::go(int argc, char *argv[])
       Real_t value_average = Real_t(0.);
       Real_t point_max = Real_t(0.);
       Real_t value_max = Real_t(0.);
+      Index_t domElems = domain.numElem() ;
       for (Index_t i=0; i<domElems; ++i) {
 
          Int_t numModels, numPairs;

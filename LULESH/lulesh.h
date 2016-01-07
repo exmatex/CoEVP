@@ -157,6 +157,7 @@ void DumpSAMI(Domain *domain, char *name);
 void DumpDomain(Domain *domain, int myRank, int numProcs);
 */
 void Initialize(int argc, char *argv[]);
+void ConstructFineScaleModel(bool sampling,ModelDatabase * global_modelDB,ApproxNearestNeighbors* global_ann);
 void go(int argc, char *argv[]);
 
 };
