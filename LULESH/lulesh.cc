@@ -3484,8 +3484,13 @@ void Lulesh::go(int argc, char *argv[])
     freeArgs();
     exit(1);
   } 
-  if (sampling) 
+  if (sampling) {
     printf("Using adaptive sampling...\n");
+  } else {
+    if (redising||flanning||global_ns) {
+      throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
+    }
+  }
   if (redising) 
     printf("Using Redis library...\n");
   if (flanning) {
