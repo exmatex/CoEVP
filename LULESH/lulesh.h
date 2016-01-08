@@ -119,6 +119,7 @@ void CalcMonotonicQRegionForElems(
          Index_t elength );
 void CalcMonotonicQForElems();
 void CalcQForElems();
+void CalcQForElems2();
 void CalcPressureForElems(Real_t* p_new, Real_t* bvc,
          Real_t* pbvc, Real_t* e_old,
          Real_t* compression, Real_t *vnewc,

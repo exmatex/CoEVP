@@ -2342,6 +2342,15 @@ void Lulesh::CalcQForElems()
 
 #endif
 
+   CalcQForElems2();
+}
+
+void Lulesh::CalcQForElems2()
+{
+
+   Real_t qstop = domain.qstop() ;
+   Index_t numElem = domain.numElem() ;
+
    CalcMonotonicQForElems() ;
 
    /* Don't allow excessive artificial viscosity */
