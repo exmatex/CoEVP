@@ -144,6 +144,7 @@ void EvalEOSForElems(Real_t *vnewc, Index_t length);
 void ApplyMaterialPropertiesForElems();
 void UpdateVolumesForElems();
 void LagrangeElements();
+void LagrangeElements2();
 void CalcCourantConstraintForElems();
 void CalcHydroConstraintForElems();
 void CalcTimeConstraintsForElems();

@@ -2342,7 +2342,6 @@ void Lulesh::CalcQForElems()
 
 #endif
 
-   CalcQForElems2();
 }
 
 void Lulesh::CalcQForElems2()
@@ -2758,6 +2757,11 @@ void Lulesh::LagrangeElements()
   /* Calculate Q.  (Monotonic q option requires communication) */
   CalcQForElems() ;
 
+}
+
+void Lulesh::LagrangeElements2(){
+  CalcQForElems2();
+
   ApplyMaterialPropertiesForElems() ;
 
   UpdateVolumesForElems() ;
@@ -2853,6 +2857,7 @@ void Lulesh::LagrangeLeapFrog()
    /* calculate element quantities (i.e. velocity gradient & q), and update
     * material states */
    LagrangeElements();
+   LagrangeElements2();
 
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_LATE)
    CommRecv(&domain, MSG_SYNC_POS_VEL, 6, domain.commNodes(), false) ;
