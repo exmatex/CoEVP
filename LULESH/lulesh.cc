@@ -1582,6 +1582,28 @@ void Lulesh::CalcPositionForNodes(const Real_t dt)
    }
 }
 
+void Lulesh::LagrangeNodal1()
+{
+  /* time of boundary condition evaluation is beginning of step for force and
+   * acceleration boundary conditions. */
+  CalcForceForNodes();
+}
+
+void Lulesh::LagrangeNodal2()
+{
+  const Real_t delt = domain.deltatime() ;
+  Real_t u_cut = domain.u_cut() ;
+
+  CalcAccelerationForNodes();
+
+  ApplyAccelerationBoundaryConditionsForNodes();
+
+  CalcVelocityForNodes( delt, u_cut ) ;
+
+  CalcPositionForNodes( delt );
+}
+
+
 void Lulesh::LagrangeNodal()
 {
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
@@ -1593,19 +1615,13 @@ void Lulesh::LagrangeNodal()
 
   /* time of boundary condition evaluation is beginning of step for force and
    * acceleration boundary conditions. */
-  CalcForceForNodes();
+  LagrangeNodal1();
 
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
   CommRecv(&domain, MSG_SYNC_POS_VEL, 6, domain.commNodes(), false) ;
 #endif
 
-  CalcAccelerationForNodes();
-
-  ApplyAccelerationBoundaryConditionsForNodes();
-
-  CalcVelocityForNodes( delt, u_cut ) ;
-
-  CalcPositionForNodes( delt );
+  LagrangeNodal2();
 
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
   fieldData[0] = &domain.x(0) ;

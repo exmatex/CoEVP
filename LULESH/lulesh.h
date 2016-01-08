@@ -99,6 +99,8 @@ void ApplyAccelerationBoundaryConditionsForNodes();
 void CalcVelocityForNodes(const Real_t dt, const Real_t u_cut);
 void CalcPositionForNodes(const Real_t dt);
 void LagrangeNodal();
+void LagrangeNodal1();
+void LagrangeNodal2();
 void CalcElemVelocityGradient( const Real_t* const xvel,
          const Real_t* const yvel,
          const Real_t* const zvel,
