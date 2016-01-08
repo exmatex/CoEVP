@@ -154,7 +154,8 @@ void CalcCourantConstraintForElems();
 void CalcHydroConstraintForElems();
 void CalcTimeConstraintsForElems();
 void LagrangeLeapFrog();
-void UpdateStressForElems();
+int UpdateStressForElems();
+void UpdateStressForElems2(int reducedIters);
 /*
 void DumpDomainToVisit(DBfile *db, Domain& domain, int myRank);
 void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks);

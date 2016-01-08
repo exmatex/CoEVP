@@ -2902,7 +2902,7 @@ void Lulesh::LagrangeLeapFrog()
    // LagrangeRelease() ;  Creation/destruction of temps may be important to capture 
 }
 
-void Lulesh::UpdateStressForElems()
+int Lulesh::UpdateStressForElems()
 {
 //#define MAX_NONLINEAR_ITER 5
    int max_nonlinear_iters = 0;
@@ -2961,6 +2961,11 @@ void Lulesh::UpdateStressForElems()
    }
 #endif
 
+   return max_nonlinear_iters;
+}
+
+void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
+{
    // The maximum number of Newton iterations required is an indicaton of
    // fast time scales in the fine-scale model.  If the number of iterations
    // becomes large, we need to reduce the timestep.  It it becomes small,
@@ -4636,7 +4641,8 @@ void Lulesh::go(int argc, char *argv[])
       TimeIncrement() ;
       LagrangeLeapFrog() ;
       /* problem->commNodes->Transfer(CommNodes::syncposvel) ; */
-      UpdateStressForElems();
+      int maxIters = UpdateStressForElems();
+      UpdateStressForElems2(maxIters);
 #ifdef LULESH_SHOW_PROGRESS
       //      printf("time = %e, dt=%e\n",
       //             double(domain.time()), double(domain.deltatime()) ) ;
