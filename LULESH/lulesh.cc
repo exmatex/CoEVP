@@ -177,7 +177,7 @@ enum { VolumeError = -1, QStopError = -2 } ;
  *    SEDOV_SYNC_POS_VEL_LATE
  */
 
-#define SEDOV_SYNC_POS_VEL_EARLY 1
+//#define SEDOV_SYNC_POS_VEL_EARLY 1
 
 /* doRecv flag only works with regular block structure */
 void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t size,
@@ -2904,7 +2904,7 @@ void Lulesh::LagrangeLeapFrog()
 
 void Lulesh::UpdateStressForElems()
 {
-#define MAX_NONLINEAR_ITER 5
+//#define MAX_NONLINEAR_ITER 5
    int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
 

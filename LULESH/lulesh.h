@@ -3,6 +3,9 @@
 
 #include "domain.h"
 
+#define MAX_NONLINEAR_ITER 5
+#define SEDOV_SYNC_POS_VEL_EARLY 1
+
 class Lulesh {
 
 private:
