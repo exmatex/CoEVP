@@ -157,8 +157,10 @@ void DumpToVisit(Domain& domain, char *baseName, char *meshName,
 void DumpSAMI(Domain *domain, char *name);
 void DumpDomain(Domain *domain, int myRank, int numProcs);
 */
+
 void Initialize(int argc, char *argv[]);
 void ConstructFineScaleModel(bool sampling,ModelDatabase * global_modelDB,ApproxNearestNeighbors* global_ann);
+void ExchangeNodalMass();
 void go(int argc, char *argv[]);
 
 };

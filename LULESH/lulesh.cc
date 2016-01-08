@@ -4521,6 +4521,23 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
 
 }
 
+void Lulesh::ExchangeNodalMass()
+{
+#if defined(COEVP_MPI)
+   Real_t *fieldData = &domain.nodalMass(0) ;
+   CommSend(&domain, MSG_COMM_SBN, 1, &fieldData,
+            domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
+   CommSBN(&domain, 1, &fieldData,
+           domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
+#endif
+
+
+#if 0
+   MPI_Finalize() ;
+   exit(0) ;
+#endif
+}
+
 void Lulesh::go(int argc, char *argv[])
 {
   //  Parse command line optoins
@@ -4584,19 +4601,7 @@ void Lulesh::go(int argc, char *argv[])
 
   Initialize(argc,argv );
   ConstructFineScaleModel(sampling,global_modelDB,global_ann);
-#if defined(COEVP_MPI)
-   Real_t *fieldData = &domain.nodalMass(0) ;
-   CommSend(&domain, MSG_COMM_SBN, 1, &fieldData,
-            domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
-   CommSBN(&domain, 1, &fieldData,
-           domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
-#endif
-
-
-#if 0
-   MPI_Finalize() ;
-   exit(0) ;
-#endif
+  ExchangeNodalMass();
 
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
