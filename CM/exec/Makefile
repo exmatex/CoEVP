@@ -88,6 +88,7 @@ AS_SRC        = $(AS_LOC)/AdaptiveSampler.cc $(INTERPDB_SRC) $(INTERP_SRC) $(DB_
 AS_OBJS       = $(AS_SRC:.cc=.o)
 AS_DEPS       = $(AS_SRC:.cc=.d)
 AS_LOC        = ../src/adaptive_sampling
+AS_INCL       = $(shell ls $(AS_LOC)/*.h)
 
 # Constitutive models
 
@@ -122,7 +123,7 @@ KINTEST_DEPS = kintest.d
 
 CMLIB_SRC  = $(CM_SRC) $(EOS_SRC) $(FS_SRC) $(AS_SRC) $(TENSOR_SRC)
 CMLIB_OBJS = $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
-CMLIB_INCL = $(INTERPDB_INCL) $(DB_INCL) $(UTILS_INCL) $(CM_INCL) $(EOS_INCL) $(FS_INCL) $(TENSOR_INCL) $(INTERP_INCL)
+CMLIB_INCL = $(INTERPDB_INCL) $(DB_INCL) $(UTILS_INCL) $(CM_INCL) $(EOS_INCL) $(FS_INCL) $(TENSOR_INCL) $(INTERP_INCL) $(AS_INCL)
 
 CXXFLAGS += -std=c++0x
 CXXFLAGS += -I$(AS_LOC) -I$(MTL_LOC) -I$(INTERPDB_LOC) -I$(INTERPDB_LOC)/kriging_database -I$(INTERPDB_LOC)/base -I$(INTERP_LOC) -I$(INTERP_LOC)/base

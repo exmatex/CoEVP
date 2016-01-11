@@ -9,8 +9,6 @@
 #include "tensor.h"
 #include "ModelDatabase.h"
 
-//class AdaptiveSampler;
-
 struct ConstitutiveData
 {
    Tensor2Sym  sigma_prime;
@@ -117,7 +115,6 @@ class Constitutive
       *buffer = ((char*)(*buffer)) + object_size;
    };
 
- //private:
  public:
 
    mutable bool m_finescale_verbose;

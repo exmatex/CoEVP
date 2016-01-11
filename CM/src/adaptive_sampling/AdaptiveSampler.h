@@ -1,11 +1,9 @@
 #ifndef ADAPTIVESAMPLER_INCLUDED
 #define ADAPTIVESAMPLER_INCLUDED
 
-#include <kriging_database/KrigingDataBase.h>
-#include <kriging_database/ApproxNearestNeighbors.h>
-#include <kriging_database/ModelDatabase.h>
-//#include <kriging_database/ApproxNearestNeighborsMTree.h>
-//#include <kriging_database/ApproxNearestNeighborsFLANN.h>
+#include <KrigingDataBase.h>
+#include <ApproxNearestNeighbors.h>
+#include <ModelDatabase.h>
 
 #include "FineScale.h"
 
@@ -70,9 +68,6 @@ class AdaptiveSampler
    double getValueNormMax() const {return m_value_norm_max;}
 
    void setVerbose(const bool verbose) const {m_verbose = verbose;}
-
- //private:
- public:
 
    void verifyInterpolationAccuracy( const std::vector<double>& point,
                                      const std::vector<double>& value,

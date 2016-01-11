@@ -85,7 +85,6 @@ class Tensor2
 
 class Tensor2Gen : public Tensor2
 {
-   //private:
    public:
       double a[9];
 
@@ -158,7 +157,6 @@ class Tensor2Sym : public Tensor2
 {
    // put data only on lower left triangle
  
-   //private:
    public:
       double a[6];  // store by diagonal: 11, 22, 33, 21, 32, 31
 

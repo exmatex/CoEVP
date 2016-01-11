@@ -257,8 +257,6 @@ namespace krigcpl {
       //
 
     public:
-
-//    protected:
       
       krigalg::InterpolationModelFactoryPointer _modelFactory;
 
