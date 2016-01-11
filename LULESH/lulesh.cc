@@ -4551,7 +4551,7 @@ void Lulesh::ExchangeNodalMass()
 #endif
 }
 
-void Lulesh::go(int visit_data_interval,int file_parts, int sampling, int debug_topology)
+void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,int file_parts, int debug_topology)
 {
 
    /* timestep to solution */

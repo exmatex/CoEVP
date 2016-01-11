@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
   luleshSystem.ExchangeNodalMass();
 
   // Simulate 
-  luleshSystem.go(visit_data_interval,file_parts,sampling,debug_topology);
+  luleshSystem.go(myRank,numRanks,sampling,visit_data_interval,file_parts,debug_topology);
 
 #if defined(COEVP_MPI)
    MPI_Finalize() ;
