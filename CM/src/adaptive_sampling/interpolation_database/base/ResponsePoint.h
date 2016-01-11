@@ -2,15 +2,15 @@
 #define included_krigcpl_ResponsePoint
 
 #ifndef included_MTreePoint
-#include "mtreedb/MTreePoint.h"
+#include "MTreePoint.h"
 #endif
 
 #ifndef included_krigalg_Point
-#include <base/Point.h>
+#include <Point.h>
 #endif
 
 #ifndef included_toolbox_Database
-#include <toolbox/base/Database.h>
+#include <Database.h>
 #endif
 
 namespace krigcpl {

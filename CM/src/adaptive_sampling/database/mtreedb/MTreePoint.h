@@ -8,7 +8,7 @@ using namespace std;
 #endif
 
 #ifndef included_toolbox_Database
-#include "toolbox/database/Database.h"
+#include "Database.h"
 #endif
 
 class MTreePoint;
