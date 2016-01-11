@@ -1,11 +1,11 @@
 #ifndef included_SingletonDB_Redis_h
 #define included_SingletonDB_Redis_h
 
+#ifdef REDIS
 #include "SingletonDB_Backend.h"
 
 #include <vector>
 #include <hiredis.h>
-#define uint128_t unsigned __int128
 
 class SingletonDB_Redis : public SingletonDB_Backend{
  public:
@@ -25,5 +25,6 @@ private:
   redisReply *pull_data(const uint128_t &key);
 };
 
+#endif //REDIS
 
 #endif // included_SingletonDB_Redis_h

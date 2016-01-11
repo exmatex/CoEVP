@@ -2,7 +2,6 @@
 #define included_SingletonDB_HashMap_h
 
 #include "SingletonDB_Backend.h"
-#include "KeyHash.h"
 
 #include <vector>
 #include <unordered_map>

@@ -6,7 +6,7 @@
 #ifdef REDIS
 #include <hiredis.h>
 #endif
-#define uint128_t unsigned __int128
+#include "KeyHash.h"
 
 class SingletonDB_Backend {
  public:
