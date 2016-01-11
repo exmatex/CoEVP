@@ -1,0 +1,43 @@
+language: cpp
+
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - ccache
+      - gfortan #for silo
+      - libhdf5-serial-dev #for silo
+      - liblapack-dev
+      - libblas-dev
+      - libopenmpi-dev
+      - openmpi-bin
+
+env:
+  matrix: 
+    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes
+    - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes NP=1 
+    - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes NP=4 
+
+before_script:
+  - export PATH="/usr/lib/ccache:$PATH"
+
+script:
+  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} && 
+    make get_reference &&
+    { [[ ${SILO} = no ]] || make test COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} MPIRUN="${NP:+mpirun -np ${NP}}"; }
+
+cache:
+  directories:
+    - $HOME/.ccache
+
+compiler:
+  - gcc
+
+notifications:
+  email:
+    - tabasco-dev@lanl.gov  
