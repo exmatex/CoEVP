@@ -3597,6 +3597,10 @@ void Lulesh::go(int argc, char *argv[])
         throw std::runtime_error("REDIS not compiled in"); 
 #endif
       }
+      else{
+        SingletonDB::getInstance(SingletonDBBackendEnum::HASHMAP_DB);
+        global_modelDB = new ModelDB_SingletonDB();
+      }
    }
    /**************************************/
    /*   Initialize Taylor cylinder mesh  */
