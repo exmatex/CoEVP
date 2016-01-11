@@ -78,17 +78,6 @@ Additional BSD Notice
 #endif
 
 int showMeMonoQ = 0 ;
-//  Command line option parsing (using Sriram code from old days)
-#include "cmdLineParser.h"
-int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
-int  redising = 0;              //  By default, do not use REDIS for database
-int  global_ns = 0;              //  By default, do not use a global earest neighbor
-int  flanning = 0;              //  By default, do not use FLANN for nearest neighbor search
-int  flann_n_trees = 1;         // Default can be overridden using command line
-int  flann_n_checks = 20;       // Default can be overridden using command line
-int  file_parts = 0;
-int  debug_topology = 0;
-int  visit_data_interval = 0; // Set this to 0 to disable VisIt data writing
 
 #define PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
@@ -3003,7 +2992,8 @@ extern "C" {
 
 static void
 DumpDomainToVisit(DBfile *db, Domain& domain, int myRank,
-                  int beginPlane, int endPlane)
+                  int beginPlane, int endPlane,
+                  int sampling, int debug_topology)
 {
    int ok = 0;
    int numElem    = domain.numElem() ;
@@ -3304,7 +3294,8 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank,
    }
 }
 
-void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
+void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks,
+  int sampling, int debug_topology)
 {
    /* MULTIBLOCK objects to tie together multiple files */
   char **multimeshObjs;
@@ -3423,7 +3414,8 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks)
 
 
 void DumpToVisit(Domain& domain, char *baseName, char *meshName,
-                 int myRank, int numRanks, int beginPlane, int endPlane)
+                 int myRank, int numRanks, int beginPlane, int endPlane,
+		 int sampling, int debug_topology)
 {
   DBfile *db;
 
@@ -3435,9 +3427,9 @@ void DumpToVisit(Domain& domain, char *baseName, char *meshName,
      sprintf(subdirName, "data_%d", myRank);
      DBMkDir(db, subdirName);
      DBSetDir(db, subdirName);
-     DumpDomainToVisit(db, domain, myRank, beginPlane, endPlane);
+     DumpDomainToVisit(db, domain, myRank, beginPlane, endPlane, sampling, debug_topology);
      if (myRank == 0) {
-        DumpMultiblockObjects(db, baseName, numRanks);
+        DumpMultiblockObjects(db, baseName, numRanks, sampling, debug_topology);
      }
      DBClose(db) ;
   }
@@ -3446,7 +3438,8 @@ void DumpToVisit(Domain& domain, char *baseName, char *meshName,
   }
 }
 
-void DumpDomain(Domain *domain, int myRank, int numProcs, int fileParts)
+void DumpDomain(Domain *domain, int myRank, int numProcs, int fileParts,
+     int sampling, int debug_topology)
 {
    char baseName[64] ;
    char meshName[64] ;
@@ -3488,7 +3481,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs, int fileParts)
          sprintf(meshName, "%s.%03d", baseName, rank) ;
       }
 
-      DumpToVisit(*domain, baseName, meshName, rank, numProcs, beginPlane, endPlane) ;
+      DumpToVisit(*domain, baseName, meshName, rank, numProcs, beginPlane, endPlane, sampling, debug_topology) ;
    }
 }
 
@@ -4365,7 +4358,7 @@ void Lulesh::Initialize(int argc, char *argv[])
 }
 
 
-void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_modelDB, ApproxNearestNeighbors* global_ann)
+void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_modelDB, ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns)
 {
    Index_t domElems = domain.numElem();
 
@@ -4564,70 +4557,8 @@ void Lulesh::ExchangeNodalMass()
 #endif
 }
 
-void Lulesh::go(int argc, char *argv[])
+void Lulesh::go(int argc, char *argv[],int visit_data_interval,int file_parts, int sampling, int debug_topology)
 {
-  //  Parse command line optoins
-  int  help   = 0;
-  
-  addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
-  addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
-  addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
-  addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search");
-  addArg("flann",    'f', 0, 'i',  &(flanning),            0, "use FLANN library");
-  addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),       0, "number of FLANN trees");
-  addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks),      0, "number of FLANN checks");
-  addArg("parts",    'p', 1, 'i',  &(file_parts),          0, "number of file parts");
-  addArg("visitint", 'v', 1, 'i',  &(visit_data_interval), 0, "visit output interval");
-  addArg("debug",    'd', 0, 'i',  &(debug_topology),      0, "add debug info to SILO");
-
-  processArgs(argc,argv);
-  
-  if (help) {
-    printArgs();
-    freeArgs();
-    exit(1);
-  } 
-  if (sampling) {
-    printf("Using adaptive sampling...\n");
-  } else {
-    if (redising||flanning||global_ns) {
-      throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
-    }
-  }
-  if (redising) 
-    printf("Using Redis library...\n");
-  if (flanning) {
-    printf("Using FLANN library...\n");
-    printf("   flann_n_trees: %d\n", flann_n_trees);
-    printf("   flann_n_checks: %d\n", flann_n_checks);
-  }
-  if (visit_data_interval != 0){
-#ifndef SILO
-      throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
-#endif
-  }
-  freeArgs();
-   
-   /*************************************/
-   /* Initialize ModelDB Interface      */
-   /*************************************/
-   ModelDatabase * global_modelDB = nullptr;
-   ApproxNearestNeighbors* global_ann = nullptr;
-   if(sampling)
-   {
-      if(redising){
-#ifdef REDIS
-        SingletonDB::getInstance(SingletonDBBackendEnum::REDIS_DB);
-        global_modelDB = new ModelDB_SingletonDB();
-#else
-        throw std::runtime_error("REDIS not compiled in"); 
-#endif
-      }
-   }
-
-  Initialize(argc,argv );
-  ConstructFineScaleModel(sampling,global_modelDB,global_ann);
-  ExchangeNodalMass();
 
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
@@ -4635,7 +4566,7 @@ void Lulesh::go(int argc, char *argv[])
       char meshName[64] ;
       if ((visit_data_interval !=0) && (domain.cycle() % visit_data_interval == 0)) {
          DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(),
-                   ((domain.numSlices() == 1) ? file_parts : 0) ) ;
+                   ((domain.numSlices() == 1) ? file_parts : 0), sampling, debug_topology ) ;
       }
 #endif
       TimeIncrement() ;
@@ -4747,7 +4678,7 @@ void Lulesh::go(int argc, char *argv[])
 #ifdef SILO
    if ((visit_data_interval != 0) && (domain.cycle() % visit_data_interval != 0)) {
       DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(), 
-                 ((domain.numSlices() == 1) ? file_parts : 0) ) ;
+                 ((domain.numSlices() == 1) ? file_parts : 0), sampling, debug_topology ) ;
    }
 #endif
 

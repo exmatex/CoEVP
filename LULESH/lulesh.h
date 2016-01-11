@@ -166,9 +166,9 @@ void DumpDomain(Domain *domain, int myRank, int numProcs);
 */
 
 void Initialize(int argc, char *argv[]);
-void ConstructFineScaleModel(bool sampling,ModelDatabase * global_modelDB,ApproxNearestNeighbors* global_ann);
+void ConstructFineScaleModel(bool sampling,ModelDatabase * global_modelDB,ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns);
 void ExchangeNodalMass();
-void go(int argc, char *argv[]);
+void go(int argc, char *argv[],int visit_data_interval,int file_parts, int sampling, int debug_topology);
 
 };
 
