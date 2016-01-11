@@ -3,17 +3,14 @@
 
 #ifndef included_MTreePoint
 #include "MTreePoint.h"
-//#include "mtreedb/MTreePoint.h"
 #endif
 
 #ifndef included_krigalg_Point
 #include <Point.h>
-//#include <base/Point.h>
 #endif
 
 #ifndef included_toolbox_Database
 #include <Database.h>
-//#include <toolbox/base/Database.h>
 #endif
 
 namespace krigcpl {
