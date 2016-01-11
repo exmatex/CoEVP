@@ -9,12 +9,31 @@
 #ifndef included_ModelDatabase_h
 #define included_ModelDatabase_h
 
-#include "InterpolationModel.h"
-#include "ResponsePoint.h"
-#include "InterpolationModelFactory.h"
+#include <memory>
+//#include "base/ResponsePoint.h"
+//#include "base/InterpolationModelFactory.h"
+//#include "base/InterpolationModel.h"
 
 #ifndef uint128_t
 #define uint128_t unsigned __int128
+#endif
+
+//Hacky forward declarations
+///TODO: Find a better solution that isn't just exposing everything in include
+#ifndef included_krigalg_InterpolationModel
+namespace krigalg
+{
+  class InterpolationModel;
+  typedef std::shared_ptr<InterpolationModel> InterpolationModelPtr;
+  class InterpolationModelFactory;
+  typedef std::shared_ptr<InterpolationModelFactory> InterpolationModelFactoryPointer;
+}
+#endif
+#ifndef included_krigcpl_ResponsePoint
+namespace krigcpl
+{
+  class ResponsePoint;
+}
 #endif
 
 class ModelDatabase {

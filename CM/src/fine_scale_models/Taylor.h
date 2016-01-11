@@ -23,9 +23,11 @@ class Taylor
       virtual void getScalingsForSampling( vector<double>& input_scaling,
                                            vector<double>& output_scaling ) const;
 
-      virtual void advance( const double delta_t, void* state) const {};
+      virtual void advance( const double delta_t, void* state);
 
-      virtual size_t getStateSize() const {return 0;}
+      virtual void getState( void* state ) const;
+
+      virtual size_t getStateSize() const {return sizeof(m_D_0) + sizeof(m_m) + sizeof(m_g);}
 
    private:
 

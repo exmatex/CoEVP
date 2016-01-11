@@ -69,11 +69,12 @@ Additional BSD Notice
 
 ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&           global,
                                               ApproxNearestNeighbors*       ann, 
+                                              ModelDatabase*                modelDB,
                                               const Tensor2Gen&             L,
                                               const double                  bulk_modulus,
                                               const double                  shear_modulus,
                                               const EOS*                    eos_model,
-                                              const Plasticity*             plasticity_model,
+                                              Plasticity*                   plasticity_model,
                                               const bool                    use_adaptive_sampling,
                                               size_t&                       state_size )
    : Constitutive(global),
@@ -112,7 +113,7 @@ ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&           glob
 
       enableAdaptiveSampling( pointDimension, valueDimension, pointScaling, valueScaling,
                               maxKrigingModelSize, maxNumberSearchModels, theta, meanErrorFactor,
-                              tolerance, maxQueryPointModelDistance, ann );
+                              tolerance, maxQueryPointModelDistance, ann, modelDB);
 
       m_tol = tolerance;
    }
@@ -234,7 +235,7 @@ ElastoViscoPlasticity::advance( const double delta_t, const Tensor2Gen& L_new, c
    getModelInfo(return_data.num_models, return_data.num_point_value_pairs);
    return_data.num_Newton_iters = numNewtonIterations();
 
-   getState(state);
+   getKinematicVariableState(state);
 
    return return_data;
 }
@@ -822,7 +823,7 @@ ElastoViscoPlasticity::printTensor4LSym( const Tensor4LSym& tensor ) const
 
 
 size_t
-ElastoViscoPlasticity::getStateSize() const
+ElastoViscoPlasticity::getKinematicVariableStateSize() const
 {
    return
       sizeof(m_Delta_max) +
@@ -841,13 +842,30 @@ ElastoViscoPlasticity::getStateSize() const
       sizeof(m_volume_change) +
       sizeof(m_tol) +
       sizeof(m_K) +
-      sizeof(m_G) +
-      m_plasticity_model->getStateSize();
+      sizeof(m_G);
+}
+
+
+size_t
+ElastoViscoPlasticity::getStateSize() const
+{
+   return getKinematicVariableStateSize() +
+          m_plasticity_model->getStateSize();
 }
 
 
 void
 ElastoViscoPlasticity::getState( void* state ) const
+{
+   getKinematicVariableState(state);
+
+   void* fine_scale_state = (char*)state + getKinematicVariableStateSize();
+   m_plasticity_model->getState(fine_scale_state);
+}
+
+
+void
+ElastoViscoPlasticity::getKinematicVariableState( void* state ) const
 {
    // Each of the following "push" calls bumps this local pointer
    void* buffer = state;

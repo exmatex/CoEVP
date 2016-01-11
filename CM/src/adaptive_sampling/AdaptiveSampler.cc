@@ -77,7 +77,8 @@ AdaptiveSampler::AdaptiveSampler( const int                     pointDimension,
                                   const double                  meanErrorFactor,
                                   const double                  tolerance,
                                   const double                  maxQueryPointModelDistance,
-                                  ApproxNearestNeighbors*       ann )
+                                  ApproxNearestNeighbors*       ann,
+                                  ModelDatabase*       modelDB )
    : m_pointDimension(pointDimension),
      m_valueDimension(valueDimension),
      m_pointScaling(pointScaling),
@@ -128,7 +129,8 @@ AdaptiveSampler::AdaptiveSampler( const int                     pointDimension,
                                       m_meanErrorFactor,
                                       m_tolerance,
                                       m_maxQueryPointModelDistance,
-                                      600000000 );
+                                      600000000,
+                                      modelDB);
    }
 
    // Add the gradient scaling from the point and value scaling

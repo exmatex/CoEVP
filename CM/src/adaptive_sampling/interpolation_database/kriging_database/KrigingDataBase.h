@@ -13,12 +13,10 @@
 
 #ifndef included_krigcpl_InterpolationDataBase_h
 #include "InterpolationDataBase.h"
-//#include "base/InterpolationDataBase.h"
 #endif 
 
 #ifndef included_krigalg_InterpolationModelFactory_h
-#include <InterpolationModelFactory.h>
-//#include <base/InterpolationModelFactory.h>
+#include "InterpolationModelFactory.h"
 #endif
 
 //#ifndef included_base_DB
@@ -29,21 +27,7 @@
 
 #include "ModelDatabase.h"
 
-namespace std {
 
-   // Defining a hash function in order to use uint128_t as a key
-   // for an std::unordered_map
-   template <>
-      struct hash<uint128_t>
-      {
-         std::size_t operator()(const uint128_t& in) const
-            {
-               return (size_t)in;
-            }
-      };
-
-
-}
 
 namespace krigcpl {
 
@@ -89,7 +73,8 @@ namespace krigcpl {
                       double meanErrorFactor,
                       double tolerance,
                       double maxQueryPointModelDistance,
-                      int    agingThreshold);
+                      int    agingThreshold,
+                      ModelDatabase * modelDB);
       /*!
        * Construction.
        * 
@@ -127,7 +112,8 @@ namespace krigcpl {
                       double maxQueryPointModelDistance,
                       int    agingThreshold,
                       const std::string & directoryName,
-                      const std::string & fileName);
+                      const std::string & fileName,
+                      ModelDatabase * modelDB);
       
       /*!
        * Destruction.

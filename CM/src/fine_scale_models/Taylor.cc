@@ -164,3 +164,39 @@ Taylor::getScalingsForSampling( vector<double>& input_scaling,
 }
 
 
+void
+Taylor::advance( const double delta_t, void* state)
+{
+   // This doesn't actually do anything but copy three doubles
+   // back and forth, but is here as an example of how a more
+   // sophisticated plasticity model might work
+
+   // Get the state
+   double* local_state = (double*)state;
+
+   m_D_0 = *local_state; local_state++;
+   m_m   = *local_state; local_state++;
+   m_g   = *local_state;
+
+   // Advance the fine-scale model (trivially)
+
+   // Update the state
+   local_state = (double*)state;
+
+   *local_state = m_D_0; local_state++;
+   *local_state = m_m;   local_state++;
+   *local_state = m_g;
+}
+
+
+void
+Taylor::getState( void* state ) const
+{
+   double* local_state = (double*)state;
+
+   *local_state = m_D_0; local_state++;
+   *local_state = m_m;   local_state++;
+   *local_state = m_g;
+}
+
+

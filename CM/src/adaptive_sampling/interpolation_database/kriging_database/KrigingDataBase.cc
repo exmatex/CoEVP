@@ -86,11 +86,6 @@ Additional BSD Notice
 #include <toolbox/database/HDFDatabase.h>
 #include <murmur3/MurmurHash3.h>
 
-#ifdef REDIS
-#include "ModelDB_SingletonDB.h"
-#else
-#include "ModelDB_HashMap.h"
-#endif
 
 #define STRING_DIGITS 16
 #define MURMUR_SEED 42
@@ -1515,7 +1510,8 @@ uint128_t saved_model_key;
                                      double meanErrorFactor,
                                      double tolerance,
                                      double maxQueryPointModelDistance,
-                                     int    agingThreshold )
+                                     int    agingThreshold, 
+                                     ModelDatabase * modelDB)
       : InterpolationDataBase(pointDimension,
 			      valueDimension),
 	_modelFactory(modelFactory),
@@ -1528,13 +1524,9 @@ uint128_t saved_model_key;
         _ann(ann),
 	_numberKrigingModels(0),
 	_numberPointValuePairs(0),
-	_agingThreshold(agingThreshold)
+	_agingThreshold(agingThreshold),
+	_modelDB(modelDB)
     {
-      #ifdef REDIS
-      this->_modelDB = new ModelDB_SingletonDB();
-      #else
-      this->_modelDB = new ModelDB_HashMap();
-      #endif
       return;
       
     }
@@ -1551,7 +1543,8 @@ uint128_t saved_model_key;
                                      double maxQueryPointModelDistance,
                                      int    agingThreshold,
                                      const std::string & directoryName,
-                                     const std::string & fileName)
+                                     const std::string & fileName,
+                                     ModelDatabase * modelDB)
        : InterpolationDataBase(pointDimension,
                                valueDimension,
                                fileName),
@@ -1565,13 +1558,9 @@ uint128_t saved_model_key;
          _ann(ann),
          _numberKrigingModels(0),
          _numberPointValuePairs(0),
-         _agingThreshold(agingThreshold)
+         _agingThreshold(agingThreshold),
+         _modelDB(modelDB)
     {
-      #ifdef REDIS
-      this->_modelDB = new ModelDB_SingletonDB();
-      #else
-      this->_modelDB = new ModelDB_HashMap();
-      #endif
       return;
        const std::pair<int, int> kriginigModelsStats =
           initializeModelDBFromFile(
@@ -1652,7 +1641,7 @@ uint128_t saved_model_key;
 
          } else {
             InterpolationModelPtr hintKrigingModel = this->_modelDB->extract(model_key, (InterpolationModelFactoryPointer *)&this->_modelFactory);
-	
+
             //
             // check if can interpolate; need a valid model for this
             //

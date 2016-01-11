@@ -174,8 +174,8 @@ public:
 
       m_p.resize(size, Real_t(0.)) ;
       m_q.resize(size, Real_t(0.)) ;
-      m_ql.resize(size) ;
-      m_qq.resize(size) ;
+      m_ql.resize(size, Real_t(0.)) ;
+      m_qq.resize(size, Real_t(0.)) ;
 
       m_v.resize(size, 1.0) ;
       m_volo.resize(size) ;
@@ -364,16 +364,16 @@ public:
    Index_t&  numSymmNodesBoundary() { return m_numSymmNodesBoundary ; }
    Index_t&  numElem()            { return m_numElem ; }
    Index_t&  numNode()            { return m_numNode ; }
+   Index_t&  sliceHeight()        { return m_sliceHeight ; }
+   Index_t&  numSlices()          { return m_numSlices ; }
+   Index_t&  sliceLoc()           { return m_sliceLoc ; }
 
-//#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
 
    Index_t&  commElems()          { return m_commElems ; }
    Index_t&  commNodes()          { return m_commNodes ; }
    Index_t&  maxPlaneSize()       { return m_maxPlaneSize ; }
 
-   Index_t&  numSlices()          { return m_numSlices ; }
-   Index_t&  sliceLoc()           { return m_sliceLoc ; }
-   Index_t&  sliceHeight()        { return m_sliceHeight ; }
 
    /* Communication Work space */
 
@@ -382,9 +382,9 @@ public:
 
    Index_t *planeNodeIds ;
    Index_t *planeElemIds ;
+#endif
 
 #if defined(COEVP_MPI)
-
    /* Maximum number of block neighbors */
    MPI_Request recvRequest[2] ; /* top and bottom Z plane of nodes */
    MPI_Request sendRequest[2] ; /* top and bottom Z plane of nodes */
@@ -525,16 +525,15 @@ private:
 
    Index_t   m_numElem ;         /* Elements/Nodes in this domain */
    Index_t   m_numNode ;
+   Index_t   m_sliceHeight ;     /* elem height of this slice */
+   Index_t   m_numSlices ;       /* number of MPI Ranks */
+   Index_t   m_sliceLoc ;        /* myRank */
 
-//#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
    Index_t   m_commElems ;       /* communicated elements per plane */
    Index_t   m_commNodes ;       /* communicated nodes per plane */
    Index_t   m_maxPlaneSize ;    /* maximum communicated bytes per plane */
-
-   Index_t   m_numSlices ;       /* number of MPI Ranks */
-   Index_t   m_sliceLoc ;        /* myRank */
-   Index_t   m_sliceHeight ;     /* elem height of this slice */
-//#endif
+#endif
 
 };
 

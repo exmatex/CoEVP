@@ -10,7 +10,7 @@
 #define included_ModelDB_HashMap_h
 
 #include "ModelDatabase.h"
-#include "KrigingDataBase.h"
+#include "KeyHash.h"
 
 #include <unordered_map>
 

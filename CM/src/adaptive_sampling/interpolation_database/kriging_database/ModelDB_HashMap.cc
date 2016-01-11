@@ -1,4 +1,5 @@
 #include "ModelDB_HashMap.h"
+#include "KrigingDataBase.h"
 
 ModelDB_HashMap::ModelDB_HashMap()
 {
@@ -18,5 +19,6 @@ krigalg::InterpolationModelPtr ModelDB_HashMap::extract(uint128_t & model_key, k
 
 void ModelDB_HashMap::erase(uint128_t & model_key)
 {
-    this->InterpolationModelDataBase.erase(model_key);
+	///TODO: Do nothing because we still have the multiple NNs using the same DB issue
+    //this->InterpolationModelDataBase.erase(model_key);
 }

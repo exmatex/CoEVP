@@ -1,10 +1,9 @@
 #ifndef ADAPTIVESAMPLER_INCLUDED
 #define ADAPTIVESAMPLER_INCLUDED
 
-#include <KrigingDataBase.h>
-//#include <kriging_database/KrigingDataBase.h>
-#include <ApproxNearestNeighbors.h>
-//#include <kriging_database/ApproxNearestNeighbors.h>
+#include <kriging_database/KrigingDataBase.h>
+#include <kriging_database/ApproxNearestNeighbors.h>
+#include <kriging_database/ModelDatabase.h>
 //#include <kriging_database/ApproxNearestNeighborsMTree.h>
 //#include <kriging_database/ApproxNearestNeighborsFLANN.h>
 
@@ -27,7 +26,8 @@ class AdaptiveSampler
                     const double                  meanErrorFactor,
                     const double                  tolerance,
                     const double                  maxQueryPointModelDistance,
-                    ApproxNearestNeighbors*       ann );
+                    ApproxNearestNeighbors*       ann,
+                    ModelDatabase*                modelDB);
 
    ~AdaptiveSampler();
 

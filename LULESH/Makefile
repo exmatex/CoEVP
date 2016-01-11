@@ -40,6 +40,11 @@ INCLUDE_DIRS +=  -I$(FLANN_LOC) -I$(FLANN_LOC)/flann
 CXXFLAGS += -DFLANN
 endif
 
+ifneq ($(strip $(REDIS_LOC)),)
+INCLUDE_DIRS +=  -I$(REDIS_LOC)
+CXXFLAGS += -DREDIS
+endif
+
 SILO_LIB =
 ifneq ($(strip $(SILO_LOC)),)
 INCLUDE_DIRS += -I$(SILO_LOC)/include/

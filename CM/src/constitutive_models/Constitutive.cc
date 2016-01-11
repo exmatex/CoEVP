@@ -91,7 +91,8 @@ Constitutive::enableAdaptiveSampling( const int                     pointDimensi
                                       const double                  meanErrorFactor,
                                       const double                  tolerance,
                                       const double                  maxQueryPointModelDistance,
-                                      ApproxNearestNeighbors*       ann )
+                                      ApproxNearestNeighbors*       ann,
+                                      ModelDatabase*                modelDB)
 {
    m_sampler = new AdaptiveSampler( pointDimension,
                                     valueDimension,
@@ -103,7 +104,8 @@ Constitutive::enableAdaptiveSampling( const int                     pointDimensi
                                     meanErrorFactor,
                                     tolerance,
                                     maxQueryPointModelDistance,
-                                    ann );
+                                    ann,
+                                    modelDB);
 
    // This variable remembers the index of the most recently used interpolation model
    m_hint = -1;
