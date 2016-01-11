@@ -1,3 +1,4 @@
+#include <stdexcept>
 #include "lulesh.h"
 #include "SingletonDB.h"
 #include "ModelDB_SingletonDB.h"
