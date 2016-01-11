@@ -1,4 +1,9 @@
 #include <stdexcept>
+
+#if defined(COEVP_MPI)
+#include <mpi.h>
+#endif
+
 #include "lulesh.h"
 #include "SingletonDB.h"
 #include "ModelDB_SingletonDB.h"
@@ -8,6 +13,14 @@
 
 int main(int argc, char *argv[])
 {
+   int numRanks = 1;
+   int myRank = 0;
+#if defined(COEVP_MPI)
+   MPI_Init(&argc, &argv) ;
+   MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
+   MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
+#endif
+  
   int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
   int  redising = 0;              //  By default, do not use REDIS for database
   int  global_ns = 0;              //  By default, do not use a global earest neighbor
@@ -21,7 +34,7 @@ int main(int argc, char *argv[])
   Lulesh luleshSystem;
 
   // Initialize Taylor cylinder mesh
-  luleshSystem.Initialize(argc, argv);
+  luleshSystem.Initialize(myRank, numRanks);
 
   //  Parse command line optoins
   int  help   = 0;
@@ -89,7 +102,11 @@ int main(int argc, char *argv[])
   luleshSystem.ExchangeNodalMass();
 
   // Simulate 
-  luleshSystem.go(argc, argv,visit_data_interval,file_parts,sampling,debug_topology);
+  luleshSystem.go(visit_data_interval,file_parts,sampling,debug_topology);
+
+#if defined(COEVP_MPI)
+   MPI_Finalize() ;
+#endif
 
   return 0;
 }

@@ -3487,7 +3487,7 @@ void DumpDomain(Domain *domain, int myRank, int numProcs, int fileParts,
 
 #endif
 
-void Lulesh::Initialize(int argc, char *argv[])
+void Lulesh::Initialize(int myRank, int numRanks)
 {
 
    Index_t edgeElems = 16 ;
@@ -3507,12 +3507,6 @@ void Lulesh::Initialize(int argc, char *argv[])
 #if defined(COEVP_MPI)
    Index_t chunkSize ;
    Index_t remainder ;
-
-   int numRanks ;
-   int myRank ;
-   MPI_Init(&argc, &argv) ;
-   MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
-   MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
 
    if (sizeof(Real_t) != 4 && sizeof(Real_t) != 8) {
       printf("MPI operations only support float and double right now...\n");
@@ -4557,7 +4551,7 @@ void Lulesh::ExchangeNodalMass()
 #endif
 }
 
-void Lulesh::go(int argc, char *argv[],int visit_data_interval,int file_parts, int sampling, int debug_topology)
+void Lulesh::go(int visit_data_interval,int file_parts, int sampling, int debug_topology)
 {
 
    /* timestep to solution */
@@ -4696,10 +4690,6 @@ void Lulesh::go(int argc, char *argv[],int visit_data_interval,int file_parts, i
    }
 
    checkpoint_file.close();
-#endif
-
-#if defined(COEVP_MPI)
-   MPI_Finalize() ;
 #endif
 }
 
