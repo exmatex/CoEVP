@@ -22,6 +22,8 @@ BLAS_LOC =
 #FLANN_LOC =
 FLANN_LOC = ../flann/flann/src/cpp
 
+LOGGER_LOC=
+
 CXX = g++
 #CXXFLAGS = -std=c++0x -g -O3 -fopenmp
 CXXFLAGS = -std=c++0x -g -O3
@@ -52,6 +54,13 @@ ifneq ($(strip $(SILO_LOC)),)
 INCLUDE_DIRS += -I$(SILO_LOC)/include/
 SILO_LIB += -Wl,-rpath,$(realpath $(SILO_LOC))/lib -L $(SILO_LOC)/lib -lsiloh5
 CXXFLAGS += -DSILO 
+endif
+
+LOGGER_LIB =
+ifneq ($(strip $(LOGGER_LOC)),)
+INCLUDE_DIRS += -I$(LOGGER_LOC)
+LOGGER_LIB += -Wl,-rpath,$(realpath $(LOGGER_LOC)) -L $(LOGGER_LOC) -llogger
+CXXFLAGS += -DLOGGER
 endif
 
 HDF5_LIB =
@@ -97,7 +106,7 @@ LULESH_DEPS=$(LULESH_SRC:.cc=.d)
 -include $(LULESH_DEPS)
 
 lulesh: $(LULESH_OBJS) $(CM_LIB)
-	$(CXX) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LAPACK) -lm
+	$(CXX) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lm
 
 clean:
 	rm -f *~ lulesh $(LULESH_OBJS) $(LULESH_DEPS)
