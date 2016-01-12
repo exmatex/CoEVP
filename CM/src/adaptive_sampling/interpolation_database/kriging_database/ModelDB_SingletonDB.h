@@ -9,7 +9,6 @@
 #ifndef included_ModelDB_SingletonDB_h
 #define included_ModelDB_SingletonDB_h
 
-#ifdef REDIS
 
 #include "ModelDatabase.h"
 #include "KrigingDataBase.h"
@@ -26,6 +25,5 @@ public:
     virtual void erase(uint128_t & model_key);
 };
 
-#endif
 
 #endif // included_ModelDB_SingletonDB_h

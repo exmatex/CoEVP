@@ -1,5 +1,3 @@
-#ifdef REDIS
-
 #include "SingletonDB_HashMap.h"
 
      
@@ -31,4 +29,3 @@ SingletonDB_HashMap::~SingletonDB_HashMap() {
 
 }
 
-#endif

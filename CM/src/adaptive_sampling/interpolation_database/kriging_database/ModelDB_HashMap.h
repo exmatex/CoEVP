@@ -13,15 +13,16 @@
 #include "KeyHash.h"
 
 #include <unordered_map>
+#include <vector>
 
 class ModelDB_HashMap : public ModelDatabase {
 public:
     ModelDB_HashMap();
     virtual void insert(uint128_t & model_key, krigalg::InterpolationModelPtr krigingModel, krigcpl::ResponsePoint * point);
-    virtual krigalg::InterpolationModelPtr extract(uint128_t & model_key, krigalg::InterpolationModelFactoryPointer  * newFact=nullptr);
+    virtual krigalg::InterpolationModelPtr extract(uint128_t & model_key, krigalg::InterpolationModelFactoryPointer  * newFact);
     virtual void erase(uint128_t & model_key);
 private:
-    std::unordered_map<uint128_t, krigalg::InterpolationModelPtr> InterpolationModelDataBase;
+    std::unordered_map<uint128_t, std::vector<double>> InterpolationModelDataBase;
 };
 
 #endif // included_ModelDB_HashMap_h
