@@ -37,7 +37,7 @@ flann:
 	${MAKE} -C flann
 
 clean:
-	${MAKE} -C CM/exec clean
+	${MAKE} -C CM/exec realclean
 	${MAKE} -C LULESH clean
 	rm -rf test/*.silo
 
