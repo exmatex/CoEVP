@@ -139,7 +139,7 @@ enum { VolumeError = -1, QStopError = -2 } ;
 #define ZETA_P_SYMM 0x1000
 #define ZETA_P_FREE 0x2000
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
 
 /* Assume 128 byte coherence */
 /* Assume Real_t is an "integral power of 2" bytes wide */
@@ -167,7 +167,9 @@ enum { VolumeError = -1, QStopError = -2 } ;
  */
 
 //#define SEDOV_SYNC_POS_VEL_EARLY 1
+#endif
 
+#if defined(COEVP_MPI)
 /* doRecv flag only works with regular block structure */
 void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t size,
               bool recvMin = true)
@@ -3504,13 +3506,17 @@ void Lulesh::Initialize(int myRank, int numRanks)
    Index_t planeNodes ;
    Index_t planeElems ;
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
    Index_t chunkSize ;
    Index_t remainder ;
 
    if (sizeof(Real_t) != 4 && sizeof(Real_t) != 8) {
       printf("MPI operations only support float and double right now...\n");
+#if defined(COEVP_MPI)
       MPI_Abort(MPI_COMM_WORLD, -1) ;
+#else
+      exit(-1);
+#endif
    }
 
 #if 0
@@ -3592,7 +3598,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
 
    domElems = domain.numElem() ;
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
 
    /* allocate a buffer large enough for nodal ghost data */
    Index_t planeMin, planeMax ;
@@ -3644,7 +3650,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    /* allocate field memory */
 
    domain.AllocateElemPersistent(domain.numElem()) ;
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
    domain.AllocateElemTemporary (domain.numElem(), domain.commElems()) ;
 #else
    domain.AllocateElemTemporary (domain.numElem(), 0) ;
@@ -3666,7 +3672,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    for (Index_t plane=0; plane<coreNodes; ++plane) {
       ty = Real_t(0.) ;
       for (Index_t row=0; row<coreNodes; ++row) {
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
          tx = domain_length[0]*Real_t(xBegin)/Real_t(edgeNodes) ;
          if (domain.numSlices() != 1) {
             domain.planeNodeIds[planeNodes++] = nidx ;
@@ -3717,7 +3723,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
                Real_t(row+1 - coreNodes)/Real_t(wingNodes) /* wing distance */
                );
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
          tx = domain_length[0]*Real_t(xBegin)/Real_t(edgeNodes) ;
          if (domain.numSlices() != 1) {
             domain.planeNodeIds[planeNodes++] = nidx ;
@@ -3767,7 +3773,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
                Real_t(plane+1-coreNodes)/Real_t(wingNodes)    /* wing dist */
               ) ;
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
          tx = domain_length[0]*Real_t(xBegin)/Real_t(edgeNodes) ;
          if (domain.numSlices() != 1) {
             domain.planeNodeIds[planeNodes++] = nidx ;
@@ -3790,7 +3796,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
       }
    }
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
    if (domain.numSlices() != 1) {
       if (planeNodes != domain.commNodes()) {
          printf("error computing comm nodes\n") ;
@@ -3806,7 +3812,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    planeElems = 0 ;
    for (Index_t plane=0; plane<coreElems; ++plane) {
       for (Index_t row=0; row<edgeElems; ++row) {
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
          if (domain.numSlices() != 1) {
             domain.planeElemIds[planeElems++] = zidx ;
          }
@@ -3833,7 +3839,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    nidx = (coreNodes-1)*edgeNodes*heightNodes ;
    zidx = coreElems*edgeElems*heightElems ;
    for (Index_t row=0; row<(coreElems-1); ++row) {
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
       if (domain.numSlices() != 1) {
          domain.planeElemIds[planeElems++] = zidx ;
       }
@@ -3857,7 +3863,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    nidx = coreNodes*heightNodes*edgeNodes ;
    for (Index_t plane=coreElems+1; plane<edgeElems; ++plane) {
       for (Index_t row=0; row<(coreElems-1); ++row) {
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
          if (domain.numSlices() != 1) {
             domain.planeElemIds[planeElems++] = zidx ;
          }
@@ -3883,7 +3889,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    nidx = (coreNodes-1)*edgeNodes*heightNodes +
           (coreNodes-1)*heightNodes ;
    for (Index_t row=coreElems ; row<edgeElems; ++row) {
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
       if (domain.numSlices() != 1) {
          domain.planeElemIds[planeElems++] = zidx ;
       }
@@ -3930,7 +3936,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
       nidx += (coreNodes-1)*heightNodes ;
    }
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
    if (domain.numSlices() != 1) {
       if (planeElems != domain.commElems()) {
          printf("%d %d error computing comm elems\n",
@@ -3946,7 +3952,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    }
 
    char name[100] ;
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
    sprintf(name, "checkConn%d.sami", domain.sliceLoc()) ;
 #else
    sprintf(name, "checkConn.sami") ;
@@ -4026,7 +4032,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
       domain.e(i) = 0.;
    }
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
    if (domain.sliceLoc() == 0)
 #endif
    {
@@ -4064,7 +4070,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
       }
    }
    /* X Symmetry */
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
    if (domain.sliceLoc() == 0) 
 #endif
    {
@@ -4225,7 +4231,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
       domain.elemBC(i) = 0 ;  /* clear BCs by default */
    }
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
 
    if (domain.numSlices() > 1) {
       if (domain.sliceLoc() == 0) {
@@ -4571,7 +4577,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #ifdef LULESH_SHOW_PROGRESS
       //      printf("time = %e, dt=%e\n",
       //             double(domain.time()), double(domain.deltatime()) ) ;
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
       if (domain.sliceLoc() == 0) 
 #endif
       {

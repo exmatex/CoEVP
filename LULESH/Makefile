@@ -39,6 +39,13 @@ CXXFLAGS += -DCOEVP_MPI
 CXX= mpic++
 endif
 
+ifeq ($(CHARM), yes)
+CXXFLAGS += -D__CHARMC__
+ifeq ($(COEVP_MPI), yes)
+$(error You cannot combine charm with mpi)
+endif
+endif
+
 ifneq ($(strip $(FLANN_LOC)),)
 INCLUDE_DIRS +=  -I$(FLANN_LOC) -I$(FLANN_LOC)/flann
 CXXFLAGS += -DFLANN
