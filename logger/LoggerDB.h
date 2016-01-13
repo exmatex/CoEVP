@@ -6,51 +6,37 @@
 //
 // http://stackoverflow.com/questions/1008019/c-singleton-design-pattern
 
-#ifndef included_SingletonDB_h
-#define included_SingletonDB_h
+#ifndef included_LoggerDB_h
+#define included_LoggerDB_h
 
 
 #include <vector>
-#ifdef REDIS
 #include <hiredis.h>
-#endif
 #define uint128_t unsigned __int128
 
-#include "SingletonDB_Backend.h"
-
-enum SingletonDBBackendEnum
-{
-  REDIS_DB,
-  HASHMAP_DB,
-  POSIX_DB,
-  HIO_DB
-};
-
-class SingletonDB {
+class LoggerDB {
  public:
-  
   //  Return the single instance that was initialized in the private constructor.
-  static  SingletonDB&  getInstance(SingletonDBBackendEnum backType=HASHMAP_DB) {
-    static  SingletonDB   instance(backType);
+  static  LoggerDB&  getInstance() {
+    static  LoggerDB   instance;
     return instance;
   }
 
   void  push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length);
-  void  erase(const uint128_t &key);
   std::vector<double> pull(const uint128_t &key);
   std::vector<double> pull_key(const uint128_t &key);
 
-private:
-  SingletonDB_Backend * backend;
+ private:
+  redisContext*   redis;
 
-  SingletonDB(SingletonDBBackendEnum backType);
-  ~SingletonDB();
+  LoggerDB();
+ ~LoggerDB();
 
   //  This technique requires C++11 (can do a C++03 version too)
-  SingletonDB(SingletonDB const&)    = delete;
-  void operator=(SingletonDB const&) = delete;
+  LoggerDB(LoggerDB const&)       = delete;
+  void operator=(LoggerDB const&) = delete;
 
+  redisReply *pull_data(const uint128_t &key);
 };
 
-
-#endif // included_SingletonDB_h
+#endif // included_LoggerDB_h

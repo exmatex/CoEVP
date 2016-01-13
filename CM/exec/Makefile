@@ -72,7 +72,7 @@ TENSOR_DEPS = $(TENSOR_SRC:.cc=.d)
 AS_LOC        = ../src/adaptive_sampling
 INTERPDB_LOC  = $(AS_LOC)/interpolation_database
 INTERPDB_SRC  = $(shell ls $(INTERPDB_LOC)/base/*.cc $(INTERPDB_LOC)/kriging_database/*.cc)
-INTERPDB_INCL = $(shell ls $(INTERPDB_LOC)/kriging_database/*.h $(INTERPDB_LOC)/base/*.h)
+INTERPDB_INCL = $(shell ls $(INTERPDB_LOC)/kriging_database/*.h $(INTERPDB_LOC)/base/*.h $(INTERPDB_LOC)/base/*.I)
 INTERP_LOC    = $(AS_LOC)/interpolation
 INTERP_SRC    = $(shell ls $(INTERP_LOC)/*/*.cc)
 INTERP_INCL   = $(shell ls $(INTERP_LOC)/base/*.h $(INTERP_LOC)/base/*.I)
@@ -81,13 +81,14 @@ DB_SRC        = $(shell ls $(DB_LOC)/mtreedb/*.cc)
 DB_INCL       = $(shell ls $(DB_LOC)/mtreedb/*.h $(DB_LOC)/mtreedb/*.I)
 UTILS_LOC     = $(AS_LOC)/utils
 UTILS_SRC     = $(shell ls $(UTILS_LOC)/toolbox/*/*.cc $(UTILS_LOC)/murmur3/*.cc)
-UTILS_INCL    = $(shell ls $(UTILS_LOC)/toolbox/base/*.h $(UTILS_LOC)/toolbox/base/*.I $(UTILS_LOC)/toolbox/database/*.h $(UTILS_LOC)/toolbox/database/*.I $(UTILS_LOC)/toolbox/stream/*.h $(UTILS_LOC)/toolbox/stream/*.I)
+UTILS_INCL    = $(shell ls $(UTILS_LOC)/toolbox/base/*.h $(UTILS_LOC)/toolbox/base/*.I $(UTILS_LOC)/toolbox/database/*.h $(UTILS_LOC)/toolbox/database/*.I $(UTILS_LOC)/toolbox/stream/*.h $(UTILS_LOC)/toolbox/stream/*.I $(UTILS_LOC)/murmur3/*.h)
 MTL_LOC       = $(AS_LOC)/mtl_headers
 MTL_INCL      = $(shell ls $(AS_LOC)/mtl_headers/mtl/*.h)
 AS_SRC        = $(AS_LOC)/AdaptiveSampler.cc $(INTERPDB_SRC) $(INTERP_SRC) $(DB_SRC) $(UTILS_SRC)
 AS_OBJS       = $(AS_SRC:.cc=.o)
 AS_DEPS       = $(AS_SRC:.cc=.d)
 AS_LOC        = ../src/adaptive_sampling
+AS_INCL       = $(shell ls $(AS_LOC)/*.h)
 
 # Constitutive models
 
@@ -122,7 +123,7 @@ KINTEST_DEPS = kintest.d
 
 CMLIB_SRC  = $(CM_SRC) $(EOS_SRC) $(FS_SRC) $(AS_SRC) $(TENSOR_SRC)
 CMLIB_OBJS = $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
-CMLIB_INCL = $(INTERPDB_INCL) $(DB_INCL) $(UTILS_INCL) $(CM_INCL) $(EOS_INCL) $(FS_INCL) $(TENSOR_INCL) $(INTERP_INCL)
+CMLIB_INCL = $(INTERPDB_INCL) $(DB_INCL) $(UTILS_INCL) $(CM_INCL) $(EOS_INCL) $(FS_INCL) $(TENSOR_INCL) $(INTERP_INCL) $(AS_INCL)
 
 CXXFLAGS += -std=c++0x
 CXXFLAGS += -I$(AS_LOC) -I$(MTL_LOC) -I$(INTERPDB_LOC) -I$(INTERPDB_LOC)/kriging_database -I$(INTERPDB_LOC)/base -I$(INTERP_LOC) -I$(INTERP_LOC)/base

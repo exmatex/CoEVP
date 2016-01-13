@@ -6,13 +6,20 @@
 //
 // http://stackoverflow.com/questions/1008019/c-singleton-design-pattern
 
-#ifdef REDIS
 
 #include "SingletonDB.h"
-#include "SingletonDB_Redis.h"
 #include "SingletonDB_HashMap.h"
 #include "SingletonDB_POSIX.h"
 #include "SingletonDB_HIO.h"
+
+#ifdef REDIS
+#include "SingletonDB_Redis.h"
+#else
+#include "SingletonDB_Dummy.h"
+typedef SingletonDB_Dummy SingletonDB_Redis;
+#endif // REDIS
+
+#include <iostream>
 
     
 //  Will eventually be something like add_points
@@ -51,7 +58,7 @@ SingletonDB::SingletonDB(SingletonDBBackendEnum backType) {
   }    
   else
   {
-	  ///TODO: Throw error
+	std::cerr << "Invalid DB Backend Used in SingletonDB.cc" << std::endl;
   }
 }
 
@@ -64,4 +71,3 @@ SingletonDB::~SingletonDB() {
   }
 }
 
-#endif

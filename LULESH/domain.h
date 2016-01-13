@@ -368,7 +368,7 @@ public:
    Index_t&  numSlices()          { return m_numSlices ; }
    Index_t&  sliceLoc()           { return m_sliceLoc ; }
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
 
    Index_t&  commElems()          { return m_commElems ; }
    Index_t&  commNodes()          { return m_commNodes ; }
@@ -382,7 +382,9 @@ public:
 
    Index_t *planeNodeIds ;
    Index_t *planeElemIds ;
+#endif
 
+#if defined(COEVP_MPI)
    /* Maximum number of block neighbors */
    MPI_Request recvRequest[2] ; /* top and bottom Z plane of nodes */
    MPI_Request sendRequest[2] ; /* top and bottom Z plane of nodes */
@@ -527,7 +529,7 @@ private:
    Index_t   m_numSlices ;       /* number of MPI Ranks */
    Index_t   m_sliceLoc ;        /* myRank */
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
    Index_t   m_commElems ;       /* communicated elements per plane */
    Index_t   m_commNodes ;       /* communicated nodes per plane */
    Index_t   m_maxPlaneSize ;    /* maximum communicated bytes per plane */
