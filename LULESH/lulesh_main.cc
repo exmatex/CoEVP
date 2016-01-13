@@ -8,6 +8,11 @@
 #include "SingletonDB.h"
 #include "ModelDB_SingletonDB.h"
 
+#if defined(LOGGER)
+#include "LoggerDB.h"    // Includes Logger base class too
+#include "Locator.h"
+#endif
+
 //  Command line option parsing (using Sriram code from old days)
 #include "cmdLineParser.h"
 
@@ -98,7 +103,15 @@ int main(int argc, char *argv[])
         global_modelDB = new ModelDB_SingletonDB();
       }
    }
+   // Logging
+#if defined(LOGGER)
+  LoggerDB  *logger_db = new LoggerDB();
+  Locator::provide(logger_db);
 
+  Logger  &logger = Locator::getLogger();
+  logger.logInfo("Logging plumbing seems to be working");
+#endif
+        
   // Construct fine scale models
   luleshSystem.ConstructFineScaleModel(sampling,global_modelDB,global_ann,flanning,flann_n_trees,flann_n_checks,global_ns);
   
