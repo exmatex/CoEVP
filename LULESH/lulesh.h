@@ -162,7 +162,6 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks);
 void DumpToVisit(Domain& domain, char *baseName, char *meshName,
          int myRank, int numRanks);
 void DumpSAMI(Domain *domain, char *name);
-void DumpDomain(Domain *domain, int myRank, int numProcs);
 */
 
 void Initialize(int myRank, int numRanks);
