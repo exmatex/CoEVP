@@ -11,6 +11,8 @@
 #include "SingletonDB.h"
 #include "SingletonDB_Redis.h"
 #include "SingletonDB_HashMap.h"
+#include "SingletonDB_POSIX.h"
+#include "SingletonDB_HIO.h"
 
     
 //  Will eventually be something like add_points
@@ -31,18 +33,26 @@ std::vector<double> SingletonDB::pull_key(const uint128_t &key) {
 }
 
 SingletonDB::SingletonDB(SingletonDBBackendEnum backType) {
-	if(backType == REDIS_DB)
-	{
-		this->backend = new SingletonDB_Redis();
-	}
-	else if(backType == HASHMAP_DB)
-	{
-		this->backend = new SingletonDB_HashMap();
-	}
-	else
-	{
-		///TODO: Throw error
-	}
+  if(backType == REDIS_DB)
+  {
+    this->backend = new SingletonDB_Redis();
+  }
+  else if(backType == HASHMAP_DB)
+  {
+    this->backend = new SingletonDB_HashMap();
+  }
+  else if(backType == POSIX_DB)
+  {
+    this->backend = new SingletonDB_POSIX();
+  }
+  else if(backType == HIO_DB)
+  {
+    this->backend = new SingletonDB_HIO();
+  }    
+  else
+  {
+	  ///TODO: Throw error
+  }
 }
 
 //  Shutdown redis databse and print some simple info about the accumulated database.

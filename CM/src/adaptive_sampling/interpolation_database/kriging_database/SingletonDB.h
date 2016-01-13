@@ -19,7 +19,9 @@
 enum SingletonDBBackendEnum
 {
   REDIS_DB,
-  HASHMAP_DB
+  HASHMAP_DB,
+  POSIX_DB,
+  HIO_DB
 };
 
 class SingletonDB {
