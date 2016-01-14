@@ -5,13 +5,10 @@ COEVP_MPI =
 
 # Silo (www.hdfgroup.org/HDF5) and HDF5 (www.hdfgroup.org/HDF5) library
 # locations.  These macros can be left undefined if visualization is not required.
-
-#SILO_LOC = /usr/local/tools/silo-4.8
 SILO_LOC = 
 
 # HDF5 library location (www.hdfgroup.org/HDF5).  This macro can
 # be undefined if visualization is not required.
-#HDF5_LOC = /usr/local/tools/hdf5-intel-serial-1.8.8
 HDF5_LOC = 
 
 # BLAS and LAPACK library locations.  It may not be necessary
@@ -19,8 +16,13 @@ HDF5_LOC =
 LAPACK_LOC =
 BLAS_LOC =
 
-#FLANN_LOC =
-FLANN_LOC = ../flann/flann/src/cpp
+# FLANN library location
+FLANN_LOC =
+
+# Redos library location
+REDIS_LOC =
+
+LOGGER_LOC=
 
 CXX = g++
 #CXXFLAGS = -std=c++0x -g -O3 -fopenmp
@@ -35,6 +37,13 @@ INCLUDE_DIRS = -I. -I../CM/include
 ifeq ($(COEVP_MPI), yes)
 CXXFLAGS += -DCOEVP_MPI
 CXX= mpic++
+endif
+
+ifeq ($(CHARM), yes)
+CXXFLAGS += -D__CHARMC__
+ifeq ($(COEVP_MPI), yes)
+$(error You cannot combine charm with mpi)
+endif
 endif
 
 ifneq ($(strip $(FLANN_LOC)),)
@@ -52,6 +61,13 @@ ifneq ($(strip $(SILO_LOC)),)
 INCLUDE_DIRS += -I$(SILO_LOC)/include/
 SILO_LIB += -Wl,-rpath,$(realpath $(SILO_LOC))/lib -L $(SILO_LOC)/lib -lsiloh5
 CXXFLAGS += -DSILO 
+endif
+
+LOGGER_LIB =
+ifneq ($(strip $(LOGGER_LOC)),)
+INCLUDE_DIRS += -I$(LOGGER_LOC)
+LOGGER_LIB += -Wl,-rpath,$(realpath $(LOGGER_LOC)) -L $(LOGGER_LOC) -llogger
+CXXFLAGS += -DLOGGER
 endif
 
 HDF5_LIB =
@@ -97,7 +113,7 @@ LULESH_DEPS=$(LULESH_SRC:.cc=.d)
 -include $(LULESH_DEPS)
 
 lulesh: $(LULESH_OBJS) $(CM_LIB)
-	$(CXX) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LAPACK) -lm
+	$(CXX) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lm
 
 clean:
 	rm -f *~ lulesh $(LULESH_OBJS) $(LULESH_DEPS)

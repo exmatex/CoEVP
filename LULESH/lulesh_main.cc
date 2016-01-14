@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
   addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
   addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
   addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
-  addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search");
+  addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search/data store");
   addArg("flann",    'f', 0, 'i',  &(flanning),            0, "use FLANN library");
   addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),       0, "number of FLANN trees");
   addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks),      0, "number of FLANN checks");
@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
         throw std::runtime_error("REDIS not compiled in"); 
 #endif
       }
-      else{
+      else if(global_ns){
         SingletonDB::getInstance(SingletonDBBackendEnum::HASHMAP_DB);
         global_modelDB = new ModelDB_SingletonDB();
       }

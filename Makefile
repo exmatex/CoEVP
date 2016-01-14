@@ -1,4 +1,4 @@
-.PHONY: all clean clean-all lulesh libcm redis flann silo test
+.PHONY: all clean clean-all lulesh libcm redis flann silo test logger
 
 all: lulesh
 
@@ -18,11 +18,16 @@ SILO_LOC=../silo/silo
 SILODIFF=silo/silo/bin/silodiff
 libcm: silo
 endif
+LOGGER=yes
+ifeq ($(LOGGER),yes)
+LOGGER_LOC=../logger
+libcm: logger
+endif
 
 lulesh: LULESH/lulesh
 
 LULESH/lulesh: libcm
-	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC)
+	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC) LOGGER_LOC=$(LOGGER_LOC)
 
 libcm:
 	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN)
@@ -36,8 +41,11 @@ silo:
 flann:
 	${MAKE} -C flann
 
+logger:
+	${MAKE} -C logger
+
 clean:
-	${MAKE} -C CM/exec clean
+	${MAKE} -C CM/exec realclean
 	${MAKE} -C LULESH clean
 	rm -rf test/*.silo
 
@@ -45,6 +53,7 @@ clean-all: clean
 	${MAKE} -C redis clean
 	${MAKE} -C flann clean
 	${MAKE} -C silo clean
+	${MAKE} -C logger clean
 
 get_reference:
 	mkdir -p test/reference
