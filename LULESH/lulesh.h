@@ -3,15 +3,21 @@
 
 #include "domain.h"
 
+#define MAX_NONLINEAR_ITER 5
+#define SEDOV_SYNC_POS_VEL_EARLY 1
+
 class Lulesh {
 
 private:
 
+public:
+  // Factor to be multiply the time step by to compensate
+  // for fast time scales in the fine-scale model
+  Real_t finescale_dt_modifier;
+
   Domain domain;
 
-public:
-
-Lulesh(){}
+Lulesh(){ finescale_dt_modifier = Real_t(1.); }
 ~Lulesh(){}
 
 void CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t size,
@@ -24,7 +30,7 @@ void CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
          Index_t *iset, Index_t size, Index_t offset);
 void CommSyncPosVel(Domain *domain,
          Index_t *iset, Index_t size, Index_t offset);
-void CommMonoQ(Domain *domain, Index_t size);
+void CommMonoQ(Domain *domain, Index_t *iset, Index_t size, Index_t offset);
 void TimeIncrement();
 void InitStressTermsForElems(Index_t numElem, 
          Real_t *sigxx, Real_t *sigyy, Real_t *sigzz,
@@ -96,6 +102,8 @@ void ApplyAccelerationBoundaryConditionsForNodes();
 void CalcVelocityForNodes(const Real_t dt, const Real_t u_cut);
 void CalcPositionForNodes(const Real_t dt);
 void LagrangeNodal();
+void LagrangeNodal1();
+void LagrangeNodal2();
 void CalcElemVelocityGradient( const Real_t* const xvel,
          const Real_t* const yvel,
          const Real_t* const zvel,
@@ -116,6 +124,7 @@ void CalcMonotonicQRegionForElems(
          Index_t elength );
 void CalcMonotonicQForElems();
 void CalcQForElems();
+void CalcQForElems2();
 void CalcPressureForElems(Real_t* p_new, Real_t* bvc,
          Real_t* pbvc, Real_t* e_old,
          Real_t* compression, Real_t *vnewc,
@@ -140,20 +149,25 @@ void EvalEOSForElems(Real_t *vnewc, Index_t length);
 void ApplyMaterialPropertiesForElems();
 void UpdateVolumesForElems();
 void LagrangeElements();
+void LagrangeElements2();
 void CalcCourantConstraintForElems();
 void CalcHydroConstraintForElems();
 void CalcTimeConstraintsForElems();
 void LagrangeLeapFrog();
-void UpdateStressForElems();
+int UpdateStressForElems();
+void UpdateStressForElems2(int reducedIters);
 /*
 void DumpDomainToVisit(DBfile *db, Domain& domain, int myRank);
 void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks);
 void DumpToVisit(Domain& domain, char *baseName, char *meshName,
          int myRank, int numRanks);
 void DumpSAMI(Domain *domain, char *name);
-void DumpDomain(Domain *domain, int myRank, int numProcs);
 */
-void go(int argc, char *argv[]);
+
+void Initialize(int myRank, int numRanks);
+void ConstructFineScaleModel(bool sampling,ModelDatabase * global_modelDB,ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns);
+void ExchangeNodalMass();
+void go(int myRank, int numRanks, int sampling, int visit_data_interval,int file_parts, int debug_topology);
 
 };
 

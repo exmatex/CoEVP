@@ -455,7 +455,7 @@ AdaptiveSampler::printInterpolationFailure( const std::vector<double>& point,
 }
 
 
-inline double
+double
 AdaptiveSampler::pointL2Norm( const double* point ) const
 {
    double norm = 0.;
@@ -467,7 +467,7 @@ AdaptiveSampler::pointL2Norm( const double* point ) const
 }
 
 
-inline double
+double
 AdaptiveSampler::pointMaxNorm( const double* point ) const
 {
    double norm = 0.;
@@ -480,7 +480,7 @@ AdaptiveSampler::pointMaxNorm( const double* point ) const
 }
 
 
-inline double
+double
 AdaptiveSampler::pointL2Norm( const std::vector<double>& point ) const
 {
    assert(m_pointDimension <= point.size());
@@ -494,7 +494,7 @@ AdaptiveSampler::pointL2Norm( const std::vector<double>& point ) const
 }
 
 
-inline double
+double
 AdaptiveSampler::pointMaxNorm( const std::vector<double>& point ) const
 {
    assert(m_pointDimension <= point.size());
@@ -509,7 +509,7 @@ AdaptiveSampler::pointMaxNorm( const std::vector<double>& point ) const
 }
 
 
-inline double
+double
 AdaptiveSampler::valueL2Norm( const double* value ) const
 {
    double norm = 0.;
@@ -521,7 +521,7 @@ AdaptiveSampler::valueL2Norm( const double* value ) const
 }
 
 
-inline double
+double
 AdaptiveSampler::valueMaxNorm( const double* value ) const
 {
    double norm = 0.;
@@ -534,7 +534,7 @@ AdaptiveSampler::valueMaxNorm( const double* value ) const
 }
 
 
-inline double
+double
 AdaptiveSampler::valueL2Norm( const std::vector<double>& value ) const
 {
    assert(m_valueDimension <= value.size());
@@ -548,7 +548,7 @@ AdaptiveSampler::valueL2Norm( const std::vector<double>& value ) const
 }
 
 
-inline double
+double
 AdaptiveSampler::valueMaxNorm( const std::vector<double>& value ) const
 {
    assert(m_valueDimension <= value.size());

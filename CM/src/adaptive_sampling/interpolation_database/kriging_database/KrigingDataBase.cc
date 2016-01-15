@@ -197,7 +197,7 @@ uint128_t saved_model_key;
 
            uint128_t model_key = keys[0];
 
-           closestKrigingModel = modelDB->extract(model_key);
+           closestKrigingModel = modelDB->extract(model_key, (krigalg::InterpolationModelFactoryPointer *) &modelFactory);
 
            closestKrigingModelId = ids[0];
         }
@@ -451,7 +451,7 @@ uint128_t saved_model_key;
 
               uint128_t model_key = keys[iter];
 
-              InterpolationModelPtr krigingModel = modelDB->extract(model_key);
+              InterpolationModelPtr krigingModel = modelDB->extract(model_key, (krigalg::InterpolationModelFactoryPointer *) &_modelFactory);
               //
               // skip invalid models
               //
@@ -2116,7 +2116,7 @@ uint128_t saved_model_key;
 
        } else {
    
-           InterpolationModelPtr hintKrigingModel = this->_modelDB->extract(model_key);
+           InterpolationModelPtr hintKrigingModel = this->_modelDB->extract(model_key, (krigalg::InterpolationModelFactoryPointer *) &(this->_modelFactory));
 	  
           assert(hintKrigingModel->hasGradient() == true);
 

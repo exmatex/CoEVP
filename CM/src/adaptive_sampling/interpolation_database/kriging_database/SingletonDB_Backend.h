@@ -3,8 +3,10 @@
 
 
 #include <vector>
+#ifdef REDIS
 #include <hiredis.h>
-#define uint128_t unsigned __int128
+#endif
+#include "KeyHash.h"
 
 class SingletonDB_Backend {
  public:

@@ -1,5 +1,3 @@
-#ifdef REDIS
-
 #include "ModelDB_SingletonDB.h"
 
 #include "base/ResponsePoint.h"
@@ -40,4 +38,3 @@ void ModelDB_SingletonDB::erase(uint128_t & model_key)
     //this->dbRef.erase( model_key);
 }
 
-#endif
