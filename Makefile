@@ -69,10 +69,12 @@ reference: LULESH/lulesh
 dummy: ;
 
 test/.mpirunflags: dummy
+	mkdir -p test
 	@[ -f $@ ] || touch $@
 	@echo "MPIRUN=$(MPIRUN)" | cmp -s $@ - || echo "MPIRUN=$(MPIRUN)" > $@
 
 test/.luleshopts: dummy
+	mkdir -p test
 	@[ -f $@ ] || touch $@
 	@echo "LULESH_OPTS=$(LULESH_OPTS)" | cmp -s $@ - || echo "LULESH_OPTS=$(LULESH_OPTS)" > $@
 
