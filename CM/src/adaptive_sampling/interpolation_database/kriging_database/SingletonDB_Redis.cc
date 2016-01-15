@@ -5,9 +5,6 @@
 #ifndef REDIS_PORT
 #define REDIS_PORT 6379
 #endif
-#ifndef REDIS_HOST
-#define REDIS_HOST "localhost"
-#endif
 #ifndef NUTCRACKER_PORT
 #define NUTCRACKER_PORT 6380
 #endif
@@ -35,7 +32,7 @@ void  SingletonDB_Redis::push(const uint128_t &key, const std::vector<double>& b
                                      &buf[0], buf.size()*sizeof(double));
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
-                             + std::string(REDIS_HOST) + "' and port "
+                             + std::string(hostBuffer) + "' and port "
                              + std::to_string(REDIS_PORT));
   }
   freeReplyObject(reply);
@@ -48,7 +45,7 @@ void  SingletonDB_Redis::erase(const uint128_t &key){
 
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
-                             + std::string(REDIS_HOST) + "' and port "
+                             + std::string(hostBuffer) + "' and port "
                              + std::to_string(REDIS_PORT));
   }
   freeReplyObject(reply);
@@ -60,7 +57,7 @@ redisReply *SingletonDB_Redis::pull_data(const uint128_t &key) {
   reply = (redisReply *)redisCommand(redis, "SMEMBERS %s", skey.c_str());
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
-                             + std::string(REDIS_HOST) + "' and port "
+                             + std::string(hostBuffer) + "' and port "
                              + std::to_string(REDIS_PORT));
   }
   if (reply->type != REDIS_REPLY_ARRAY){
@@ -100,6 +97,7 @@ std::vector<double> SingletonDB_Redis::pull_key(const uint128_t &key) {
 //
 SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
   int port;
+  gethostname(hostBuffer, 256);
   if(distributedRedis)
   {
     port = NUTCRACKER_PORT;
@@ -111,7 +109,7 @@ SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
   std::cout << "Connecting to redis in SingletonDB_Redis..." << std::endl;
   this->redisServerHandle = nullptr;
   this->nutcrackerServerHandle = nullptr;
-  redis = redisConnect(REDIS_HOST, port);
+  redis = redisConnect(hostBuffer, port);
   
   if (redis != NULL && redis->err) {
     //If needed, spawn nutcracker
@@ -119,8 +117,6 @@ SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
 	{
 		std::cout << "Enabling Twemproxy..." << std::endl;
 		char cmdBuffer[256];
-		char hostBuffer[256];
-		gethostname(hostBuffer, 256);
 		sprintf(cmdBuffer, "%s -c ./%s/nutcracker.yml 2>&1", NUTCRACKER_SERVER, hostBuffer);
 		this->nutcrackerServerHandle = popen(cmdBuffer, "r");
 		bool serverNotReady = true;
@@ -139,8 +135,6 @@ SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
     //Attempt to spawn redis-server
     std::cout << "Attempting to spawn redis in SingletonDB_Redis..." << std::endl;
     char cmdBuffer[256];
-    char hostBuffer[256];
-    gethostname(hostBuffer, 256);
     sprintf(cmdBuffer, "%s --port %d --dbfilename %s.rdb", REDIS_SERVER, REDIS_PORT, hostBuffer);
     this->redisServerHandle = popen(cmdBuffer, "r");
     bool serverNotReady = true;
@@ -171,7 +165,7 @@ SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
     redisReply *reply = (redisReply *) redisCommand(redis, "DBSIZE");
     if (!reply) {
       throw std::runtime_error("No connection to redis server, please start one on host'"
-                             + std::string(REDIS_HOST) + "' and port "
+                             + std::string(hostBuffer) + "' and port "
                              + std::to_string(port));
     }
     if (reply->type != REDIS_REPLY_INTEGER){
@@ -192,7 +186,7 @@ SingletonDB_Redis::~SingletonDB_Redis() {
   redisReply *reply = (redisReply *) redisCommand(redis, "INFO");
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
-                             + std::string(REDIS_HOST) + "' and port "
+                             + std::string(hostBuffer) + "' and port "
                              + std::to_string(REDIS_PORT));
   }
   if (reply->type != REDIS_REPLY_STRING){

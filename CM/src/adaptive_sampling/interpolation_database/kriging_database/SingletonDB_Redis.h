@@ -22,6 +22,7 @@ private:
   redisContext*   redis;
   FILE * redisServerHandle;
   FILE * nutcrackerServerHandle;
+  char hostBuffer[256];
 
   redisReply *pull_data(const uint128_t &key);
 };
