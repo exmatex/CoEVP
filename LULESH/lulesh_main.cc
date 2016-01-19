@@ -35,6 +35,7 @@ int main(int argc, char *argv[])
   int  file_parts = 0;
   int  debug_topology = 0;
   int  visit_data_interval = 0; // Set this to 0 to disable VisIt data writing
+  int distributed_redis = 0;
 
   Lulesh luleshSystem;
 
@@ -47,13 +48,14 @@ int main(int argc, char *argv[])
   addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
   addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
   addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
-  addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search");
+  addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search/data store");
   addArg("flann",    'f', 0, 'i',  &(flanning),            0, "use FLANN library");
   addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),       0, "number of FLANN trees");
   addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks),      0, "number of FLANN checks");
   addArg("parts",    'p', 1, 'i',  &(file_parts),          0, "number of file parts");
   addArg("visitint", 'v', 1, 'i',  &(visit_data_interval), 0, "visit output interval");
   addArg("debug",    'd', 0, 'i',  &(debug_topology),      0, "add debug info to SILO");
+  addArg("distributed_redis", 'R', 0, 'i', &(distributed_redis), 0, "use distributed REDIS via twemproxy");
 
   processArgs(argc,argv);
   
@@ -65,12 +67,16 @@ int main(int argc, char *argv[])
   if (sampling) {
     printf("Using adaptive sampling...\n");
   } else {
-    if (redising||flanning||global_ns) {
-      throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
+    if (redising||distributed_redis||flanning||global_ns) {
+      throw std::runtime_error("--redis/--distributed_redis/--flann/--globalns needs --sample"); 
     }
   }
   if (redising) 
+  {
     printf("Using Redis library...\n");
+    if(distributed_redis)
+      printf("Using Distributed Redis (twemproxy)...\n");
+  }
   if (flanning) {
     printf("Using FLANN library...\n");
     printf("   flann_n_trees: %d\n", flann_n_trees);
@@ -92,13 +98,16 @@ int main(int argc, char *argv[])
    {
       if(redising){
 #ifdef REDIS
-        SingletonDB::getInstance(SingletonDBBackendEnum::REDIS_DB);
+        if(distributed_redis)
+          SingletonDB::getInstance(SingletonDBBackendEnum::DIST_REDIS_DB);
+        else
+          SingletonDB::getInstance(SingletonDBBackendEnum::REDIS_DB);
         global_modelDB = new ModelDB_SingletonDB();
 #else
         throw std::runtime_error("REDIS not compiled in"); 
 #endif
       }
-      else{
+      else if(global_ns){
         SingletonDB::getInstance(SingletonDBBackendEnum::HASHMAP_DB);
         global_modelDB = new ModelDB_SingletonDB();
       }

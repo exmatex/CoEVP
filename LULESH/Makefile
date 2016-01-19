@@ -5,13 +5,10 @@ COEVP_MPI =
 
 # Silo (www.hdfgroup.org/HDF5) and HDF5 (www.hdfgroup.org/HDF5) library
 # locations.  These macros can be left undefined if visualization is not required.
-
-#SILO_LOC = /usr/local/tools/silo-4.8
 SILO_LOC = 
 
 # HDF5 library location (www.hdfgroup.org/HDF5).  This macro can
 # be undefined if visualization is not required.
-#HDF5_LOC = /usr/local/tools/hdf5-intel-serial-1.8.8
 HDF5_LOC = 
 
 # BLAS and LAPACK library locations.  It may not be necessary
@@ -19,8 +16,11 @@ HDF5_LOC =
 LAPACK_LOC =
 BLAS_LOC =
 
-#FLANN_LOC =
-FLANN_LOC = ../flann/flann/src/cpp
+# FLANN library location
+FLANN_LOC =
+
+# Redos library location
+REDIS_LOC =
 
 LOGGER_LOC=
 
@@ -37,6 +37,13 @@ INCLUDE_DIRS = -I. -I../CM/include
 ifeq ($(COEVP_MPI), yes)
 CXXFLAGS += -DCOEVP_MPI
 CXX= mpic++
+endif
+
+ifeq ($(CHARM), yes)
+CXXFLAGS += -D__CHARMC__
+ifeq ($(COEVP_MPI), yes)
+$(error You cannot combine charm with mpi)
+endif
 endif
 
 ifneq ($(strip $(FLANN_LOC)),)
@@ -79,6 +86,10 @@ ifneq ($(strip $(BLAS_LOC)),)
 LAPACK += -L$(BLAS_LOC)
 endif
 LAPACK += -lblas
+endif
+
+ifeq ($(FSTRACE), yes)
+CXXFLAGS += -DFSTRACE
 endif
 
 CXXFLAGS += $(INCLUDE_DIRS)
