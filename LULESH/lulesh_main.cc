@@ -103,15 +103,26 @@ int main(int argc, char *argv[])
         global_modelDB = new ModelDB_SingletonDB();
       }
    }
-   // Logging
-#if defined(LOGGER)
-  LoggerDB  *logger_db = new LoggerDB();
-  Locator::provide(logger_db);
-
-  Logger  &logger = Locator::getLogger();
-  logger.logInfo("Logging plumbing seems to be working");
+   // Logging requires REDIS
+   Locator::initialize();             // Fix this logic
+#if defined(LOGGER) && defined(REDIS)
+#if defined(COEVP_MPI)
+   int my_rank;
+   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+   char my_node[MPI_MAX_PROCESSOR_NAME];
+   int name_len;
+   MPI_Get_processor_name(my_node, &name_len);
+   LoggerDB  *logger_db = new LoggerDB("cn01", "2363", std::string(my_node), my_rank);
+#else
+   LoggerDB  *logger_db = new LoggerDB("cn01", "2363");
 #endif
-        
+   Locator::provide(logger_db);
+#endif
+
+   Logger  &logger = Locator::getLogger();
+   logger.logInfo("Logging plumbing seems to be working");
+
+   logger.startTimer();
   // Construct fine scale models
   luleshSystem.ConstructFineScaleModel(sampling,global_modelDB,global_ann,flanning,flann_n_trees,flann_n_checks,global_ns);
   
@@ -121,6 +132,7 @@ int main(int argc, char *argv[])
   // Simulate 
   luleshSystem.go(myRank,numRanks,sampling,visit_data_interval,file_parts,debug_topology);
 
+  logger.logStopTimer("everything");
 #if defined(COEVP_MPI)
    MPI_Finalize() ;
 #endif

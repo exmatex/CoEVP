@@ -18,7 +18,7 @@ SILO_LOC=../silo/silo
 SILODIFF=silo/silo/bin/silodiff
 libcm: silo
 endif
-LOGGER=yes
+LOGGER=no
 ifeq ($(LOGGER),yes)
 LOGGER_LOC=../logger
 libcm: logger
