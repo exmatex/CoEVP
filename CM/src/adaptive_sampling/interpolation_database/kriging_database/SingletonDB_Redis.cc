@@ -8,6 +8,9 @@
 #ifndef NUTCRACKER_PORT
 #define NUTCRACKER_PORT 6380
 #endif
+#ifndef NUTCRACKER_SERVER
+#define NUTCRACKER_SERVER "ERROR: Twemproxy Not Built"
+#endif
 
 #include <iostream>
 #include <string>
