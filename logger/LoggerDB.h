@@ -14,23 +14,28 @@
 
 #include <string>
 #include <time.h>
+#include "hiredis.h"
 #include "Logger.h"
 
 
 class LoggerDB : public Logger {
  public:
-  LoggerDB(std::string db_node, std::string port);
-  LoggerDB(std::string db_node, std::string port, std::string my_node, int my_rank);
+  LoggerDB(std::string db_node, int port);
+  LoggerDB(std::string db_node, int port, std::string my_node, int my_rank);
 
+  ~LoggerDB();
   
   virtual void  logInfo(std::string txt);
   virtual void  startTimer(void);
   virtual void  logStopTimer(std::string txt);
  protected:
-  std::string   my_node;
-  int           my_rank;
+  std::string   hostname;
+  int           id;
   bool          isDistributed;
   timespec      ts_beg, ts_end;
+  redisContext *redis;
+
+  void  connectDB(std::string db_name, int port);
 };
 
 #endif  // LOGGERDB_H

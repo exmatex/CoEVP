@@ -1,5 +1,6 @@
 CLEANEXTS   = o a
 LOGLIBFILE  = liblogger.a
+CXXFLAGS   += -I../redis/hiredis -std=c++11
 
 .PHONY: all
 all: $(LOGLIBFILE)
