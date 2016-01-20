@@ -2919,6 +2919,9 @@ int Lulesh::UpdateStressForElems()
 #endif
       for (Index_t k=0; k<numElem; ++k) {
 
+#ifdef FSTRACE
+         cout << "Processing FS element " << k << endl;
+#endif
          ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
                                                           domain.cm_vel_grad(k),
                                                           domain.cm_vol_chng(k),
