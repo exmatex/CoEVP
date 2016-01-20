@@ -42,6 +42,7 @@ void  SingletonDB_Redis::push(const uint128_t &key, const std::vector<double>& b
 }
 
 void  SingletonDB_Redis::erase(const uint128_t &key){
+  /*
   redisReply* reply;
   std::string skey=uint128_to_string(key);
   reply = (redisReply *)redisCommand(redis, "DEL %s", skey.c_str());
@@ -52,6 +53,7 @@ void  SingletonDB_Redis::erase(const uint128_t &key){
                              + std::to_string(REDIS_PORT));
   }
   freeReplyObject(reply);
+  */
 }
 
 redisReply *SingletonDB_Redis::pull_data(const uint128_t &key) {
