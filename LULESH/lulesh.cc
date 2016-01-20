@@ -4087,12 +4087,14 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
       if (domain.sliceLoc() == 0) 
 #endif
       {
-         printf("step = %d, time = %e, dt=%e\n",
-                domain.cycle(), double(domain.time()), double(domain.deltatime()) ) ;
+         printf("step = %d, time = %e, dt=%e, nElems=%d\n",
+                domain.cycle(), double(domain.time()), double(domain.deltatime()), domain.numElem() ) ;
          fflush(stdout);
       }
 
+#define PRINT_PERFORMANCE_DIAGNOSTICS
 #ifdef PRINT_PERFORMANCE_DIAGNOSTICS
+		 int total_fine = 0;
       if ( sampling ) {
 
          int total_samples = 0;
@@ -4101,10 +4103,13 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
          for (int i=0; i<domElems; ++i) {
             total_samples += domain.cm(i)->getNumSamples();
             total_interpolations += domain.cm(i)->getNumSuccessfulInterpolations();
+			total_fine += domain.cm(i)->getNumFineScales();
          }
 
-         cout << "   Interpolation efficiency = " << (double)total_interpolations / (double)total_samples << endl;
+         //cout << "   Interpolation efficiency = " << (double)total_interpolations / (double)total_samples << endl;
 
+		//printf("Samples: %d, Success Interp: %d, nElems %d, Fines: %d \n", total_samples, total_interpolations, domain.numElem(), total_fine);
+		
       }
 #endif
 #endif
@@ -4118,7 +4123,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
       }
 #endif
 	  double endTime = getUnixTime();
-	  outFile << endTime << "\t" << endTime - startTime << std::endl;
+	  outFile << endTime << "\t" << endTime - startTime << "\t" << total_fine << std::endl;
    }
 
    outFile.close();

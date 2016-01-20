@@ -209,6 +209,11 @@ Constitutive::getNumSuccessfulInterpolations() const
 }
 
 
+int Constitutive::getNumFineScales()
+{
+	return m_sampler->m_num_fine_scale_evaluations;
+}
+
 double
 Constitutive::getAveragePointNorm() const
 {

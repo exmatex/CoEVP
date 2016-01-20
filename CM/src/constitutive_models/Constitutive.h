@@ -83,6 +83,8 @@ class Constitutive
 
    int getNumSuccessfulInterpolations() const;
 
+   int getNumFineScales();
+
    double getAveragePointNorm() const;
 
    double getAverageValueNorm() const;
