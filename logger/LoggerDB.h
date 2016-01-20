@@ -20,8 +20,8 @@
 
 class LoggerDB : public Logger {
  public:
-  LoggerDB(std::string db_node, int port);
-  LoggerDB(std::string db_node, int port, std::string my_node, int my_rank);
+  LoggerDB(std::string db_node);
+  LoggerDB(std::string db_node, std::string my_node, int my_rank);
 
   ~LoggerDB();
   
@@ -35,7 +35,7 @@ class LoggerDB : public Logger {
   timespec      ts_beg, ts_end;
   redisContext *redis;
 
-  void  connectDB(std::string db_name, int port);
+  void  connectDB(std::string db_name);
 };
 
 #endif  // LOGGERDB_H

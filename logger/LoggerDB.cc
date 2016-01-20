@@ -12,44 +12,53 @@
 #include "LoggerDB.h"
 #include <unistd.h>
 #include <stdexcept>
+#include <ctime>
+#include <string>
+#include <sstream>
+#include <vector>
 
 
-LoggerDB::LoggerDB(std::string db_node, int port)
+LoggerDB::LoggerDB(std::string db_node)
   : isDistributed(false), id(0) {
-  std::cout << "Attempting to connect to REDIS logging database on:" << std::endl;
-  std::cout << "  node: " << db_node << std::endl;
-  std::cout << "  port: " << port    << std::endl;
+  std::cout << "Attempting to connect to REDIS logging database on" << db_node << std::endl;
   char buffer[256];
   gethostname(buffer, 256);
   hostname = std::string(buffer);
   std::cout << "from node(" << hostname << ")/id(" << id << ")" << std::endl;
 
-  connectDB(db_node, port);
+  connectDB(db_node);
 }
 
 
 
-LoggerDB::LoggerDB(std::string db_node, int port, std::string my_node, int my_rank)
+LoggerDB::LoggerDB(std::string db_node, std::string my_node, int my_rank)
   : isDistributed(true), hostname(my_node), id(my_rank) {
-  std::cout << "Attempting to connect to REDIS logging database on:" << std::endl;
-  std::cout << "  node: " << db_node << std::endl;
-  std::cout << "  port: " << port    << std::endl;
+  std::cout << "Attempting to connect to REDIS logging database on" << db_node << std::endl;
   std::cout << "from node("<< my_node << ")/id(" << my_rank << ")" << std::endl;
 
-  connectDB(db_node, port);
+  connectDB(db_node);
 }
 
 
-void  LoggerDB::connectDB(std::string db_node, int port) {
-  redis = redisConnect(db_node.c_str(), port);
+void  LoggerDB::connectDB(std::string db_node) {
+  //  Separate the hostname from the port (input must be of form "host:nnn")
+  std::vector<std::string> elems;
+  std::stringstream ss(db_node);
+  std::string item;
+  while (std::getline(ss, item, ':')) {
+    elems.push_back(item);
+  }
+  if (elems.size() != 2) {
+    throw std::runtime_error("Invalid logging host:port (" + db_node + ") specified");
+  }
+  //  Try connecting to the logging database
+  redis = redisConnect(elems[0].c_str(), std::stoi(elems[1]));
   if (redis != NULL && redis->err) {
-    throw std::runtime_error("Error connecting to redis for logging, please start one on host'"
-                             + db_node + "' and port " + std::to_string(port));
+    throw std::runtime_error("Error connecting to redis for logging, please start one on " + db_node);
   }
   redisReply *reply = (redisReply *) redisCommand(redis, "DBSIZE");
   if (!reply) {
-    throw std::runtime_error("No connection to redis server for logging, please start one on host'"
-                             + db_node + "' and port " + std::to_string(port));
+    throw std::runtime_error("No connection to redis server for logging, please start one on " + db_node);
   }
   if (reply->type != REDIS_REPLY_INTEGER){
     throw std::runtime_error("Wrong redis return type (when opening for logging)");
@@ -86,6 +95,8 @@ void  LoggerDB::logInfo(std::string txt) {
     std::cerr << "No connection to redis for logging...continuing" << std::endl;
   }
   freeReplyObject(reply);
+  std::time_t result = std::time(nullptr);
+  std::cout << "Timestamp: " << std::asctime(std::localtime(&result)) << std::endl;
 }
 
 

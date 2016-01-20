@@ -28,14 +28,16 @@ int main(int argc, char *argv[])
   
   int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
   int  redising = 0;              //  By default, do not use REDIS for database
-  int  global_ns = 0;              //  By default, do not use a global earest neighbor
+  int  global_ns = 0;             //  By default, do not use a global earest neighbor
   int  flanning = 0;              //  By default, do not use FLANN for nearest neighbor search
+  int  logging = 0;               //  By default, do not use FLANN for nearest neighbor search
   int  flann_n_trees = 1;         // Default can be overridden using command line
   int  flann_n_checks = 20;       // Default can be overridden using command line
   int  file_parts = 0;
   int  debug_topology = 0;
-  int  visit_data_interval = 0; // Set this to 0 to disable VisIt data writing
-
+  int  visit_data_interval = 0;  // Set this to 0 to disable VisIt data writing
+  char logdb[1024] = {0};        // host and port of logging databse (e.g. cn1:6379)
+  
   Lulesh luleshSystem;
 
   // Initialize Taylor cylinder mesh
@@ -54,6 +56,7 @@ int main(int argc, char *argv[])
   addArg("parts",    'p', 1, 'i',  &(file_parts),          0, "number of file parts");
   addArg("visitint", 'v', 1, 'i',  &(visit_data_interval), 0, "visit output interval");
   addArg("debug",    'd', 0, 'i',  &(debug_topology),      0, "add debug info to SILO");
+  addArg("log",      'l', 1, 's',  &(logdb),   sizeof(logdb), "log to REDIS databse");
 
   processArgs(argc,argv);
   
@@ -81,6 +84,12 @@ int main(int argc, char *argv[])
       throw std::runtime_error("--redis/--flann/--globalns needs --sample"); 
 #endif
   }
+  if (strlen(logdb) != 0) {
+#ifndef REDIS
+    throw std::runtime_error("--log needs REDIS compiled in"); 
+#endif
+    logging = 1;
+  }
   freeArgs();
    
    /*************************************/
@@ -103,21 +112,24 @@ int main(int argc, char *argv[])
         global_modelDB = new ModelDB_SingletonDB();
       }
    }
-   // Logging requires REDIS
-   Locator::initialize();             // Fix this logic
+
+   // Initialize logging to REDIS database
+   Locator::initialize();             // make sure a dummy logger exists
+   if (logging) {
 #if defined(LOGGER) && defined(REDIS)
 #if defined(COEVP_MPI)
-   int my_rank;
-   MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
-   char my_node[MPI_MAX_PROCESSOR_NAME];
-   int name_len;
-   MPI_Get_processor_name(my_node, &name_len);
-   LoggerDB  *logger_db = new LoggerDB("cn1", 6379, std::string(my_node), my_rank);
+     int my_rank;
+     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+     char my_node[MPI_MAX_PROCESSOR_NAME];
+     int name_len;
+     MPI_Get_processor_name(my_node, &name_len);
+     LoggerDB  *logger_db = new LoggerDB(logdb, std::string(my_node), my_rank);
 #else
-   LoggerDB  *logger_db = new LoggerDB("cn1", 6379);
+     LoggerDB  *logger_db = new LoggerDB(logdb);
 #endif
-   Locator::provide(logger_db);
+     Locator::provide(logger_db);
 #endif
+   }
 
    Logger  &logger = Locator::getLogger();
    logger.logInfo("Logging plumbing seems to be working");
@@ -133,7 +145,10 @@ int main(int argc, char *argv[])
   luleshSystem.go(myRank,numRanks,sampling,visit_data_interval,file_parts,debug_topology);
 
   logger.logStopTimer("everything");
-  delete(&logger);   //  Don't know if destructor is getting called on exit?
+  // Only do this is we have actually opened a REDIS connection.
+  if (logging) {
+    delete(&logger);   //  Destructor does not seem to get called on exit. Hence this.
+  }
 #if defined(COEVP_MPI)
    MPI_Finalize() ;
 #endif
