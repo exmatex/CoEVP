@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
   addArg("parts",    'p', 1, 'i',  &(file_parts),          0, "number of file parts");
   addArg("visitint", 'v', 1, 'i',  &(visit_data_interval), 0, "visit output interval");
   addArg("debug",    'd', 0, 'i',  &(debug_topology),      0, "add debug info to SILO");
-  addArg("log",      'l', 1, 's',  &(logdb),   sizeof(logdb), "log to REDIS databse");
+  addArg("log",      'l', 1, 's',  &(logdb),   sizeof(logdb), "log to REDIS at hostname:port");
 
   processArgs(argc,argv);
   

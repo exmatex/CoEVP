@@ -22,7 +22,7 @@ TWEMPROXY=yes
 ifeq ($(TWEMPROXY),yes)
 libcm: twemproxy
 endif
-LOGGER=no
+LOGGER=yes
 ifeq ($(LOGGER),yes)
 LOGGER_LOC=../logger
 libcm: logger
@@ -50,7 +50,7 @@ twemproxy:
 	${MAKE} -C twemproxy
 
 logger:
-	${MAKE} -C logger
+	${MAKE} -C logger REDIS=$(REDIS) REDIS_LOC=$(REDIS_LOC)
 
 clean:
 	${MAKE} -C CM/exec realclean
