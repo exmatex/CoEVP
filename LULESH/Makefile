@@ -63,11 +63,14 @@ SILO_LIB += -Wl,-rpath,$(realpath $(SILO_LOC))/lib -L $(SILO_LOC)/lib -lsiloh5
 CXXFLAGS += -DSILO 
 endif
 
+
+LOG_LIB =
 LOGGER_LIB =
 ifneq ($(strip $(LOGGER_LOC)),)
 INCLUDE_DIRS += -I$(LOGGER_LOC)
 LOGGER_LIB += -Wl,-rpath,$(realpath $(LOGGER_LOC)) -L $(LOGGER_LOC) -llogger
 CXXFLAGS += -DLOGGER
+LOG_LIB = ../logger/liblogger.a     # make lulesh depend on logger library
 endif
 
 HDF5_LIB =
@@ -116,7 +119,7 @@ LULESH_DEPS=$(LULESH_SRC:.cc=.d)
 
 -include $(LULESH_DEPS)
 
-lulesh: $(LULESH_OBJS) $(CM_LIB)
+lulesh: $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
 	$(CXX) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lm
 
 clean:

@@ -20,7 +20,7 @@
 
 LoggerDB::LoggerDB(std::string db_node)
   : isDistributed(false), id(0) {
-  std::cout << "Attempting to connect to REDIS logging database on" << db_node << std::endl;
+  std::cout << "Attempting to connect to REDIS logging database on " << db_node << std::endl;
   char buffer[256];
   gethostname(buffer, 256);
   hostname = std::string(buffer);
@@ -33,7 +33,7 @@ LoggerDB::LoggerDB(std::string db_node)
 
 LoggerDB::LoggerDB(std::string db_node, std::string my_node, int my_rank)
   : isDistributed(true), hostname(my_node), id(my_rank) {
-  std::cout << "Attempting to connect to REDIS logging database on" << db_node << std::endl;
+  std::cout << "Attempting to connect to REDIS logging database on " << db_node << std::endl;
   std::cout << "from node("<< my_node << ")/id(" << my_rank << ")" << std::endl;
 
   connectDB(db_node);
@@ -95,8 +95,6 @@ void  LoggerDB::logInfo(std::string txt) {
     std::cerr << "No connection to redis for logging...continuing" << std::endl;
   }
   freeReplyObject(reply);
-  std::time_t result = std::time(nullptr);
-  std::cout << "Timestamp: " << std::asctime(std::localtime(&result)) << std::endl;
 }
 
 
@@ -113,8 +111,28 @@ void  LoggerDB::startTimer(void) {
 void  LoggerDB::logStopTimer(std::string txt) {
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts_end);
   float  et = (ts_end.tv_sec - ts_beg.tv_sec) + (ts_end.tv_nsec - ts_beg.tv_nsec) / 1e9;
-  std::cout << log_keywords[LOG_TIMER] << "  " << hostname << "/" << id
-              << "  " << txt << "  " << et << " sec" << std::endl;
+  std::string key = makeKey(LOG_TIMER, txt);
+  std::string val = makeVal(et);
+  std::cout << key << " ----- " << val << std::endl;
+}
+
+
+std::string  LoggerDB::makeKey(enum LogKeyword keyword, std::string txt) {
+  std::string  key = log_keywords[keyword];
+  key += ':' + hostname + ':' + std::to_string(id) + ':' + txt;
+  return key;
+}
+
+
+std::string  LoggerDB::makeVal(float et) {
+  std::string  val = std::to_string(et);
+  std::time_t result = std::time(nullptr);
+  val += std::string(" sec   ") + std::asctime(std::localtime(&result));
+  //  Remove the expected newline provided by asctime
+  if (!val.empty() && val[val.length()-1] == '\n') {
+    val.erase(val.length()-1);
+  }
+  return val;
 }
 
 

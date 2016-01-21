@@ -32,10 +32,12 @@ class LoggerDB : public Logger {
   std::string   hostname;
   int           id;
   bool          isDistributed;
-  timespec      ts_beg, ts_end;
+  timespec      ts_beg, ts_end;  // these need to be indexed by keyword
   redisContext *redis;
 
   void  connectDB(std::string db_name);
+  std::string  makeKey(enum LogKeyword keyword, std::string txt);
+  std::string  makeVal(float et);
 };
 
 #endif  // LOGGERDB_H

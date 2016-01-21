@@ -73,6 +73,11 @@ Additional BSD Notice
 #include <mpi.h>
 #endif
 
+#if defined(LOGGER)
+#include "LoggerDB.h"    // Includes Logger base class too
+#include "Locator.h"
+#endif
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -4061,8 +4066,11 @@ void Lulesh::ExchangeNodalMass()
 void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,int file_parts, int debug_topology)
 {
 
+   Logger  &logger = Locator::getLogger();
+
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
+     logger.startTimer();
 #ifdef SILO
       char meshName[64] ;
       if ((visit_data_interval !=0) && (domain.cycle() % visit_data_interval == 0)) {
@@ -4081,12 +4089,13 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #if defined(COEVP_MPI)||defined(__CHARMC__)
       if (domain.sliceLoc() == 0) 
 #endif
+
       {
          printf("step = %d, time = %e, dt=%e\n",
                 domain.cycle(), double(domain.time()), double(domain.deltatime()) ) ;
          fflush(stdout);
       }
-
+      
 #ifdef PRINT_PERFORMANCE_DIAGNOSTICS
       if ( sampling ) {
 
@@ -4112,12 +4121,12 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
          cumulative_fsm_count = num_fsm_evals;
       }
 #endif
+   logger.logStopTimer("outer");
    }
 
 #ifdef WRITE_FSM_EVAL_COUNT
    fsm_count_file.close();
 #endif   
-
    if ( sampling ) {
 
       Int_t minNumModels = 10000000;
@@ -4173,6 +4182,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 
       cout << "Scaled query average = " << point_average << ", max = " << point_max << endl;
       cout << "Scaled value average = " << value_average << ", max = " << value_max << endl; 
+
 
    }
 

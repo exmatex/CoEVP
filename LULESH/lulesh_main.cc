@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
    Logger  &logger = Locator::getLogger();
    logger.logInfo("Logging plumbing seems to be working");
 
-   logger.startTimer();
+   //logger.startTimer();
   // Construct fine scale models
   luleshSystem.ConstructFineScaleModel(sampling,global_modelDB,global_ann,flanning,flann_n_trees,flann_n_checks,global_ns);
   
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
   // Simulate 
   luleshSystem.go(myRank,numRanks,sampling,visit_data_interval,file_parts,debug_topology);
 
-  logger.logStopTimer("everything");
+  //logger.logStopTimer("everything");
   // Only do this is we have actually opened a REDIS connection.
   if (logging) {
     delete(&logger);   //  Destructor does not seem to get called on exit. Hence this.
