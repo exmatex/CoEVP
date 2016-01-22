@@ -113,6 +113,11 @@ void  LoggerDB::logStopTimer(std::string txt) {
   float  et = (ts_end.tv_sec - ts_beg.tv_sec) + (ts_end.tv_nsec - ts_beg.tv_nsec) / 1e9;
   std::string key = makeKey(LOG_TIMER, txt);
   std::string val = makeVal(et);
+  redisReply *reply = (redisReply *)redisCommand(redis, "SADD %s %s", key.c_str(), val.c_str());
+  if (!reply) {
+    std::cerr << "No connection to redis for logging...continuing" << std::endl;
+  }
+  freeReplyObject(reply);
   std::cout << key << " ----- " << val << std::endl;
 }
 
