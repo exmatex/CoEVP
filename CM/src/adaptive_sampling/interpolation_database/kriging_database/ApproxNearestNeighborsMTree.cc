@@ -47,7 +47,7 @@ ApproxNearestNeighborsMTree::insert(std::vector<uint128_t> const& keys)
 void
 ApproxNearestNeighborsMTree::remove(int id)
 {
-   m_tree->deleteObject(id);
+   //m_tree->deleteObject(id);
 }
     
     
