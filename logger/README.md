@@ -13,7 +13,7 @@ Logging is _on_ by default
 [`CoEVP/Makefile`](https://github.com/exmatex/CoEVP/blob/adbd900521b4651a7daa9782d695320999f7fb0f/Makefile#L25)). Also,
 `lulesh` has been made dependent of the logging library (need link when merged
 with master) so that it
-it rebuilt if the library is updated. Finally, since we're logging to REDIS, it
+is rebuilt if the library is updated. Finally, since we're logging to REDIS, it
 must be turned on (`REDIS=yes`) in the build too.
 
 A minimal build (from the `CoEVP` directory) with logging enabled looks like:
@@ -45,4 +45,5 @@ make REDIS=yes LOGGER=yes COEVP_MPI=yes
 * Will caching be necessary when the runs get big?
 * Timers need to be mapped to a keyword so many can run at once.
 * Do we need to ensure thread safety?
+* Should probably make sure it building it will pass Christoph's Travis tests.
 
