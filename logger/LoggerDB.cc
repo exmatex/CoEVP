@@ -113,12 +113,11 @@ void  LoggerDB::logStopTimer(std::string txt) {
   float  et = (ts_end.tv_sec - ts_beg.tv_sec) + (ts_end.tv_nsec - ts_beg.tv_nsec) / 1e9;
   std::string key = makeKey(LOG_TIMER, txt);
   std::string val = makeVal(et);
-  redisReply *reply = (redisReply *)redisCommand(redis, "SADD %s %s", key.c_str(), val.c_str());
+  redisReply *reply = (redisReply *)redisCommand(redis, "RPUSH %s %s", key.c_str(), val.c_str());
   if (!reply) {
     std::cerr << "No connection to redis for logging...continuing" << std::endl;
   }
   freeReplyObject(reply);
-  std::cout << key << " ----- " << val << std::endl;
 }
 
 
@@ -132,7 +131,7 @@ std::string  LoggerDB::makeKey(enum LogKeyword keyword, std::string txt) {
 std::string  LoggerDB::makeVal(float et) {
   std::string  val = std::to_string(et);
   std::time_t result = std::time(nullptr);
-  val += std::string(" sec   ") + std::asctime(std::localtime(&result));
+  val += std::string(" sec") + ':' + std::asctime(std::localtime(&result));
   //  Remove the expected newline provided by asctime
   if (!val.empty() && val[val.length()-1] == '\n') {
     val.erase(val.length()-1);
