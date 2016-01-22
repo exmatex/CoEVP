@@ -9,7 +9,22 @@ information. Python code is used to process the collected logs.
 ### Building the Library
 
 Logging is _on_ by default
-(`LOGGER=yes` in [`CoEVP/Makefile`](https://github.com/exmatex/CoEVP/blob/adbd900521b4651a7daa9782d695320999f7fb0f/Makefile#L25). 
+(`LOGGER=yes` in
+[`CoEVP/Makefile`](https://github.com/exmatex/CoEVP/blob/adbd900521b4651a7daa9782d695320999f7fb0f/Makefile#L25)). Also,
+`lulesh` has been made dependent of the logging library (need link when merged
+with master) so that it
+it rebuilt if the library is updated. Finally, since we're logging to REDIS, it
+must be turned on (`REDIS=yes`) in the build too.
+
+A minimal build (from the `CoEVP` directory) with logging enabled looks like:
+```sh
+make REDIS=yes LOGGER=yes
+```
+
+The logging library also works with MPI:
+```sh
+make REDIS=yes LOGGER=yes COEVP_MPI=yes
+```
 
 ### Instrumenting CoEVP for Logging
 
@@ -28,3 +43,6 @@ Logging is _on_ by default
 * How much of a hassle is it going to be to set up a Python environment?
 * What is the correct balance between key length and number of values per key?
 * Will caching be necessary when the runs get big?
+* Timers need to be mapped to a keyword so many can run at once.
+* Do we need to ensure thread safety?
+
