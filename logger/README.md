@@ -8,7 +8,8 @@ information. Python code is used to process the collected logs.
 
 ### Building the Library
 
-Logging is _on_ by default (`LOGGING=yes` in [`CoEVP/Makefile`](../Makefile). 
+Logging is _on_ by default
+(`LOGGER=yes` in [`CoEVP/Makefile`](https://github.com/exmatex/CoEVP/blob/adbd900521b4651a7daa9782d695320999f7fb0f/Makefile#L25). 
 
 ### Instrumenting CoEVP for Logging
 
