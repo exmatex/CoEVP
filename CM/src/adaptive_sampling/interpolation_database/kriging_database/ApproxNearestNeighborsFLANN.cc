@@ -117,6 +117,7 @@ ApproxNearestNeighborsFLANN::getKey(int id)
 void
 ApproxNearestNeighborsFLANN::remove(int id)
 {
+	/*
    assert(id >= 0 && id < keymap.size() && id < points.size());
 
    flann_index.removePoint(id);
@@ -124,5 +125,6 @@ ApproxNearestNeighborsFLANN::remove(int id)
    keymap[id] = uint128_t_undefined;
 
    delete [] points[id];
+   */
 }
 #endif
