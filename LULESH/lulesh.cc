@@ -73,12 +73,8 @@ Additional BSD Notice
 #include <mpi.h>
 #endif
 
-#if defined(LOGGER)
-#if defined(REDIS)
+#if defined(LOGGER)      // CoEVP Makefile enforces assert LOGGER=REDIS=yes
 #include "LoggerDB.h"    // Includes Logger base class too
-#else
-#include "Logger.h"
-#endif
 #include "Locator.h"
 #endif
 
@@ -4070,11 +4066,15 @@ void Lulesh::ExchangeNodalMass()
 void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,int file_parts, int debug_topology)
 {
 
+#if defined(LOGGER)   // did I mention that I hate this define stuff?
    Logger  &logger = Locator::getLogger();
-
+#endif
+   
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
+#if defined(LOGGER)
      logger.startTimer();
+#endif
 #ifdef SILO
       char meshName[64] ;
       if ((visit_data_interval !=0) && (domain.cycle() % visit_data_interval == 0)) {
@@ -4125,7 +4125,9 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
          cumulative_fsm_count = num_fsm_evals;
       }
 #endif
+#if defined(LOGGER)
    logger.logStopTimer("outer");
+#endif
    }
 
 #ifdef WRITE_FSM_EVAL_COUNT

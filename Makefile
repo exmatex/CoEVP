@@ -22,8 +22,13 @@ TWEMPROXY=yes
 ifeq ($(TWEMPROXY),yes)
 libcm: twemproxy
 endif
+# LOGGER depends on REDIS=yes
+# IF REDIS=no, logging ends up being a NO OP
 LOGGER=yes
-ifeq ($(LOGGER),yes)
+ifeq ($(LOGGER)$(REDIS), yesno)
+LOGGER=no
+endif
+ifeq ($(LOGGER)$(REDIS), yesyes)
 LOGGER_LOC=../logger
 libcm: logger
 endif

@@ -8,14 +8,11 @@
 #include "SingletonDB.h"
 #include "ModelDB_SingletonDB.h"
 
-#if defined(LOGGER)
-#if defined(REDIS)
+#if defined(LOGGER)      // CoEVP Makefile enforces assert LOGGER=REDIS=yes
 #include "LoggerDB.h"    // Includes Logger base class too
-#else
-#include "Logger.h"
-#endif
 #include "Locator.h"
 #endif
+
 
 //  Command line option parsing (using Sriram code from old days)
 #include "cmdLineParser.h"
@@ -93,9 +90,6 @@ int main(int argc, char *argv[])
 #endif
   }
   if (strlen(logdb) != 0) {
-#ifndef REDIS
-    std::cout << "REDIS not compiled in, logging is a NO OP for this run" << std::endl;
-#endif
     logging = 1;
   }
   freeArgs();
@@ -124,10 +118,10 @@ int main(int argc, char *argv[])
       }
    }
 
+#if defined(LOGGER)
    // Initialize logging to REDIS database
    Locator::initialize();             // make sure a dummy logger exists
    if (logging) {
-#if defined(LOGGER) && defined(REDIS)
 #if defined(COEVP_MPI)
      int my_rank;
      MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
@@ -139,13 +133,11 @@ int main(int argc, char *argv[])
      LoggerDB  *logger_db = new LoggerDB(logdb);
 #endif
      Locator::provide(logger_db);
-#endif
    }
 
    Logger  &logger = Locator::getLogger();
-   logger.logInfo("Logging plumbing seems to be working");
+#endif
 
-   //logger.startTimer();
   // Construct fine scale models
   luleshSystem.ConstructFineScaleModel(sampling,global_modelDB,global_ann,flanning,flann_n_trees,flann_n_checks,global_ns);
   
@@ -155,13 +147,12 @@ int main(int argc, char *argv[])
   // Simulate 
   luleshSystem.go(myRank,numRanks,sampling,visit_data_interval,file_parts,debug_topology);
 
-  //logger.logStopTimer("everything");
   // Only do this is we have actually opened a REDIS connection.
+#if defined(LOGGER)
   if (logging) {
-#if defined(REDIS)
     delete(&logger);   //  Destructor does not seem to get called on exit. Hence this.
-#endif
   }
+#endif
   
 #if defined(COEVP_MPI)
    MPI_Finalize() ;
