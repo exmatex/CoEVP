@@ -9,7 +9,7 @@ file:
 
 To build a minimal set of features one can use:
 
-     make REDIS=no FLANN=no SILO=no
+     make REDIS=no FLANN=no SILO=no TWEMPROXY=no LOGGER=no
 
 which will enable building of the redis backend, the libflann based neighbor search and
 silo output files. 
@@ -27,3 +27,5 @@ To run lulesh use:
      LULESH/luslesh
 
 and see use the "--help" option for help.
+
+To run with distributed redis, please see Twemproxy.md
