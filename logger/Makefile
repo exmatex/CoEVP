@@ -1,6 +1,6 @@
 CLEANEXTS   = o a
 LOGLIBFILE  = liblogger.a
-CXXFLAGS   += -I$(REDIS_LOC) -std=c++0x
+CXXFLAGS   += -I$(REDIS_LOC) -std=c++11
 
 .PHONY: all
 all: $(LOGLIBFILE)

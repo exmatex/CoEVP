@@ -15,7 +15,7 @@ addons:
       - libblas-dev
       - libopenmpi-dev
       - openmpi-bin
-
+      - g++-4.8
 env:
   matrix: 
     # - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=yes
