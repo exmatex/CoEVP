@@ -1,8 +1,13 @@
 branches:
   except:
-
+    
 language: cpp
 
+compiler: gcc
+
+install:
+    - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+    
 sudo: false
 
 addons:
@@ -16,6 +21,7 @@ addons:
       - libopenmpi-dev
       - openmpi-bin
       - g++-4.8
+      
 env:
   matrix: 
     # - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=yes
