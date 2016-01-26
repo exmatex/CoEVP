@@ -1,7 +1,3 @@
-ifneq ($(REDIS), yes)
-$(info ** ERROR: logging requires REDIS, set REDIS=yes in top Makefile **)
-endif
-
 CLEANEXTS   = o a
 LOGLIBFILE  = liblogger.a
 CXXFLAGS   += -I$(REDIS_LOC) -std=c++11
@@ -9,7 +5,11 @@ CXXFLAGS   += -I$(REDIS_LOC) -std=c++11
 .PHONY: all
 all: $(LOGLIBFILE)
 
+ifeq ($(REDIS), yes)
 $(LOGLIBFILE): LoggerDB.o Locator.o
+else
+$(LOGLIBFILE): Locator.o
+endif
 	ar ru $@ $^
 	ranlib $@
 
@@ -17,5 +17,7 @@ $(LOGLIBFILE): LoggerDB.o Locator.o
 clean:
 	for file in $(CLEANEXTS); do rm -f *.$$file; done
 
+ifeq ($(REDIS), yes)
 LoggerDB.o: LoggerDB.h Logger.h LoggerDB.cc
+endif
 Locator.o: Locator.h Logger.h Locator.cc

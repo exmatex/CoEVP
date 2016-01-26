@@ -9,7 +9,11 @@
 #include "ModelDB_SingletonDB.h"
 
 #if defined(LOGGER)
+#if defined(REDIS)
 #include "LoggerDB.h"    // Includes Logger base class too
+#else
+#include "Logger.h"
+#endif
 #include "Locator.h"
 #endif
 
@@ -90,7 +94,7 @@ int main(int argc, char *argv[])
   }
   if (strlen(logdb) != 0) {
 #ifndef REDIS
-    throw std::runtime_error("--log needs REDIS compiled in"); 
+    std::cout << "REDIS not compiled in, logging is a NO OP for this run" << std::endl;
 #endif
     logging = 1;
   }
@@ -154,8 +158,11 @@ int main(int argc, char *argv[])
   //logger.logStopTimer("everything");
   // Only do this is we have actually opened a REDIS connection.
   if (logging) {
+#if defined(REDIS)
     delete(&logger);   //  Destructor does not seem to get called on exit. Hence this.
+#endif
   }
+  
 #if defined(COEVP_MPI)
    MPI_Finalize() ;
 #endif

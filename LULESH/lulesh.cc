@@ -74,7 +74,11 @@ Additional BSD Notice
 #endif
 
 #if defined(LOGGER)
+#if defined(REDIS)
 #include "LoggerDB.h"    // Includes Logger base class too
+#else
+#include "Logger.h"
+#endif
 #include "Locator.h"
 #endif
 
