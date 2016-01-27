@@ -1,19 +1,11 @@
 branches:
   except:
-    
+   - log-basic
+   
 language: cpp
-compiler: gcc
 
 sudo: false
 
-before_install:
-- add-apt-repository -y ppa:ubuntu-toolchain-r/test
-- apt-get update -qq
-
-install:
-- apt-get install -qq g++-4.8
-- export CXX="g++-4.8"
-    
 addons:
   apt:
     packages:
@@ -24,22 +16,21 @@ addons:
       - libblas-dev
       - libopenmpi-dev
       - openmpi-bin
-      - g++-4.8
       
 env:
   matrix: 
-    # - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=yes
+    # - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no
     # - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no
-    # - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=yes
+    # - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no
     # - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no
     - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=no  LOGGER=yes
     # - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=yes LOGGER=no
     # - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=no  LOGGER=yes
-    # - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=yes LOGGER=yes
+    # - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=yes LOGGER=no
     # - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=yes
-    # - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=yes
-    # - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no NP=1 LOGGER=yes
-    # - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=yes NP=1 LOGGER=no
+    # - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no
+    # - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no NP=1 LOGGER=no
+    # - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=yes NP=1 LOGGER=yes
     # - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes NP=4 LOGGER=no
 
 before_script:
