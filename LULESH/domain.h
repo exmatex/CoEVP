@@ -193,6 +193,7 @@ public:
       m_txy.resize(size, Real_t(0.)) ;
       m_txz.resize(size, Real_t(0.)) ;
       m_tyz.resize(size, Real_t(0.)) ;
+      m_mises.resize(size, Real_t(0.)) ;
 
       m_cm.resize(size);
       m_cm_state.resize(size);
@@ -318,6 +319,7 @@ public:
    Real_t& txy(Index_t idx)        { return m_txy[idx] ; }
    Real_t& txz(Index_t idx)        { return m_txz[idx] ; }
    Real_t& tyz(Index_t idx)        { return m_tyz[idx] ; }
+   Real_t& mises(Index_t idx)      { return m_mises[idx] ; }
 
    Constitutive*& cm(Index_t idx)  { return m_cm[idx] ; }
    void*& cm_state(Index_t idx)     { return m_cm_state[idx] ; }
@@ -478,6 +480,7 @@ private:
    std::vector<Real_t> m_txy ;
    std::vector<Real_t> m_txz ;
    std::vector<Real_t> m_tyz ;
+   std::vector<Real_t> m_mises ;
 
    std::vector<Constitutive*> m_cm ;  /* constitutive model */
    std::vector<void*> m_cm_state ;  /* constitutive model state */

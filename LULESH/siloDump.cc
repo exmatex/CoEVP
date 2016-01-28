@@ -147,6 +147,15 @@ DumpDomainToVisit(DBfile *db, Domain& domain, int myRank,
                       NULL);
    delete [] p ;
 
+   Real_t *mises = new double[numElem] ;
+   for (int ei=0; ei < numElem; ++ei) {
+      mises[ei] = domain.mises(elemMap[ei]) ;
+   }
+   ok += DBPutUcdvar1(db, "mises", "mesh", (float*) mises,
+                      numElem, NULL, 0, DB_DOUBLE, DB_ZONECENT,
+                      NULL);
+   delete [] mises ;
+
    Real_t *v = new double[numElem] ;
    for (int ei=0; ei < numElem; ++ei) {
       v[ei] = domain.v(elemMap[ei]) ;
@@ -327,7 +336,7 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks,
   int ok = 0;
   // Make sure this list matches what's written out above
   // All variables related to adaptive samplig MUST come AFTER the others
-  char const *vars[] = {"p","e","v","volo","q","speed","xd","yd","zd",
+  char const *vars[] = {"p","e","mises","v","volo","q","speed","xd","yd","zd",
                         "num_as_models","as_efficiency",
                         "node_conn0", "node_conn1", "node_conn2", "node_conn3",
                         "node_conn4", "node_conn5", "node_conn6", "node_conn7",
@@ -336,7 +345,7 @@ void DumpMultiblockObjects(DBfile *db, char basename[], int numRanks,
   };
   
   //  This is kinda hacky--find a cleaner way to handle this.
-  int numvars = 9 ;
+  int numvars = 10 ;
   if (sampling) {
     numvars += 2 ;
   }
