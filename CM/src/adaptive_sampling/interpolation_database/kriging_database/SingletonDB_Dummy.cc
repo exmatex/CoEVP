@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-SingletonDB_Dummy::SingletonDB_Dummy()
+SingletonDB_Dummy::SingletonDB_Dummy(bool dummyArg)
 {
 	std::cerr << "Error: Instantiating Dummy DB Backend. Check your build flags" << std::endl;
 }

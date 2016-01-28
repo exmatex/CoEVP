@@ -1,4 +1,4 @@
-.PHONY: all clean clean-all lulesh libcm redis flann silo test logger
+.PHONY: all clean clean-all lulesh libcm redis flann silo test logger twemproxy
 
 all: lulesh
 
@@ -18,19 +18,24 @@ SILO_LOC=../silo/silo
 SILODIFF=silo/silo/bin/silodiff
 libcm: silo
 endif
+TWEMPROXY=yes
+ifeq ($(TWEMPROXY),yes)
+libcm: twemproxy
+endif
 LOGGER=yes
 ifeq ($(LOGGER),yes)
 LOGGER_LOC=../logger
 libcm: logger
 endif
+FSTRACE=no
 
 lulesh: LULESH/lulesh
 
 LULESH/lulesh: libcm
-	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC) LOGGER_LOC=$(LOGGER_LOC)
+	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC) LOGGER_LOC=$(LOGGER_LOC) FSTRACE=$(FSTRACE) 
 
 libcm:
-	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN)
+	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN) TWEMPROXY=$(TWEMPROXY) FSTRACE=$(FSTRACE)
 
 redis:
 	${MAKE} -C redis
@@ -40,6 +45,9 @@ silo:
 
 flann:
 	${MAKE} -C flann
+
+twemproxy:
+	${MAKE} -C twemproxy
 
 logger:
 	${MAKE} -C logger
@@ -53,6 +61,7 @@ clean-all: clean
 	${MAKE} -C redis clean
 	${MAKE} -C flann clean
 	${MAKE} -C silo clean
+	${MAKE} -C twemproxy clean
 	${MAKE} -C logger clean
 
 get_reference:

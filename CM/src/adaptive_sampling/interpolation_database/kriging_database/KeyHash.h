@@ -1,6 +1,8 @@
 #ifndef included_KeyHash_h
 #define included_KeyHash_h
 
+#include <functional>
+
 #define uint128_t unsigned __int128
 
 namespace std {

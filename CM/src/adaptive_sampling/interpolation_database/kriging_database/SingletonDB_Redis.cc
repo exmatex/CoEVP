@@ -5,8 +5,11 @@
 #ifndef REDIS_PORT
 #define REDIS_PORT 6379
 #endif
-#ifndef REDIS_HOST
-#define REDIS_HOST "localhost"
+#ifndef NUTCRACKER_PORT
+#define NUTCRACKER_PORT 6380
+#endif
+#ifndef NUTCRACKER_SERVER
+#define NUTCRACKER_SERVER "ERROR: Twemproxy Not Built"
 #endif
 
 #include <iostream>
@@ -32,23 +35,25 @@ void  SingletonDB_Redis::push(const uint128_t &key, const std::vector<double>& b
                                      &buf[0], buf.size()*sizeof(double));
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
-                             + std::string(REDIS_HOST) + "' and port "
+                             + std::string(hostBuffer) + "' and port "
                              + std::to_string(REDIS_PORT));
   }
   freeReplyObject(reply);
 }
 
 void  SingletonDB_Redis::erase(const uint128_t &key){
+  /*
   redisReply* reply;
   std::string skey=uint128_to_string(key);
   reply = (redisReply *)redisCommand(redis, "DEL %s", skey.c_str());
 
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
-                             + std::string(REDIS_HOST) + "' and port "
+                             + std::string(hostBuffer) + "' and port "
                              + std::to_string(REDIS_PORT));
   }
   freeReplyObject(reply);
+  */
 }
 
 redisReply *SingletonDB_Redis::pull_data(const uint128_t &key) {
@@ -57,7 +62,7 @@ redisReply *SingletonDB_Redis::pull_data(const uint128_t &key) {
   reply = (redisReply *)redisCommand(redis, "SMEMBERS %s", skey.c_str());
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
-                             + std::string(REDIS_HOST) + "' and port "
+                             + std::string(hostBuffer) + "' and port "
                              + std::to_string(REDIS_PORT));
   }
   if (reply->type != REDIS_REPLY_ARRAY){
@@ -95,51 +100,88 @@ std::vector<double> SingletonDB_Redis::pull_key(const uint128_t &key) {
 //  If the databse is already populated, zero it out.  Existing entries will screw up
 //  CoEVP.
 //
-SingletonDB_Redis::SingletonDB_Redis() {
+SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
+  int port;
+  gethostname(hostBuffer, 256);
+  if(distributedRedis)
+  {
+    port = NUTCRACKER_PORT;
+  }
+  else
+  {
+    port = REDIS_PORT;
+  }
   std::cout << "Connecting to redis in SingletonDB_Redis..." << std::endl;
-  redis = redisConnect(REDIS_HOST, REDIS_PORT);
   this->redisServerHandle = nullptr;
+  this->nutcrackerServerHandle = nullptr;
+  redis = redisConnect(hostBuffer, port);
+  
   if (redis != NULL && redis->err) {
+    //If needed, spawn nutcracker
+    if(distributedRedis)
+	{
+		std::cout << "Enabling Twemproxy..." << std::endl;
+		char cmdBuffer[256];
+		sprintf(cmdBuffer, "%s -c ./%s/nutcracker.yml 2>&1", NUTCRACKER_SERVER, hostBuffer);
+		this->nutcrackerServerHandle = popen(cmdBuffer, "r");
+		bool serverNotReady = true;
+		char buffer[256];
+		while(serverNotReady)
+		{
+			char * crashedIfNull = fgets(buffer, 256, this->nutcrackerServerHandle);
+			std::string lineStr(buffer);
+			size_t funLine = lineStr.find("it's time to dig another one");
+			if(crashedIfNull == nullptr || funLine != std::string::npos)
+			{
+				serverNotReady = false;
+			}
+		}
+	}
     //Attempt to spawn redis-server
     std::cout << "Attempting to spawn redis in SingletonDB_Redis..." << std::endl;
     char cmdBuffer[256];
-    char hostBuffer[256];
-    gethostname(hostBuffer, 256);
     sprintf(cmdBuffer, "%s --port %d --dbfilename %s.rdb", REDIS_SERVER, REDIS_PORT, hostBuffer);
     this->redisServerHandle = popen(cmdBuffer, "r");
     bool serverNotReady = true;
     char buffer[256];
+    char portLine[256];
+    sprintf(portLine, " port %d", REDIS_PORT);
     while(serverNotReady)
     {
       char * crashedIfNull = fgets(buffer, 256, this->redisServerHandle);
       std::string lineStr(buffer);
-      size_t portIndex = lineStr.find(" port 6379");
+      size_t portIndex = lineStr.find(portLine);
       if(crashedIfNull == nullptr || portIndex != std::string::npos)
       {
         serverNotReady = false;
       }
     }
     //Try again
-    redis = redisConnect(REDIS_HOST, REDIS_PORT);
+    redis = redisConnect(hostBuffer, port);
     if (redis != NULL && redis->err) {
+		std::string hostString(hostBuffer);
       throw std::runtime_error("Error connecting to redis, please start one on host'"
-                             + std::string(REDIS_HOST) + "' and port "
-                             + std::to_string(REDIS_PORT));
+                             + hostString  + "' and port "
+                             + std::to_string(port));
     }
   }
-  redisReply *reply = (redisReply *) redisCommand(redis, "DBSIZE");
-  if (!reply) {
-    throw std::runtime_error("No connection to redis server, please start one on host'"
-                             + std::string(REDIS_HOST) + "' and port "
-                             + std::to_string(REDIS_PORT));
+  if(!distributedRedis)
+  {
+    redisReply *reply = (redisReply *) redisCommand(redis, "DBSIZE");
+    if (!reply) {
+      throw std::runtime_error("No connection to redis server, please start one on host'"
+                             + std::string(hostBuffer) + "' and port "
+                             + std::to_string(port));
+    }
+    if (reply->type != REDIS_REPLY_INTEGER){
+      throw std::runtime_error("Wrong redis return type");
+    }
+    if(reply->integer > 0) {
+      std::cout << "...existing database found (" << reply->integer << " keys), erasing it" << std::endl;
+      redisCommand(redis, "FLUSHDB");    // Never supposed to fail :-)
+    }
   }
-  if (reply->type != REDIS_REPLY_INTEGER){
-    throw std::runtime_error("Wrong redis return type");
-  }
-  if(reply->integer > 0) {
-    std::cout << "...existing database found (" << reply->integer << " keys), erasing it" << std::endl;
-    redisCommand(redis, "FLUSHDB");    // Never supposed to fail :-)
-  }
+
 }
 
 //  Shutdown redis databse and print some simple info about the accumulated database.
@@ -149,7 +191,7 @@ SingletonDB_Redis::~SingletonDB_Redis() {
   redisReply *reply = (redisReply *) redisCommand(redis, "INFO");
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
-                             + std::string(REDIS_HOST) + "' and port "
+                             + std::string(hostBuffer) + "' and port "
                              + std::to_string(REDIS_PORT));
   }
   if (reply->type != REDIS_REPLY_STRING){
@@ -161,6 +203,11 @@ SingletonDB_Redis::~SingletonDB_Redis() {
     std::cout << "Closing redis server in SingletonDB_Redis..." << std::endl;
     redisReply * reply = (redisReply *) redisCommand(redis, "SHUTDOWN");
     pclose(this->redisServerHandle);
+  }
+  if(this->nutcrackerServerHandle != nullptr)
+  {
+    std::cout << "Closing nutcracker server in SingletonDB_Redis..." << std::endl;
+    pclose(this->nutcrackerServerHandle);
   }
   redisFree(redis);
 }

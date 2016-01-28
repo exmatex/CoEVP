@@ -88,6 +88,10 @@ endif
 LAPACK += -lblas
 endif
 
+ifeq ($(FSTRACE), yes)
+CXXFLAGS += -DFSTRACE
+endif
+
 CXXFLAGS += $(INCLUDE_DIRS)
 
 all: lulesh
