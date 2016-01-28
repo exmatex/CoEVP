@@ -97,6 +97,8 @@ endif
 
 CXXFLAGS += $(INCLUDE_DIRS)
 
+OPTFLAGS = $(CXXFLAGS) $(CCFLAGS)
+
 all: lulesh
 
 dummy: ;
@@ -119,8 +121,8 @@ LULESH_DEPS=$(LULESH_SRC:.cc=.d)
 
 -include $(LULESH_DEPS)
 
-lulesh: $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
-	$(CXX) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lm
+lulesh: $(LULESH_OBJS) $(CM_LIB)
+	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lm
 
 clean:
 	rm -f *~ lulesh $(LULESH_OBJS) $(LULESH_DEPS)
