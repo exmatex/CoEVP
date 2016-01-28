@@ -9,7 +9,9 @@ class Logger {
   virtual void  logInfo(std::string txt) = 0;
   virtual void  startTimer(void) = 0;
   virtual void  logStopTimer(std::string txt) = 0;
+  virtual void  incrTimeStep(void) = 0;
   virtual      ~Logger() {}
+
  protected:
   enum LogKeyword {
     LOG_INFO = 0,
@@ -32,6 +34,7 @@ class NullLogger : public Logger
   virtual void  logInfo(std::string txt)                           { /* NO OP */ }
   virtual void  startTimer(void)                                   { /* NO OP */ }
   virtual void  logStopTimer(std::string txt)                      { /* NO OP */ }
+  virtual void  incrTimeStep(void)                                 { /* NO OP */ }
 };
 
 #endif  // LOGGER_H

@@ -4127,8 +4127,9 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
 #if defined(LOGGER)
    logger.logStopTimer("outer");
+   logger.incrTimeStep();
 #endif
-   }
+   }  /* while */
 
 #ifdef WRITE_FSM_EVAL_COUNT
    fsm_count_file.close();

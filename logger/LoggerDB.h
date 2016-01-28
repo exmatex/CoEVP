@@ -28,9 +28,12 @@ class LoggerDB : public Logger {
   virtual void  logInfo(std::string txt);
   virtual void  startTimer(void);
   virtual void  logStopTimer(std::string txt);
+  virtual void  incrTimeStep(void);
+  
  protected:
   std::string   hostname;
   int           id;
+  int           step = 1;
   bool          isDistributed;
   timespec      ts_beg, ts_end;  // these need to be indexed by keyword
   redisContext *redis;

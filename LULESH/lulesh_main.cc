@@ -8,7 +8,7 @@
 #include "SingletonDB.h"
 #include "ModelDB_SingletonDB.h"
 
-#if defined(LOGGER)      // CoEVP Makefile enforces assert LOGGER=REDIS=yes
+#if defined(LOGGER)      // CoEVP Makefile enforces assert: LOGGER=REDIS=yes
 #include "LoggerDB.h"    // Includes Logger base class too
 #include "Locator.h"
 #endif

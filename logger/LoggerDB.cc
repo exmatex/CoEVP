@@ -121,9 +121,15 @@ void  LoggerDB::logStopTimer(std::string txt) {
 }
 
 
+void  LoggerDB::incrTimeStep(void) {
+  step++;
+}
+
+
 std::string  LoggerDB::makeKey(enum LogKeyword keyword, std::string txt) {
   std::string  key = log_keywords[keyword];
-  key += ':' + hostname + ':' + std::to_string(id) + ':' + txt;
+  key += ':' + hostname + ':' + std::to_string(id) + ':'
+    + std::to_string(step) + ':' + txt;
   return key;
 }
 
@@ -138,5 +144,4 @@ std::string  LoggerDB::makeVal(float et) {
   }
   return val;
 }
-
 
