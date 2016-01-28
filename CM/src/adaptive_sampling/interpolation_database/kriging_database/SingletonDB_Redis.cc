@@ -20,7 +20,7 @@
 
 static std::string uint128_to_string(const uint128_t &in){
    uint64_t *in64 = (uint64_t *)&in; 
-   return std::to_string(*in64)+std::to_string(*(in64+1));
+   return std::to_string((unsigned long long) *in64)+std::to_string((unsigned long long)*(in64+1));
 }
       
 //  Will eventually be something like add_points
@@ -36,7 +36,7 @@ void  SingletonDB_Redis::push(const uint128_t &key, const std::vector<double>& b
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
                              + std::string(hostBuffer) + "' and port "
-                             + std::to_string(REDIS_PORT));
+                             + std::to_string((long long)REDIS_PORT));
   }
   freeReplyObject(reply);
 }
@@ -63,14 +63,14 @@ redisReply *SingletonDB_Redis::pull_data(const uint128_t &key) {
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
                              + std::string(hostBuffer) + "' and port "
-                             + std::to_string(REDIS_PORT));
+                             + std::to_string((long long)REDIS_PORT));
   }
   if (reply->type != REDIS_REPLY_ARRAY){
     throw std::runtime_error("Wrong redis return type");
   }
   if(reply->elements < 1) {
     throw std::runtime_error("Number of redis reply elements wrong, got: "
-                             + std::to_string(reply->elements));
+                             + std::to_string((long long)reply->elements));
   }
   return reply;
 }
@@ -162,7 +162,7 @@ SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
 		std::string hostString(hostBuffer);
       throw std::runtime_error("Error connecting to redis, please start one on host'"
                              + hostString  + "' and port "
-                             + std::to_string(port));
+                             + std::to_string((long long)port));
     }
   }
   if(!distributedRedis)
@@ -171,7 +171,7 @@ SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
     if (!reply) {
       throw std::runtime_error("No connection to redis server, please start one on host'"
                              + std::string(hostBuffer) + "' and port "
-                             + std::to_string(port));
+                             + std::to_string((long long)port));
     }
     if (reply->type != REDIS_REPLY_INTEGER){
       throw std::runtime_error("Wrong redis return type");
@@ -192,7 +192,7 @@ SingletonDB_Redis::~SingletonDB_Redis() {
   if (!reply) {
     throw std::runtime_error("No connection to redis server, please start one on host'"
                              + std::string(hostBuffer) + "' and port "
-                             + std::to_string(REDIS_PORT));
+                             + std::to_string((long long)REDIS_PORT));
   }
   if (reply->type != REDIS_REPLY_STRING){
     throw std::runtime_error("Wrong redis return type");
