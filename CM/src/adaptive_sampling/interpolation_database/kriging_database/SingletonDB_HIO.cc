@@ -4,9 +4,10 @@
 
 #ifndef HIO_NAMESPACE
 #define HIO_NAMESPACE "CoEVP"
+#endif
 #ifndef HIO_CONFIG
 #define HIO_CONFIG "config.hio"
-
+#endif
 
 #include <iostream>
 #include <string>

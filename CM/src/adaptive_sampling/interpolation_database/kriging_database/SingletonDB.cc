@@ -10,13 +10,15 @@
 #include "SingletonDB.h"
 #include "SingletonDB_HashMap.h"
 #include "SingletonDB_POSIX.h"
-#include "SingletonDB_HIO.h"
 
-#ifdef REDIS
+#ifdef HIO
+#include "SingletonDB_HIO.h"
+#elseif REDIS
 #include "SingletonDB_Redis.h"
 #else
 #include "SingletonDB_Dummy.h"
 typedef SingletonDB_Dummy SingletonDB_Redis;
+typedef SingletonDB_Dummy SingletonDB_HIO;
 #endif // REDIS
 
 #include <iostream>

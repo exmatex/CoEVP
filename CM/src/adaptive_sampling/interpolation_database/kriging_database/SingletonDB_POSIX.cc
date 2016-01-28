@@ -2,6 +2,7 @@
 
 #ifndef POSIX_PATH
 #define POSIX_PATH "."
+#endif
 
 #include <iostream>
 #include <string>
@@ -20,21 +21,24 @@ static std::string uint128_to_string(const uint128_t &in){
 void  SingletonDB_POSIX::push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length) {
   size_t sz = buf.size();
   std::string skey=uint128_to_string(key);
-  strcat(skey, dbPath);
+  skey += dbPath;
   std::ofstream keyfile(skey, std::ios::out | std::ios::binary);
   keyfile.write((char *) &buf[0], sz*sizeof(buf[0]));
   keyfile.close();
 }
 
 void  SingletonDB_POSIX::erase(const uint128_t &key){
-  std::string skey=uint128_to_string(key);
-  strcat(skey, dbPath);
-  int reply = std::remove(skey.c_str());
+//  std::string skey=uint128_to_string(key);
+//  std::strcat(skey, dbPath);
+//  int reply = std::remove(skey.c_str());
+   std::cout << "POSIX DB: erase not officially implemented, contact vernon@lanl.gov" << std::endl;
+   exit(1);
+
 }
 
 std::vector<double> SingletonDB_POSIX::pull(const uint128_t &key) {
   std::string skey=uint128_to_string(key);
-  strcat(skey, dbPath);
+  skey += dbPath;
   std::ifstream keyfile(skey, std::ios::in | std::ios::binary);
   keyfile.seekg(0, keyfile.end);
   size_t sz = keyfile.tellg();
@@ -46,8 +50,8 @@ std::vector<double> SingletonDB_POSIX::pull(const uint128_t &key) {
 }
 
 std::vector<double> SingletonDB_POSIX::pull_key(const uint128_t &key) {
-   std::cout << "POSIX DB: pull_key not implemented, contact vernon@lanl.gov" << std::endl;
-   exit();
+   std::cout << "POSIX DB: pull_key not officially implemented, contact vernon@lanl.gov" << std::endl;
+   exit(1);
   //std::string skey=uint128_to_string(key);
   //strcat(skey, dbPath);
   //std::ifstream keyfile(skey, std::ios::in | std::ios::binary);

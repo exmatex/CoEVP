@@ -4,6 +4,8 @@
 #include "SingletonDB_Backend.h"
 
 #include <vector>
+#include <string>
+
 #define uint128_t unsigned __int128
 
 class SingletonDB_POSIX : public SingletonDB_Backend{
@@ -18,7 +20,7 @@ class SingletonDB_POSIX : public SingletonDB_Backend{
   virtual std::vector<double> pull_key(const uint128_t &key);
 
 private:
-    string dbPath;
+    std::string dbPath;
 };
 
 
