@@ -154,6 +154,8 @@ ifeq ($(FSTRACE), yes)
 CXXFLAGS += -DFSTRACE
 endif
 
+OPTFLAGS = $(CXXFLAGS) $(CCFLAGS)
+
 MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 
 default: libcm
@@ -181,7 +183,7 @@ dummy: ;
 	cp $*.d.tmp $*.d
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' -e '/^$$/ d' -e 's/$$/ :/' < $*.d.tmp >> $*.d
 	rm -f $*.d.tmp
-	$(CXX) -c $(CXXFLAGS) -c -o $@ $< 
+	$(CXX) -c $(OPTFLAGS)  -c -o $@ $< 
 
 -include $(CM_DEPS)
 -include $(AS_DEPS)
