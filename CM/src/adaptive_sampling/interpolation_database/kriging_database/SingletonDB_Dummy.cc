@@ -1,6 +1,7 @@
 #include "SingletonDB_Dummy.h"
 
 #include <iostream>
+#include <stdexcept>
 
 SingletonDB_Dummy::SingletonDB_Dummy(bool dummyArg)
 {
