@@ -94,6 +94,13 @@ Additional BSD Notice
 #  define DEBUG 0
 #endif
 
+#ifdef FSTRACE
+static std::string uint128_to_string(const uint128_t &in){
+  uint64_t *in64 = (uint64_t *)&in; 
+  return std::to_string(*in64)+std::to_string(*(in64+1));
+}
+#endif
+
 using namespace krigalg;
 
 namespace krigcpl {
@@ -1641,10 +1648,20 @@ uint128_t saved_model_key;
 
          } else {
             InterpolationModelPtr hintKrigingModel = this->_modelDB->extract(model_key, (InterpolationModelFactoryPointer *)&this->_modelFactory);
-
-            //
-            // check if can interpolate; need a valid model for this
-            //
+#ifdef FSTRACE
+       std::cout << "Using krigging model with id " << uint128_to_string(model_key) << std::endl;
+       vector<Point> model_points = hintKrigingModel->getPoints();
+       for (int i=0; i<model_points.size(); i++){
+         std::cout << "point " << i << " coordinates";
+         for (int j=0; j<model_points[i].size(); j++) {
+           std::cout << " " << model_points[i][j];
+         }
+         std::cout << std::endl;
+       }
+#endif
+	  //
+	  // check if can interpolate; need a valid model for this
+	  //
 
             if (hintKrigingModel->isValid() == true) {
 
@@ -1877,6 +1894,17 @@ uint128_t saved_model_key;
     
            InterpolationModelPtr hintKrigingModel = _modelDB->extract(model_key, (InterpolationModelFactoryPointer *)&this->_modelFactory);
 	  
+#ifdef FSTRACE
+       std::cout << "Using krigging model with id " << uint128_to_string(model_key) << std::endl;
+       vector<Point> model_points = hintKrigingModel->getPoints();
+       for (int i=0; i<model_points.size(); i++){
+         std::cout << "point " << i << " coordinates";
+         for (int j=0; j<model_points[i].size(); j++) {
+           std::cout << " " << model_points[i][j];
+         }
+         std::cout << std::endl;
+       }
+#endif
 	  //
 	  // check the distance between hintKrigingModel and point
 	  //

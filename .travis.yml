@@ -15,12 +15,18 @@ addons:
 
 env:
   matrix: 
-    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no
-    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no
-    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes
-    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no
-    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes
-    - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes NP=1 
+    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no TWEMPROXY=no
+    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no TWEMPROXY=yes
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no TWEMPROXY=no
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no TWEMPROXY=yes
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=no
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=yes
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no TWEMPROXY=no
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no TWEMPROXY=yes
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes
+    - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no NP=1 
+    - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=yes NP=1 
     - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes NP=4 
 
 before_script:

@@ -451,7 +451,7 @@ class Tensor4LSym : public Tensor4
    // lower index symmetric: A_ijkl = A_jikl = A_ijlk
    // for every symmetry store lower left part (i>j,k>l)
 
-   private:
+   public:
       double a[36];
 
    public:

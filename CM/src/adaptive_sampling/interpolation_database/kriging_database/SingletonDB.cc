@@ -56,6 +56,10 @@ SingletonDB::SingletonDB(SingletonDBBackendEnum backType) {
   {
     this->backend = new SingletonDB_HIO();
   }    
+  else if(backType == DIST_REDIS_DB)
+  {
+         this->backend = new SingletonDB_Redis(true);
+  }
   else
   {
 	std::cerr << "Invalid DB Backend Used in SingletonDB.cc" << std::endl;

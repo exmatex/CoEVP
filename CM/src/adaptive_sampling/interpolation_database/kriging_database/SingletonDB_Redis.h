@@ -10,7 +10,7 @@
 class SingletonDB_Redis : public SingletonDB_Backend{
  public:
  
-  SingletonDB_Redis();
+  SingletonDB_Redis(bool distributedRedis = false);
   ~SingletonDB_Redis();
 
   virtual void  push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length);
@@ -21,6 +21,8 @@ class SingletonDB_Redis : public SingletonDB_Backend{
 private:
   redisContext*   redis;
   FILE * redisServerHandle;
+  FILE * nutcrackerServerHandle;
+  char hostBuffer[256];
 
   redisReply *pull_data(const uint128_t &key);
 };
