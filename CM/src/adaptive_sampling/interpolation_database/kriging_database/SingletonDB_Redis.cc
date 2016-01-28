@@ -18,10 +18,23 @@
 #include <stdexcept>
 #include <unistd.h>
 
+
+namespace std
+{
+	std::string to_string(unsigned long long inVal)
+	{
+		char buf[256];
+		sprintf(buf, "%llu", inVal);
+		std::string retString(buf);
+		return buf;
+	}
+}
+
 static std::string uint128_to_string(const uint128_t &in){
    uint64_t *in64 = (uint64_t *)&in; 
    return std::to_string((unsigned long long) *in64)+std::to_string((unsigned long long)*(in64+1));
 }
+
       
 //  Will eventually be something like add_points
 void  SingletonDB_Redis::push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length) {
