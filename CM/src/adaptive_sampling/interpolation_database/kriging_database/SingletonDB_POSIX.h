@@ -21,6 +21,7 @@ class SingletonDB_POSIX : public SingletonDB_Backend{
 
 private:
     std::string dbPath;
+    std::string prefix;
 };
 
 
