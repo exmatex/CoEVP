@@ -17,6 +17,7 @@
 #include <assert.h>
 #include <stdexcept>
 #include <unistd.h>
+#include <cstdarg>
 
 
 ///TODO: Find a way to use to_string_hack() because this is bad
@@ -112,7 +113,19 @@ std::vector<double> SingletonDB_Redis::pull_key(const uint128_t &key) {
 //  If the databse is already populated, zero it out.  Existing entries will screw up
 //  CoEVP.
 //
-SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
+//SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
+SingletonDB_Redis::SingletonDB_Redis(int nArgs, ...) {
+  bool distributedRedis = false;
+  if(nArgs != 0)
+  {
+    //This is REALLY REALLY hacky and messy
+    va_list vargs;
+    va_start(vargs, nArgs);
+    //First argument is distributedRedis... yup
+    distributedRedis = (va_arg(vargs, int) == 0) ? false : true;
+    ///TODO: Figure out a better solution than basically passing a variable length blob
+    va_end(vargs);
+  }
   int port;
   gethostname(hostBuffer, 256);
   if(distributedRedis)

@@ -10,7 +10,7 @@
 class SingletonDB_Redis : public SingletonDB_Backend{
  public:
  
-  SingletonDB_Redis(bool distributedRedis = false);
+  SingletonDB_Redis(int nArgs = 0, ...);
   ~SingletonDB_Redis();
 
   virtual void  push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length);
