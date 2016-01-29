@@ -23,8 +23,9 @@ int main(int argc, char *argv[])
   
   int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
   int  redising = 0;              //  By default, do not use REDIS for database
-  int  posixing = 0;             // POSIX Key/Value store
-  int  global_ns = 0;              //  By default, do not use a global earest neighbor
+  int  posixing = 0;              // POSIX Key/Value store
+  int  hioing = 0;                //  HIO global store
+  int  global_ns = 0;             //  By default, do not use a global earest neighbor
   int  flanning = 0;              //  By default, do not use FLANN for nearest neighbor search
   int  flann_n_trees = 1;         // Default can be overridden using command line
   int  flann_n_checks = 20;       // Default can be overridden using command line
@@ -45,6 +46,7 @@ int main(int argc, char *argv[])
   addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
   addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
   addArg("posix",    'x', 0, 'i',  &(posixing),            0, "use POSIX library");
+  addArg("hio",      'b', 0, 'i',  &(hioing),              0, "use HIO library");
   addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search/data store");
   addArg("flann",    'f', 0, 'i',  &(flanning),            0, "use FLANN library");
   addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),       0, "number of FLANN trees");
@@ -77,6 +79,10 @@ int main(int argc, char *argv[])
   if (posixing) 
   {
     printf("Using POSIX library...\n");
+  }
+  if (hioing) 
+  {
+    printf("Using HIO library...\n");
   }
   if (flanning) {
     printf("Using FLANN library...\n");
@@ -114,6 +120,10 @@ int main(int argc, char *argv[])
       }
 	  else if(posixing) {
         SingletonDB::getInstance(SingletonDBBackendEnum::POSIX_DB);
+        global_modelDB = new ModelDB_SingletonDB();
+	  }
+	  else if(hioing) {
+        SingletonDB::getInstance(SingletonDBBackendEnum::HIO_DB);
         global_modelDB = new ModelDB_SingletonDB();
 	  }
    }

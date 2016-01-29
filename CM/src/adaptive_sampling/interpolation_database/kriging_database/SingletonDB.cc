@@ -13,12 +13,16 @@
 
 #ifdef HIO
 #include "SingletonDB_HIO.h"
-#elseif REDIS
+#else
+#include "SingletonDB_Dummy.h"
+typedef SingletonDB_Dummy SingletonDB_HIO;
+#endif
+
+#ifdef REDIS
 #include "SingletonDB_Redis.h"
 #else
 #include "SingletonDB_Dummy.h"
 typedef SingletonDB_Dummy SingletonDB_Redis;
-typedef SingletonDB_Dummy SingletonDB_HIO;
 #endif // REDIS
 
 #include <iostream>
@@ -56,6 +60,7 @@ SingletonDB::SingletonDB(SingletonDBBackendEnum backType) {
   }
   else if(backType == HIO_DB)
   {
+    std::cout << "huh" << std::endl;
     this->backend = new SingletonDB_HIO();
   }    
   else if(backType == DIST_REDIS_DB)
