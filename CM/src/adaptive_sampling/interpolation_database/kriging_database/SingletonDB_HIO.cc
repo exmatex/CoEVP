@@ -24,77 +24,99 @@ static std::string uint128_to_string(const uint128_t &in){
       
 //  Will eventually be something like add_points
 void  SingletonDB_HIO::push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length) {
+
    hio_element_t element;
    
-   size_t sz = buf.size();
-   
-   std::string skey=uint128_to_string(key);
-   hrc = hio_element_open(dataset, &element, skey,  HIO_FLAG_CREAT|HIO_FLAG_WRITE|HIO_FLAG_READ);
-   hio_return(hrc);
-   
-   hrc = hio_element_write(element, 0, 0, &buf, sz, sz*sizeof(buf[0]));
-   hio_return(hrc);
-   
-   //printf("Force element flush\n");
-   //hrc = hio_element_flush(element, HIO_FLUSH_MODE_COMPLETE);
-   //hio_return(hrc);
+//   size_t sz;
+   int64_t sz = buf.size();
+   printf("IN: Number of elements %d\n", buf.size());
+   printf("Element[0] %g\n", buf[0]);
+//   for (int i = sz - 1; i >= 0; i--) 
+//     std::cout << buf[0];
 
+   printf("Create New HIO Element\n");
+   std::string skey=uint128_to_string(key);
+   hrc = hio_element_open(dataset, &element, skey.c_str(),  HIO_FLAG_CREAT|HIO_FLAG_WRITE);
+   check_hio_return(hrc);
+   
+   printf("Write Key to Element\n");
+   hrc = hio_element_write(element, 0, 0, &buf, sz, sizeof(double));
+   check_hio_return(hrc-sz*sizeof(double));
+   
+   printf("Force element flush\n");
+//   hrc = hio_element_flush(element, HIO_FLUSH_MODE_LOCAL);
+   hrc = hio_dataset_flush(dataset, HIO_FLUSH_MODE_LOCAL);
+   check_hio_return(hrc);
+
+   printf("Close Element\n");
    hrc = hio_element_close(&element);
-   hio_return(hrc);   
+   check_hio_return(hrc);   
+
+
    
 }
 
 void  SingletonDB_HIO::erase(const uint128_t &key){
+   std::cout << "HIO DB: erase not implemented, contact vernon@lanl.gov" << std::endl;
+   exit(1);
  
 }
 
 std::vector<double> SingletonDB_HIO::pull(const uint128_t &key) {
-   printf("Read back data from element\n");
+
+
+   hio_element_t element;
    
    std::string skey=uint128_to_string(key);
-   size_t sz;
+//   size_t sz;
+   int64_t sz;
+
+   printf("Open Element for Reading\n");
   
-   hrc = hio_element_open(dataset, &element, skey,  HIO_FLAG_CREAT|HIO_FLAG_WRITE|HIO_FLAG_READ);
-   hio_return(hrc);
+   hrc = hio_element_open(dataset, &element, skey.c_str(),  HIO_FLAG_READ);
+   check_hio_return(hrc);
 
-   hrc = hio_element_size(element, &sz);
+   printf("Get Size of Element\n");
+   hrc = hio_e_size(element, &sz);
+   check_hio_return(hrc);
+   sz /= sizeof(double);
+   printf("OUT: Size of element %d\n", sz);
    std::vector<double> packedContainer(sz);
-   hrc = hio_element_read(element, 0, 0, &packedContainer, sz, sz*sizeof(packedContainer[0]));
-   hio_return(hrc);
-   
-   hrc = hio_element_close(&element);
-   hio_return(hrc);
-   
 
+   printf("Read Element Contents\n");
+   hrc = hio_element_read(element, 0, 0, &packedContainer, sz, sizeof(double));
+   check_hio_return(hrc);
+   printf("Element[0] %g\n", packedContainer[0]);
+//   for (int i = sz - 1; i >= 0; i--) 
+//     std::cout << packedContainer[i];
+
+   printf("Size of packedContainer %d\n", packedContainer.size());
+
+   
+   printf("Close Element\n");
+
+   hrc = hio_element_close(&element);
+   check_hio_return(hrc);
+   
    return packedContainer;
 }
 
 std::vector<double> SingletonDB_HIO::pull_key(const uint128_t &key) {
    std::cout << "HIO DB: pull_key not implemented, contact vernon@lanl.gov" << std::endl;
-   exit();
+   exit(1);
 }
 
 
-void  SingletonDB_HIO::check_hio_return(hio_return_t hrc)
-{
-   if(hrc==HIO_SUCCESS)
-   {
-       printf("HIO action succeeded: %d\n", hrc);
-   }
-   else
-   {
-       printf("HIO action failed: %d\n", hrc);
-   }
-}
 
 SingletonDB_HIO::SingletonDB_HIO() {
-   std::cout << "Create active HIO context..." << std::endl;
-   hrc = hio_init_single(&hio_context, HIO_CONFIG, "", HIO_NAMESPACE);
-   hio_return(hrc);
+   std::cout << "HIO API VERSION: " << HIO_API_VERSION << std::endl;
+   std::cout << "Create active HIO context."  << std::endl;
+   hrc = hio_init_single(&hio, HIO_CONFIG, "", HIO_NAMESPACE);
+   check_hio_return(hrc);
    
    std::cout << "Create/Open dataset instance" << std::endl;
-   hrc  = hio_dataset_open(hio_context, &dataset, "kriging_database", 0, HIO_FLAG_CREAT|HIO_FLAG_WRITE|HIO_FLAG_READ, 1);
-   hio_return(hrc);
+   hrc  = hio_dataset_open(hio, &dataset, "kriging_database", 0, HIO_FLAG_CREAT|HIO_FLAG_WRITE|HIO_FLAG_READ, HIO_SET_ELEMENT_UNIQUE);
+   check_hio_return(hrc);
 
 }
 
@@ -102,12 +124,13 @@ SingletonDB_HIO::SingletonDB_HIO() {
 SingletonDB_HIO::~SingletonDB_HIO() {
   std::cout << "Finishing HIO in SingletonDB_HIO..." << std::endl;
   
-   printf("Close dataset \n");
+   printf("Close Dataset \n");
    hrc = hio_dataset_close(&dataset);
-   hio_return(hrc);
-   printf("Destrony HIO context \n");   
-   hio_fini(&hio_context);
+   check_hio_return(hrc);
+   printf("Destroy HIO Context \n");   
+   hio_fini(&hio);
 
 }
 
 #endif
+

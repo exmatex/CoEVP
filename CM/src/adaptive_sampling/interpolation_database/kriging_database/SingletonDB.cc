@@ -60,7 +60,6 @@ SingletonDB::SingletonDB(SingletonDBBackendEnum backType) {
   }
   else if(backType == HIO_DB)
   {
-    std::cout << "huh" << std::endl;
     this->backend = new SingletonDB_HIO();
   }    
   else if(backType == DIST_REDIS_DB)

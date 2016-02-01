@@ -20,9 +20,21 @@ class SingletonDB_HIO : public SingletonDB_Backend{
 
 private:
   hio_context_t hio;
-  hio_return_t hrc;
+//  hio_return_t hrc;
+  int  hrc;
   hio_dataset_t dataset;
-  void check_hio_return(hrc);
+
+  void  check_hio_return(int hrc)
+  {
+     if(hrc==HIO_SUCCESS)
+     {
+         printf("HIO action succeeded: %d\n", hrc);
+     }
+     else
+     {
+         printf("HIO action failed: %d\n", hrc);
+     }
+  }
 };
 
 
