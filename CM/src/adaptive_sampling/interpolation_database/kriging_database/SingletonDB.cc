@@ -18,6 +18,7 @@ typedef SingletonDB_Dummy SingletonDB_Redis;
 #endif // REDIS
 
 #include <iostream>
+#include <cstdarg>
 
     
 //  Will eventually be something like add_points
