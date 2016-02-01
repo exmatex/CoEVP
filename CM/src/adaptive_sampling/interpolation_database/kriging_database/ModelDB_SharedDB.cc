@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <cstdarg>
 
 #ifdef REDIS
 #include "SingletonDB_Redis.h"
