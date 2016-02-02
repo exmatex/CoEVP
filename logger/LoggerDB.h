@@ -13,6 +13,7 @@
 #define LOGGERDB_H
 
 #include <string>
+#include <map>
 #include <time.h>
 #include "hiredis.h"
 #include "Logger.h"
@@ -26,7 +27,7 @@ class LoggerDB : public Logger {
   ~LoggerDB();
   
   virtual void  logInfo(std::string txt);
-  virtual void  startTimer(void);
+  virtual void  logStartTimer(std::string);
   virtual void  logStopTimer(std::string txt);
   virtual void  incrTimeStep(void);
   
@@ -35,9 +36,14 @@ class LoggerDB : public Logger {
   int           id;
   int           step = 1;
   bool          isDistributed;
-  timespec      ts_beg, ts_end;  // these need to be indexed by keyword
   redisContext *redis;
 
+  struct  TimeVals {
+    timespec  ts_beg;
+    timespec  ts_end;
+  };
+  std::map<std::string, TimeVals *> timers;
+  
   void  connectDB(std::string db_name);
   std::string  makeKey(enum LogKeyword keyword, std::string txt);
   std::string  makeVal(float et);

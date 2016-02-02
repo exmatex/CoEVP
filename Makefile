@@ -36,7 +36,7 @@ FSTRACE=no
 
 lulesh: LULESH/lulesh
 
-LULESH/lulesh: libcm
+LULESH/lulesh: libcm logger
 	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC) LOGGER_LOC=$(LOGGER_LOC) FSTRACE=$(FSTRACE) 
 
 libcm:

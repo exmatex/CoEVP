@@ -2,13 +2,13 @@
 #define LOGGER_H
 
 #include <string>
-#include <iostream>
+
 
 class Logger {
  public:
-  virtual void  logInfo(std::string txt) = 0;
-  virtual void  startTimer(void) = 0;
-  virtual void  logStopTimer(std::string txt) = 0;
+  virtual void  logInfo(std::string) = 0;
+  virtual void  logStartTimer(std::string) = 0;
+  virtual void  logStopTimer(std::string) = 0;
   virtual void  incrTimeStep(void) = 0;
   virtual      ~Logger() {}
 
@@ -32,7 +32,7 @@ class NullLogger : public Logger
 {
  public:
   virtual void  logInfo(std::string txt)                           { /* NO OP */ }
-  virtual void  startTimer(void)                                   { /* NO OP */ }
+  virtual void  logStartTimer(std::string txt)                     { /* NO OP */ }
   virtual void  logStopTimer(std::string txt)                      { /* NO OP */ }
   virtual void  incrTimeStep(void)                                 { /* NO OP */ }
 };
