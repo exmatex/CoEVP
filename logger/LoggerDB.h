@@ -27,8 +27,13 @@ class LoggerDB : public Logger {
   ~LoggerDB();
   
   virtual void  logInfo(std::string txt);
+  //  Timers
   virtual void  logStartTimer(std::string);
   virtual void  logStopTimer(std::string txt);
+  //  Counters
+  virtual void  logCountIncr(std::string, int i=1);
+  virtual void  logCount(std::string);
+
   virtual void  incrTimeStep(void);
   
  protected:
@@ -38,15 +43,20 @@ class LoggerDB : public Logger {
   bool          isDistributed;
   redisContext *redis;
 
+  //  Timers
   struct  TimeVals {
     timespec  ts_beg;
     timespec  ts_end;
   };
   std::map<std::string, TimeVals *> timers;
+  //  Counters
+  int  cnt;
+  std::map<std::string, int> counters;
   
   void  connectDB(std::string db_name);
   std::string  makeKey(enum LogKeyword keyword, std::string txt);
   std::string  makeVal(float et);
+  std::string  makeVal(int i);
 };
 
 #endif  // LOGGERDB_H

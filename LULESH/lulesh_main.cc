@@ -152,7 +152,7 @@ int main(int argc, char *argv[])
   // Only do this is we have actually opened a REDIS connection.
 #if defined(LOGGER)
   if (logging) {
-    delete(&logger);   //  Destructor does not seem to get called on exit. Hence this.
+    delete(&logger); 
   }
 #endif
   

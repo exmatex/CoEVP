@@ -155,6 +155,47 @@ void  LoggerDB::logStopTimer(std::string txt) {
 }
 
 
+//  Increments a counter tied to a keyword (txt). If the counter already exists,
+//  the function just increments it. If not, one is created (initialized to zero)
+//  and is then incremented. It is the user's responsibility to match keywords
+//  on subsequnet calls to logCounter.
+void  LoggerDB::logCountIncr(std::string txt, int i) {
+  std::map<std::string, int>::iterator it = counters.find(txt);
+  
+  if (it != counters.end()) {     // already exists
+    it->second += i;
+    return;
+  } else {                      // create it
+    counters.insert(std::pair<std::string, int>(txt, 0));
+  }
+}
+
+
+//  Logs an existing counter (that has been tied to a key) to the database.
+//  It is the user's responsibility to ensure keys match between counter
+//  increments and sends to the database. We don't anticipate starting
+//  many counters (~100 per run), so we wait until the LoggerDB object is
+//  deleted to delete them all.
+//
+//  TODO: this is very ugly and inefficient--fix it.
+void  LoggerDB::logCount(std::string txt) {
+  std::map<std::string, int>::iterator it = counters.find(txt);
+  if (it == counters.end()) {
+    std::cerr << "Trying to log counter (" << txt << ") that doesn't exist?" << std::endl;
+    return;
+  } else {
+    std::string key = makeKey(LOG_COUNT, txt);
+    std::string val = makeVal(it->second);
+    redisReply *reply =
+      (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
+    if (!reply) {
+      std::cerr << "No connection to redis for logging...continuing" << std::endl;
+    }
+    freeReplyObject(reply);
+  }
+}
+
+
 void  LoggerDB::incrTimeStep(void) {
   step++;
 }
@@ -172,6 +213,18 @@ std::string  LoggerDB::makeVal(float et) {
   std::string  val = std::to_string(et);
   std::time_t result = std::time(nullptr);
   val += std::string(" sec") + ':' + std::asctime(std::localtime(&result));
+  //  Remove the expected newline provided by asctime
+  if (!val.empty() && val[val.length()-1] == '\n') {
+    val.erase(val.length()-1);
+  }
+  return val;
+}
+
+
+std::string  LoggerDB::makeVal(int i) {
+  std::string  val = std::to_string(i);
+  std::time_t result = std::time(nullptr);
+  val += ':' + std::asctime(std::localtime(&result));
   //  Remove the expected newline provided by asctime
   if (!val.empty() && val[val.length()-1] == '\n') {
     val.erase(val.length()-1);

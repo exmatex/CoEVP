@@ -2962,9 +2962,16 @@ int Lulesh::UpdateStressForElems()
 #if defined(COEVP_MPI)
    {
       int g_max_nonlinear_iters ;
+#if defined(LOGGER)
+   Logger  &logger = Locator::getLogger();
+   logger.logStartTimer("max_nonlinear_iters_reduce");
+#endif
       MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
                     MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
       max_nonlinear_iters = g_max_nonlinear_iters ;
+#if defined(LOGGER)
+   logger.logStopTimer("max_nonlinear_iters_reduce");
+#endif
    }
 #endif
 
@@ -4078,6 +4085,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
    while(domain.time() < domain.stoptime() ) {
 #if defined(LOGGER)
      logger.logStartTimer("outer");
+     logger.logCountIncr("outer");
 #endif
 #ifdef SILO
       char meshName[64] ;
@@ -4131,9 +4139,11 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
 #if defined(LOGGER)
    logger.logStopTimer("outer");
+   logger.logCount("outer");
    logger.incrTimeStep();
 #endif
    }  /* while */
+
 
 #ifdef WRITE_FSM_EVAL_COUNT
    fsm_count_file.close();
