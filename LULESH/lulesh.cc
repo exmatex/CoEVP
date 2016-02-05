@@ -4085,7 +4085,6 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
    while(domain.time() < domain.stoptime() ) {
 #if defined(LOGGER)
      logger.logStartTimer("outer");
-     logger.logCountIncr("outer");
 #endif
 #ifdef SILO
       char meshName[64] ;
@@ -4139,7 +4138,6 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
 #if defined(LOGGER)
    logger.logStopTimer("outer");
-   logger.logCount("outer");
    logger.incrTimeStep();
 #endif
    }  /* while */

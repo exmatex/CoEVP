@@ -20,7 +20,7 @@
 
 
 LoggerDB::LoggerDB(std::string db_node)
-  : isDistributed(false), id(0) {
+  : isDistributed(false), id(0), isLogging(true) {
   std::cout << "Attempting to connect to REDIS logging database on " << db_node << std::endl;
   char buffer[256];
   gethostname(buffer, 256);
@@ -33,7 +33,7 @@ LoggerDB::LoggerDB(std::string db_node)
 
 
 LoggerDB::LoggerDB(std::string db_node, std::string my_node, int my_rank)
-  : isDistributed(true), hostname(my_node), id(my_rank) {
+  : isDistributed(true), hostname(my_node), id(my_rank), isLogging(true) {
   std::cout << "Attempting to connect to REDIS logging database on " << db_node << std::endl;
   std::cout << "from node("<< my_node << ")/id(" << my_rank << ")" << std::endl;
 
@@ -42,6 +42,9 @@ LoggerDB::LoggerDB(std::string db_node, std::string my_node, int my_rank)
 
 
 void  LoggerDB::connectDB(std::string db_node) {
+  //  Get time we start logging (for stats on logging itself);
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(loggingTimer.ts_beg));
+  
   //  Separate the hostname from the port (input must be of form "host:nnn")
   std::vector<std::string> elems;
   std::stringstream ss(db_node);
@@ -74,11 +77,23 @@ void  LoggerDB::connectDB(std::string db_node) {
 
 
 LoggerDB::~LoggerDB() {
-  std::cout << "Clearing " << timers.size() << " timers" << std::endl;
-  timers.clear();
-  std::cout << "Would be shutting down REDIS server" << std::endl;
-  std::cout << "Currently isn't compile to ease testing" << std::endl;
-  std::cout << "Make sure to put back in for 'production'" << std::endl;
+  if (isDistributed && (id==0)) {             // if MPI and rank 0 (mild kludge)...
+    //  Print stats for logging itself
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(loggingTimer.ts_end));
+    timespec  ts_beg = loggingTimer.ts_beg;
+    timespec  ts_end = loggingTimer.ts_end;
+    float  et = (ts_end.tv_sec - ts_beg.tv_sec) + (ts_end.tv_nsec - ts_beg.tv_nsec) / 1e9;
+    std::cout << timerCount   << " timers to REDIS in "   << et << " secs" << std::endl;
+    std::cout << counterCount << " counters to REDIS in " << et << " secs" << std::endl;
+    std::cout << "Timers per second:   " << (float)timerCount/et    << std::endl;
+    std::cout << "Counters per second: " << (float)counterCount/et << std::endl;
+  
+    std::cout << "Clearing " << timers.size() << " timers" << std::endl;
+    timers.clear();
+    std::cout << "Should be shutting down REDIS server..." << std::endl;
+    std::cout << "Currently isn't compiled in to ease testing..." << std::endl;
+    std::cout << "Make sure to put back in for 'production'..." << std::endl;
+  }
 #if 0
   std::cout << "Closing redis for logging..." << std::endl;
   redisReply *reply = (redisReply *) redisCommand(redis, "INFO");
@@ -96,6 +111,7 @@ LoggerDB::~LoggerDB() {
 
 
 void  LoggerDB::logInfo(std::string txt) {
+  if (!isLogging) return;
   std::cout << log_keywords[LOG_INFO] << "  " << hostname << "/" << id
             << "  " << txt << std::endl;
   redisReply *reply = (redisReply *)redisCommand(redis, "SET %s %s",
@@ -112,6 +128,7 @@ void  LoggerDB::logInfo(std::string txt) {
 //  the function restarts an existing timer. It is the user's responsibility
 //  to match keywords on subsequnet calls to logStopTimer.
 void  LoggerDB::logStartTimer(std::string txt) {
+  if (!isLogging) return;
   TimeVals  *tv;
   std::map<std::string, TimeVals *>::iterator it = timers.find(txt);
   
@@ -134,6 +151,7 @@ void  LoggerDB::logStartTimer(std::string txt) {
 //
 //  TODO: this is very ugly and inefficient--fix it.
 void  LoggerDB::logStopTimer(std::string txt) {
+  if (!isLogging) return;
   std::map<std::string, struct TimeVals *>::iterator it = timers.find(txt);
   if (it == timers.end()) {
     std::cerr << "Stopping timer (" << txt << ") that hasn't been started?" << std::endl;
@@ -151,48 +169,48 @@ void  LoggerDB::logStopTimer(std::string txt) {
       std::cerr << "No connection to redis for logging...continuing" << std::endl;
     }
     freeReplyObject(reply);
+    timerCount++;
   }
 }
 
 
 //  Increments a counter tied to a keyword (txt). If the counter already exists,
-//  the function just increments it. If not, one is created (initialized to zero)
-//  and is then incremented. It is the user's responsibility to match keywords
-//  on subsequnet calls to logCounter.
+//  the function just increments it. If not, one is created (initialized to i).
+//  In all case, on every call, the counter is written to the database. The
+//  databse will overwrite a counter with an existing key. It is the user's
+//  responsibility to match keywords on subsequnet calls.
+//
+//  We don't anticipate starting many counters (~100 per run), so we wait
+//  until the LoggerDB object is deleted to free them all.
+//
+//  [TODO]  This is kind of kludgy. If it gets to be too much for the database,
+//  counters can be cached and written to databse at the end of run. Possible
+//  future optimization.
 void  LoggerDB::logCountIncr(std::string txt, int i) {
+  if (!isLogging) return;
   std::map<std::string, int>::iterator it = counters.find(txt);
   
   if (it != counters.end()) {     // already exists
     it->second += i;
-    return;
-  } else {                      // create it
-    counters.insert(std::pair<std::string, int>(txt, 0));
+  } else {                        // create it
+    counters.insert(std::pair<std::string, int>(txt, i));
   }
-}
 
-
-//  Logs an existing counter (that has been tied to a key) to the database.
-//  It is the user's responsibility to ensure keys match between counter
-//  increments and sends to the database. We don't anticipate starting
-//  many counters (~100 per run), so we wait until the LoggerDB object is
-//  deleted to delete them all.
-//
-//  TODO: this is very ugly and inefficient--fix it.
-void  LoggerDB::logCount(std::string txt) {
-  std::map<std::string, int>::iterator it = counters.find(txt);
-  if (it == counters.end()) {
-    std::cerr << "Trying to log counter (" << txt << ") that doesn't exist?" << std::endl;
-    return;
-  } else {
-    std::string key = makeKey(LOG_COUNT, txt);
-    std::string val = makeVal(it->second);
-    redisReply *reply =
-      (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
-    if (!reply) {
-      std::cerr << "No connection to redis for logging...continuing" << std::endl;
-    }
-    freeReplyObject(reply);
+  //  Write to database. Note that if key already exists in the database, it
+  //  will be overwritten with the new count value. This is the desired behavior
+  //  but may prove to be inefficient--hitting the database too hard. If that
+  //  happens we can always cache counters and write them to the databse at
+  //  the end of the run.
+  std::string key = makeKey(LOG_COUNT, txt);
+  std::string val = makeVal(it->second);
+  redisReply *reply =
+    (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
+  if (!reply) {
+    std::cerr << "No connection to redis for logging...continuing" << std::endl;
   }
+  freeReplyObject(reply);
+  counterCount++;
+  return;
 }
 
 
