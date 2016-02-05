@@ -1,0 +1,4 @@
+*.py[cod]
+*.rdb
+venv
+__pycache__
