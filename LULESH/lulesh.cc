@@ -84,6 +84,7 @@ Additional BSD Notice
 #endif
 
 int showMeMonoQ = 0 ;
+volatile int taylorCnt = 0;
 
 #define PRINT_PERFORMANCE_DIAGNOSTICS
 #define LULESH_SHOW_PROGRESS
@@ -4098,6 +4099,11 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #define PRINT_PERFORMANCE_DIAGNOSTICS
 #ifdef PRINT_PERFORMANCE_DIAGNOSTICS
 		 int total_fine = 0;
+         Index_t domElems = domain.numElem() ;
+         for (int i=0; i<domElems; ++i) {
+			total_fine += domain.cm(i)->getNumFineScales();
+
+		 }
       if ( sampling ) {
 
          int total_samples = 0;
@@ -4126,7 +4132,8 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
       }
 #endif
 	  double endTime = getUnixTime();
-	  outFile << endTime << "\t" << endTime - startTime << "\t" << total_fine << std::endl;
+	  outFile << endTime << "\t" << endTime - startTime << "\t" << total_fine << "\t" << taylorCnt << std::endl;
+	  taylorCnt = 0;
    }
 
    outFile.close();

@@ -22,7 +22,7 @@ class Constitutive
  public:
 
    Constitutive( ConstitutiveGlobal& global)
-      : m_global(&global), m_sampler(NULL), m_finescale_verbose(false) {;}
+      : m_global(&global), m_sampler(NULL), m_finescale_verbose(false) {this->cumulativeFineScale = 0;}
 
    ~Constitutive();
 
@@ -116,6 +116,8 @@ class Constitutive
       memcpy(&data, *buffer, object_size);
       *buffer = ((char*)(*buffer)) + object_size;
    };
+
+   int cumulativeFineScale;
 
  public:
 

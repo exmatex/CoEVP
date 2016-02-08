@@ -211,7 +211,17 @@ Constitutive::getNumSuccessfulInterpolations() const
 
 int Constitutive::getNumFineScales()
 {
-	return m_sampler->m_num_fine_scale_evaluations;
+	if(this->m_sampler != NULL)
+	{
+	int retVal = m_sampler->m_num_fine_scale_evaluations - this->cumulativeFineScale;
+	this->cumulativeFineScale = m_sampler->m_num_fine_scale_evaluations;
+	return retVal;
+	}
+
+	else
+	{
+	return 1;
+	}
 }
 
 double

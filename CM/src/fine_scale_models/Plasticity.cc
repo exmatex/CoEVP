@@ -70,6 +70,8 @@ Plasticity::evaluateNative( const Tensor2Sym& in,
                             Tensor2Sym&       out_value,
                             Tensor4LSym&      out_derivative ) const
 {
+	extern int taylorCnt;
+	taylorCnt++;
    out_value = tensorFunction(in);
 
    out_derivative = tensorFunctionDerivative(in);
