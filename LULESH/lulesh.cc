@@ -2939,11 +2939,15 @@ int Lulesh::UpdateStressForElems()
 
          const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
 
-         domain.sx(k) = sigma_prime(1,1);
-         domain.sy(k) = sigma_prime(2,2);
-         domain.txy(k) = sigma_prime(2,1);
-         domain.txz(k) = sigma_prime(3,1);
-         domain.tyz(k) = sigma_prime(3,2);
+         Real_t sx  = domain.sx(k) = sigma_prime(1,1);
+         Real_t sy  = domain.sy(k) = sigma_prime(2,2);
+         Real_t sz  = - sx - sy;
+         Real_t txy = domain.txy(k) = sigma_prime(2,1);
+         Real_t txz = domain.txz(k) = sigma_prime(3,1);
+         Real_t tyz = domain.tyz(k) = sigma_prime(3,2);
+
+         domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
+                               + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
       }
 
 #ifdef _OPENMP

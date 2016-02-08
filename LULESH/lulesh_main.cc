@@ -92,19 +92,21 @@ int main(int argc, char *argv[])
    if(sampling)
    {
       if(redising){
-#ifdef REDIS
         if(distributed_redis)
           SingletonDB::getInstance(SingletonDBBackendEnum::DIST_REDIS_DB);
         else
           SingletonDB::getInstance(SingletonDBBackendEnum::REDIS_DB);
         global_modelDB = new ModelDB_SingletonDB();
-#else
-        throw std::runtime_error("REDIS not compiled in"); 
-#endif
       }
-      else if(global_ns){
+      // Add in new (global) backends that require initialization here
+      // Optionally put a !variable in the else if
+      else if(!redising && global_ns){
         SingletonDB::getInstance(SingletonDBBackendEnum::HASHMAP_DB);
         global_modelDB = new ModelDB_SingletonDB();
+      }
+      else
+      {
+        //Do nothing because we don't have to initialize a global_modelDB
       }
    }
 
