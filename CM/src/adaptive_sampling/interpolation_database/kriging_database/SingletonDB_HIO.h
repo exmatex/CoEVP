@@ -19,22 +19,22 @@ class SingletonDB_HIO : public SingletonDB_Backend{
   virtual std::vector<double> pull_key(const uint128_t &key);
 
 private:
+  int hrc;
   hio_context_t hio;
-//  hio_return_t hrc;
-  int  hrc;
-  hio_dataset_t dataset;
-
-  void  check_hio_return(int hrc)
+  std::string prefix;
+  void  check_hio_return(int hrc, hio_context_t hio, char description[])
   {
      if(hrc==HIO_SUCCESS)
      {
-         printf("HIO action succeeded: %d\n", hrc);
+		(void) hio_err_print_all(hio, stderr, description);
      }
-     else
-     {
-         printf("HIO action failed: %d\n", hrc);
-     }
+//     else
+//     {
+//         printf("HIO action failed: %d\n", hrc);
+//     }
+
   }
+
 };
 
 
