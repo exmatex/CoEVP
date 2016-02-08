@@ -222,7 +222,7 @@ AdaptiveSampler::sample( std::vector<double>&       value,
 
    if (interpolationSuccess == false) {
 #if defined(LOGGER)
-   logger.logCountIncr("interp_fail");
+   logger.logIncrCount("interp_fail");
 #endif
 
 #if defined(LOGGER)
@@ -280,7 +280,7 @@ AdaptiveSampler::sample( std::vector<double>&       value,
    }
    else {
 #if defined(LOGGER)
-   logger.logCountIncr("interp_succeed");
+   logger.logIncrCount("interp_succeed");
 #endif
 
       if (m_verbose) {

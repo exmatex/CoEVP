@@ -88,8 +88,11 @@ LoggerDB::~LoggerDB() {
     std::cout << "Timers per second:   " << (float)timerCount/et    << std::endl;
     std::cout << "Counters per second: " << (float)counterCount/et << std::endl;
   
-    std::cout << "Clearing " << timers.size() << " timers" << std::endl;
+    std::cout << "Clearing " << timers.size()   << " timers" << std::endl;
     timers.clear();
+    std::cout << "Clearing " << counters.size() << " counters" << std::endl;
+    counters.clear();
+    
     std::cout << "Should be shutting down REDIS server..." << std::endl;
     std::cout << "Currently isn't compiled in to ease testing..." << std::endl;
     std::cout << "Make sure to put back in for 'production'..." << std::endl;
@@ -186,7 +189,7 @@ void  LoggerDB::logStopTimer(std::string txt) {
 //  [TODO]  This is kind of kludgy. If it gets to be too much for the database,
 //  counters can be cached and written to databse at the end of run. Possible
 //  future optimization.
-void  LoggerDB::logCountIncr(std::string txt, int i) {
+void  LoggerDB::logIncrCount(std::string txt, int i) {
   if (!isLogging) return;
   std::map<std::string, int>::iterator it = counters.find(txt);
   

@@ -31,7 +31,7 @@ class LoggerDB : public Logger {
   virtual void  logStartTimer(std::string);
   virtual void  logStopTimer(std::string txt);
   //  Counters
-  virtual void  logCountIncr(std::string, int i=1);
+  virtual void  logIncrCount(std::string, int i=1);
 
   virtual void  incrTimeStep(void);
   
