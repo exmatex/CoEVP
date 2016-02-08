@@ -61,6 +61,11 @@ Additional BSD Notice
 
 */
 
+#if defined(LOGGER)      // CoEVP Makefile enforces assert LOGGER=REDIS=yes
+#include "LoggerDB.h"    // Includes Logger base class too
+#include "Locator.h"
+#endif
+
 #include "AdaptiveSampler.h"
 
 #include <kriging/LinearDerivativeRegressionModel.h>
@@ -185,12 +190,19 @@ AdaptiveSampler::sample( std::vector<double>&       value,
    int value_length = value.size();
    double* local_value = new double[value_length];
 
+#if defined(LOGGER)
+   Logger  &logger = Locator::getLogger();       //  We have the logger for this call
+   logger.logStartTimer("interpolate");
+#endif
    bool interpolationSuccess = 
       m_interp->interpolate(local_value,
                             hint,
                             local_point,
                             flags,
                             error_estimate);
+#if defined(LOGGER)
+   logger.logStopTimer("interpolate");
+#endif
 
 #ifdef FSTRACE
          std::cout << "   Querying : (" << local_point[0];
@@ -209,8 +221,17 @@ AdaptiveSampler::sample( std::vector<double>&       value,
 #endif
 
    if (interpolationSuccess == false) {
+#if defined(LOGGER)
+   logger.logCountIncr("interp_fail");
+#endif
 
+#if defined(LOGGER)
+   logger.logStartTimer("fs_eval");
+#endif
       fineScaleModel.evaluate(point, value);
+#if defined(LOGGER)
+   logger.logStopTimer("fs_eval");
+#endif
 
       if (m_verbose) {
 #ifdef FSTRACE
@@ -239,11 +260,17 @@ AdaptiveSampler::sample( std::vector<double>&       value,
          local_value[i] = value[i] / m_valueScaling[i];
       }
 
+#if defined(LOGGER)
+   logger.logStartTimer("fs_insert");
+#endif
       m_interp->insert(hint,
                        local_point,
                        local_value,
                        &(local_value[m_valueDimension]),
                        flags);
+#if defined(LOGGER)
+   logger.logStopTimer("fs_insert");
+#endif
 
       m_num_fine_scale_evaluations++;
 
@@ -252,11 +279,17 @@ AdaptiveSampler::sample( std::vector<double>&       value,
 
    }
    else {
+#if defined(LOGGER)
+   logger.logCountIncr("interp_succeed");
+#endif
 
       if (m_verbose) {
          //         cout << "Interpolation succeeded" << endl;
       }
 
+#if defined(LOGGER)
+   logger.logStartTimer("second_interp");
+#endif
       interpolationSuccess = 
       m_interp->interpolate(local_value,
                             local_value + point_length,
@@ -264,6 +297,9 @@ AdaptiveSampler::sample( std::vector<double>&       value,
                             local_point,
                             flags,
                             error_estimate);
+#if defined(LOGGER)
+   logger.logStopTimer("second_interp");
+#endif
 
       for (int i=0; i<value_length; ++i) {
          value[i] = local_value[i] * m_valueScaling[i];

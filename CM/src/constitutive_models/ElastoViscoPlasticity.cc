@@ -66,11 +66,6 @@ Additional BSD Notice
 #include "ElastoViscoPlasticity.h"
 #include "xtensor.h"
 
-#if defined(LOGGER)      // CoEVP Makefile enforces assert LOGGER=REDIS=yes
-#include "LoggerDB.h"    // Includes Logger base class too
-#include "Locator.h"
-#endif
-
 
 
 ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&           global,
@@ -421,16 +416,7 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
    double tol2 = 2. * tol;
 
    Tensor4LSym Dbar_prime_deriv;
-#if defined(LOGGER)
-   //  [TODO] Really need comulative timer here.
-   Logger  &logger = Locator::getLogger();
-   logger.logStartTimer("eval_fs_model");
-   logger.logCountIncr("eval_fs_model");
-#endif
    evaluateFineScaleModel( tauBarPrime(a_new, Vbar_prime_new), Dbar_prime_new, Dbar_prime_deriv );
-#if defined(LOGGER)
-   logger.logStopTimer("eval_fs_model");
-#endif
 
    double saved_estimate = m_error_estimate;
    int current_model = m_hint;
@@ -468,10 +454,6 @@ ElastoViscoPlasticity::updateVbar_prime( const Tensor2Sym& Vbar_prime_old,
 
       diagnostic_p_norm[m_num_iters] = norm(p);
 
-#if defined(LOGGER)
-   Logger  &logger = Locator::getLogger();
-   logger.logCountIncr("eval_fs_model");
-#endif
       evaluateFineScaleModel( tauBarPrime(a_new, proposed_solution), Dbar_prime_new, Dbar_prime_deriv );
 
       diagnostic_model[m_num_iters+1] = m_hint;
