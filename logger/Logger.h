@@ -9,7 +9,7 @@ class Logger {
   virtual void  logInfo(std::string) = 0;
   //  Timers
   virtual void  logStartTimer(std::string) = 0;
-  virtual void  logStopTimer(std::string) = 0;
+  virtual void  logIncrTimer(std::string) = 0;
   //  Counters
   virtual void  logIncrCount(std::string, int i=1) = 0;
 
@@ -37,7 +37,7 @@ class NullLogger : public Logger
  public:
   virtual void  logInfo(std::string txt)                           { /* NO OP */ }
   virtual void  logStartTimer(std::string txt)                     { /* NO OP */ }
-  virtual void  logStopTimer(std::string txt)                      { /* NO OP */ }
+  virtual void  logIncrTimer(std::string txt)                      { /* NO OP */ }
   virtual void  logIncrCount(std::string, int i=1)                 { /* NO OP */ }
   virtual void  incrTimeStep(void)                                 { /* NO OP */ }
 };

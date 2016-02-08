@@ -2962,16 +2962,10 @@ int Lulesh::UpdateStressForElems()
 #if defined(COEVP_MPI)
    {
       int g_max_nonlinear_iters ;
-#if defined(LOGGER)
-   Logger  &logger = Locator::getLogger();
-   logger.logStartTimer("max_nonlinear_iters_reduce");
-#endif
+
       MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
                     MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
       max_nonlinear_iters = g_max_nonlinear_iters ;
-#if defined(LOGGER)
-   logger.logStopTimer("max_nonlinear_iters_reduce");
-#endif
    }
 #endif
 
@@ -4137,7 +4131,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
       }
 #endif
 #if defined(LOGGER)
-   logger.logStopTimer("outer");
+   logger.logIncrTimer("outer");
    logger.incrTimeStep();
 #endif
    }  /* while */

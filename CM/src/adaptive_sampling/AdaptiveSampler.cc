@@ -201,7 +201,7 @@ AdaptiveSampler::sample( std::vector<double>&       value,
                             flags,
                             error_estimate);
 #if defined(LOGGER)
-   logger.logStopTimer("interpolate");
+   logger.logIncrTimer("interpolate");
 #endif
 
 #ifdef FSTRACE
@@ -230,7 +230,7 @@ AdaptiveSampler::sample( std::vector<double>&       value,
 #endif
       fineScaleModel.evaluate(point, value);
 #if defined(LOGGER)
-   logger.logStopTimer("fs_eval");
+   logger.logIncrTimer("fs_eval");
 #endif
 
       if (m_verbose) {
@@ -269,7 +269,7 @@ AdaptiveSampler::sample( std::vector<double>&       value,
                        &(local_value[m_valueDimension]),
                        flags);
 #if defined(LOGGER)
-   logger.logStopTimer("fs_insert");
+   logger.logIncrTimer("fs_insert");
 #endif
 
       m_num_fine_scale_evaluations++;
@@ -298,7 +298,7 @@ AdaptiveSampler::sample( std::vector<double>&       value,
                             flags,
                             error_estimate);
 #if defined(LOGGER)
-   logger.logStopTimer("second_interp");
+   logger.logIncrTimer("second_interp");
 #endif
 
       for (int i=0; i<value_length; ++i) {

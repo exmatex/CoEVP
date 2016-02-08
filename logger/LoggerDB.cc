@@ -78,6 +78,31 @@ void  LoggerDB::connectDB(std::string db_node) {
 
 LoggerDB::~LoggerDB() {
   if (isDistributed && (id==0)) {             // if MPI and rank 0 (mild kludge)...
+    //  Write all the timers to REDIS
+    for(auto &it : timers) {
+      std::string key = it.first;
+      std::string val = makeVal(it.second->et_secs, it.second->timesIncremented);
+      redisReply *reply =
+        (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
+      if (!reply) {
+        std::cerr << "No connection to redis for logging...continuing" << std::endl;
+      }
+      freeReplyObject(reply);
+    }
+      
+    //  Write all the counters to REDIS
+    for(auto &it : counters) {
+      std::string key = it.first;
+      std::string val = makeVal(it.second);
+      redisReply *reply =
+        (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
+      if (!reply) {
+        std::cerr << "No connection to redis for logging...continuing" << std::endl;
+      }
+      freeReplyObject(reply);
+    }
+      
+#if 0
     //  Print stats for logging itself
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(loggingTimer.ts_end));
     timespec  ts_beg = loggingTimer.ts_beg;
@@ -87,7 +112,8 @@ LoggerDB::~LoggerDB() {
     std::cout << counterCount << " counters to REDIS in " << et << " secs" << std::endl;
     std::cout << "Timers per second:   " << (float)timerCount/et    << std::endl;
     std::cout << "Counters per second: " << (float)counterCount/et << std::endl;
-  
+#endif
+    
     std::cout << "Clearing " << timers.size()   << " timers" << std::endl;
     timers.clear();
     std::cout << "Clearing " << counters.size() << " counters" << std::endl;
@@ -133,7 +159,9 @@ void  LoggerDB::logInfo(std::string txt) {
 void  LoggerDB::logStartTimer(std::string txt) {
   if (!isLogging) return;
   TimeVals  *tv;
-  std::map<std::string, TimeVals *>::iterator it = timers.find(txt);
+  
+  std::string key = makeKey(LOG_TIMER, txt);    // Add node, id, timestep
+  std::map<std::string, TimeVals *>::iterator it = timers.find(key);
   
   if (it != timers.end()) {     // already exists
     tv = it->second;
@@ -141,38 +169,36 @@ void  LoggerDB::logStartTimer(std::string txt) {
     return;
   } else {                      // create it
     tv = new TimeVals;
+    tv->timesIncremented = 0;
+    tv->et_secs = 0.0;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(tv->ts_beg));
-    timers.insert(std::pair<std::string, TimeVals *>(txt, tv));
+    timers.insert(std::pair<std::string, TimeVals *>(key, tv));
   }
 }
 
 
-//  Stops a previously started timer (that has been tied to a key)
+//  Increments a previously started timer (that has been tied to a key)
 //  It is the user's responsibility to ensure keys match between starts
 //  and stops.  We don't anticipate starting many timers (~100 per run),
 //  so we wait until the LoggerDB destructor is called to delete them all.
 //
 //  TODO: this is very ugly and inefficient--fix it.
-void  LoggerDB::logStopTimer(std::string txt) {
+void  LoggerDB::logIncrTimer(std::string txt) {
   if (!isLogging) return;
-  std::map<std::string, struct TimeVals *>::iterator it = timers.find(txt);
+
+  std::string key = makeKey(LOG_TIMER, txt);    // Add node, id, timestep
+  std::map<std::string, struct TimeVals *>::iterator it = timers.find(key);
+
   if (it == timers.end()) {
-    std::cerr << "Stopping timer (" << txt << ") that hasn't been started?" << std::endl;
+    std::cerr << "Incrementing timer (" << txt << ") that hasn't been started?" << std::endl;
     return;
   } else {
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(it->second->ts_end));
-    timespec  ts_beg = it->second->ts_beg;
-    timespec  ts_end = it->second->ts_end;
-    float  et = (ts_end.tv_sec - ts_beg.tv_sec) + (ts_end.tv_nsec - ts_beg.tv_nsec) / 1e9;
-    std::string key = makeKey(LOG_TIMER, txt);
-    std::string val = makeVal(et);
-    redisReply *reply =
-      (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
-    if (!reply) {
-      std::cerr << "No connection to redis for logging...continuing" << std::endl;
-    }
-    freeReplyObject(reply);
-    timerCount++;
+    timespec  beg = it->second->ts_beg;
+    timespec  end = it->second->ts_end;
+    float     et  = (end.tv_sec - beg.tv_sec) + (end.tv_nsec - beg.tv_nsec) / 1e9;
+    it->second->et_secs += et;
+    it->second->timesIncremented++;
   }
 }
 
@@ -191,28 +217,15 @@ void  LoggerDB::logStopTimer(std::string txt) {
 //  future optimization.
 void  LoggerDB::logIncrCount(std::string txt, int i) {
   if (!isLogging) return;
-  std::map<std::string, int>::iterator it = counters.find(txt);
+
+  std::string key = makeKey(LOG_COUNT, txt);    // Add node, id, timestep
+  std::map<std::string, int>::iterator it = counters.find(key);
   
   if (it != counters.end()) {     // already exists
     it->second += i;
   } else {                        // create it
-    counters.insert(std::pair<std::string, int>(txt, i));
+    counters.insert(std::pair<std::string, int>(key, i));
   }
-
-  //  Write to database. Note that if key already exists in the database, it
-  //  will be overwritten with the new count value. This is the desired behavior
-  //  but may prove to be inefficient--hitting the database too hard. If that
-  //  happens we can always cache counters and write them to the databse at
-  //  the end of the run.
-  std::string key = makeKey(LOG_COUNT, txt);
-  std::string val = makeVal(it->second);
-  redisReply *reply =
-    (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
-  if (!reply) {
-    std::cerr << "No connection to redis for logging...continuing" << std::endl;
-  }
-  freeReplyObject(reply);
-  counterCount++;
   return;
 }
 
@@ -234,6 +247,19 @@ std::string  LoggerDB::makeVal(float et) {
   std::string  val = std::to_string(et);
   std::time_t result = std::time(nullptr);
   val += std::string(" sec") + ':' + std::asctime(std::localtime(&result));
+  //  Remove the expected newline provided by asctime
+  if (!val.empty() && val[val.length()-1] == '\n') {
+    val.erase(val.length()-1);
+  }
+  return val;
+}
+
+
+std::string  LoggerDB::makeVal(float et, int c) {
+  std::string  val = std::to_string(et) + " sec";
+  val += ':' + std::to_string(c) + ':';
+  std::time_t result = std::time(nullptr);
+  val += std::asctime(std::localtime(&result));
   //  Remove the expected newline provided by asctime
   if (!val.empty() && val[val.length()-1] == '\n') {
     val.erase(val.length()-1);

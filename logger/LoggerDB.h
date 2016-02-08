@@ -29,7 +29,7 @@ class LoggerDB : public Logger {
   virtual void  logInfo(std::string txt);
   //  Timers
   virtual void  logStartTimer(std::string);
-  virtual void  logStopTimer(std::string txt);
+  virtual void  logIncrTimer(std::string txt);
   //  Counters
   virtual void  logIncrCount(std::string, int i=1);
 
@@ -47,6 +47,8 @@ class LoggerDB : public Logger {
   struct  TimeVals {
     timespec  ts_beg;
     timespec  ts_end;
+    float     et_secs;
+    int       timesIncremented;
   };
   std::map<std::string, TimeVals *> timers;
 
@@ -54,12 +56,11 @@ class LoggerDB : public Logger {
   std::map<std::string, int> counters;
   
   //  Stats for the logger itself.
-  int       timerCount = 0;
-  int       counterCount = 0;
   TimeVals  loggingTimer;
 
   void         connectDB(std::string db_name);
   std::string  makeKey(enum LogKeyword keyword, std::string txt);
+  std::string  makeVal(float et, int c);
   std::string  makeVal(float et);
   std::string  makeVal(int i);
 };
