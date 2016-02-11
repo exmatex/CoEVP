@@ -9,7 +9,7 @@
 class SingletonDB_Dummy : public SingletonDB_Backend{
  public:
  
-  SingletonDB_Dummy(bool dummyArg = false);
+  SingletonDB_Dummy(int dummyArg = 0, ...);
   ~SingletonDB_Dummy();
 
   virtual void  push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length);

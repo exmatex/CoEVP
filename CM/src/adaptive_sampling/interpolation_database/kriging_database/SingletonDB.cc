@@ -26,6 +26,7 @@ typedef SingletonDB_Dummy SingletonDB_Redis;
 #endif // REDIS
 
 #include <iostream>
+#include <cstdarg>
 
     
 //  Will eventually be something like add_points
@@ -45,31 +46,51 @@ std::vector<double> SingletonDB::pull_key(const uint128_t &key) {
   return this->backend->pull_key(key);
 }
 
-SingletonDB::SingletonDB(SingletonDBBackendEnum backType) {
-  if(backType == REDIS_DB)
-  {
-    this->backend = new SingletonDB_Redis();
-  }
-  else if(backType == HASHMAP_DB)
-  {
-    this->backend = new SingletonDB_HashMap();
-  }
-  else if(backType == POSIX_DB)
-  {
-    this->backend = new SingletonDB_POSIX();
-  }
-  else if(backType == HIO_DB)
-  {
-    this->backend = new SingletonDB_HIO();
-  }    
-  else if(backType == DIST_REDIS_DB)
-  {
-         this->backend = new SingletonDB_Redis(true);
-  }
-  else
-  {
-	std::cerr << "Invalid DB Backend Used in SingletonDB.cc" << std::endl;
-  }
+SingletonDB::SingletonDB(SingletonDBBackendEnum backType, int nArgs, ...) {
+	if(backType == REDIS_DB)
+	{
+		if(nArgs != 0)
+		{
+			va_list args;
+			va_start(args, nArgs);
+			this->backend = new SingletonDB_Redis(nArgs, args);
+			va_end(args);
+		}
+		else
+		{
+			this->backend = new SingletonDB_Redis();
+		}
+	}
+	else if(backType == HASHMAP_DB)
+	{
+		this->backend = new SingletonDB_HashMap();
+	}
+	else if(backType == DIST_REDIS_DB)
+	{
+		if(nArgs != 0)
+		{
+			va_list args;
+			va_start(args, nArgs);
+			this->backend = new SingletonDB_Redis(nArgs, args);
+			va_end(args);
+		}
+		else
+		{
+			this->backend = new SingletonDB_Redis(1, true);
+		}
+	}
+	else if(backType == POSIX_DB)
+	{
+		this->backend = new SingletonDB_POSIX();
+	}
+	else if(backType == HIO_DB)
+	{
+		this->backend = new SingletonDB_HIO();
+	}    
+	else
+	{
+		std::cerr << "Invalid DB Backend Used in SingletonDB.cc" << std::endl;
+	}
 }
 
 //  Shutdown redis databse and print some simple info about the accumulated database.
