@@ -5,6 +5,7 @@
 #define POSIX_PATH "posix"
 #endif
 
+#include <sys/stat.h>
 #include <iostream>
 #include <string>
 #include <assert.h>
@@ -20,8 +21,18 @@ static std::string uint128_to_string(const uint128_t &in){
 }
       
 
+inline bool file_exists (const std::string& name) {
+    if (FILE *file = fopen(name.c_str(), "r")) {
+        fclose(file);
+        return true;
+    } else {
+        return false;
+    }   
+}
+
+
 void  SingletonDB_POSIX::push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length) {
-  size_t sz = buf.size();
+  unsigned long sz = buf.size();
   // generate path to file
   std::string skey=uint128_to_string(key);
   std::string skey_path = dbPath + "/" + skey;
@@ -29,21 +40,27 @@ void  SingletonDB_POSIX::push(const uint128_t &key, const std::vector<double>& b
   std::ifstream infile(skey_path);
   if(infile.good())
   { 
-//    std::cout << "Key Hit, returning" << std::endl;
+    //std::cout << "Key Hit, returning" << std::endl;
     infile.close();
 	return;
-  }
+  } 
+
   // write with prefix
 //  std::cout << "Key Miss, writing" << std::endl;
 
   std::string prefix_skey = dbPath + "/" + prefix + skey;  
   std::ofstream keyfile(prefix_skey, std::ios::out | std::ios::binary);
-  keyfile.write((char *) &buf[0], sz*sizeof(buf[0]));
+
+//  keyfile.write((char *) sz, sizeof(unsigned long));
+//  keyfile.write((char *) key_length, sizeof(unsigned long));
+  keyfile.write((char *) buf.data(), sz*sizeof(buf[0]));
   keyfile.close();
 
 
 // std::cout << "Key written, renaming" << std::endl;
  
+//  printf("Size of buf %d\n", buf.size() * sizeof(buf[0]));
+
   int rc = std::rename(prefix_skey.c_str(), skey_path.c_str()); 
   if(rc) { std::perror("Key Write Soft Collision");}
 }
@@ -64,9 +81,12 @@ std::vector<double> SingletonDB_POSIX::pull(const uint128_t &key) {
   keyfile.seekg(0, keyfile.end);
   size_t sz = keyfile.tellg();
   keyfile.seekg(0, keyfile.beg);
-  std::vector<double> packedContainer(sz);
-  keyfile.read((char *) &packedContainer[0], sz*sizeof(double));
 
+  std::vector<double> packedContainer(sz+2);
+//  keyfile.read((char *) &packedContainer[0], sz*sizeof(double));
+  keyfile.read((char *) packedContainer.data(), sz);
+
+//  exit(1);
   return packedContainer;
 }
 

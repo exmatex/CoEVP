@@ -22,6 +22,10 @@ private:
   int hrc;
   hio_context_t hio;
   std::string prefix;
+  enum dataset_state { HREAD, HWRITE };
+  hio_dataset_t dataset;
+  dataset_state dstate;
+
   void  check_hio_return(int hrc, hio_context_t hio, char description[])
   {
      if(hrc==HIO_SUCCESS)

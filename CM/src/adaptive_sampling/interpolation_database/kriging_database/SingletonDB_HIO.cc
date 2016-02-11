@@ -32,15 +32,17 @@ void  SingletonDB_HIO::push(const uint128_t &key, const std::vector<double>& buf
 //   hrc = hio_init_single(&hio, HIO_CONFIG, "", HIO_NAMESPACE);
 //   check_hio_return(hrc);
 
-
-    hio_dataset_t dataset_writer;
-    hrc  = hio_dataset_open(hio, &dataset_writer, prefix.c_str(), 0, HIO_FLAG_CREAT|HIO_FLAG_WRITE, HIO_SET_ELEMENT_UNIQUE);
-    check_hio_return(hrc, hio, "HIO: Create Dataset");
-    if(hrc != HIO_SUCCESS)
+	switch(dstate)
     {
-       hrc  = hio_dataset_open(hio, &dataset_writer, prefix.c_str(), 0, HIO_FLAG_WRITE, HIO_SET_ELEMENT_UNIQUE);
-       check_hio_return(hrc, hio, "HIO: Open existing Dataset");
-    }
+		case HREAD:
+			hrc = hio_dataset_close(&dataset);
+		    check_hio_return(hrc, hio, "HIO: Close Dataset Read Handle"); 
+    		hrc  = hio_dataset_open(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_WRITE, HIO_SET_ELEMENT_UNIQUE);
+			check_hio_return(hrc, hio, "HIO: Open Dataset Write Handle");
+			dstate = HWRITE;
+			break;
+	}
+
     hio_element_t element;
 
 //   size_t sz;
@@ -48,7 +50,7 @@ void  SingletonDB_HIO::push(const uint128_t &key, const std::vector<double>& buf
 
     std::string skey=uint128_to_string(key);
 
-    hrc = hio_element_open(dataset_writer, &element, skey.c_str(),  HIO_FLAG_CREAT|HIO_FLAG_WRITE);
+    hrc = hio_element_open(dataset, &element, skey.c_str(),  HIO_FLAG_CREAT|HIO_FLAG_WRITE);
     check_hio_return(hrc, hio, "HIO: Create new element");
 
     hrc = hio_element_write(element, 0, 0, buf.data(), sz, sizeof(double));
@@ -63,9 +65,6 @@ void  SingletonDB_HIO::push(const uint128_t &key, const std::vector<double>& buf
     check_hio_return(hrc, hio, "HIO: Close Element");   
 
    
-    hrc = hio_dataset_close(&dataset_writer);
-    check_hio_return(hrc, hio, "HIO: Close Dataset Handle");
-
 //   std::cout << "Close HIO context" << std::endl;
 //   hrc = hio_fini(&hio);
 //   check_hio_return(hrc);
@@ -82,7 +81,18 @@ std::vector<double> SingletonDB_HIO::pull(const uint128_t &key) {
 
 //   hio_context_t hio;
 //   int  hrc;
-    hio_dataset_t dataset_reader;
+
+    switch(dstate)
+    {
+        case HWRITE:
+            hrc = hio_dataset_close(&dataset);
+            check_hio_return(hrc, hio, "HIO: Close Dataset Write Handle"); 
+            hrc  = hio_dataset_open(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_READ, HIO_SET_ELEMENT_UNIQUE);
+            check_hio_return(hrc, hio, "HIO: Open Dataset Read Handle");
+            dstate = HREAD;
+            break;
+    }
+
 
 //   std::cout << "Open HIO context" << std::endl;
 //   hrc = hio_init_single(&hio, HIO_CONFIG, "", HIO_NAMESPACE);
@@ -90,8 +100,6 @@ std::vector<double> SingletonDB_HIO::pull(const uint128_t &key) {
 
 
 
-    hrc  = hio_dataset_open(hio, &dataset_reader, prefix.c_str(), 0, HIO_FLAG_READ, HIO_SET_ELEMENT_UNIQUE);
-    check_hio_return(hrc, hio, "HIO: Open Dataset for reading");
 
     hio_element_t element;
    
@@ -100,7 +108,7 @@ std::vector<double> SingletonDB_HIO::pull(const uint128_t &key) {
     int64_t sz;
 
   
-    hrc = hio_element_open(dataset_reader, &element, skey.c_str(),  HIO_FLAG_READ);
+    hrc = hio_element_open(dataset, &element, skey.c_str(),  HIO_FLAG_READ);
     check_hio_return(hrc, hio, "HIO: Open Element for reading");
 
     hrc = hio_element_size(element, &sz);
@@ -112,13 +120,8 @@ std::vector<double> SingletonDB_HIO::pull(const uint128_t &key) {
     check_hio_return(hrc-sz*sizeof(double), hio, "HIO: Read element to buffer");
 
 
-
     hrc = hio_element_close(&element);
     check_hio_return(hrc, hio, "HIO: Close Element");
-
-    hrc = hio_dataset_close(&dataset_reader);
-    check_hio_return(hrc, hio, "HIO: Close dataset read handkle");   
-
 
    
     return packedContainer;
@@ -145,6 +148,22 @@ SingletonDB_HIO::SingletonDB_HIO() {
     prefix += std::to_string(getpid());
     prefix += "kriging_database";
 
+	// create or open the dataset for the first time
+
+    hrc  = hio_dataset_open(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_CREAT|HIO_FLAG_WRITE, HIO_SET_ELEMENT_UNIQUE);
+    check_hio_return(hrc, hio, "HIO: Create Dataset");
+    if(hrc != HIO_SUCCESS)
+    {
+    	hrc  = hio_dataset_open(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_WRITE, HIO_SET_ELEMENT_UNIQUE);
+		check_hio_return(hrc, hio, "HIO: Open existing Dataset");
+		if(hrc != HIO_SUCCESS)
+		{
+			std::perror("HIO: Can't create or open existing dataset. Check HIO lib compatibility?\n");
+			exit(1);
+
+		}
+	}
+	dstate = HWRITE;
 }
 
 
