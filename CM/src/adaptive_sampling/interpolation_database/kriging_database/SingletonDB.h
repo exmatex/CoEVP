@@ -42,7 +42,7 @@ class SingletonDB {
 private:
   SingletonDB_Backend * backend;
 
-  SingletonDB(SingletonDBBackendEnum backType);
+  SingletonDB(SingletonDBBackendEnum backType, int nArgs = 0, ...);
   ~SingletonDB();
 
   //  This technique requires C++11 (can do a C++03 version too)
