@@ -3,7 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 
-SingletonDB_Dummy::SingletonDB_Dummy(bool dummyArg)
+SingletonDB_Dummy::SingletonDB_Dummy(int dummyArg, ...)
 {
     throw std::runtime_error("Error: Instantiation Dummy DB Backend. Check your build flags"); 
 }
