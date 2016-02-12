@@ -77,65 +77,68 @@ void  LoggerDB::connectDB(std::string db_node) {
 
 
 LoggerDB::~LoggerDB() {
-  if (isDistributed && (id==0)) {             // if MPI and rank 0 (mild kludge)...
-    //  Write all the timers to REDIS
-    for(auto &it : timers) {
-      std::string key = it.first;
-      std::string val = makeVal(it.second->et_secs, it.second->timesIncremented);
-      redisReply *reply =
-        (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
-      if (!reply) {
-        std::cerr << "No connection to redis for logging...continuing" << std::endl;
-      }
-      freeReplyObject(reply);
+  //  Write all the timers to REDIS
+  for(auto &it : timers) {
+    std::string key = it.first;
+    std::string val = makeVal(it.second->et_secs, it.second->timesIncremented);
+    redisReply *reply =
+      (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
+    if (!reply) {
+      std::cerr << "No connection to redis for logging...continuing" << std::endl;
     }
+    freeReplyObject(reply);
+  }
       
-    //  Write all the counters to REDIS
-    for(auto &it : counters) {
-      std::string key = it.first;
-      std::string val = makeVal(it.second);
-      redisReply *reply =
-        (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
-      if (!reply) {
-        std::cerr << "No connection to redis for logging...continuing" << std::endl;
-      }
-      freeReplyObject(reply);
+  //  Write all the counters to REDIS
+  for(auto &it : counters) {
+    std::string key = it.first;
+    std::string val = makeVal(it.second);
+    redisReply *reply =
+      (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
+    if (!reply) {
+      std::cerr << "No connection to redis for logging...continuing" << std::endl;
     }
+    freeReplyObject(reply);
+  }
       
 #if 0
-    //  Print stats for logging itself
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(loggingTimer.ts_end));
-    timespec  ts_beg = loggingTimer.ts_beg;
-    timespec  ts_end = loggingTimer.ts_end;
-    float  et = (ts_end.tv_sec - ts_beg.tv_sec) + (ts_end.tv_nsec - ts_beg.tv_nsec) / 1e9;
-    std::cout << timerCount   << " timers to REDIS in "   << et << " secs" << std::endl;
-    std::cout << counterCount << " counters to REDIS in " << et << " secs" << std::endl;
-    std::cout << "Timers per second:   " << (float)timerCount/et    << std::endl;
-    std::cout << "Counters per second: " << (float)counterCount/et << std::endl;
+  //  This is only interesting if we're writing to REDIS at a fine
+  //  granularity throught the run--not if we're aggregating and
+  //  writing it all at job termination.
+  clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(loggingTimer.ts_end));
+  timespec  ts_beg = loggingTimer.ts_beg;
+  timespec  ts_end = loggingTimer.ts_end;
+  float  et = (ts_end.tv_sec - ts_beg.tv_sec) + (ts_end.tv_nsec - ts_beg.tv_nsec) / 1e9;
+  std::cout << timerCount   << " timers to REDIS in "   << et << " secs" << std::endl;
+  std::cout << counterCount << " counters to REDIS in " << et << " secs" << std::endl;
+  std::cout << "Timers per second:   " << (float)timerCount/et    << std::endl;
+  std::cout << "Counters per second: " << (float)counterCount/et << std::endl;
+    
+  std::cout << "Clearing " << timers.size()   << " timers" << std::endl;
+  timers.clear();
+  std::cout << "Clearing " << counters.size() << " counters" << std::endl;
+  counters.clear();
+    
 #endif
-    
-    std::cout << "Clearing " << timers.size()   << " timers" << std::endl;
-    timers.clear();
-    std::cout << "Clearing " << counters.size() << " counters" << std::endl;
-    counters.clear();
-    
+
+  if (isDistributed && (id==0)) {             // if MPI and rank 0 (mild kludge)...
     std::cout << "Should be shutting down REDIS server..." << std::endl;
     std::cout << "Currently isn't compiled in to ease testing..." << std::endl;
     std::cout << "Make sure to put back in for 'production'..." << std::endl;
-  }
 #if 0
-  std::cout << "Closing redis for logging..." << std::endl;
-  redisReply *reply = (redisReply *) redisCommand(redis, "INFO");
-  if (!reply) {
-    throw std::runtime_error("No connection to redis server, something went wrong along the way!");
-  }
-  if (reply->type != REDIS_REPLY_STRING){
-    throw std::runtime_error("Wrong redis return type when closing for logging");
-  }
-  reply = (redisReply *) redisCommand(redis, "SHUTDOWN");
-  freeReplyObject(reply);
-  redisFree(redis);
+    std::cout << "Closing redis for logging..." << std::endl;
+    redisReply *reply = (redisReply *) redisCommand(redis, "INFO");
+    if (!reply) {
+      throw std::runtime_error("No connection to redis server, something went wrong along the way!");
+    }
+    if (reply->type != REDIS_REPLY_STRING){
+      throw std::runtime_error("Wrong redis return type when closing for logging");
+    }
+    reply = (redisReply *) redisCommand(redis, "SHUTDOWN");
+    freeReplyObject(reply);
+    redisFree(redis);
 #endif
+  }
 }
 
 
