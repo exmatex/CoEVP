@@ -231,51 +231,63 @@ void  LoggerDB::logIncrCount(std::string txt, int i) {
 
 
 void  LoggerDB::incrTimeStep(void) {
-  step++;
+  //  [TODO] Write the counters and timers to the database
+step++;
 }
 
 
 std::string  LoggerDB::makeKey(enum LogKeyword keyword, std::string txt) {
   std::string  key = log_keywords[keyword];
-  key += ':' + hostname + ':' + std::to_string(id) + ':'
-    + std::to_string(step) + ':' + txt;
+  key += ',' + hostname + ',' + std::to_string(id) + ','
+    + std::to_string(step) + ',' + txt;
   return key;
 }
 
 
 std::string  LoggerDB::makeVal(float et) {
   std::string  val = std::to_string(et);
+  val += ',';
+  //  No timestamps for now
+#if 0
   std::time_t result = std::time(nullptr);
   val += std::string(" sec") + ':' + std::asctime(std::localtime(&result));
   //  Remove the expected newline provided by asctime
   if (!val.empty() && val[val.length()-1] == '\n') {
     val.erase(val.length()-1);
   }
+#endif
   return val;
 }
 
 
 std::string  LoggerDB::makeVal(float et, int c) {
-  std::string  val = std::to_string(et) + " sec";
-  val += ':' + std::to_string(c) + ':';
+  std::string  val = std::to_string(et);
+  val += ',' + std::to_string(c) + ',';
+  //  No timestamps for now
+#if 0
   std::time_t result = std::time(nullptr);
   val += std::asctime(std::localtime(&result));
   //  Remove the expected newline provided by asctime
   if (!val.empty() && val[val.length()-1] == '\n') {
     val.erase(val.length()-1);
   }
+#endif
   return val;
 }
 
 
 std::string  LoggerDB::makeVal(int i) {
   std::string  val = std::to_string(i);
+  val += ',';
+  //  No timestamps for now
+#if 0
   std::time_t result = std::time(nullptr);
   val += ':' + std::asctime(std::localtime(&result));
   //  Remove the expected newline provided by asctime
   if (!val.empty() && val[val.length()-1] == '\n') {
     val.erase(val.length()-1);
   }
+#endif
   return val;
 }
 
