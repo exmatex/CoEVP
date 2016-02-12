@@ -1,5 +1,6 @@
 from __future__ import print_function
 import pandas as pd
+import numpy as np
 
 
 def main():
@@ -12,9 +13,16 @@ def main():
     print("\n\n")
     timers =   df[(df.Mode == 'TIMER')]
     counters = df[(df.Mode == 'COUNT')]
-    print(timers)
+    print(timers.head())
     print("\n\n")
-    print(counters)
+    print(counters.head())
+
+    counter_ops = counters.groupby(['Timestep', 'Operation'])
+    print(counter_ops.aggregate(np.sum))
+    print("\n\n")
+
+    timer_ops = timers.groupby(['Timestep', 'Rank', 'Operation'])
+    print(timer_ops.aggregate(np.sum))
     print("\n\n")
 
     

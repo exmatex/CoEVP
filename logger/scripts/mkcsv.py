@@ -35,14 +35,14 @@ def get_all_sets(db):
 
         
 def init_csv_file(f):
-    f.write('Mode, Node, Rank, Timestep, Operation, Value, Executed\n')
+    f.write('Mode,Node,Rank,Timestep,Operation,Value,Executed\n')
     
 
 def add_csv_line(f, k, v):
-    k_list = k.split(':')
+    k_list = k.split(',')
     for k_word in k_list:
         f.write(k_word + ', ')
-    v_list = v.split(':')
+    v_list = v.split(',')
     # [HACK] This relies on knowledge of the REDIS file format
     # Should just write to REDIS with comma separators ala CSV
     if k_list[0] == 'TIMER':
