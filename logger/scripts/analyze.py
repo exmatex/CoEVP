@@ -16,13 +16,16 @@ def main():
     print(timers.head())
     print("\n\n")
     print(counters.head())
-
-    counter_ops = counters.groupby(['Timestep', 'Operation'])
-    print(counter_ops.aggregate(np.sum))
     print("\n\n")
 
-    timer_ops = timers.groupby(['Timestep', 'Rank', 'Operation'])
-    print(timer_ops.aggregate(np.sum))
+    outer = df[(df.Operation == 'outer')]
+    print(outer.head())
+    print("\n\n")
+
+    print(outer.groupby('Rank').groups.keys())
+    print("\n\n")
+
+    print(outer.groupby('Rank')['Value'].quantile(.99))
     print("\n\n")
 
     

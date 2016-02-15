@@ -41,14 +41,14 @@ def init_csv_file(f):
 def add_csv_line(f, k, v):
     k_list = k.split(',')
     for k_word in k_list:
-        f.write(k_word + ', ')
+        f.write(k_word + ',')
     v_list = v.split(',')
     # [HACK] This relies on knowledge of the REDIS file format
     # Should just write to REDIS with comma separators ala CSV
     if k_list[0] == 'TIMER':
-        f.write(v_list[0] + ', ' + v_list[1] + '\n')   # no timestamp!
+        f.write(v_list[0] + ',' + v_list[1] + '\n')   # no timestamp!
     else:
-        f.write(v_list[0] + ', '             + '\n')
+        f.write(v_list[0] + ','             + '\n')
         
 
 if __name__ == "__main__":
