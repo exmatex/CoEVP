@@ -1,6 +1,6 @@
 branches:
   except:
-   - log-basic
+#   - log-basic
    
 language: cpp
 
