@@ -24,9 +24,9 @@ REDIS_LOC =
 
 LOGGER_LOC=
 
-CXX = g++
+#CXX = g++
 #CXXFLAGS = -std=c++0x -g -O3 -fopenmp
-CXXFLAGS = -std=c++0x -g -O3
+CXXFLAGS = -std=c++11 -g -O3
 
 ###### CONFIGURATION END ############
 
@@ -107,7 +107,7 @@ dummy: ;
 	@[ -f $@ ] || touch $@
 	@echo "CXXFLAGS=$(CXXFLAGS)" | cmp -s $@ - || echo "CXXFLAGS=$(CXXFLAGS)" > $@
 
-MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
+MAKEDEPEND = $(CC) -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 %.o: %.cc .cxxflags
 	@$(MAKEDEPEND)
 	cp $*.d.tmp $*.d
