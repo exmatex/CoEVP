@@ -19,6 +19,8 @@
 #include <vector>
 
 
+
+//  Create logger for NON-DISTRIBUTED environment
 LoggerDB::LoggerDB(std::string db_node)
   : isDistributed(false), id(0), isLogging(true) {
   std::cout << "Attempting to connect to REDIS logging database on " << db_node << std::endl;
@@ -32,6 +34,7 @@ LoggerDB::LoggerDB(std::string db_node)
 
 
 
+//  Create logger for DISTRIBUTED environment
 LoggerDB::LoggerDB(std::string db_node, std::string my_node, int my_rank)
   : isDistributed(true), hostname(my_node), id(my_rank), isLogging(true) {
   std::cout << "Attempting to connect to REDIS logging database on " << db_node << std::endl;
@@ -41,6 +44,10 @@ LoggerDB::LoggerDB(std::string db_node, std::string my_node, int my_rank)
 }
 
 
+
+//  Try connecting to the database (as part of the construction process).
+//  If a logging database already exists, we just erase it.
+//  Runtime errors are thrown if we can't connect for some reason.
 void  LoggerDB::connectDB(std::string db_node) {
   //  Get time we start logging (for stats on logging itself);
   clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &(loggingTimer.ts_beg));
@@ -76,30 +83,17 @@ void  LoggerDB::connectDB(std::string db_node) {
 }
 
 
+
+//  Note that this destructor does not automatically get called at the end of main(1).
+//  The user needs to manually 'delele' the logger object.
+//  Here we write all remaining cached timers and counters to the database.
+//  We also dump some simple information on how much time and effort we've been
+//  spending on logging.  Finaly, we shutdown the databse after we disconnect.
 LoggerDB::~LoggerDB() {
-  //  Write all the timers to REDIS
-  for(auto &it : timers) {
-    std::string key = it.first;
-    std::string val = makeVal(it.second->et_secs, it.second->timesIncremented);
-    redisReply *reply =
-      (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
-    if (!reply) {
-      std::cerr << "No connection to redis for logging...continuing" << std::endl;
-    }
-    freeReplyObject(reply);
-  }
-      
-  //  Write all the counters to REDIS
-  for(auto &it : counters) {
-    std::string key = it.first;
-    std::string val = makeVal(it.second);
-    redisReply *reply =
-      (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
-    if (!reply) {
-      std::cerr << "No connection to redis for logging...continuing" << std::endl;
-    }
-    freeReplyObject(reply);
-  }
+  //  Write all remaining (we may have been writing at the end of each timestrp)
+  //  timers and counters to the database.
+  writeAllTimers();
+  writeAllCounters();
       
 #if 0
   //  This is only interesting if we're writing to REDIS at a fine
@@ -118,7 +112,6 @@ LoggerDB::~LoggerDB() {
   timers.clear();
   std::cout << "Clearing " << counters.size() << " counters" << std::endl;
   counters.clear();
-    
 #endif
 
   if (isDistributed && (id==0)) {             // if MPI and rank 0 (mild kludge)...
@@ -142,6 +135,8 @@ LoggerDB::~LoggerDB() {
 }
 
 
+
+//  Log an arbitrary text string (usually used for information purposes only.
 void  LoggerDB::logInfo(std::string txt) {
   if (!isLogging) return;
   std::cout << log_keywords[LOG_INFO] << "  " << hostname << "/" << id
@@ -156,14 +151,15 @@ void  LoggerDB::logInfo(std::string txt) {
 }
 
 
+
 //  Starts a timer tied to a keyword (txt). If the timer already exists,
-//  the function restarts an existing timer. It is the user's responsibility
+//  the function restarts the existing timer. It is the user's responsibility
 //  to match keywords on subsequnet calls to logStopTimer.
 void  LoggerDB::logStartTimer(std::string txt) {
-  if (!isLogging) return;
+  if (!isLogging) return;      // [TODO] is this superflous?
   TimeVals  *tv;
   
-  std::string key = makeKey(LOG_TIMER, txt);    // Add node, id, timestep
+  std::string key = makeKey(LOG_TIMER, txt);    // add node, id, timestep
   std::map<std::string, TimeVals *>::iterator it = timers.find(key);
   
   if (it != timers.end()) {     // already exists
@@ -180,16 +176,16 @@ void  LoggerDB::logStartTimer(std::string txt) {
 }
 
 
+
 //  Increments a previously started timer (that has been tied to a key)
 //  It is the user's responsibility to ensure keys match between starts
 //  and stops.  We don't anticipate starting many timers (~100 per run),
-//  so we wait until the LoggerDB destructor is called to delete them all.
-//
-//  TODO: this is very ugly and inefficient--fix it.
+//  so we wait until the LoggerDB destructor is called to delete them all
+//  (or we do so incrementally when we move to the next timestep)
 void  LoggerDB::logIncrTimer(std::string txt) {
-  if (!isLogging) return;
+  if (!isLogging) return;        // [TODO] is this superflous?
 
-  std::string key = makeKey(LOG_TIMER, txt);    // Add node, id, timestep
+  std::string key = makeKey(LOG_TIMER, txt);    // add node, id, timestep
   std::map<std::string, struct TimeVals *>::iterator it = timers.find(key);
 
   if (it == timers.end()) {
@@ -206,18 +202,14 @@ void  LoggerDB::logIncrTimer(std::string txt) {
 }
 
 
+
 //  Increments a counter tied to a keyword (txt). If the counter already exists,
 //  the function just increments it. If not, one is created (initialized to i).
-//  In all case, on every call, the counter is written to the database. The
-//  databse will overwrite a counter with an existing key. It is the user's
-//  responsibility to match keywords on subsequnet calls.
+//  It is the user's responsibility to match keywords on subsequnet calls.
 //
 //  We don't anticipate starting many counters (~100 per run), so we wait
-//  until the LoggerDB object is deleted to free them all.
-//
-//  [TODO]  This is kind of kludgy. If it gets to be too much for the database,
-//  counters can be cached and written to databse at the end of run. Possible
-//  future optimization.
+//  until the LoggerDB object is deleted to free them all (or we write them
+//  to the datanse incrementally when we update to the next timestep).
 void  LoggerDB::logIncrCount(std::string txt, int i) {
   if (!isLogging) return;
 
@@ -233,12 +225,23 @@ void  LoggerDB::logIncrCount(std::string txt, int i) {
 }
 
 
-void  LoggerDB::incrTimeStep(void) {
-  //  [TODO] Write the counters and timers to the database
-step++;
+
+//  This will likely be called (by the user) at the end of every timestep (so
+//  somewhere in the main loop. Aside  from incrementing the timestep number
+//  (which is integrated into all keys) we optionally write the cached counters
+//  and timers to the database. If we don't do that here, they will be written
+//  at the end of the computation when the logger's destructor is executed.
+void  LoggerDB::incrTimeStep(bool writeAtTimestepUpdate) {
+  if (writeAtTimestepUpdate) {
+    writeAllTimers();
+    writeAllCounters();
+  }
+  step++;
 }
 
 
+
+//  Makes a simple key (usually for the LOG_INFO keyword).
 std::string  LoggerDB::makeKey(enum LogKeyword keyword, std::string txt) {
   std::string  key = log_keywords[keyword];
   key += ',' + hostname + ',' + std::to_string(id) + ','
@@ -247,6 +250,9 @@ std::string  LoggerDB::makeKey(enum LogKeyword keyword, std::string txt) {
 }
 
 
+
+//  Poorly named.  Just converts the supplied float parameter to a string
+//  and adds a key separator.  Doesn't do any timer arithmetic.
 std::string  LoggerDB::makeVal(float et) {
   std::string  val = std::to_string(et);
   val += ',';
@@ -263,6 +269,10 @@ std::string  LoggerDB::makeVal(float et) {
 }
 
 
+
+//  Poorly named.  Just converts the supplied float parameter to a string,
+//  adds an integer that represents the number of times we've incremented
+//  this timer, and adds  key separators.  Doesn't do any timer arithmetic.
 std::string  LoggerDB::makeVal(float et, int c) {
   std::string  val = std::to_string(et);
   val += ',' + std::to_string(c) + ',';
@@ -279,6 +289,10 @@ std::string  LoggerDB::makeVal(float et, int c) {
 }
 
 
+
+//  Also poorly named.  Just converts the supplied int (a counter value) to
+//  a string and appends a key separator.  No arithmetic on counters is
+//  performed.
 std::string  LoggerDB::makeVal(int i) {
   std::string  val = std::to_string(i);
   val += ',';
@@ -294,3 +308,34 @@ std::string  LoggerDB::makeVal(int i) {
   return val;
 }
 
+
+
+//  Writes all cached timers to the database.
+void  LoggerDB::writeAllTimers(void) {
+  for(auto &it : timers) {
+    std::string key = it.first;
+    std::string val = makeVal(it.second->et_secs, it.second->timesIncremented);
+    redisReply *reply =
+      (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
+    if (!reply) {
+      std::cerr << "No connection to redis for logging...continuing" << std::endl;
+    }
+    freeReplyObject(reply);
+  }
+}
+      
+
+
+//  Writes all cached timers to the database.
+void  LoggerDB::writeAllCounters() {
+  for(auto &it : counters) {
+    std::string key = it.first;
+    std::string val = makeVal(it.second);
+    redisReply *reply =
+      (redisReply *)redisCommand(redis, "SET %s %s", key.c_str(), val.c_str());
+    if (!reply) {
+      std::cerr << "No connection to redis for logging...continuing" << std::endl;
+    }
+    freeReplyObject(reply);
+  }
+}

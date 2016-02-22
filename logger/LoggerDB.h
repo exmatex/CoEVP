@@ -33,15 +33,15 @@ class LoggerDB : public Logger {
   //  Counters
   virtual void  logIncrCount(std::string, int i=1);
 
-  virtual void  incrTimeStep(void);
+  virtual void  incrTimeStep(bool writeAtTimestepUpdate=true);
   
  protected:
-  std::string   hostname;            //  Physical host (perhaps multiple IDs on it)
-  int           id;                  //  Rank if MPI (Charm??)
-  int           step = 1;            //  Track current time step
-  bool          isDistributed;       //  If MPI (or Charm?)
-  bool          isLogging = false;   //  This mirrors comman'd line switch
-  redisContext *redis;
+  std::string   hostname;            //  physical host (perhaps multiple IDs on it)
+  int           id;                  //  e.g. rank if MPI (Charm??)
+  int           step = 1;            //  track current time step
+  bool          isDistributed;       //  if MPI (or Charm?)
+  bool          isLogging = false;   //  this mirrors command line switch
+  redisContext *redis;               //  database connection
 
   //  Timers
   struct  TimeVals {
@@ -55,10 +55,12 @@ class LoggerDB : public Logger {
   //  Counters
   std::map<std::string, int> counters;
   
-  //  Stats for the logger itself.
+  //  Tracks how much time we've spent in logging.
   TimeVals  loggingTimer;
 
   void         connectDB(std::string db_name);
+  void         writeAllTimers(void);
+  void         writeAllCounters(void);
   std::string  makeKey(enum LogKeyword keyword, std::string txt);
   std::string  makeVal(float et, int c);
   std::string  makeVal(float et);
