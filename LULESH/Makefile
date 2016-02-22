@@ -121,6 +121,9 @@ LULESH_DEPS=$(LULESH_SRC:.cc=.d)
 
 -include $(LULESH_DEPS)
 
+# Al added the -lrt library on 2/22/2016 because Travis builds were failing with an undefined reference
+# to clock_gettime. Documentation says that -lrt is required, but it was working OK without on Darwin.
+# It does build successfully on Darwin with -lrt too.
 lulesh: $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
 	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lrt -lm
 

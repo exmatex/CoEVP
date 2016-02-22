@@ -189,7 +189,6 @@ dummy: ;
 	cp $*.d.tmp $*.d
 	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' -e '/^$$/ d' -e 's/$$/ :/' < $*.d.tmp >> $*.d
 	rm -f $*.d.tmp
-	$(info CXX is $(CXX))
 	$(CXX) -c $(OPTFLAGS)  -c -o $@ $< 
 
 -include $(CM_DEPS)

@@ -1,6 +1,5 @@
 branches:
   except:
-#   - log-basic
    
 sudo: false
 
@@ -29,26 +28,24 @@ addons:
       
 env:
   matrix: 
-    # - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no
-    # - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no
-    # - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no
-    # - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no
+    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no
+    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no
     - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=no  LOGGER=yes
-    # - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=yes LOGGER=no
-    # - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=no  LOGGER=yes
-    # - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=yes LOGGER=no
-    # - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=yes
-    # - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no
-    # - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no NP=1 LOGGER=no
-    # - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=yes NP=1 LOGGER=yes
-    # - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes NP=4 LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=yes LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=no  LOGGER=yes
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=yes LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=yes
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no
+    - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=no  NP=1
+    - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes               LOGGER=no  NP=4
 
 before_script:
   - export PATH="/usr/lib/ccache:$PATH"
 
-# put -j2 back
 script:
-  - make COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} && 
+  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} && 
     make get_reference &&
     { [[ ${SILO} = no ]] || make test COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} MPIRUN="${NP:+mpirun -np ${NP}}"; }
 
