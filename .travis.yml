@@ -14,6 +14,8 @@ install:
 
 addons:
   apt:
+    sources:
+      - ubuntu-toolchain-r-test
     packages:
       - ccache
       - gfortan #for silo
@@ -55,4 +57,4 @@ cache:
 
 notifications:
   email:
-    - tabasco-dev@lanl.gov  
+#    - tabasco-dev@lanl.gov  
