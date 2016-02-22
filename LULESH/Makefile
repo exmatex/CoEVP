@@ -122,7 +122,7 @@ LULESH_DEPS=$(LULESH_SRC:.cc=.d)
 -include $(LULESH_DEPS)
 
 lulesh: $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
-	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lm
+	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lrt -lm
 
 clean:
 	rm -f *~ lulesh $(LULESH_OBJS) $(LULESH_DEPS)
