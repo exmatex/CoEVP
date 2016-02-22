@@ -10,7 +10,7 @@ compiler:
   - gcc
 
 install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
 
 addons:
   apt:
@@ -24,8 +24,8 @@ addons:
       - libblas-dev
       - libopenmpi-dev
       - openmpi-bin
-      - gcc-4.8
-      - g++-4.8
+      - gcc-4.9
+      - g++-4.9
       
 env:
   matrix: 
