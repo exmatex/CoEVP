@@ -4,7 +4,11 @@ branches:
    
 language: cpp
 
-sudo: false
+compiler:
+  - gcc
+
+install:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8" CC="gcc-4.8"; fi
 
 addons:
   apt:
@@ -16,6 +20,8 @@ addons:
       - libblas-dev
       - libopenmpi-dev
       - openmpi-bin
+      - gcc-4.8
+      - g++-4.8
       
 env:
   matrix: 
@@ -44,9 +50,6 @@ script:
 cache:
   directories:
     - $HOME/.ccache
-
-compiler:
-  - gcc
 
 notifications:
   email:
