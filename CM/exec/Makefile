@@ -6,7 +6,7 @@
 # Specify the C++ compiler.  This is also used for linking the executable.
 #
 
-CXX = g++
+#CXX = g++
 
 #
 # Specify compiler options (optimization level, debugging options, etc.)
