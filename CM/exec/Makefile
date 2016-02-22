@@ -177,9 +177,8 @@ dummy: ;
 	@[ -f $@ ] || touch $@
 	@echo "CXXFLAGS=$(CXXFLAGS)" | cmp -s $@ - || echo "CXXFLAGS=$(CXXFLAGS)" > $@
 
-# [TODO] Link the logger lib in here instead of in lulesh?
 ../lib/libcm.a:  $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS) $(LOGGER_LIBS)
-	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
+	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS) $(LOGGER_LIBS)
 	cp $(CMLIB_INCL) ../include
 	mkdir -p ../include/mtl
 	cp $(MTL_INCL) ../include/mtl

@@ -36,10 +36,10 @@ FSTRACE=no
 
 lulesh: LULESH/lulesh
 
-LULESH/lulesh: libcm logger
+LULESH/lulesh: libcm
 	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC) LOGGER_LOC=$(LOGGER_LOC) FSTRACE=$(FSTRACE) 
 
-libcm: logger
+libcm:
 	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN) TWEMPROXY=$(TWEMPROXY) FSTRACE=$(FSTRACE) LOGGER=$(LOGGER)
 
 redis:
