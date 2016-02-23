@@ -43,7 +43,9 @@ env:
 
 before_script:
   - export PATH="/usr/lib/ccache:$PATH"
-
+  - export OMPI_CC=$(CC)
+  - export OMPI_CXX=$(CXX)
+  
 script:
   - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} && 
     make get_reference &&

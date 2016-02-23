@@ -150,7 +150,9 @@ TWEMPROXY_SERVER = $(realpath ../../twemproxy/twemproxy-master/src/nutcracker)
 CXXFLAGS += -DNUTCRACKER_SERVER=\"${TWEMPROXY_SERVER}\"
 endif
 
-ifeq ($(LOGGER), yes)
+# LOGGER depends on REDIS=yes
+# IF REDIS=no, logging ends up being a NO OP
+ifeq ($(LOGGER)$(REDIS), yesyes)
 LOGGER_LOC = ../../logger
 LOGGER_LIBS = $(LOGGER_LOC)/liblogger.a
 CXXFLAGS += -DLOGGER -I$(LOGGER_LOC)
