@@ -27,7 +27,7 @@ void  SingletonDB::push(const uint128_t &key, const std::vector<double>& buf, co
 }
 
 void  SingletonDB::erase(const uint128_t &key){
-  this->backend->erase(key);
+  //this->backend->erase(key);
 }
 
 std::vector<double> SingletonDB::pull(const uint128_t &key) {
