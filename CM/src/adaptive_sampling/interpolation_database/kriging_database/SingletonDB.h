@@ -22,6 +22,8 @@ enum SingletonDBBackendEnum
 {
   REDIS_DB,
   HASHMAP_DB,
+  POSIX_DB,
+  HIO_DB,
   DIST_REDIS_DB
 };
 

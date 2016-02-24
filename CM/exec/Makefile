@@ -145,6 +145,11 @@ CXXFLAGS += -DFLANN -I$(FLANN_LOC)
 FLANN_LIBS = $(FLANN_LOC)/../../lib/libflann_s.a
 endif
 
+ifeq ($(HIO), yes)
+CXXFLAGS += -DHIO -I$(LIBHIO_INCLUDE) 
+HIO_LIBS = $(LIBHIO_INCLUDE)/../lib/libhio.a
+endif
+
 ifeq ($(TWEMPROXY), yes)
 TWEMPROXY_SERVER = $(realpath ../../twemproxy/twemproxy-master/src/nutcracker)
 CXXFLAGS += -DNUTCRACKER_SERVER=\"${TWEMPROXY_SERVER}\"
@@ -171,8 +176,8 @@ dummy: ;
 	@[ -f $@ ] || touch $@
 	@echo "CXXFLAGS=$(CXXFLAGS)" | cmp -s $@ - || echo "CXXFLAGS=$(CXXFLAGS)" > $@
 
-../lib/libcm.a:  $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
-	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
+../lib/libcm.a:  $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS) $(HIO_LIBS)
+	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS) $(HIO_LIBS)
 	cp $(CMLIB_INCL) ../include
 	mkdir -p ../include/mtl
 	cp $(MTL_INCL) ../include/mtl
