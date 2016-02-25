@@ -29,6 +29,8 @@ int main(int argc, char *argv[])
   
   int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
   int  redising = 0;              //  By default, do not use REDIS for database
+  int  posixing = 0;              // POSIX Key/Value store
+  int  hioing = 0;                //  HIO global store
   int  global_ns = 0;             //  By default, do not use a global earest neighbor
   int  flanning = 0;              //  By default, do not use FLANN for nearest neighbor search
   int  logging = 0;               //  By default, do not use FLANN for nearest neighbor search
@@ -51,7 +53,9 @@ int main(int argc, char *argv[])
   addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
   addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
   addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
-  addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search");
+  addArg("posix",    'x', 0, 'i',  &(posixing),            0, "use POSIX library");
+  addArg("hio",      'b', 0, 'i',  &(hioing),              0, "use HIO library");
+  addArg("globalns" ,'g', 0, 'i',  &(global_ns),           0, "use global neighbor search/data store");
   addArg("flann",    'f', 0, 'i',  &(flanning),            0, "use FLANN library");
   addArg("n_trees",  't', 1, 'i',  &(flann_n_trees),       0, "number of FLANN trees");
   addArg("n_checks", 'c', 1, 'i',  &(flann_n_checks),      0, "number of FLANN checks");
@@ -78,6 +82,14 @@ int main(int argc, char *argv[])
     printf("Using Redis library...\n");
     if(distributed_redis)
       printf("Using Distributed Redis (twemproxy)...\n");
+  }
+  if (posixing) 
+  {
+    printf("Using POSIX library...\n");
+  }
+  if (hioing) 
+  {
+    printf("Using HIO library...\n");
   }
   if (flanning) {
     printf("Using FLANN library...\n");
@@ -110,6 +122,14 @@ int main(int argc, char *argv[])
       }
       // Add in new (global) backends that require initialization here
       // Optionally put a !variable in the else if
+	  else if(posixing) {
+        SingletonDB::getInstance(SingletonDBBackendEnum::POSIX_DB);
+        global_modelDB = new ModelDB_SingletonDB();
+	  }
+	  else if(hioing) {
+        SingletonDB::getInstance(SingletonDBBackendEnum::HIO_DB);
+        global_modelDB = new ModelDB_SingletonDB();
+	  }
       else if(!redising && global_ns){
         SingletonDB::getInstance(SingletonDBBackendEnum::HASHMAP_DB);
         global_modelDB = new ModelDB_SingletonDB();

@@ -7,7 +7,7 @@ void  SingletonDB_HashMap::push(const uint128_t &key, const std::vector<double>&
 }
 
 void  SingletonDB_HashMap::erase(const uint128_t &key){
-  this->DBMap.erase(key);
+  //this->DBMap.erase(key);
 }
 
 std::vector<double> SingletonDB_HashMap::pull(const uint128_t &key) {

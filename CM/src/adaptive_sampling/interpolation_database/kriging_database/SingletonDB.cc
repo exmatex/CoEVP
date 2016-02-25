@@ -9,6 +9,14 @@
 
 #include "SingletonDB.h"
 #include "SingletonDB_HashMap.h"
+#include "SingletonDB_POSIX.h"
+
+#ifdef HIO
+#include "SingletonDB_HIO.h"
+#else
+#include "SingletonDB_Dummy.h"
+typedef SingletonDB_Dummy SingletonDB_HIO;
+#endif
 
 #ifdef REDIS
 #include "SingletonDB_Redis.h"
@@ -27,7 +35,7 @@ void  SingletonDB::push(const uint128_t &key, const std::vector<double>& buf, co
 }
 
 void  SingletonDB::erase(const uint128_t &key){
-  this->backend->erase(key);
+  //this->backend->erase(key);
 }
 
 std::vector<double> SingletonDB::pull(const uint128_t &key) {
@@ -71,6 +79,14 @@ SingletonDB::SingletonDB(SingletonDBBackendEnum backType, int nArgs, ...) {
 			this->backend = new SingletonDB_Redis(1, true);
 		}
 	}
+	else if(backType == POSIX_DB)
+	{
+		this->backend = new SingletonDB_POSIX();
+	}
+	else if(backType == HIO_DB)
+	{
+		this->backend = new SingletonDB_HIO();
+	}    
 	else
 	{
 		std::cerr << "Invalid DB Backend Used in SingletonDB.cc" << std::endl;
