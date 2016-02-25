@@ -1,6 +1,3 @@
-branches:
-  except:
-    
 sudo: false
 
 language: cpp
@@ -57,4 +54,4 @@ cache:
 
 notifications:
   email:
-#    - tabasco-dev@lanl.gov  
+    - tabasco-dev@lanl.gov  
