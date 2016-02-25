@@ -1,7 +1,6 @@
 *.py[cod]
 *.csv
 *.rdb
-*.ipynb
 venv
 __pycache__
 .ipynb_checkpoints
