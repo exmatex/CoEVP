@@ -4,7 +4,7 @@
 class  Domain;
 class  ConstitutiveData;
 
-ConstitutiveData shim_advance(Domain *, int);
+ConstitutiveData shim_advance(Domain &, int);
 
 #endif
 

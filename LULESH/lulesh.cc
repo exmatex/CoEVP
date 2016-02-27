@@ -2934,7 +2934,7 @@ int Lulesh::UpdateStressForElems()
 
 #if defined(PROTOBUF)
 
-         ConstitutiveData cm_data = shim_advance(&domain, k);
+         ConstitutiveData cm_data = shim_advance(domain, k);
 #else
          ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
                                                           domain.cm_vel_grad(k),
