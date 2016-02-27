@@ -1,3 +1,7 @@
+branches:
+  except:
+    - serverize
+
 sudo: false
 
 language: cpp

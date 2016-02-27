@@ -1,0 +1,64 @@
+package advance;
+
+message Args {
+  required double delta_t = 1;
+
+  message L_new {
+    repeated double a = 1 [packed=true];
+  }
+
+  required double volume_change = 2;
+
+  message State {
+    required double m_Delta_max = 1;
+    required double m_Delta = 2;
+
+    message m_D_old {
+      repeated double a = 1 [packed=true];
+    }
+
+    message m_W_old {
+      repeated double a = 1 [packed=true];
+    }
+    
+    message m_D_new {
+      repeated double a = 1 [packed=true];
+    }
+
+    message m_W_new {
+      repeated double a = 1 [packed=true];
+    }
+    
+    message m_R {
+      repeated double a = 1 [packed=true];
+    }
+
+    required double m_J = 3;
+    required int32 m_num_iters = 4;
+    
+    message m_Vbar_prime {
+      repeated double a = 1 [packed=true];
+    }
+
+    message m_Vbar_prime_dot {
+      repeated double a = 1 [packed=true];
+    }
+
+    message m_Dbar_prime {
+      repeated double a = 1 [packed=true];
+    }
+
+    message m_Wbar {
+      repeated double a = 1 [packed=true];
+    }
+
+    required double m_volume_change = 5;
+    required double m_tol = 6;
+    required double m_K = 7;
+    required double m_G = 8;
+
+    message taylor_state {
+      repeated double a = 1 [packed=true];
+    }
+  }
+}

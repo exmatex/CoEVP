@@ -24,6 +24,8 @@ REDIS_LOC =
 
 LOGGER_LOC=
 
+MSGPACK_LOC=
+
 #CXX = g++
 #CXXFLAGS = -std=c++0x -g -O3 -fopenmp
 CXXFLAGS = -std=c++11 -g -O3
@@ -71,6 +73,20 @@ INCLUDE_DIRS += -I$(LOGGER_LOC)
 LOGGER_LIB += -Wl,-rpath,$(realpath $(LOGGER_LOC)) -L $(LOGGER_LOC) -llogger
 CXXFLAGS += -DLOGGER
 LOG_LIB = ../logger/liblogger.a     # make lulesh depend on logger library
+endif
+
+ifneq ($(strip $(MSGPACK_LOC)),)
+INCLUDE_DIRS +=  -I$(MSGPACK_LOC)
+CXXFLAGS += -DMSGPACK -DMSGPACK_DISABLE_LEGACY_NIL -DMSGPACK_DISABLE_LEGACY_CONVERT
+endif
+
+PROTO_LIB =
+PROTOBUF_LIB =
+ifneq ($(strip $(PROTOBUF_LOC)),)
+INCLUDE_DIRS += -I$(PROTOBUF_LOC)/include
+PROTOBUF_LIB += -Wl,-rpath,$(realpath $(PROTOBUF_LOC))/lib -L $(PROTOBUF_LOC)/lib -lprotobuf
+CXXFLAGS += -DPROTOBUF
+PROTO_LIB = ../serverize/protobuf/lib/libprotobuf.a   # make lulesh depend on protobuf library
 endif
 
 HDF5_LIB =
@@ -125,7 +141,7 @@ LULESH_DEPS=$(LULESH_SRC:.cc=.d)
 # to clock_gettime. Documentation says that -lrt is required, but it was working OK without on Darwin.
 # It does build successfully on Darwin with -lrt too.
 lulesh: $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
-	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lrt -lm
+	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(PROTOBUF_LIB) $(LAPACK) -lrt -lm
 
 clean:
 	rm -f *~ lulesh $(LULESH_OBJS) $(LULESH_DEPS)

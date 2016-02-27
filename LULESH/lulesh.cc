@@ -78,6 +78,15 @@ Additional BSD Notice
 #include "Locator.h"
 #endif
 
+#if defined(MSGPACK)
+#include "msgpack.hpp"
+#endif
+
+#if defined(PROTOBUF)
+#include "shims.h"
+#include "advance.pb.h"
+#endif
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -2922,11 +2931,16 @@ int Lulesh::UpdateStressForElems()
 #ifdef FSTRACE
          cout << "Processing FS element " << k << endl;
 #endif
+
+#if defined(PROTOBUF)
+
+         ConstitutiveData cm_data = shim_advance(&domain, k);
+#else
          ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
                                                           domain.cm_vel_grad(k),
                                                           domain.cm_vol_chng(k),
                                                           domain.cm_state(k));
-
+#endif
          int num_iters = cm_data.num_Newton_iters;
          if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
 
