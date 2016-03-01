@@ -4,7 +4,12 @@
 class  Domain;
 class  ConstitutiveData;
 
-ConstitutiveData shim_advance(Domain &, int);
+struct WrapReturn {
+  ConstitutiveData  *cm_data;
+  void              *state;
+};
+  
+struct WrapReturn  *wrap_advance(Domain &, int);
 
 #endif
 

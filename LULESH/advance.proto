@@ -46,16 +46,15 @@ message Args {
   required double delta_t        = 1;
   required Tensor_2_Gen L_new    = 2;
   required double volume_change  = 3;
-  required CM_State cm_state     = 4;
 }
 
 
 //  Data returned from constitutive model advance() call
-//  Note that a few more items are returned in the serialized version
-//  because we can't modify passed arguments.
-message Results {
-  required double delta_t       = 1;
-  required Tensor_2_Gen L_new   = 2;
-  required double volume_change = 3;
-  required CM_State cm_state    = 4;
+//  Note that we also return a separate CM_State value since advance() modifies
+//  the void* argument it was called with.
+message CM_Data {
+  required Tensor_2_Sym  sigma_prime           = 1;
+  required int32         num_models            = 2;
+  required int32         num_point_value_pairs = 3;
+  required int32         num_Newton_iters      = 4;
 }

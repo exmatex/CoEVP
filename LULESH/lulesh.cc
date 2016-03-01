@@ -2932,8 +2932,9 @@ int Lulesh::UpdateStressForElems()
 #endif
 
 #if defined(PROTOBUF)
-         ConstitutiveData cm_data = shim_advance(domain, k);
-         exit(1);
+         struct WrapReturn *wrap_ret = wrap_advance(domain, k);
+         ConstitutiveData cm_data = *(wrap_ret->cm_data);
+         delete wrap_ret;
 #else
          ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
                                                           domain.cm_vel_grad(k),
