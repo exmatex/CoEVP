@@ -1,64 +1,61 @@
 package advance;
 
+//  9 doubles  (C++ Tensor2Gen has public access to member array a[0..5])
+message Tensor_2_Gen {
+  repeated double a = 1 [packed=true];
+}
+
+
+//  6 doubles  (C++ Tensor2Sym has public access to member array a[0..8])
+message Tensor_2_Sym {
+  repeated double a = 1 [packed=true];
+}
+
+
+//  Arbitrary length array of doubles (used for fine scale state, et.al.)
+message Double_Array {
+  repeated double a = 1 [packed=true];
+}
+
+
+// Constitutive model state (order matters--really matters)
+message CM_State {
+  required double         m_Delta_max      = 1;
+  required double         m_Delta          = 2;
+  required Tensor_2_Sym   m_D_old          = 3;
+  required Tensor_2_Gen   m_W_old          = 4;
+  required Tensor_2_Sym   m_D_new          = 5;
+  required Tensor_2_Gen   m_W_new          = 6;
+  required Tensor_2_Gen   m_R              = 7;
+  required double         m_J              = 8;
+  required int32          m_num_iters      = 9;
+  required Tensor_2_Sym   m_Vbar_prime     = 10;
+  required Tensor_2_Sym   m_Vbar_prime_dot = 11;
+  required Tensor_2_Sym   m_Dbar_prime     = 12;
+  required Tensor_2_Gen   m_Wbar           = 13;
+  required double         m_volume_change  = 14;
+  required double         m_tol            = 15;
+  required double         m_K              = 16;
+  required double         m_G              = 17;
+  required Double_Array   fs_state         = 18;
+}
+
+
+//  Arguments passed to constitutive model advance() call
 message Args {
-  required double delta_t = 1;
+  required double delta_t        = 1;
+  required Tensor_2_Gen L_new    = 2;
+  required double volume_change  = 3;
+  required CM_State cm_state     = 4;
+}
 
-  message L_new {
-    repeated double a = 1 [packed=true];
-  }
 
-  required double volume_change = 2;
-
-  message State {
-    required double m_Delta_max = 1;
-    required double m_Delta = 2;
-
-    message m_D_old {
-      repeated double a = 1 [packed=true];
-    }
-
-    message m_W_old {
-      repeated double a = 1 [packed=true];
-    }
-    
-    message m_D_new {
-      repeated double a = 1 [packed=true];
-    }
-
-    message m_W_new {
-      repeated double a = 1 [packed=true];
-    }
-    
-    message m_R {
-      repeated double a = 1 [packed=true];
-    }
-
-    required double m_J = 3;
-    required int32 m_num_iters = 4;
-    
-    message m_Vbar_prime {
-      repeated double a = 1 [packed=true];
-    }
-
-    message m_Vbar_prime_dot {
-      repeated double a = 1 [packed=true];
-    }
-
-    message m_Dbar_prime {
-      repeated double a = 1 [packed=true];
-    }
-
-    message m_Wbar {
-      repeated double a = 1 [packed=true];
-    }
-
-    required double m_volume_change = 5;
-    required double m_tol = 6;
-    required double m_K = 7;
-    required double m_G = 8;
-
-    message taylor_state {
-      repeated double a = 1 [packed=true];
-    }
-  }
+//  Data returned from constitutive model advance() call
+//  Note that a few more items are returned in the serialized version
+//  because we can't modify passed arguments.
+message Results {
+  required double delta_t       = 1;
+  required Tensor_2_Gen L_new   = 2;
+  required double volume_change = 3;
+  required CM_State cm_state    = 4;
 }

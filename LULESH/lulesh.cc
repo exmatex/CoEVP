@@ -84,7 +84,6 @@ Additional BSD Notice
 
 #if defined(PROTOBUF)
 #include "shims.h"
-#include "advance.pb.h"
 #endif
 
 #ifdef _OPENMP
@@ -2933,8 +2932,8 @@ int Lulesh::UpdateStressForElems()
 #endif
 
 #if defined(PROTOBUF)
-
          ConstitutiveData cm_data = shim_advance(domain, k);
+         exit(1);
 #else
          ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
                                                           domain.cm_vel_grad(k),
