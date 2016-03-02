@@ -142,7 +142,6 @@ endif
 ifeq ($(FLANN), yes)
 FLANN_LOC = ../../flann/flann/src/cpp
 CXXFLAGS += -DFLANN -I$(FLANN_LOC)
-FLANN_LIBS = $(FLANN_LOC)/../../lib/libflann_s.a
 endif
 
 ifeq ($(HIO), yes)
@@ -184,8 +183,8 @@ dummy: ;
 	@[ -f $@ ] || touch $@
 	@echo "CXXFLAGS=$(CXXFLAGS)" | cmp -s $@ - || echo "CXXFLAGS=$(CXXFLAGS)" > $@
 
-../lib/libcm.a:  $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS) $(HIO_LIBS) $(LOGGER_LIBS)
-	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS) $(HIO_LIBS) $(LOGGER_LIBS)
+../lib/libcm.a:  $(CMLIB_OBJS) $(REDIS_LIBS)  $(HIO_LIBS) $(LOGGER_LIBS)
+	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS)  $(HIO_LIBS) $(LOGGER_LIBS)
 	cp $(CMLIB_INCL) ../include
 	mkdir -p ../include/mtl
 	cp $(MTL_INCL) ../include/mtl
