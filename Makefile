@@ -34,13 +34,18 @@ libcm: logger
 endif
 FSTRACE=no
 
-FORTRAN_FLAGS = -lifcore
-#FORTRAN_FLAGS = -lgfortran -lquadmath
+VPSC=yes
+ifeq ($(VPSC),yes)
+libcm: vpsc
+endif
 
 lulesh: LULESH/lulesh
 
 LULESH/lulesh: libcm
 	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC) LOGGER_LOC=$(LOGGER_LOC) FSTRACE=$(FSTRACE) $(FORTRAN_FLAGS)
+
+vpsc:
+	${MAKE} -C CM/src/fine_scale_models/fortran modules
 
 libcm:
 	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN) TWEMPROXY=$(TWEMPROXY) FSTRACE=$(FSTRACE) LOGGER=$(LOGGER)
@@ -61,6 +66,7 @@ logger: redis
 	${MAKE} -C logger REDIS=$(REDIS) REDIS_LOC=$(REDIS_LOC)
 
 clean:
+	${MAKE} -C CM/src/fine_scale_models/fortran clean
 	${MAKE} -C CM/exec realclean
 	${MAKE} -C LULESH clean
 	rm -rf test/*.silo

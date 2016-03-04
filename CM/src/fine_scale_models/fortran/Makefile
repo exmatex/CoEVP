@@ -22,18 +22,17 @@ FILES = vpEtxt_interface_base.f90 vpscVpETxt_interface.f90 libraryR8.f vpsc_as_N
 SRCS = $(wildcard $(FILES))
 
 OBJS = vpEtxt_interface_base.o vpscVpETxt_interface.o libraryR8.o vpsc_as_N2O.o init.o
-MODS = vpETxt_interface_base.mod vpscVpETxt_interface.mod
+MODS = vpetxt_interface_base.mod vpscvpetxt_interface.mod
 
 Taylor: TaylorFort.f90
 	$(FC) -c TaylorFort.f90
 
-modules: $(MODS) $(OBJS) $(SRCS)
-	$(FC) $(FFLAGS) -c $(SRCS)
+modules: $(MODS) $(OBJS)
 
-vpETxt_interface_base.mod: vpEtxt_interface_base.f90
+vpetxt_interface_base.mod vpEtxt_interface_base.o: vpEtxt_interface_base.f90
 	$(FC) $(FFLAGS) -c $<
 
-vpscVpETxt_interface.mod: vpscVpETxt_interface.f90
+vpscvpetxt_interface.mod vpscVpETxt_interface.o: vpscVpETxt_interface.f90
 	$(FC) $(FFLAGS) -c $<
 
 %.o : %.f90

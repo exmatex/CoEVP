@@ -6,7 +6,7 @@ compiler:
   - gcc
 
 install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
+  - export CXX="g++-4.9" CC="gcc-4.9" FC="gfortran-4.9"
 
 addons:
   apt:
@@ -22,6 +22,7 @@ addons:
       - openmpi-bin
       - gcc-4.9
       - g++-4.9
+      - gfortran-4.9
       
 env:
   matrix: 
@@ -44,7 +45,7 @@ before_script:
   - export OMPI_CXX="g++-4.9"
   
 script:
-  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} && 
+  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} FFLAGS="-fdefault-real-8" FORTRAN_LIBS="-lgfortran -lquadmath" FC="${FC}" && 
     make get_reference &&
     { [[ ${SILO} = no ]] || make test COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} MPIRUN="${NP:+mpirun -np ${NP}}"; }
 

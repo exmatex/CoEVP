@@ -45,13 +45,8 @@ HDF5_DEFINES = -DH5_USE_16_API
 #
 
 
-#ifeq($(CXX),'icc')
-# intel libs
-LIBS = -lm -lifcore
-#else 
-# gcc libs
-#LIBS = -lgfortran -lquadmath -lm
-#endif
+FORTRAN_LIBS=-lifcore
+LIBS = -lm
 
 ifneq ($(strip $(LAPACK_LOC)),)
 LIBS += -L$(LAPACK_LOC)
@@ -124,7 +119,7 @@ FS_F_LOC  = ../src/fine_scale_models/fortran
 FS_SRC  = $(shell ls $(FS_LOC)/*.cc)
 FS_INCL = $(FS_SRC:.cc=.h) $(FS_LOC)/FineScale.h
 FS_OBJS = $(FS_SRC:.cc=.o)
-FS_F_SRC  = $(shell ls $(FS_LOC)/*.f90)
+FS_F_SRC  = $(shell ls $(FS_F_LOC)/*.f90)
 FS_F_OBJS = $(shell ls $(FS_F_LOC)/*.o)
 #FS_F_OBJS = init.o  libraryR8.o  vpEtxt_interface_base.o  vpscVpETxt_interface.o  vpsc_as_N2O.o TaylorFort.o
 FS_DEPS = $(FS_SRC:.cc=.d) ${FS_F_SRC:.f90=.d}
@@ -196,11 +191,11 @@ default: libcm
 libcm: ../lib/libcm.a
 
 kintest: $(KINTEST_OBJS)
-	$(CXX) $(CXXFLAGS) $(KINTEST_OBJS) $(LIBS) -o kintest
+	$(CXX) $(CXXFLAGS) $(KINTEST_OBJS) $(LIBS) $(FORTRAN_LIBS) -o kintest
 
 modtest: $(MODTEST_OBJS) ${MODTEST_F_OBJS}
 	${FC} -c ${FS_F_SRC}
-	$(CXX) $(CXXFLAGS) $(MODTEST_OBJS) ${MODTEST_F_OBJS} $(LIBS) -o modtest 
+	$(CXX) $(CXXFLAGS) $(MODTEST_OBJS) ${MODTEST_F_OBJS} $(LIBS) $(FORTRAN_LIBS) -o modtest 
 
 dummy: ;
 

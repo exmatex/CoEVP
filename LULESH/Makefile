@@ -35,8 +35,8 @@ CXXFLAGS = -std=c++11 -g -O3
 #CXXFLAGS = -std=c++0x -g -O3
 
 # fortran flags hardcoded for now
-FORTRAN_FLAGS = -lifcore
-#FORTRAN_FLAGS = -lgfortran -lquadmath
+FORTRAN_LIBS = -lifcore
+#FORTRAN_LIBS = -lgfortran -lquadmath
 
 ###### CONFIGURATION END ############
 
@@ -135,7 +135,7 @@ LULESH_DEPS=$(LULESH_SRC:.cc=.d)
 # to clock_gettime. Documentation says that -lrt is required, but it was working OK without on Darwin.
 # It does build successfully on Darwin with -lrt too.
 lulesh: $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
-	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lrt -lm $(EXTRA_LIBS) $(FORTRAN_FLAGS)
+	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lrt -lm $(EXTRA_LIBS) $(FORTRAN_LIBS)
 
 clean:
 	rm -f *~ lulesh $(LULESH_OBJS) $(LULESH_DEPS)
