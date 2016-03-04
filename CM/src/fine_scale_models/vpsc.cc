@@ -128,6 +128,8 @@ vpsc::printState()
    void
 vpsc::vpsc_init_class()
 {
+   diagnostics = 0;
+
    char fnameIn[80]="CM/src/fine_scale_models/data/vpsc_as_try.in";
    char str[1000];
    FILE *inFile=NULL;
@@ -137,7 +139,8 @@ vpsc::vpsc_init_class()
 
    inFile = fopen(fnameIn,"r");
    fscanf(inFile,"%d %[^\n]\n", &numPhases, str);
-   printf("numPhases = %d\n", numPhases);
+   if (diagnostics == 1)
+      printf("numPhases = %d\n", numPhases);
    if (numPhases > nPhaseMax) {
       printf("We don't handle more than %d phases\n", nPhaseMax);
       exit;
@@ -150,7 +153,6 @@ vpsc::vpsc_init_class()
    nGrTot = 300;
    nH = 19;
    nTwinSysMax = 12;
-   diagnostics = 0;
 
    // allocate space for the materials
    // interface data
@@ -173,6 +175,7 @@ vpsc::vpsc_init_class()
 
    for (iPhase = 0; iPhase < nPhase; iPhase++) {
       fscanf(inFile, "%lf", &volFrac[iPhase]);
+   if (diagnostics == 1)
       printf("Phase %d has volume fraction %lf\n", iPhase, volFrac[iPhase]);
    }
    fscanf(inFile,"\n");
@@ -181,6 +184,7 @@ vpsc::vpsc_init_class()
 
    //printState();
 
+   if (diagnostics == 1)
    printf("Calling vpsc_init_\n");
 
    // initialize the values using the fortran routines
@@ -214,6 +218,7 @@ vpsc::vpsc_init_class()
 
    //printState();
 
+   if (diagnostics == 1)
    printf("Finished with vpsc_init_\n");
 
 }
