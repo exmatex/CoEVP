@@ -54,7 +54,7 @@ flann:
 twemproxy:
 	${MAKE} -C twemproxy
 
-logger:
+logger: redis
 	${MAKE} -C logger REDIS=$(REDIS) REDIS_LOC=$(REDIS_LOC)
 
 clean:
