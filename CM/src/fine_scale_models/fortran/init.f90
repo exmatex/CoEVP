@@ -136,21 +136,23 @@ SUBROUTINE vpsc_init(&
    integer :: kgr,i,j,f_eval, iGlobal
    integer :: diagnostics
    !
-   !
+   ! 
+   if (diagnostics == 1) then
    write(*,*) 'nPhase passed in = ', nPhase
+   endif
 
    fnameIn='CM/src/fine_scale_models/data/vpsc_as_try.in'
    open(62,FILE=fnameIn,STATUS='OLD')
    read(62,*) iPhase
 
+   if (diagnostics == 1) then
    write(*,*) 'nPhase read in = ', iPhase
    write(*,*) 'Got to here'
+   endif
 
    it%nPhase=nPhase
    it%dRef=1.
    dRef = 1.
-
-   write(*,*) 'Got to here'
 
    if (nPhase > 2) then
       write(*,*) 'No more than 2 phases allowed right now!'
@@ -170,7 +172,9 @@ SUBROUTINE vpsc_init(&
    read(55,*) nGrains(1)
    read(56,*) nGrains(2)
 
+   if (diagnostics == 1) then
    write(*,*) (nGrains(i), i=1,nPhase)
+   endif
    nGrTot = 0
    do iPhase = 1, nPhase
       nGrTot = nGrTot + nGrains(iPhase)
@@ -200,6 +204,7 @@ SUBROUTINE vpsc_init(&
          stop
       endif
 
+   if (diagnostics == 1) then
    write(*,*) 'init_vpsc completed'
    !
    ! generate the flattened arrays to be passed up to the C code
@@ -221,6 +226,7 @@ SUBROUTINE vpsc_init(&
    write(*,*) 'withPorosity= ', it%withPorosity
    write(*,*) 'porosityIHVLB = ', porosityIHVLB
    write(*,*) 'porosityIHVUB = ', porosityIHVUB
+   endif
 
    ! convert fortran logical to C int
    intPorosity = 0;
@@ -234,8 +240,6 @@ SUBROUTINE vpsc_init(&
    withPorosity = it%withPorosity
    porosityIHVLB = it%porosityIHVLB
    porosityIHVUB = it%porosityIHVUB
-
-   write(*,*) 'Got to here'
 
    do i = 1, nH
       hVecInit(i) = it%hVecInit(i)
@@ -262,11 +266,7 @@ SUBROUTINE vpsc_init(&
          iWeight = iWeight + 1
       enddo
 
-      write(*,*) 'Got to here', iPhase, nGrains(iPhase)
- 
    enddo
-
-   write(*,*) 'Got to here'
 
    if (diagnostics == 1) then
 
@@ -299,10 +299,10 @@ SUBROUTINE vpsc_init(&
          write(*,*) i, orients(iGlobal+1), orients(iGlobal+2), orients(iGlobal+3), weights(i)
       enddo
    
-   endif
 
    write(*,*) 'Got to end of vpsc_init'
 
+   endif
 
 end subroutine vpsc_init
 
@@ -380,7 +380,9 @@ subroutine vpsc_run(    &
 
    withPorosity = .false.
 
-   write(*,*) 'Starting vpsc_run'
+   if (diagnostics == 1) then 
+      write(*,*) 'Starting vpsc_run'
+   endif
 
       call cpu_time(tStart)
    ! scale the stress
@@ -473,7 +475,6 @@ subroutine vpsc_run(    &
       do i=1,7
          write(*,*) stressIn(i), stressSvecP(i)
       enddo
-   endif
 
    !
       write(*,*)
@@ -481,6 +482,7 @@ subroutine vpsc_run(    &
       write(*,*)   
    !  pause
    !
+   endif
 
       allocate(hVec(it%nH))
       allocate(hVecDot(it%nH))
@@ -495,6 +497,7 @@ subroutine vpsc_run(    &
          stop
       endif
    !
+   if (diagnostics == 1) then 
       write(*,*)
       write(*,*) 'L_o='
       write(*,*)  L_o
@@ -508,6 +511,7 @@ subroutine vpsc_run(    &
    !
       call cpu_time(tEnd)
       write(*,*) tEnd-tStart
+   endif
 
 END subroutine vpsc_run
 
