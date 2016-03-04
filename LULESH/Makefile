@@ -125,7 +125,7 @@ LULESH_DEPS=$(LULESH_SRC:.cc=.d)
 # to clock_gettime. Documentation says that -lrt is required, but it was working OK without on Darwin.
 # It does build successfully on Darwin with -lrt too.
 lulesh: $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
-	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lrt -lm
+	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(LAPACK) -lrt -lm $(EXTRA_LIBS)
 
 clean:
 	rm -f *~ lulesh $(LULESH_OBJS) $(LULESH_DEPS)
