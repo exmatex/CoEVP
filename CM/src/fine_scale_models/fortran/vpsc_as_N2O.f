@@ -237,7 +237,7 @@ cas        CALL UPDATE_SHAPE (IPH)
 C ***************************************************************************
 
       NGTOT=NELEM*NGR(NPH)
-      WRITE(*,'('' --> TOTAL NUMBER OF GRAINS IS'',I6)') NGTOT
+!      WRITE(*,'('' --> TOTAL NUMBER OF GRAINS IS'',I6)') NGTOT
       IF(NGTOT.GT.NGRMX) THEN
         WRITE(*,'('' --> INCREASE PARAMETER NGRMX IN vpsc_as.dim'')')
         STOP
