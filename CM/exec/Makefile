@@ -7,12 +7,15 @@
 #
 
 #CXX = g++
+#FC = gfortran
 
+#CXX = icc
+#FC = ifort
 #
 # Specify compiler options (optimization level, debugging options, etc.)
 #
 
-CXXFLAGS = -O3 -g
+CXXFLAGS = -O3 # -g
 
 #
 # Specify the location of the BLAS and LAPACK libraries.  Depending upon the
@@ -41,7 +44,15 @@ HDF5_DEFINES = -DH5_USE_16_API
 # ===== Build options end here =====
 #
 
-LIBS =
+
+#ifeq($(CXX),'icc')
+# intel libs
+LIBS = -lm -lifcore
+#else 
+# gcc libs
+#LIBS = -lgfortran -lquadmath -lm
+#endif
+
 ifneq ($(strip $(LAPACK_LOC)),)
 LIBS += -L$(LAPACK_LOC)
 endif
@@ -109,20 +120,30 @@ EOS_DEPS = $(EOS_SRC:.cc=.d)
 # Fine scale models
 
 FS_LOC  = ../src/fine_scale_models
+FS_F_LOC  = ../src/fine_scale_models/fortran
 FS_SRC  = $(shell ls $(FS_LOC)/*.cc)
 FS_INCL = $(FS_SRC:.cc=.h) $(FS_LOC)/FineScale.h
 FS_OBJS = $(FS_SRC:.cc=.o)
-FS_DEPS = $(FS_SRC:.cc=.d)
+FS_F_SRC  = $(shell ls $(FS_LOC)/*.f90)
+FS_F_OBJS = $(shell ls $(FS_F_LOC)/*.o)
+#FS_F_OBJS = init.o  libraryR8.o  vpEtxt_interface_base.o  vpscVpETxt_interface.o  vpsc_as_N2O.o TaylorFort.o
+FS_DEPS = $(FS_SRC:.cc=.d) ${FS_F_SRC:.f90=.d}
 
 # Standalone kinematic system test
 
 KINTEST_OBJS = kintest.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
 KINTEST_DEPS = kintest.d
 
+# Standalone kinematic system test
+
+MODTEST_OBJS = modtest.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
+MODTEST_F_OBJS = ${FS_F_OBJS}
+MODTEST_DEPS = modtest.d
+
 # Constitutive model library
 
 CMLIB_SRC  = $(CM_SRC) $(EOS_SRC) $(FS_SRC) $(AS_SRC) $(TENSOR_SRC)
-CMLIB_OBJS = $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
+CMLIB_OBJS = $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS) ${FS_F_OBJS}
 CMLIB_INCL = $(INTERPDB_INCL) $(DB_INCL) $(UTILS_INCL) $(CM_INCL) $(EOS_INCL) $(FS_INCL) $(TENSOR_INCL) $(INTERP_INCL) $(AS_INCL)
 
 CXXFLAGS += -std=c++11
@@ -176,6 +197,10 @@ libcm: ../lib/libcm.a
 
 kintest: $(KINTEST_OBJS)
 	$(CXX) $(CXXFLAGS) $(KINTEST_OBJS) $(LIBS) -o kintest
+
+modtest: $(MODTEST_OBJS) ${MODTEST_F_OBJS}
+	${FC} -c ${FS_F_SRC}
+	$(CXX) $(CXXFLAGS) $(MODTEST_OBJS) ${MODTEST_F_OBJS} $(LIBS) -o modtest 
 
 dummy: ;
 

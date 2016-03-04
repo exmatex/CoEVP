@@ -116,6 +116,7 @@ int showMeMonoQ = 0 ;
 
 // Fine scale model options
 #include "Taylor.h"        // the fine-scale plasticity model
+#include "vpsc.h"
 
 enum { VolumeError = -1, QStopError = -2 } ;
 
@@ -3887,7 +3888,16 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
       //      double g = 1.e-4; // (Mbar) Gives a reasonable looking result for m = 1./2.
       //      double m = 1.;
       //      double g = 2.e-6; // (Mbar) Gives a reasonable looking result for m = 1.
-      Plasticity* plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
+      //Plasticity* plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
+
+      printf("Got to here\n");
+      fflush(stdout);
+      vpsc* plasticity_model = new vpsc;
+
+      plasticity_model->vpsc_init_class();
+
+      printf("Got to here %d \n", i);
+      fflush(stdout);
 
       // Construct the equation of state
       EOS* eos_model;
@@ -4045,6 +4055,9 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
       cout << "Plotting fine-scale model evaluations in element " << fsm_count_elem
            << " at (" << xav << "," << yav << "," << zav << ")" << endl;
    }
+
+   printf("Fine scale models initialized\n");
+   fflush(stdout);
 
    Int_t cumulative_fsm_count = 0;
 #endif   

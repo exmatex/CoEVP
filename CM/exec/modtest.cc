@@ -64,19 +64,37 @@ Additional BSD Notice
 #include "GammaLawGas.h"
 #include "MieGruneisen.h"
 #include "Taylor.h"
+#include "vpsc.h"
 #include "ElastoViscoPlasticity.h"
 #include "ApproxNearestNeighborsMTree.h"
 #include "ApproxNearestNeighborsFLANN.h"
+#include "ModelDatabase.h"
+
+void printTensor2Sym (Tensor2Sym A)
+{
+   for (int i=0; i<3; i++) {
+      for (int j=0; j<i+1; j++) {
+         printf("%g  ", A(i+1,j+1));
+      }
+      // print the full tensor to look nice
+      for (int j=i+1; j<3; j++) {
+         printf("%g  ", A(j+1,i+1));
+      }
+      printf("\n");
+   }
+   printf("\n");
+}
 
 void setVelocityGradient(double      time,
                          Tensor2Gen& L)
 {
+   double scale = 40000.0;
    L = Tensor2Gen(0);
 
-   L(1,1) = L(2,2) = -0.5;
-   L(3,3) = 1.;
+   L(1,1) = L(2,2) = -0.5*scale*time;
+   L(3,3) = 1.0*scale*time;
 
-   L(1,3) = L(3,1) = 1.;
+   L(1,3) = L(3,1) = 1.0*scale*time;
 }
 
 int 
@@ -87,8 +105,11 @@ main( int   argc,
    double m = 1./20.;
    double g = 2.e-3;
    double D_0 = 1.e-2;
-   Taylor plasticity_model(D_0, m, g);
+   //Taylor plasticity_model(D_0, m, g);
+   vpsc plasticity_model;
 
+   plasticity_model.vpsc_init_class();
+   
    // Construct the equation of state
    EOS* eos_model;
    {
@@ -140,15 +161,29 @@ main( int   argc,
 
    // Set up the time integration
    double end_time = 2.e-3;
-   int num_steps = 20;
+   int num_steps = 100;
    double delta_t = end_time / num_steps;
-   double time = 0.;
+   double time = 0.1;
+   double Lnorm[num_steps];
+   double gain[num_steps];
+
+   int i,j;
+
+   printf(" Got to here in modtest\n");
+
+   //plasticity_model.printState();
 
    for (int step=1; step<=num_steps; ++step) {
 
       // Advance the hydro, obtaining new values for the following:
       Tensor2Gen L_new;
       setVelocityGradient(time, L_new);
+
+      printf("L_new %d\n", step);
+      for (i=0;i<3;i++) {
+         printf("%f, %f, %f\n",L_new.a[3*i+0],L_new.a[3*i+1],L_new.a[3*i+2]);
+      }
+      fflush(stdout);
 
       // Advance the constitutive model to the new time
       ConstitutiveData cm_data = constitutive_model.advance(delta_t, L_new, 1., state);
@@ -164,7 +199,19 @@ main( int   argc,
       time += delta_t;
 
       cout << "Step " << step << " completed, simulation time is " << time << endl;
+      printTensor2Sym(sigma_prime);
+
+      gain[step] = sigma_prime(1,1)/L_new(1,1);
+      Lnorm[step] = norm(L_new);
+
+
    }
+   cout << "Gain " << endl;
+   for (int step=1; step<=num_steps; ++step) {
+      //cout << step << " ' " << gain[step] << endl;
+      printf(" %d , %e, %e \n", step, Lnorm[step], gain[step]);
+   }
+
 }
 
 

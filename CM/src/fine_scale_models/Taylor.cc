@@ -64,11 +64,37 @@ Additional BSD Notice
 #include "Taylor.h"
 #include <stdlib.h>
 
+#define USE_FORT 1
+
+extern "C"
+{
+   void taylorf_(int*, double*, double*, const double*, const double*, const double*);
+   void printtensor2_(double* in);
+}
 
 Tensor2Sym
 Taylor::tensorFunction( const Tensor2Sym& tau_prime ) const
 {
    Tensor2Sym val;
+#if USE_FORT
+   int size = 6;
+   double in[6];
+
+   double out[6];
+
+   // copy tensor values to flat array
+   for (int i = 0; i < 6; i++) { 
+      in[i] = tau_prime.a[i];
+   }
+
+    printf("Calling Taylor fortran\n");
+
+   taylorf_(&size, in, out, &m_m, &m_D_0, &m_g);
+   for (int i = 0; i < 6; i++) { 
+      val.a[i] = out[i];
+   }
+
+#else
 
    if ( m_m == 1. ) {
       val = m_D_0 * tau_prime / m_g;
@@ -77,6 +103,7 @@ Taylor::tensorFunction( const Tensor2Sym& tau_prime ) const
 
       double norm_tau_prime = norm(tau_prime);
 
+//      cout << norm_tau_prime << endl;
       if (norm_tau_prime > 0.) {
          val = m_D_0 * tau_prime * ( pow(norm_tau_prime/m_g, 1./m_m) / norm_tau_prime );
       }
@@ -85,6 +112,7 @@ Taylor::tensorFunction( const Tensor2Sym& tau_prime ) const
       }
    }
 
+#endif
    return val;
 }
 
