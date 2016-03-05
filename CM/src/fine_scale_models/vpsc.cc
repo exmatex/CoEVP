@@ -130,7 +130,7 @@ vpsc::vpsc_init_class()
 {
    diagnostics = 0;
 
-   char fnameIn[80]="CM/src/fine_scale_models/data/vpsc_as_try.in";
+   char fnameIn[80]="../CM/src/fine_scale_models/data/vpsc_as_try.in";
    char str[1000];
    FILE *inFile=NULL;
    int nPhaseMax = 2;

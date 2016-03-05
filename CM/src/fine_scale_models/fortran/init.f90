@@ -141,7 +141,7 @@ SUBROUTINE vpsc_init(&
    write(*,*) 'nPhase passed in = ', nPhase
    endif
 
-   fnameIn='CM/src/fine_scale_models/data/vpsc_as_try.in'
+   fnameIn='../CM/src/fine_scale_models/data/vpsc_as_try.in'
    open(62,FILE=fnameIn,STATUS='OLD')
    read(62,*) iPhase
 
@@ -166,8 +166,8 @@ SUBROUTINE vpsc_init(&
    read(62,*) (phaseDataList(iPhase)%volfrac, iPhase=1,nPhase)
    close(62)
    !
-   open(55,file='CM/src/fine_scale_models/data/orient_ph1.in',status='old')
-   open(56,file='CM/src/fine_scale_models/data/orient_ph2.in',status='old')
+   open(55,file='../CM/src/fine_scale_models/data/orient_ph1.in',status='old')
+   open(56,file='../CM/src/fine_scale_models/data/orient_ph2.in',status='old')
    !
    read(55,*) nGrains(1)
    read(56,*) nGrains(2)

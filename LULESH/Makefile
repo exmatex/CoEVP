@@ -35,8 +35,8 @@ CXXFLAGS = -std=c++11 -g -O3
 #CXXFLAGS = -std=c++0x -g -O3
 
 # fortran flags hardcoded for now
-FORTRAN_LIBS = -lifcore
-#FORTRAN_LIBS = -lgfortran -lquadmath
+#FORTRAN_LIBS = -lifcore
+FORTRAN_LIBS = -lgfortran #-lquadmath
 
 ###### CONFIGURATION END ############
 
