@@ -120,6 +120,13 @@ dummy: ;
 	@[ -f $@ ] || touch $@
 	@echo "CXXFLAGS=$(CXXFLAGS)" | cmp -s $@ - || echo "CXXFLAGS=$(CXXFLAGS)" > $@
 
+# The Makefile doesn't work correctly.
+# If the .pb.cc and .pb.h file DO NOT exist, they will NOT be built by this target.
+# If they do exist, and the .proto file is newer, the target WILL be run.
+# To get the makefile to work properly, need to find out how to run protoc when the
+# .pb.cc and .pb.h file DO NOT PREVIOUSLY EXIST.
+# So, for now, before forst execution of Makefile, run (from within LULESH directory):
+# ../serverize/protobuf/bin/protoc --cpp_out=. advance.proto
 %.pb.cc %.pb.h: %.proto
 	$(PROTOC) --cpp_out=. $<
 
@@ -130,13 +137,11 @@ ifneq ($(strip $(PROTOBUF_LOC)),)
 # For this to work correctly, proto has to have generated its .cc and .h files
 # (or they must exist form previous execution of protoc)
 LULESH_SRC=$(shell ls *.cc)
-LULESH_OBJS=$(LULESH_SRC:.cc=.o)
-LULESH_OBJS += $(PBOBJS)
 else
 # Removes pre-existing protobuf files if we're building without libprotobuf
 LULESH_SRC=$(filter-out $(PBGENS) ,$(shell ls *.cc))
-LULESH_OBJS=$(LULESH_SRC:.cc=.o)
 endif
+LULESH_OBJS=$(LULESH_SRC:.cc=.o)
 $(info $(LULESH_SRC))
 $(info $(LULESH_OBJS))
 
