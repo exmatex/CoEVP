@@ -1,4 +1,4 @@
-.PHONY: all clean clean-all lulesh libcm redis flann silo test logger twemproxy protobuf
+.PHONY: all clean clean-all lulesh libcm redis flann silo test logger twemproxy protobuf circle
 
 all: lulesh
 
@@ -35,6 +35,7 @@ endif
 PROTOBUF=no
 ifeq ($(PROTOBUF),yes)
 PROTOBUF_LOC=../serverize/protobuf
+CIRCLE_LOC=../serverize/circle
 # libcm:    don't know what this should be
 endif
 FSTRACE=no
@@ -42,7 +43,7 @@ FSTRACE=no
 lulesh: LULESH/lulesh
 
 LULESH/lulesh: libcm
-	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC) LOGGER_LOC=$(LOGGER_LOC) PROTOBUF_LOC=$(PROTOBUF_LOC) FSTRACE=$(FSTRACE) 
+	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC) LOGGER_LOC=$(LOGGER_LOC) PROTOBUF_LOC=$(PROTOBUF_LOC) CIRCLE_LOC=$(CIRCLE_LOC) FSTRACE=$(FSTRACE) 
 
 libcm:
 	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN) TWEMPROXY=$(TWEMPROXY) FSTRACE=$(FSTRACE) LOGGER=$(LOGGER) PROTOBUF=$(PROTOBUF)
@@ -65,6 +66,9 @@ logger:
 protobuf:
 	${MAKE} -C serverize/protobuf
 
+circle:
+	${MAKE} -C serverize/circle
+
 clean:
 	${MAKE} -C CM/exec realclean
 	${MAKE} -C LULESH clean
@@ -77,6 +81,7 @@ clean-all: clean
 	${MAKE} -C twemproxy clean
 	${MAKE} -C logger clean
 	${MAKE} -C serverize/protobuf clean
+	${MAKE} -C serverize/circle clean
 
 get_reference:
 	mkdir -p test/reference
