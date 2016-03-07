@@ -1,4 +1,4 @@
-.PHONY: all clean clean-all lulesh libcm redis flann silo test logger twemproxy
+.PHONY: all clean clean-all lulesh libcm redis flann silo test logger twemproxy protobuf
 
 all: lulesh
 
@@ -63,7 +63,7 @@ logger:
 	${MAKE} -C logger REDIS=$(REDIS) REDIS_LOC=$(REDIS_LOC)
 
 protobuf:
-	${MAKE} -C protobuf
+	${MAKE} -C serverize/protobuf
 
 clean:
 	${MAKE} -C CM/exec realclean
@@ -76,7 +76,7 @@ clean-all: clean
 	${MAKE} -C silo clean
 	${MAKE} -C twemproxy clean
 	${MAKE} -C logger clean
-	${MAKE} -C protobuf clean
+	${MAKE} -C serverize/protobuf clean
 
 get_reference:
 	mkdir -p test/reference

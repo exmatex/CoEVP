@@ -19,12 +19,10 @@ BLAS_LOC =
 # FLANN library location
 FLANN_LOC =
 
-# Redos library location
+# Redis library location
 REDIS_LOC =
 
 LOGGER_LOC=
-
-MSGPACK_LOC=
 
 #CXX = g++
 #CXXFLAGS = -std=c++0x -g -O3 -fopenmp
@@ -75,18 +73,17 @@ CXXFLAGS += -DLOGGER
 LOG_LIB = ../logger/liblogger.a     # make lulesh depend on logger library
 endif
 
-ifneq ($(strip $(MSGPACK_LOC)),)
-INCLUDE_DIRS +=  -I$(MSGPACK_LOC)
-CXXFLAGS += -DMSGPACK -DMSGPACK_DISABLE_LEGACY_NIL -DMSGPACK_DISABLE_LEGACY_CONVERT
-endif
-
 PROTO_LIB =
 PROTOBUF_LIB =
+PBSRCS   = $(wildcard *.proto)
+PBOBJS   = $(PBSRCS:.proto=.pb.o)
+PBGENS   = $(PBSRCS:.proto=.pb.cc) $(PBSRCS:.proto=.pb.h)
 ifneq ($(strip $(PROTOBUF_LOC)),)
 INCLUDE_DIRS += -I$(PROTOBUF_LOC)/include
 PROTOBUF_LIB += -Wl,-rpath,$(realpath $(PROTOBUF_LOC))/lib -L $(PROTOBUF_LOC)/lib -lprotobuf
 CXXFLAGS += -DPROTOBUF
-PROTO_LIB = ../serverize/protobuf/lib/libprotobuf.a   # make lulesh depend on protobuf library
+PROTO_LIB = $(PROTOBUF_LOC)/lib/libprotobuf.a   # make lulesh depend on protobuf library
+PROTOC = $(PROTOBUF_LOC)/bin/protoc
 endif
 
 HDF5_LIB =
@@ -123,25 +120,31 @@ dummy: ;
 	@[ -f $@ ] || touch $@
 	@echo "CXXFLAGS=$(CXXFLAGS)" | cmp -s $@ - || echo "CXXFLAGS=$(CXXFLAGS)" > $@
 
-MAKEDEPEND = $(CC) -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
+%.pb.cc %.pb.h: %.proto
+	$(PROTOC) --cpp_out=. $<
+
 %.o: %.cc .cxxflags
-	@$(MAKEDEPEND)
-	cp $*.d.tmp $*.d
-	sed -e 's/#.*//' -e 's/^[^:]*: *//' -e 's/ *\\$$//' -e '/^$$/ d' -e 's/$$/ :/' < $*.d.tmp >> $*.d
-	rm -f $*.d.tmp
 	$(CXX) -c $(CXXFLAGS) -c -o $@ $< 
 
+ifneq ($(strip $(PROTOBUF_LOC)),)
+# For this to work correctly, proto has to have generated its .cc and .h files
+# (or they must exist form previous execution of protoc)
 LULESH_SRC=$(shell ls *.cc)
 LULESH_OBJS=$(LULESH_SRC:.cc=.o)
-LULESH_DEPS=$(LULESH_SRC:.cc=.d)
-
--include $(LULESH_DEPS)
+LULESH_OBJS += $(PBOBJS)
+else
+# Removes pre-existing protobuf files if we're building without libprotobuf
+LULESH_SRC=$(filter-out $(PBGENS) ,$(shell ls *.cc))
+LULESH_OBJS=$(LULESH_SRC:.cc=.o)
+endif
+$(info $(LULESH_SRC))
+$(info $(LULESH_OBJS))
 
 # Al added the -lrt library on 2/22/2016 because Travis builds were failing with an undefined reference
 # to clock_gettime. Documentation says that -lrt is required, but it was working OK without on Darwin.
 # It does build successfully on Darwin with -lrt too.
-lulesh: $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
-	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(PROTOBUF_LIB) $(LAPACK) -lrt -lm
+lulesh:  $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
+	$(CXX) $(OPTFLAGS) -o $@ $(LULESH_OBJS) $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(PROTOBUF_LIB) $(LAPACK) -lrt -lm
 
 clean:
-	rm -f *~ lulesh $(LULESH_OBJS) $(LULESH_DEPS)
+	rm -f *~ lulesh $(LULESH_OBJS) $(PBGENS) $(PBOBJS)
