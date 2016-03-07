@@ -41,8 +41,8 @@ int main(int argc, char *argv[])
   int  visit_data_interval = 0;  // Set this to 0 to disable VisIt data writing
   int  distributed_redis = 0;
   char logdb[1024] = {0};        // host and port of logging databse (e.g. cn1:6379)
-  int heightElems = 16;
-  int edgeElems = 26;
+  int heightElems = 26;
+  int edgeElems = 16;
   double domStopTime = 1.e-1;
   
   Lulesh luleshSystem;
