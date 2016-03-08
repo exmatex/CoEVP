@@ -133,7 +133,7 @@ dummy: ;
 %.o: %.cc .cxxflags
 	$(CXX) -c $(CXXFLAGS) -c -o $@ $< 
 
-LULESH_SRC=$(filter-out $(PBGENS) ,$(shell ls *.cc))
+LULESH_SRC=$(filter-out $(PBGENS) lctest.cc,$(shell ls *.cc))
 LULESH_OBJS=$(LULESH_SRC:.cc=.o)
 ifneq ($(strip $(PROTOBUF_LOC)),)
 LULESH_OBJS+=$(PBOBJS)
