@@ -1,3 +1,6 @@
+branches:
+  except:
+    
 sudo: false
 
 language: cpp

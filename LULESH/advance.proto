@@ -1,0 +1,60 @@
+package advance;
+
+//  9 doubles  (C++ Tensor2Gen has public access to member array a[0..5])
+message Tensor_2_Gen {
+  repeated double a = 1 [packed=true];
+}
+
+
+//  6 doubles  (C++ Tensor2Sym has public access to member array a[0..8])
+message Tensor_2_Sym {
+  repeated double a = 1 [packed=true];
+}
+
+
+//  Arbitrary length array of doubles (used for fine scale state, et.al.)
+message Double_Array {
+  repeated double a = 1 [packed=true];
+}
+
+
+// Constitutive model state (order matters--really matters)
+message CM_State {
+  required double         m_Delta_max      = 1;
+  required double         m_Delta          = 2;
+  required Tensor_2_Sym   m_D_old          = 3;
+  required Tensor_2_Gen   m_W_old          = 4;
+  required Tensor_2_Sym   m_D_new          = 5;
+  required Tensor_2_Gen   m_W_new          = 6;
+  required Tensor_2_Gen   m_R              = 7;
+  required double         m_J              = 8;
+  required int32          m_num_iters      = 9;
+  required Tensor_2_Sym   m_Vbar_prime     = 10;
+  required Tensor_2_Sym   m_Vbar_prime_dot = 11;
+  required Tensor_2_Sym   m_Dbar_prime     = 12;
+  required Tensor_2_Gen   m_Wbar           = 13;
+  required double         m_volume_change  = 14;
+  required double         m_tol            = 15;
+  required double         m_K              = 16;
+  required double         m_G              = 17;
+  required Double_Array   fs_state         = 18;
+}
+
+
+//  Arguments passed to constitutive model advance() call
+message Args {
+  required double delta_t        = 1;
+  required Tensor_2_Gen L_new    = 2;
+  required double volume_change  = 3;
+}
+
+
+//  Data returned from constitutive model advance() call
+//  Note that we also return a separate CM_State value since advance() modifies
+//  the void* argument it was called with.
+message CM_Data {
+  required Tensor_2_Sym  sigma_prime           = 1;
+  required int32         num_models            = 2;
+  required int32         num_point_value_pairs = 3;
+  required int32         num_Newton_iters      = 4;
+}
