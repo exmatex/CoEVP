@@ -1,7 +1,5 @@
 branches:
   except:
-    - serverize
-    - circle
     
 sudo: false
 

@@ -24,7 +24,7 @@ libcm: twemproxy
 endif
 # LOGGER depends on REDIS=yes
 # IF REDIS=no, logging ends up being a NO OP
-LOGGER=yes
+LOGGER=no
 ifeq ($(LOGGER)$(REDIS), yesno)
 LOGGER=no
 endif

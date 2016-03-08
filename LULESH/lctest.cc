@@ -15,6 +15,9 @@
 #include <mpi.h>
 #include "hiredis.h"
 
+const int nSteps = 3;
+const int k      = 500;
+
 int timestep = 0;
 
 
@@ -58,7 +61,7 @@ void processTasks(CIRCLE_handle *handle) {
 //  enqueue for each of the 'k' cells in the mesh.
 void buildTasks(CIRCLE_handle *handle) {
   char taskString[CIRCLE_MAX_STRING_LEN];
-  for(int i=0; i<5; i++) {
+  for(int i=0; i<k; i++) {
     //  "pack"
     sprintf(taskString, "%d %d", timestep, i);
     handle->enqueue(taskString);
@@ -79,7 +82,7 @@ int main(int argc, char ** argv)
   CIRCLE_enable_logging(CIRCLE_LOG_ERR);
 
   if(rank != 0) {
-    for(int i=0; i<3; i++) {
+    for(int i=0; i<nSteps; i++) {
       CIRCLE_begin();
       //  MPI_Barrier(MPI_COMM_WORLD);
       //  At this point, all libcircle tasks are finished(?)
@@ -88,7 +91,7 @@ int main(int argc, char ** argv)
     return 0;
   }
 
-  for(int i=0; i<3; i++) {
+  for(int i=0; i<nSteps; i++) {
     timestep = i;
     doCircleTasks();
     //  Is this even necessary, or does CIRCLE_begin() block here too?
@@ -97,7 +100,7 @@ int main(int argc, char ** argv)
     //  eventually consistent so there is a chance that we will not get all
     //  results. There is a way to check it (using atomic INCR to count
     //  executions), but no way to ensure that we have all results. Ugh.
-    sleep(1);
+    //sleep(1);
     std:: cout << "------" << std::endl;
     //  Fake getting results from REDIS.
     redisContext  *redis = redisConnect("cn2", 6379);   // [HACK]
@@ -111,9 +114,8 @@ int main(int argc, char ** argv)
     if (reply->type != REDIS_REPLY_ARRAY) {
       throw std::runtime_error("Wrong redis return type for libcircle KEYS *");
     }
-    if(reply->elements < 1) {
-      throw std::runtime_error("Number of redis reply elements wrong on KEYS *, got: "
-                               + std::to_string(reply->elements));
+    if(reply->elements != k) {
+      throw std::runtime_error(std::to_string(k) + " keys expected, got " + std::to_string(reply->elements));
     }
     std::cout << "TS: " << i << " (" << reply->elements << ")" << std::endl;
     for (int j=0; j<reply->elements; j++) {
@@ -121,8 +123,9 @@ int main(int argc, char ** argv)
       if (k_reply->type != REDIS_REPLY_STRING) {
         throw std::runtime_error("Wrong redis return type for libcircle getting a key");
       }
-      std::cout << k_reply->str << std::endl;
+      std::cout << k_reply->str << "  ";
     }
+    std::cout << std::endl;
     freeReplyObject(reply);   //  free the KEYS * results (and sub-results)
     reply = (redisReply *)redisCommand(redis, "FLUSHDB");
     if (!reply) {
