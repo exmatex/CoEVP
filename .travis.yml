@@ -1,7 +1,8 @@
 branches:
   except:
     - serverize
-
+    - circle
+    
 sudo: false
 
 language: cpp
