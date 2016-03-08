@@ -3000,11 +3000,11 @@ void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
 }
 
 
-void Lulesh::Initialize(int myRank, int numRanks)
+void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime)
 {
 
-   Index_t edgeElems = 16 ;
-   Index_t gheightElems = 26 ;
+   Index_t edgeElems = edgeDim ;
+   Index_t gheightElems = heightDim ;
 // Index_t gheightElems = 8 ;
 // Index_t edgeElems = 4 ;
    Index_t edgeNodes = edgeElems+1 ;
@@ -3477,7 +3477,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
 
    domain.deltatimemultlb() = Real_t(1.1) ;
    domain.deltatimemultub() = Real_t(1.2) ;
-   domain.stoptime()  = Real_t(1.e-1) ;
+   domain.stoptime()  = domainStopTime;
    domain.dtcourant() = Real_t(1.0e+20) ;
    domain.dthydro()   = Real_t(1.0e+20) ;
    domain.dtmax()     = Real_t(1.0e-2) ;
