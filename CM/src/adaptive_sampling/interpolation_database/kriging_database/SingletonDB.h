@@ -17,15 +17,8 @@
 #define uint128_t unsigned __int128
 
 #include "SingletonDB_Backend.h"
+#include "ModelDB_Enums.h"
 
-enum SingletonDBBackendEnum
-{
-  REDIS_DB,
-  HASHMAP_DB,
-  POSIX_DB,
-  HIO_DB,
-  DIST_REDIS_DB
-};
 
 class SingletonDB {
  public:
