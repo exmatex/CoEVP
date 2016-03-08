@@ -133,15 +133,12 @@ dummy: ;
 %.o: %.cc .cxxflags
 	$(CXX) -c $(CXXFLAGS) -c -o $@ $< 
 
-ifneq ($(strip $(PROTOBUF_LOC)),)
-# For this to work correctly, proto has to have generated its .cc and .h files
-# (or they must exist form previous execution of protoc)
-LULESH_SRC=$(shell ls *.cc)
-else
-# Removes pre-existing protobuf files if we're building without libprotobuf
 LULESH_SRC=$(filter-out $(PBGENS) ,$(shell ls *.cc))
-endif
 LULESH_OBJS=$(LULESH_SRC:.cc=.o)
+ifneq ($(strip $(PROTOBUF_LOC)),)
+LULESH_OBJS+=$(PBOBJS)
+shims.o: advance.pb.h; 
+endif
 $(info $(LULESH_SRC))
 $(info $(LULESH_OBJS))
 

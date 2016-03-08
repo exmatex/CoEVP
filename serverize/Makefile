@@ -10,6 +10,8 @@ CIRCLE_LIB=${CIRCLE_INSTALL}/lib/libcircle.a
 
 all: ${PROTOBUF_BIN} ${CIRCLE_LIB}
 
+protobuf: ${PROTOBUF_BIN}
+
 $(PROTOBUF_DIR).tar.gz:
 ifeq (, $(shell which curl))
 	wget -O $@ https://github.com/google/protobuf/releases/download/v${PROTOBUF_PV}/protobuf-${PROTOBUF_PV}.tar.gz

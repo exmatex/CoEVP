@@ -36,7 +36,7 @@ PROTOBUF=no
 ifeq ($(PROTOBUF),yes)
 PROTOBUF_LOC=../serverize/protobuf
 CIRCLE_LOC=../serverize/circle
-# libcm:    don't know what this should be
+libcm: protobuf
 endif
 FSTRACE=no
 
@@ -64,7 +64,7 @@ logger:
 	${MAKE} -C logger REDIS=$(REDIS) REDIS_LOC=$(REDIS_LOC)
 
 protobuf:
-	${MAKE} -C serverize/protobuf
+	${MAKE} -C serverize protobuf
 
 circle:
 	${MAKE} -C serverize/circle
