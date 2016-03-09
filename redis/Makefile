@@ -8,16 +8,16 @@ all: ${REDIS_SERVER} $(HIREDIS_LIB)
 
 redis-${REDIS_PV}.tar.gz:
 ifeq (, $(shell which curl))
-	wget -O $@ https://github.com/antirez/redis/archive/${REDIS_PV}.tar.gz
+	wget -O $@ https://github.com/antirez/redis/archive/${REDIS_PV}.tar.gz $(WGETFLAG)
 else
-	curl -o $@ -L https://github.com/antirez/redis/archive/${REDIS_PV}.tar.gz
+	curl -o $@ -L https://github.com/antirez/redis/archive/${REDIS_PV}.tar.gz $(CURLFLAG)
 endif
 
 hiredis-${HIREDIS_PV}.tar.gz:
 ifeq (, $(shell which curl))
-	wget -O $@ https://github.com/redis/hiredis/archive/v${HIREDIS_PV}.tar.gz
+	wget -O $@ https://github.com/redis/hiredis/archive/v${HIREDIS_PV}.tar.gz $(WGETFLAG)
 else
-	curl -o $@ -L https://github.com/redis/hiredis/archive/v${HIREDIS_PV}.tar.gz
+	curl -o $@ -L https://github.com/redis/hiredis/archive/v${HIREDIS_PV}.tar.gz $(CURLFLAG)
 endif
 
 $(REDIS_SERVER): redis-${REDIS_PV}.tar.gz
