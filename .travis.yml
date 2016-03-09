@@ -48,9 +48,9 @@ before_script:
   - export OMPI_CXX="g++-4.9"
   
 script:
-  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} && 
+  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} USE_SSL=${USE_SSL} && 
     make get_reference &&
-    { [[ ${SILO} = no ]] || make test COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} USE_SSL=${USE_SSL} MPIRUN="${NP:+mpirun -np ${NP}}"; }
+    { [[ ${SILO} = no ]] || make test COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} MPIRUN="${NP:+mpirun -np ${NP}}"; }
 
 cache:
   directories:
