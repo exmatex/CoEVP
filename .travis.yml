@@ -38,6 +38,7 @@ env:
     - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=yes LOGGER=no
     - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=yes
     - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no USE_SSL=no
     - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=no  NP=1
     - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes               LOGGER=no  NP=4
 

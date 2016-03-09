@@ -42,7 +42,7 @@ FSTRACE=no
 USE_SSL=yes
 ifeq ($(USE_SSL),no)
 CURLFLAG=-k
-WGETFLAG=
+WGETFLAG=--no-check-certificate
 endif
 
 lulesh: LULESH/lulesh
