@@ -228,17 +228,19 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
 {
    Tensor2Sym out;
 
+   double normThreshold = 1.0e-8;
    double inFlat[6];
    double outFlat[6];
 
    double normIn = norm(in);
 
    // bypass vpsc call if stress is too small
-   if (normIn > 1.0e-8) 
+   if (normIn > normThreshold) 
    {
       // copy tensor values to flat array
       for (int i = 0; i < 6; i++) { 
          inFlat[i] = in.a[i];
+         if (diagnostics > 0)
          printf("%f, %f\n", in.a[i], inFlat[i]);
       }
 
@@ -281,8 +283,10 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
       for (int i = 0; i < 6; i++) { 
          out.a[i] = 0.0;
       }
-
-
+      printf("VPSC call bypass\n");
+   }
+   for (int i = 0; i < 6; i++) { 
+       printf("%g, %g\n", in.a[i], out.a[i]);
    }
 
    return out;
