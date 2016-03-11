@@ -15,6 +15,8 @@
 typedef SingletonDB_Dummy SingletonDB_Redis;
 #endif // REDIS
 
+#include "SingletonDB_HashMap.h"
+
 
 ModelDB_SharedDB::ModelDB_SharedDB(SingletonDBBackendEnum backType, int nArgs, ...)
 {
@@ -37,9 +39,10 @@ ModelDB_SharedDB::ModelDB_SharedDB(SingletonDBBackendEnum backType, int nArgs, .
 	}
 	else if(backType == HASHMAP_DB)
 	{
-		//For now, we haven't implemented multiple entry points to a shared hashmap.
-		///TODO: Implement this for testing/performance analysis purposes
-		throw std::runtime_error("Unimplemented Backend (Hashmap) used in ModelDB_SharedDB.cc");
+		//For now, we haven't implemented multiple entry points to a shared hashmap, so throw up a warning that we will ignore
+		std::cerr << "Warning: Non-singleton Hashmap is not Shared" << std::endl;
+		this->dbRef = new SingletonDB_HashMap();
+		//throw std::runtime_error("Unimplemented Backend (Hashmap) used in ModelDB_SharedDB.cc");
 	}
 	else if(backType == DIST_REDIS_DB)
 	{
