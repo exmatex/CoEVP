@@ -133,12 +133,15 @@ dummy: ;
 %.o: %.cc .cxxflags
 	$(CXX) -c $(CXXFLAGS) -c -o $@ $< 
 
-LULESH_SRC=$(filter-out $(PBGENS) lctest.cc,$(shell ls *.cc))
+LULESH_SRC=$(filter-out $(PBGENS) lctest.cc, $(shell ls *.cc))
 LULESH_OBJS=$(LULESH_SRC:.cc=.o)
 ifneq ($(strip $(PROTOBUF_LOC)),)
 LULESH_OBJS+=$(PBOBJS)
-shims.o: advance.pb.h; 
+# This fix by Christoph still doesn't work.
+#shims.o: advance.pb.h; 
 endif
+$(info $(LULESH_SRC))
+$(info $(LULESH_OBJS))
 
 # Al added the -lrt library on 2/22/2016 because Travis builds were failing with an undefined reference
 # to clock_gettime. Documentation says that -lrt is required, but it was working OK without on Darwin.

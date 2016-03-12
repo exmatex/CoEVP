@@ -2910,6 +2910,59 @@ void Lulesh::LagrangeLeapFrog()
    // LagrangeRelease() ;  Creation/destruction of temps may be important to capture 
 }
 
+//  For use with libcircle, REDIS pub/sub, Apache Thrift, etc.
+//  Splits main loop into two loops: one to farm out work and the other to
+//  collect results.
+int Lulesh::UpdateStressForElemsServer()
+{
+  //  Cleaned out a bunch of stuff from the serial UpdateStressForElems.
+  int max_nonlinear_iters = 0;
+  int max_local_newton_iters = 0;
+  int numElem = domain.numElem() ;
+
+  for (Index_t k=0; k<numElem; ++k) {
+    //  For now, the only server version is libcircle. This code will be changed when
+    //  we add others such as REDIS pub/sub.
+    struct WrapReturn *wrap_ret = wrap_advance(domain, k);
+    ConstitutiveData cm_data = *(wrap_ret->cm_data);
+    delete wrap_ret;
+
+    int num_iters = cm_data.num_Newton_iters;
+    if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
+
+    const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
+
+    Real_t sx  = domain.sx(k) = sigma_prime(1,1);
+    Real_t sy  = domain.sy(k) = sigma_prime(2,2);
+    Real_t sz  = - sx - sy;
+    Real_t txy = domain.txy(k) = sigma_prime(2,1);
+    Real_t txz = domain.txz(k) = sigma_prime(3,1);
+    Real_t tyz = domain.tyz(k) = sigma_prime(3,2);
+
+    domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
+                            + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
+  }
+
+  if (max_local_newton_iters > max_nonlinear_iters) {
+    max_nonlinear_iters = max_local_newton_iters;
+  }
+
+  //  Basically means that LULESH is distributed. This code will change
+  //  when we couple server-based advance() with distributed LULESH.
+#if defined(COEVP_MPI)
+  {
+    int g_max_nonlinear_iters ;
+
+    MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
+                  MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
+    max_nonlinear_iters = g_max_nonlinear_iters ;
+  }
+#endif
+
+  return max_nonlinear_iters;
+}
+
+
 int Lulesh::UpdateStressForElems()
 {
 //#define MAX_NONLINEAR_ITER 5
@@ -2985,6 +3038,7 @@ int Lulesh::UpdateStressForElems()
 
    return max_nonlinear_iters;
 }
+
 
 void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
 {
@@ -4104,7 +4158,13 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
       TimeIncrement() ;
       LagrangeLeapFrog() ;
       /* problem->commNodes->Transfer(CommNodes::syncposvel) ; */
+
+#if defined(PROTOBUF)
+      int maxIters = UpdateStressForElemsServer();
+#else
       int maxIters = UpdateStressForElems();
+#endif
+
       UpdateStressForElems2(maxIters);
 #ifdef LULESH_SHOW_PROGRESS
       //      printf("time = %e, dt=%e\n",

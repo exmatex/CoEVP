@@ -155,6 +155,7 @@ void CalcHydroConstraintForElems();
 void CalcTimeConstraintsForElems();
 void LagrangeLeapFrog();
 int UpdateStressForElems();
+int UpdateStressForElemsServer();
 void UpdateStressForElems2(int reducedIters);
 /*
 void DumpDomainToVisit(DBfile *db, Domain& domain, int myRank);
