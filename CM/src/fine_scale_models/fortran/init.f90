@@ -308,7 +308,7 @@ end subroutine vpsc_init
 
 subroutine vpsc_run(    &
       stressIn,         &
-      stressOut,        &
+      strainOut,        &
       ! interface variables
       m, g, &
       dRef,    &
@@ -369,7 +369,7 @@ subroutine vpsc_run(    &
    real :: tStart, tEnd
    real(idp) tk,stressSvecP(SVEC+1), L_o(DIMS,DIMS),m,g
    real(idp), pointer :: hVec(:), hVecDot(:)
-   real(idp) stressIn(6), stressOut(6)
+   real(idp) stressIn(6), strainOut(6)
    real(idp) :: scaling
    type (vpETxt_interface_type) :: it
    type (vpETxt_phase_data_type),allocatable, target :: phaseDataList(:)
@@ -389,13 +389,23 @@ subroutine vpsc_run(    &
       scaling = 1.0
    ! index rotation to conform to VPSC internal notation
       stressSvecP=0.
+      ! old rotation
+      !stressSvecP(1)=stressIn(1)*scaling
+      !stressSvecP(2)=stressIn(3)*scaling
+      !stressSvecP(3)=stressIn(6)*scaling
+      !stressSvecP(4)=stressIn(5)*scaling
+      !stressSvecP(5)=stressIn(4)*scaling
+      !stressSvecP(6)=stressIn(2)*scaling
+
+      ! new rotation as per Milo
       stressSvecP(1)=stressIn(1)*scaling
-      stressSvecP(2)=stressIn(3)*scaling
-      stressSvecP(3)=stressIn(6)*scaling
+      stressSvecP(2)=stressIn(2)*scaling
+      stressSvecP(3)=stressIn(3)*scaling
       stressSvecP(4)=stressIn(5)*scaling
-      stressSvecP(5)=stressIn(4)*scaling
-      stressSvecP(6)=stressIn(2)*scaling
-      stressSvecP(7)=20.*(1./3.)*scaling
+      stressSvecP(5)=stressIn(6)*scaling
+      stressSvecP(6)=stressIn(4)*scaling
+
+      stressSvecP(7)=0.*(1./3.)*scaling
 
    ! allocate all the structs used by the interface structs
 
@@ -512,6 +522,22 @@ subroutine vpsc_run(    &
       call cpu_time(tEnd)
       write(*,*) tEnd-tStart
    endif
+
+    ! old rotation
+   !strainOut(1) = L_o(1,1)
+   !strainOut(2) = (L_o(1,2)+L_o(2,1))*0.5
+   !strainOut(3) = L_o(2,2)
+   !strainOut(4) = (L_o(1,3)+L_o(3,1))*0.5
+   !strainOut(5) = (L_o(2,3)+L_o(3,2))*0.5
+   !strainOut(6) = L_o(3,3)
+
+    ! new rotation
+   strainOut(1) = L_o(1,1)
+   strainOut(2) = L_o(2,2)
+   strainOut(3) = L_o(3,3)
+   strainOut(4) = (L_o(1,2)+L_o(2,1))*0.5
+   strainOut(5) = (L_o(2,3)+L_o(3,2))*0.5
+   strainOut(6) = (L_o(1,3)+L_o(3,1))*0.5
 
 END subroutine vpsc_run
 
