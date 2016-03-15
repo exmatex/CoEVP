@@ -39,13 +39,14 @@ int main(int argc, char** argv)
 	char *command;
 	char **command_argv;
 	command = "/home/vernon/CoEVP/LULESH/lulesh";
-	command_argv = (char **)malloc(3 * sizeof(char *));
-	command_argv[0] = "-s";
-	command_argv[1] = "-E 4";
-	command_argv[2] = "-H 1";
-	
-    MPI_Comm_spawn("/home/vernon/CoEVP/LULESH/lulesh", command_argv, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
-
+    command_argv = (char **)malloc(4 * sizeof(char *));
+    command_argv[0] = "-s";
+    command_argv[1] = "-E 4" ;
+    command_argv[2] = "-H 1";
+    command_argv[3] = NULL;	
+//    MPI_Comm_spawn("/home/vernon/CoEVP/LULESH/lulesh", command_argv, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
+    MPI_Comm_spawn(command, command_argv, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
+//      MPI_Comm_spawn("/home/vernon/CoEVP/CM/exec/kintask", MPI_ARGV_NULL, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
 
     // collective broadcast of number of task handlers to all tasks, MPI_ROOT as we are using an intercommunicator
 

@@ -2942,6 +2942,8 @@ int Lulesh::UpdateStressForElemsServer()
     while(1)
     {
   
+        printf("Lulesh Task %d notifies Task Handler %d about its availability.\n", rank, myHandler);
+
         MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_parent);
         // If we sent succesfully, then we are ready to discover some work
         MPI_Recv(&lulesh_worker_id, 1, MPI_INT, myHandler, 3, mpi_intercomm_parent, MPI_STATUS_IGNORE);

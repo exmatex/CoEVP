@@ -21,8 +21,8 @@ int main(int argc, char *argv[])
 {
    int numRanks = 1;
    int myRank = 0;
-   int numTaskHandlers = 4;
-   int numTasks=16;
+   int numTaskHandlers = 2;
+   int numTasks=4;
 
 
 #if defined(COEVP_MPI)
@@ -78,12 +78,18 @@ int main(int argc, char *argv[])
 	  char *command;
    	  char **command_argv;
       command = "/home/vernon/CoEVP/LULESH/lulesh"; 
-      command_argv = (char **)malloc(3 * sizeof(char *));
+      command_argv = (char **)malloc(4 * sizeof(char *));
       command_argv[0] = "-s";
       command_argv[1] = "-E 4";
       command_argv[2] = "-H 1";
+      command_argv[3] = NULL;
+
+	
     
-      MPI_Comm_spawn("/home/vernon/CoEVP/LULESH/lulesh", command_argv, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
+	  printf("LULESH collective spawning %d tasks\n", numTasks);
+//      MPI_Comm_spawn("/home/vernon/CoEVP/LULESH/lulesh", command_argv, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
+      MPI_Comm_spawn(command, command_argv, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
+
 //	  MPI_Comm_spawn("/home/vernon/CoEVP/CM/exec/kintask", MPI_ARGV_NULL, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
 
 
@@ -109,7 +115,7 @@ int main(int argc, char *argv[])
  
 	  MPI_Bcast(&numTaskHandlers, 1, MPI_INT, 0, mpi_intercomm_parent);
   
-	  int myHandler = (int) (((float)myRank / (float)numRanks) * (float)numTaskHandlers);
+	  myHandler = (int) (((float)myRank / (float)numRanks) * (float)numTaskHandlers);
 	  printf("Lulesh Task Worker %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
 
 		// we need to convince lulesh to ignore mpi domain decomposition, hopefully this hack will do it
