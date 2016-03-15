@@ -28,8 +28,18 @@ int main(int argc, char *argv[])
 
 #if defined(MPI_TASK_POOL)
 // create a common intercommunicator between the lulesh domains and the task handlers
+  int rank, size;
+  MPI_Comm mpi_intercomm_taskhandler;
+  MPI_Comm_spawn("/home/vernon/CoEVP/CM/exec/taskhandler", MPI_ARGV_NULL, 4, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
+  
+
+  // here it gets complicated. we need to new intracoomunicator including our spawned task handlers, so we can doa collect launch of the kintask process
   MPI_Comm mpi_comm_taskhandler;
-  MPI_Comm_spawn("kintask", MPI_ARGV_NULL, 4, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_comm_taskhandler, MPI_ERRCODES_IGNORE);
+  MPI_Intercomm_merge(mpi_intercomm_taskhandler, 1, &mpi_comm_taskhandler); 
+
+  MPI_Comm_rank (mpi_comm_taskhandler, &rank);
+  MPI_Comm_size (mpi_comm_taskhandler, &size);
+  printf( "View from Lulesh on intracommunicator  %d of %d\n", rank, size );
 
 
 #endif

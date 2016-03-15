@@ -36,8 +36,12 @@ INCLUDE_DIRS = -I. -I../CM/include
 
 ifeq ($(COEVP_MPI), yes)
 CXXFLAGS += -DCOEVP_MPI
+ifeq ($(MPI_TASK_POOL), yes)
+CXXFLAGS += -DMPI_TASK_POOL
+endif
 CXX= mpic++
 endif
+
 
 ifeq ($(CHARM), yes)
 CXXFLAGS += -D__CHARMC__
