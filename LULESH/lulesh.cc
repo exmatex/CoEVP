@@ -2920,6 +2920,13 @@ int Lulesh::UpdateStressForElemsServer()
   int max_local_newton_iters = 0;
   int numElem = domain.numElem() ;
 
+  void *v;
+  int flag;
+  int vval;
+  MPI_Comm_get_attr( MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, &v, &flag );
+  /* MPI_UNIVERSE_SIZE need not be set */
+  printf("Flag: %d\n", flag);
+
   for (Index_t k=0; k<numElem; ++k) {
     //  For now, the only server version is libcircle. This code will be changed when
     //  we add others such as REDIS pub/sub.
@@ -3096,6 +3103,7 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
 #else
       exit(-1);
 #endif
+
    }
 
 #if 0
@@ -3924,6 +3932,18 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
 #endif
 
    }
+
+
+#if defined(COEVP_MPI)
+
+#if defined(MPI_TASK_POOL)
+// Let's create our task pool using mpi_comm_spawn
+
+
+#endif
+
+#endif
+
 
 #if 0
    {

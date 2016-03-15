@@ -1,6 +1,6 @@
 PROTOBUF_PV=2.6.1
 PROTOBUF_DIR=protobuf-${PROTOBUF_PV}
-PROTOBUF_INSTALL=protobuf
+PROTOBUF_INSTALL=../protobuf
 PROTOBUF_BIN=${PROTOBUF_INSTALL}/bin/protoc
 
 CIRCLE_PV=0.2.1-rc.1
@@ -21,7 +21,7 @@ endif
 
 $(PROTOBUF_BIN): ${PROTOBUF_DIR}.tar.gz
 	tar -xzvf $<
-	mkdir ${PROTOBUF_INSTALL}
+	mkdir -p ${PROTOBUF_INSTALL}
 	cd ${PROTOBUF_DIR}; ./configure --prefix=${PWD}/${PROTOBUF_INSTALL}; make; make install
 
 $(CIRCLE_DIR).tar.gz:
