@@ -25,6 +25,7 @@ public:
 	#if defined(MPI_TASK_POOL)
     	MPI_Comm mpi_comm_taskhandler;
 	    MPI_Comm mpi_intercomm_taskpool;
+		MPI_Comm mpi_intercomm_parent;
 		int myDomainID;
 		int myHandler;
 	#endif

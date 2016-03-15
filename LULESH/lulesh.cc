@@ -2924,82 +2924,99 @@ int Lulesh::UpdateStressForElemsServer()
   int flag;
   int vval;
   int task_worker_id;
-  
+  int lulesh_worker_id;
 
 // let's become a task worker if appropriate
-#if defined(COEVP_MPI)
 
 #if defined(MPI_TASK_POOL)
 
 // I'm really sorry but to avoid initialization headaches, lulesh is both the producer and consumer of work
 // so we have to check if we were instantiated by another mpi process
-  MPI_Comm mpi_intercomm_parent;
-  MPI_Comm_get_parent(&mpi_intercomm_parent);
-  if (mpi_intercomm_parent == MPI_COMM_NULL)  
+  if (mpi_intercomm_parent != MPI_COMM_NULL)  
   {
+
+	// let's reprove for rank, just because
+   int rank;
+   MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+
+    while(1)
+    {
   
+        MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_parent);
+        // If we sent succesfully, then we are ready to discover some work
+        MPI_Recv(&lulesh_worker_id, 1, MPI_INT, myHandler, 3, mpi_intercomm_parent, MPI_STATUS_IGNORE);
 
+        printf("Task %d was paired up with Lulesh domain %d\n", rank, lulesh_worker_id);
 
-  }
-  else
-  {
+        MPI_Send(&rank, 1, MPI_INT, lulesh_worker_id, 4, mpi_intercomm_parent);
 
+        // this is where we receive work from the lulesh domain and ultimately send it back
 
-  for (Index_t k=0; k<numElem; ++k) {
-    //  For now, the only server version is libcircle. This code will be changed when
-    //  we add others such as REDIS pub/sub.
-    struct WrapReturn *wrap_ret = wrap_advance(domain, k);
-  
-    // let us stick our request for a task_worker here
+        printf("Task %d is done working with domain %d\n", rank, lulesh_worker_id);
+	}
 
-	printf("Lulesh Domain %d is registering a task request with Task Handler %d\n", myDomainID, myHandler);
-
-
-    MPI_Send(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler);
-
-   // recieve the task/worker for my payload
-	MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 4, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-
-	printf("Lulesh Domain %d received request for work from task %d\n", myDomainID, task_worker_id);
-
-    ConstitutiveData cm_data = *(wrap_ret->cm_data);
-    delete wrap_ret;
-
-    int num_iters = cm_data.num_Newton_iters;
-    if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
-
-    const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
-
-    Real_t sx  = domain.sx(k) = sigma_prime(1,1);
-    Real_t sy  = domain.sy(k) = sigma_prime(2,2);
-    Real_t sz  = - sx - sy;
-    Real_t txy = domain.txy(k) = sigma_prime(2,1);
-    Real_t txz = domain.txz(k) = sigma_prime(3,1);
-    Real_t tyz = domain.tyz(k) = sigma_prime(3,2);
-
-    domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
-                            + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
-  }
-
-  if (max_local_newton_iters > max_nonlinear_iters) {
-    max_nonlinear_iters = max_local_newton_iters;
-  }
-
-  //  Basically means that LULESH is distributed. This code will change
-  //  when we couple server-based advance() with distributed LULESH.
-#if defined(COEVP_MPI)
-  {
-    int g_max_nonlinear_iters ;
-
-    MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
-                  MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
-    max_nonlinear_iters = g_max_nonlinear_iters ;
   }
 #endif
 
-// end of  main loop
-  }
-  return max_nonlinear_iters;
+
+	  for (Index_t k=0; k<numElem; ++k) {
+	    //  For now, the only server version is libcircle. This code will be changed when
+	    //  we add others such as REDIS pub/sub.
+	    struct WrapReturn *wrap_ret = wrap_advance(domain, k);
+  
+	    // let us stick our request for a task_worker here
+#if defined(MPI_TASK_POOL)
+
+		printf("Lulesh Domain %d is registering a task request with Task Handler %d\n", myDomainID, myHandler);
+
+	    MPI_Send(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler);
+
+	   // recieve the task/worker for my payload
+		MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 4, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+
+		printf("Lulesh Domain %d received request for work from task %d\n", myDomainID, task_worker_id);
+#endif
+
+	    ConstitutiveData cm_data = *(wrap_ret->cm_data);
+	    delete wrap_ret;
+
+	    int num_iters = cm_data.num_Newton_iters;
+	    if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
+
+	    const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
+
+    	Real_t sx  = domain.sx(k) = sigma_prime(1,1);
+	    Real_t sy  = domain.sy(k) = sigma_prime(2,2);
+	    Real_t sz  = - sx - sy;
+	    Real_t txy = domain.txy(k) = sigma_prime(2,1);
+	    Real_t txz = domain.txz(k) = sigma_prime(3,1);
+    	Real_t tyz = domain.tyz(k) = sigma_prime(3,2);
+	
+	    domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
+    	                        + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
+	  }
+
+	  if (max_local_newton_iters > max_nonlinear_iters) {
+	    max_nonlinear_iters = max_local_newton_iters;
+	  }
+
+	  //  Basically means that LULESH is distributed. This code will change
+	  //  when we couple server-based advance() with distributed LULESH.
+	#if defined(COEVP_MPI)
+	  {
+	    int g_max_nonlinear_iters ;
+	
+	    MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
+	                  MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
+	    max_nonlinear_iters = g_max_nonlinear_iters ;
+	  }
+	#endif
+
+	// end of  main loop
+	  
+	
+	  return max_nonlinear_iters;
+
 }
 
 
