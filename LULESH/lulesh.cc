@@ -2923,14 +2923,24 @@ int Lulesh::UpdateStressForElemsServer()
   void *v;
   int flag;
   int vval;
-  MPI_Comm_get_attr( MPI_COMM_WORLD, MPI_UNIVERSE_SIZE, &v, &flag );
-  /* MPI_UNIVERSE_SIZE need not be set */
-  printf("Flag: %d\n", flag);
-
+  int task_worker_id;
   for (Index_t k=0; k<numElem; ++k) {
     //  For now, the only server version is libcircle. This code will be changed when
     //  we add others such as REDIS pub/sub.
     struct WrapReturn *wrap_ret = wrap_advance(domain, k);
+  
+    // let us stick our request for a task_worker here
+
+	printf("Lulesh Domain %d is registering a task request with Task Handler %d\n", myDomainID, myHandler);
+
+
+    MPI_Send(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler);
+
+   // recieve the task/worker for my payload
+	MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 4, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+
+	printf("Lulesh Domain %d received request for work from task %d\n", myDomainID, task_worker_id);
+
     ConstitutiveData cm_data = *(wrap_ret->cm_data);
     delete wrap_ret;
 

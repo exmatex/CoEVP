@@ -3,6 +3,13 @@
 
 #include "domain.h"
 
+#if defined(COEVP_MPI)
+#include <mpi.h>
+#endif
+
+
+
+
 #define MAX_NONLINEAR_ITER 5
 #define SEDOV_SYNC_POS_VEL_EARLY 1
 
@@ -10,7 +17,19 @@ class Lulesh {
 
 private:
 
+
+
 public:
+
+	#if defined(COEVP_MPI)
+	#if defined(MPI_TASK_POOL)
+    	MPI_Comm mpi_comm_taskhandler;
+	    MPI_Comm mpi_intercomm_taskpool;
+		int myDomainID;
+		int myHandler;
+	#endif
+	#endif
+
   // Factor to be multiply the time step by to compensate
   // for fast time scales in the fine-scale model
   Real_t finescale_dt_modifier;

@@ -21,9 +21,8 @@ int main(int argc, char *argv[])
 {
    int numRanks = 1;
    int myRank = 0;
-   int numTaskHandlers = 2;
-   int numTasks=4;
-   int myHandler;
+   int numTaskHandlers = 4;
+   int numTasks=16;
 
 
 #if defined(COEVP_MPI)
@@ -33,6 +32,12 @@ int main(int argc, char *argv[])
 
 #if defined(MPI_TASK_POOL)
 // create a common intercommunicator between the lulesh domains and the task handlers
+  MPI_Comm mpi_comm_taskhandler;
+  MPI_Comm mpi_intercomm_taskpool;
+  int myDomainID;
+  int myHandler;
+
+
   int rank, size;
   MPI_Comm mpi_intercomm_taskhandler;
   printf("Spawning %d MPI Task Handlers\n", numTaskHandlers);
@@ -41,19 +46,20 @@ int main(int argc, char *argv[])
   
 
   // here it gets complicated. we need to new intracoomunicator including our spawned task handlers, so we can doa collect launch of the kintask process
-  MPI_Comm mpi_comm_taskhandler;
+
   MPI_Intercomm_merge(mpi_intercomm_taskhandler, 1, &mpi_comm_taskhandler); 
 
   MPI_Comm_rank (mpi_comm_taskhandler, &rank);
   MPI_Comm_size (mpi_comm_taskhandler, &size);
   printf( "View from Lulesh on intracommunicator  %d of %d\n", rank, size );
 
+  myDomainID = rank; //this is used to ID me when I request workers
+
   // let's tell the task handlers how many tasks we want to spawn
 
   MPI_Bcast(&numTasks, 1, MPI_INT, size-1, mpi_comm_taskhandler);
 
   // we build a shared intracommunicator, so let's use it to do a collective mpi_spawn on our tasks
-  MPI_Comm mpi_intercomm_taskpool;
   MPI_Comm_spawn("/home/vernon/CoEVP/CM/exec/kintask", MPI_ARGV_NULL, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
 
 
@@ -88,6 +94,15 @@ int main(int argc, char *argv[])
   double domStopTime = 1.e-1;
   
   Lulesh luleshSystem;
+
+#if defined(COEVP_MPI)
+  #if defined(MPI_TASK_POOL)
+  luleshSystem.mpi_comm_taskhandler=mpi_comm_taskhandler;
+  luleshSystem.mpi_intercomm_taskpool = mpi_intercomm_taskpool;
+  luleshSystem.myDomainID = myDomainID;
+  luleshSystem.myHandler = myHandler;
+  #endif
+#endif
 
   //  Parse command line optoins
   int  help   = 0;

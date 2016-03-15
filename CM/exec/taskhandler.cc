@@ -50,6 +50,34 @@ int main(int argc, char** argv)
 	    MPI_Bcast(&numTaskHandlers, 1, MPI_INT, MPI_PROC_NULL, mpi_intercomm_taskpool);
     }
 
+    // at this point we are ready to start pairing tasks with lulesh ranks
+
+
+    int lulesh_work_id;
+    int task_worker_id;
+	MPI_Status mpi_status;
+
+	while(1)
+	{ 
+		// the alpha version does a blocking receive from lulesh before looking for available tasks
+        // work_id is just the index of a lulesh domain that has some work
+		// in this case I have to use the merged communicator as I may receive work from an overloaded task handler
+       
+		MPI_Recv(&lulesh_work_id, 1, MPI_INT, MPI_ANY_SOURCE, 1, mpi_comm_taskhandler, &mpi_status);
+
+		// we recieved a payload notification (apparently), let's find a worker to assign it to
+
+		MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 2, mpi_intercomm_taskpool, &mpi_status);
+
+		// send the lulesh worker id to the task, it can do the rest
+
+		MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);
+ 
+		// Sweet, our incredibly hard work is done
+
+		printf("Task Handler %d recieved work from Lulesh domain %d and assigned it to task %d\n", rank, lulesh_work_id, task_worker_id);
+	}
+
   }
   else
   {

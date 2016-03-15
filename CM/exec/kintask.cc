@@ -174,27 +174,47 @@ main( int   argc,
  int step=1;
    
    // this is our blocking while task loop that continues to crunch models until the program dies
+	int lulesh_worker_id;
 
-   for(step=1;step<3;step++)
-   {
+	while(1)
+	{
       // Advance the hydro, obtaining new values for the following:
-      Tensor2Gen L_new;
-      setVelocityGradient(time, L_new);
+   //   Tensor2Gen L_new;
+   //   setVelocityGradient(time, L_new);
 
       // Advance the constitutive model to the new time
-      ConstitutiveData cm_data = constitutive_model.advance(delta_t, L_new, 1., state);
+   //   ConstitutiveData cm_data = constitutive_model.advance(delta_t, L_new, 1., state);
 
       //      cout << "Number of Newton iterations = " << cm_data.num_Newton_iters << endl;
 
       // Print some interpolation statistics if adaptive sampling is being used
-      constitutive_model.printNewInterpStats();
+   //   constitutive_model.printNewInterpStats();
 
       // Get the new Cauchy stress and update hydro
-      const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
+  //    const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
 
-      time += delta_t;
+  //    time += delta_t;
 
-      cout << "Step " << step << " completed, simulation time is " << time << endl;
+   //   cout << "Step " << step << " completed, simulation time is " << time << endl;
+
+
+
+     // I can't do any work until the handler knows I'm free, so I'll do a blocking send
+     // all we are doing with this framework is pairing up tasks with lulesh ranks so we just have to give our rank to the handler
+
+ 		MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_parent);
+     	// If we sent succesfully, then we are ready to discover some work
+		MPI_Recv(&lulesh_worker_id, 1, MPI_INT, myHandler, 3, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+
+		printf("Task %d was paired up with Lulesh domain %d\n", rank, lulesh_worker_id);
+
+		MPI_Send(&rank, 1, MPI_INT, lulesh_worker_id, 4, mpi_intercomm_parent);
+
+		// this is where we receive work from the lulesh domain and ultimately send it back
+
+		printf("Task %d is done working with domain %d\n", rank, lulesh_worker_id);
+      
+
    }
 
    MPI_Finalize();
