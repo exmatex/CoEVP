@@ -2924,6 +2924,27 @@ int Lulesh::UpdateStressForElemsServer()
   int flag;
   int vval;
   int task_worker_id;
+  
+
+// let's become a task worker if appropriate
+#if defined(COEVP_MPI)
+
+#if defined(MPI_TASK_POOL)
+
+// I'm really sorry but to avoid initialization headaches, lulesh is both the producer and consumer of work
+// so we have to check if we were instantiated by another mpi process
+  MPI_Comm mpi_intercomm_parent;
+  MPI_Comm_get_parent(&mpi_intercomm_parent);
+  if (mpi_intercomm_parent == MPI_COMM_NULL)  
+  {
+  
+
+
+  }
+  else
+  {
+
+
   for (Index_t k=0; k<numElem; ++k) {
     //  For now, the only server version is libcircle. This code will be changed when
     //  we add others such as REDIS pub/sub.
@@ -2976,6 +2997,8 @@ int Lulesh::UpdateStressForElemsServer()
   }
 #endif
 
+// end of  main loop
+  }
   return max_nonlinear_iters;
 }
 
