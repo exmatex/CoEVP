@@ -4,12 +4,17 @@
 
 int main(int argc, char** argv)
 {
-  int rank, size, numTasks;
+  int localrank, numTaskHandlers, rank, size, numTasks;
 
   MPI_Init (&argc, &argv);	/* starts MPI */
+ 
+  MPI_Comm_rank (MPI_COMM_WORLD, &localrank);
+  MPI_Comm_size (MPI_COMM_WORLD, &numTaskHandlers);
 
   MPI_Comm mpi_comm_taskhandler;
 
+
+  printf("Total task handlers: %d\n", numTaskHandlers);
 
   // get the parent intercommunicator
   MPI_Comm mpi_intercomm_parent;
@@ -33,6 +38,17 @@ int main(int argc, char** argv)
     MPI_Comm mpi_intercomm_taskpool;
     MPI_Comm_spawn("/home/vernon/CoEVP/CM/exec/kintask", MPI_ARGV_NULL, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
 
+
+    // collective broadcast of number of task handlers to all tasks, MPI_ROOT as we are using an intercommunicator
+
+    if(rank==0)
+    {
+        MPI_Bcast(&numTaskHandlers, 1, MPI_INT, MPI_ROOT, mpi_intercomm_taskpool);
+    }
+    else
+    {
+	    MPI_Bcast(&numTaskHandlers, 1, MPI_INT, MPI_PROC_NULL, mpi_intercomm_taskpool);
+    }
 
   }
   else

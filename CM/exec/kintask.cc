@@ -155,12 +155,28 @@ main( int   argc,
 
    MPI_Comm_rank (mpi_comm_taskpool, &rank);
    MPI_Comm_size (mpi_comm_taskpool, &size);
-   printf( "Hello world from process %d of %d\n", rank, size );
 
+  // let's build an enormous intracommunicator (hmmm this is ugly and unecessary but I can't thnk of a clean way to do it right now)
 
+  MPI_Comm mpi_intercomm_parent;
+  MPI_Comm_get_parent(&mpi_intercomm_parent);
 
-   for (int step=1; step<=num_steps; ++step) {
+  // let's broadcast the number of task handlers why not, this is using an intercommunicator so behaves a little difference
+  
+  int numTaskHandlers;
+ 
+  MPI_Bcast(&numTaskHandlers, 1, MPI_INT, 0, mpi_intercomm_parent);
+  
+  int myHandler = (int) (((float)rank / (float)size) * (float)numTaskHandlers);
+ 
+  printf("Task %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", rank, numTaskHandlers, myHandler);
 
+ int step=1;
+   
+   // this is our blocking while task loop that continues to crunch models until the program dies
+
+   for(step=1;step<3;step++)
+   {
       // Advance the hydro, obtaining new values for the following:
       Tensor2Gen L_new;
       setVelocityGradient(time, L_new);

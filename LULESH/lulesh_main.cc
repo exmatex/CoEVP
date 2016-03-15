@@ -23,6 +23,8 @@ int main(int argc, char *argv[])
    int myRank = 0;
    int numTaskHandlers = 2;
    int numTasks=4;
+   int myHandler;
+
 
 #if defined(COEVP_MPI)
    MPI_Init(&argc, &argv) ;
@@ -54,12 +56,15 @@ int main(int argc, char *argv[])
   MPI_Comm mpi_intercomm_taskpool;
   MPI_Comm_spawn("/home/vernon/CoEVP/CM/exec/kintask", MPI_ARGV_NULL, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
 
-  // let's build a new intracommunicator where everything can talk to each other
 
-  MPI_Comm mpi_comm_taskpool;
+  // we have to take part in the collective bcast cool to let all tasks lnow the number of tasks
+  MPI_Bcast(&numTaskHandlers, 1, MPI_INT, MPI_PROC_NULL, mpi_intercomm_taskpool);
 
+  // I had better figure out my priority task scheduler while I'm at it
 
+  myHandler = (int) (((float)myRank / (float)numRanks) * (float)numTaskHandlers);
 
+  printf("Lulesh Rank %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numRanks, myHandler);
 
 #endif
 #endif
