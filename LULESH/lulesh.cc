@@ -3934,16 +3934,6 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
    }
 
 
-#if defined(COEVP_MPI)
-
-#if defined(MPI_TASK_POOL)
-// Let's create our task pool using mpi_comm_spawn
-
-
-#endif
-
-#endif
-
 
 #if 0
    {

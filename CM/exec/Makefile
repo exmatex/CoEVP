@@ -124,7 +124,7 @@ KINTEST_DEPS = kintest.d
 KINTASK_OBJS = kintask.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
 KINTASK_DEPS = kintask.d
 
-TASKHANDLER_OBJS = taskhandler.cc
+TASKHANDLER_OBJS = taskhandler.o
 
 
 # Constitutive model library

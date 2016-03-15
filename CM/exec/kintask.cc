@@ -150,9 +150,13 @@ main( int   argc,
    int rank;
    int size;
    MPI_Init(&argc, &argv);
-   MPI_Comm_rank (MPI_COMM_WORLD, &rank);
-   MPI_Comm_size (MPI_COMM_WORLD, &size);
+   MPI_Comm mpi_comm_taskpool;
+   MPI_Comm_dup(MPI_COMM_WORLD, &mpi_comm_taskpool);
+
+   MPI_Comm_rank (mpi_comm_taskpool, &rank);
+   MPI_Comm_size (mpi_comm_taskpool, &size);
    printf( "Hello world from process %d of %d\n", rank, size );
+
 
 
    for (int step=1; step<=num_steps; ++step) {

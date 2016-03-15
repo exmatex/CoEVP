@@ -25,6 +25,14 @@ int main(int argc, char *argv[])
    MPI_Init(&argc, &argv) ;
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
    MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
+
+#if defined(MPI_TASK_POOL)
+// create a common intercommunicator between the lulesh domains and the task handlers
+  MPI_Comm mpi_comm_taskhandler;
+  MPI_Comm_spawn("kintask", MPI_ARGV_NULL, 4, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_comm_taskhandler, MPI_ERRCODES_IGNORE);
+
+
+#endif
 #endif
   
   int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
