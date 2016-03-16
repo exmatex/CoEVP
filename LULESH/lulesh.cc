@@ -69,8 +69,10 @@ Additional BSD Notice
 #include <stdexcept>
 #include <sstream>
 
+
 #if defined(COEVP_MPI)
 #include <mpi.h>
+#include <typeinfo>
 #endif
 
 #if defined(LOGGER)      // CoEVP Makefile enforces assert LOGGER=REDIS=yes
@@ -2939,8 +2941,13 @@ int Lulesh::UpdateStressForElemsServer()
    int rank;
    MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 
-    while(1)
-    {
+	Tensor2Gen  cm_vel_grad = domain.cm_vel_grad(1);
+	Real_t deltatime;
+	double  cm_vol_chng;
+	void* cm_state = domain.cm_state(1);
+//	std::cout << "Size of cm_state" << sizeof(*domain.cm_state(1));
+//    while(1)
+//    {
   
         printf("Lulesh Task %d notifies Task Handler %d about its availability.\n", rank, myHandler);
 
@@ -2953,10 +2960,22 @@ int Lulesh::UpdateStressForElemsServer()
         MPI_Send(&rank, 1, MPI_INT, lulesh_worker_id, 4, mpi_intercomm_parent);
 
         // this is where we receive work from the lulesh domain and ultimately send it back
+		MPI_Recv(&deltatime, sizeof(deltatime), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+		MPI_Recv(&cm_vel_grad, sizeof(cm_vel_grad), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+		MPI_Recv(&cm_vol_chng, sizeof(cm_vol_chng), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+		MPI_Recv(cm_state, sizeof(cm_state), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
 
+         ConstitutiveData cm_data = domain.cm(1)->advance(deltatime,
+                                                          cm_vel_grad,
+                                                          cm_vol_chng,
+                                                          cm_state);		
+
+		printf("Task %d completed advance call from %d. State Size: ", rank, lulesh_worker_id);
+		std::cout << cm_state.getStateSize() << "\n";
         printf("Task %d is done working with domain %d\n", rank, lulesh_worker_id);
-	}
+//	}
 
+	exit();
   }
 #endif
 
@@ -2964,7 +2983,6 @@ int Lulesh::UpdateStressForElemsServer()
 	  for (Index_t k=0; k<numElem; ++k) {
 	    //  For now, the only server version is libcircle. This code will be changed when
 	    //  we add others such as REDIS pub/sub.
-	    struct WrapReturn *wrap_ret = wrap_advance(domain, k);
   
 	    // let us stick our request for a task_worker here
 #if defined(MPI_TASK_POOL)
@@ -2977,10 +2995,24 @@ int Lulesh::UpdateStressForElemsServer()
 		MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 4, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
 
 		printf("Lulesh Domain %d received request for work from task %d\n", myDomainID, task_worker_id);
+
+		// now we send the work using our mpi custom datatype
+
+		MPI_Send(&domain.deltatime(), sizeof(domain.deltatime()), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
+		MPI_Send(&domain.cm_vel_grad(k), sizeof(domain.cm_vel_grad(k)), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
+		MPI_Send(&domain.cm_vol_chng(k), sizeof(domain.cm_vol_chng(k)), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
+		MPI_Send(domain.cm_state(k), sizeof(domain.cm_state(k)), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
+
+
+
 #endif
 
-	    ConstitutiveData cm_data = *(wrap_ret->cm_data);
-	    delete wrap_ret;
+         ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
+                                                          domain.cm_vel_grad(k),
+                                                          domain.cm_vol_chng(k),
+                                                          domain.cm_state(k));
+
+
 
 	    int num_iters = cm_data.num_Newton_iters;
 	    if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
