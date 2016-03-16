@@ -15,6 +15,17 @@
 typedef SingletonDB_Dummy SingletonDB_Redis;
 #endif // REDIS
 
+#ifdef HIO
+#include "SingletonDB_HIO.h"
+#else
+#include "SingletonDB_Dummy.h"
+typedef SingletonDB_Dummy SingletonDB_HIO;
+#endif
+
+#include "SingletonDB_POSIX.h"
+
+
+
 #include "SingletonDB_HashMap.h"
 
 
@@ -40,7 +51,8 @@ ModelDB_SharedDB::ModelDB_SharedDB(SingletonDBBackendEnum backType, int nArgs, .
 	else if(backType == HASHMAP_DB)
 	{
 		//For now, we haven't implemented multiple entry points to a shared hashmap, so throw up a warning that we will ignore
-		std::cerr << "Warning: Non-singleton Hashmap is not Shared" << std::endl;
+		//std::cerr << "Warning: Non-singleton Hashmap is not Shared" << std::endl;
+		//And ignore the warning because it is too annoying
 		this->dbRef = new SingletonDB_HashMap();
 		//throw std::runtime_error("Unimplemented Backend (Hashmap) used in ModelDB_SharedDB.cc");
 	}
@@ -60,9 +72,19 @@ ModelDB_SharedDB::ModelDB_SharedDB(SingletonDBBackendEnum backType, int nArgs, .
 			this->dbRef = new SingletonDB_Redis(2, true, true);
 		}
 	}
+	else if(backType == POSIX_DB)
+	{
+		///WARNING: Confirm this is thread-safe
+		this->dbRef = new SingletonDB_POSIX();
+	}
+	else if(backType == HIO_DB)
+	{
+		///WARNING: Confirm this is thread-safe
+		this->dbRef = new SingletonDB_HIO();
+	} 
 	else
 	{
-		//Undefined backend specified
+		//Undefined dbRef specified
 		throw std::runtime_error("Invalid DB Backend Used in ModelDB_SharedDB.cc");
 	}
 
