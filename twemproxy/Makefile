@@ -10,9 +10,9 @@ all: $(TWEMPROXY_SERVER)
 
 master.tar.gz:
 ifeq (, $(shell which curl))
-	wget -O $@ https://github.com/twitter/twemproxy/archive/master.tar.gz
+	wget -O $@ https://github.com/twitter/twemproxy/archive/master.tar.gz $(WGETFLAG)
 else
-	curl -o $@ -L https://github.com/twitter/twemproxy/archive/master.tar.gz
+	curl -o $@ -L https://github.com/twitter/twemproxy/archive/master.tar.gz $(CURLFLAG)
 endif
 
 $(TWEMPROXY_SERVER): master.tar.gz

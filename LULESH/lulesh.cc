@@ -359,6 +359,7 @@ void Lulesh::CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
          Real_t *destAddr = fieldData[fi] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[iset[i]] += srcAddr[i] ;
+
          }
          srcAddr += size ;
       }
@@ -371,6 +372,10 @@ void Lulesh::CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
          Real_t *destAddr = &fieldData[fi][offset] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[iset[i]] += srcAddr[i] ;
+#ifdef COMM_TEST
+            if (domain->sliceLoc() == 0)
+                printf("receiveDataNodes: %d %d %d %d from P1  %d %d %d = %.10e %.10e\n", domain->sliceLoc(), xferFields, fi, offset, size, i, iset[i], srcAddr[i], destAddr[iset[i]]);
+#endif
          }
          srcAddr += size ;
       }
@@ -433,6 +438,10 @@ void Lulesh::CommSyncPosVel(Domain *domain,
          Real_t *destAddr = &fieldData[fi][offset] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[iset[i]] = srcAddr[i] ;
+#ifdef COMM_TEST
+            if (domain->sliceLoc() == 0)
+                printf("receiveDataNodes: %d %d %d %d from P1  %d %d %d = %.10e %.10e\n", domain->sliceLoc(), xferFields, fi, offset, size, i, iset[i], srcAddr[i], destAddr[iset[i]]);
+#endif
          }
          srcAddr += size ;
       }
@@ -489,6 +498,7 @@ void Lulesh::CommMonoQ(Domain *domain, Index_t *iset, Index_t size, Index_t offs
          Real_t *destAddr = fieldData[fi] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[i] = srcAddr[i] ;
+
             if (showMeMonoQ) {
                printf("%e[%d] ", srcAddr[i], iset[i]) ;
             }
@@ -506,12 +516,17 @@ void Lulesh::CommMonoQ(Domain *domain, Index_t *iset, Index_t size, Index_t offs
       srcAddr = &domain->commDataRecv[pmsg * maxPlaneComm] ;
       MPI_Wait(&domain->recvRequest[pmsg], &status) ;
       if (showMeMonoQ) {
-         printf("%d, %d, %d <- %d: ", domain->cycle(), offset, domain->sliceLoc(), domain->sliceLoc() + 1) ;
+      //   printf("%d, %d, %d <- %d: ", domain->cycle(), offset, domain->sliceLoc(), domain->sliceLoc() + 1) ;
       }
       for (Index_t fi=0 ; fi<xferFields; ++fi) {
          Real_t *destAddr = fieldData[fi] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[i] = srcAddr[i] ;
+
+#ifdef COMM_TEST
+            if (domain->sliceLoc() == 0)
+                printf("receiveDataElems: %d %d %d %d from P1  %d %d %d = %.10e\n", domain->sliceLoc(), xferFields, fi, offset, size, i, i, srcAddr[i]);
+#endif
             if (showMeMonoQ) {
                printf("%e[%d] ", srcAddr[i], iset[i]+offset) ;
             }
@@ -1541,7 +1556,7 @@ void Lulesh::ApplyAccelerationBoundaryConditionsForNodes()
 
   Index_t numImpactNodes   = domain.numSymmNodesImpact() ;
 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
   if (domain.sliceLoc() == 0)
 #endif
   {
@@ -3821,14 +3836,14 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
    for (int plane=0; plane<coreElems; ++plane) {
       for (int row=0; row<edgeElems; ++row) {
          domain.elemBC(plane*edgeElems*heightElems + row*heightElems) |=
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
 		 ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
 #else
 		 XI_M_SYMM ;	
 #endif
          domain.elemBC(plane*edgeElems*heightElems +
                         row*heightElems + heightElems-1) |= 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
                            ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
 #else
                            XI_P_FREE ;
@@ -3839,7 +3854,7 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
       for (int row=0; row<(coreElems-1); ++row) {
          domain.elemBC(coreElems*edgeElems*heightElems +
                        plane*(coreElems-1)*heightElems + row*heightElems) |= 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
 		 ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
 #else
 	         XI_M_SYMM ;
@@ -3847,7 +3862,7 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
          domain.elemBC(coreElems*edgeElems*heightElems +
                        plane*(coreElems-1)*heightElems +
                        row*heightElems + heightElems-1) |=
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
                           ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
 #else
                           XI_P_FREE ;
@@ -3855,7 +3870,7 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
       }
       domain.elemBC(coreElems*edgeElems*heightElems +
                     wingElems*(coreElems-1)*heightElems + plane*heightElems) |= 
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
 	      ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
 #else
 	         XI_M_SYMM ;
@@ -3863,7 +3878,7 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
       domain.elemBC(coreElems*edgeElems*heightElems +
                     wingElems*(coreElems-1)*heightElems +
                     plane*heightElems + heightElems-1) |=
-#if defined(COEVP_MPI)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
                        ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
 #else
                           XI_P_FREE ;
