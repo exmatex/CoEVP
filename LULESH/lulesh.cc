@@ -2927,7 +2927,7 @@ int Lulesh::UpdateStressForElemsServer()
   int vval;
   int task_worker_id;
   int lulesh_worker_id;
-
+  void *cm_state = operator new(domain.cm(1)->getStateSize());
 // let's become a task worker if appropriate
 
 #if defined(MPI_TASK_POOL)
@@ -2944,8 +2944,6 @@ int Lulesh::UpdateStressForElemsServer()
 	Tensor2Gen  cm_vel_grad = domain.cm_vel_grad(1);
 	Real_t deltatime;
 	double  cm_vol_chng;
-	void* cm_state = domain.cm_state(1);
-//	std::cout << "Size of cm_state" << sizeof(*domain.cm_state(1));
 //    while(1)
 //    {
   
@@ -2963,19 +2961,21 @@ int Lulesh::UpdateStressForElemsServer()
 		MPI_Recv(&deltatime, sizeof(deltatime), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
 		MPI_Recv(&cm_vel_grad, sizeof(cm_vel_grad), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
 		MPI_Recv(&cm_vol_chng, sizeof(cm_vol_chng), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
-		MPI_Recv(cm_state, sizeof(cm_state), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+//		MPI_Recv(cm_state, sizeof(domain.cm(1)->getStateSize()), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+		
 
-         ConstitutiveData cm_data = domain.cm(1)->advance(deltatime,
-                                                          cm_vel_grad,
-                                                          cm_vol_chng,
-                                                          cm_state);		
+//         ConstitutiveData cm_data = domain.cm(1)->advance(deltatime,
+  //                                                        cm_vel_grad,
+    //                                                      cm_vol_chng,
+      //                                                    domain.cm_state(1));		
 
 		printf("Task %d completed advance call from %d. State Size: ", rank, lulesh_worker_id);
-		std::cout << cm_state.getStateSize() << "\n";
+//		std::cout << domain.cm(1)->getStateSize() << "\n";
+
         printf("Task %d is done working with domain %d\n", rank, lulesh_worker_id);
 //	}
 
-	exit();
+	exit(0);
   }
 #endif
 
@@ -3001,8 +3001,9 @@ int Lulesh::UpdateStressForElemsServer()
 		MPI_Send(&domain.deltatime(), sizeof(domain.deltatime()), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
 		MPI_Send(&domain.cm_vel_grad(k), sizeof(domain.cm_vel_grad(k)), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
 		MPI_Send(&domain.cm_vol_chng(k), sizeof(domain.cm_vol_chng(k)), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
-		MPI_Send(domain.cm_state(k), sizeof(domain.cm_state(k)), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
+//		MPI_Send(domain.cm_state(k), sizeof(domain.cm(1)->getStateSize()), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
 
+		std::cout << domain.cm(1)->getStateSize() << "\n";
 
 
 #endif
