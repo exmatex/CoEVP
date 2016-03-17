@@ -76,6 +76,11 @@ Tensor2Sym
 Taylor::tensorFunction( const Tensor2Sym& tau_prime ) const
 {
    Tensor2Sym val;
+   Tensor2Sym tau_dev;
+
+   // project onto deviatoric 
+   tau_dev = dev(tau_prime);
+
 #if USE_FORT
    int size = 6;
    double in[6];
@@ -84,10 +89,10 @@ Taylor::tensorFunction( const Tensor2Sym& tau_prime ) const
 
    // copy tensor values to flat array
    for (int i = 0; i < 6; i++) { 
-      in[i] = tau_prime.a[i];
+      in[i] = tau_dev.a[i];
    }
 
-    printf("Calling Taylor fortran\n");
+   // printf("Calling Taylor fortran\n");
 
    taylorf_(&size, in, out, &m_m, &m_D_0, &m_g);
    for (int i = 0; i < 6; i++) { 
@@ -97,15 +102,15 @@ Taylor::tensorFunction( const Tensor2Sym& tau_prime ) const
 #else
 
    if ( m_m == 1. ) {
-      val = m_D_0 * tau_prime / m_g;
+      val = m_D_0 * tau_dev / m_g;
    }
    else {
 
-      double norm_tau_prime = norm(tau_prime);
+      double norm_tau_dev = norm(tau_dev);
 
-//      cout << norm_tau_prime << endl;
-      if (norm_tau_prime > 0.) {
-         val = m_D_0 * tau_prime * ( pow(norm_tau_prime/m_g, 1./m_m) / norm_tau_prime );
+//      cout << norm_tau_dev << endl;
+      if (norm_tau_dev > 0.) {
+         val = m_D_0 * tau_dev * ( pow(norm_tau_dev/m_g, 1./m_m) / norm_tau_dev );
       }
       else {
          val = 0.;
