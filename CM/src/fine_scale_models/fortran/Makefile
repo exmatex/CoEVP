@@ -42,6 +42,6 @@ vpscvpetxt_interface.mod vpscVpETxt_interface.o: vpscVpETxt_interface.f90
 	$(FC) $(FFLAGS) -c $<
 
 clean:
-	rm *.mod *.o
+	rm -f *.mod *.o
 
 print-%  : ; @echo $* = $($*)
