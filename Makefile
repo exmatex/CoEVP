@@ -34,9 +34,10 @@ libcm: logger
 endif
 FSTRACE=no
 
-VPSC=yes
 ifeq ($(VPSC),yes)
 libcm: vpsc
+else
+libcm: taylor
 endif
 
 lulesh: LULESH/lulesh
@@ -45,7 +46,12 @@ LULESH/lulesh: libcm
 	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC) LOGGER_LOC=$(LOGGER_LOC) FSTRACE=$(FSTRACE) $(FORTRAN_FLAGS)
 
 vpsc:
+	${MAKE} -C CM/src/fine_scale_models/fortran clean
 	${MAKE} -C CM/src/fine_scale_models/fortran modules
+
+taylor:
+	${MAKE} -C CM/src/fine_scale_models/fortran clean
+	${MAKE} -C CM/src/fine_scale_models/fortran Taylor
 
 libcm:
 	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN) TWEMPROXY=$(TWEMPROXY) FSTRACE=$(FSTRACE) LOGGER=$(LOGGER)
