@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	  MPI_Comm mpi_intercomm_taskhandler;
 	  printf("Spawning %d MPI Task Handlers\n", numTaskHandlers);
 
-	  MPI_Comm_spawn("/home/vernon/CoEVP/CM/exec/taskhandler", MPI_ARGV_NULL, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
+	  MPI_Comm_spawn("../CM/exec/taskhandler", MPI_ARGV_NULL, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
   
 
 	  // here it gets complicated. we need to new intracoomunicator including our spawned task handlers, so we can doa collect launch of the kintask process

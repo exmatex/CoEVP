@@ -84,9 +84,6 @@ Additional BSD Notice
 #include "msgpack.hpp"
 #endif
 
-#if defined(PROTOBUF)
-#include "shims.h"
-#endif
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -2915,7 +2912,7 @@ void Lulesh::LagrangeLeapFrog()
 //  For use with libcircle, REDIS pub/sub, Apache Thrift, etc.
 //  Splits main loop into two loops: one to farm out work and the other to
 //  collect results.
-int Lulesh::UpdateStressForElemsServer()
+int Lulesh::UpdateStressForElems()
 {
   //  Cleaned out a bunch of stuff from the serial UpdateStressForElems.
   int max_nonlinear_iters = 0;
@@ -2926,11 +2923,12 @@ int Lulesh::UpdateStressForElemsServer()
   int flag;
   int vval;
   int task_worker_id;
-  int lulesh_worker_id;
-  void *cm_state = operator new(domain.cm(1)->getStateSize());
 // let's become a task worker if appropriate
 
 #if defined(MPI_TASK_POOL)
+  int lulesh_worker_id;
+  void *cm_state = operator new(domain.cm(1)->getStateSize());
+
 
 // I'm really sorry but to avoid initialization headaches, lulesh is both the producer and consumer of work
 // so we have to check if we were instantiated by another mpi process
@@ -2944,8 +2942,8 @@ int Lulesh::UpdateStressForElemsServer()
 	Tensor2Gen  cm_vel_grad = domain.cm_vel_grad(1);
 	Real_t deltatime;
 	double  cm_vol_chng;
-//    while(1)
-//    {
+    while(1)
+    {
   
         printf("Lulesh Task %d notifies Task Handler %d about its availability.\n", rank, myHandler);
 
@@ -2961,19 +2959,25 @@ int Lulesh::UpdateStressForElemsServer()
 		MPI_Recv(&deltatime, sizeof(deltatime), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
 		MPI_Recv(&cm_vel_grad, sizeof(cm_vel_grad), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
 		MPI_Recv(&cm_vol_chng, sizeof(cm_vol_chng), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
-//		MPI_Recv(cm_state, sizeof(domain.cm(1)->getStateSize()), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+		//MPI_Recv(cm_state, sizeof(domain.cm(1)->getStateSize()), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+		MPI_Recv(domain.cm_state(1), sizeof(domain.cm(1)->getStateSize()), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
 		
 
-//         ConstitutiveData cm_data = domain.cm(1)->advance(deltatime,
-  //                                                        cm_vel_grad,
-    //                                                      cm_vol_chng,
-      //                                                    domain.cm_state(1));		
+       ConstitutiveData cm_data = domain.cm(1)->advance(deltatime,
+                                                          cm_vel_grad,
+                                                          cm_vol_chng,
+                                                          domain.cm_state(1));		
 
-		printf("Task %d completed advance call from %d. State Size: ", rank, lulesh_worker_id);
-//		std::cout << domain.cm(1)->getStateSize() << "\n";
+//		std::cout << "CM Data on task worker: " << reinterpret_cast<char*>(&cm_data) << "\n";
+		printf("Task %d completed advance call from %d. State Size: %d \n", rank, lulesh_worker_id, domain.cm(1)->getStateSize());
+
+		printf("Task %d on Lulesh Worker %d number of iters %d size of cm_data %d\n", rank, lulesh_worker_id, cm_data.num_Newton_iters, sizeof(cm_data));
 
         printf("Task %d is done working with domain %d\n", rank, lulesh_worker_id);
-//	}
+
+		MPI_Send(&cm_data, sizeof(cm_data), MPI_BYTE, lulesh_worker_id, 6, mpi_intercomm_parent);
+
+	}
 
 	exit(0);
   }
@@ -2992,6 +2996,8 @@ int Lulesh::UpdateStressForElemsServer()
 	    MPI_Send(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler);
 
 	   // recieve the task/worker for my payload
+		printf("Lulesh Domain %d is receiving a request for work.\n", myDomainID);
+
 		MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 4, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
 
 		printf("Lulesh Domain %d received request for work from task %d\n", myDomainID, task_worker_id);
@@ -3001,17 +3007,38 @@ int Lulesh::UpdateStressForElemsServer()
 		MPI_Send(&domain.deltatime(), sizeof(domain.deltatime()), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
 		MPI_Send(&domain.cm_vel_grad(k), sizeof(domain.cm_vel_grad(k)), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
 		MPI_Send(&domain.cm_vol_chng(k), sizeof(domain.cm_vol_chng(k)), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
-//		MPI_Send(domain.cm_state(k), sizeof(domain.cm(1)->getStateSize()), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
+		MPI_Send(domain.cm_state(k), sizeof(domain.cm(k)->getStateSize()), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
+
+		printf("Lulesh Domain %d sent work to  %d\n", myDomainID, task_worker_id);
+
 
 		std::cout << domain.cm(1)->getStateSize() << "\n";
 
 
 #endif
 
-         ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
-                                                          domain.cm_vel_grad(k),
-                                                          domain.cm_vol_chng(k),
+         ConstitutiveData cm_data_reference = domain.cm(k)->advance(domain.deltatime(),
+                                                         domain.cm_vel_grad(k),
+                                                         domain.cm_vol_chng(k),
                                                           domain.cm_state(k));
+
+
+
+		printf("Lulesh Domain %d number of iters %d size of cm_data %d\n", myDomainID, cm_data_reference.num_Newton_iters, sizeof(cm_data_reference));
+
+		// receive result from worker
+
+//		struct ConstitutiveData *cm_data_result = malloc(sizeof(struct ConstitutiveData));
+		ConstitutiveData cm_data;
+
+		printf("Sizeof CM data scratch space %d\n", sizeof(cm_data));
+		
+		MPI_Recv(&cm_data, sizeof(cm_data), MPI_BYTE, task_worker_id, 6, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+
+		if(cm_data.num_Newton_iters != cm_data_reference.num_Newton_iters)
+		{
+			printf("Task and worker don't agree on result!\n");
+		}
 
 
 
@@ -3055,81 +3082,6 @@ int Lulesh::UpdateStressForElemsServer()
 }
 
 
-int Lulesh::UpdateStressForElems()
-{
-//#define MAX_NONLINEAR_ITER 5
-   int max_nonlinear_iters = 0;
-   int numElem = domain.numElem() ;
-
-#ifdef _OPENMP
-#pragma omp parallel
-#endif
-   {
-      int max_local_newton_iters = 0;
-
-#ifdef _OPENMP
-#pragma omp for
-#endif
-      for (Index_t k=0; k<numElem; ++k) {
-
-#ifdef FSTRACE
-         cout << "Processing FS element " << k << endl;
-#endif
-
-#if defined(PROTOBUF)
-         struct WrapReturn *wrap_ret = wrap_advance(domain, k);
-         ConstitutiveData cm_data = *(wrap_ret->cm_data);
-         delete wrap_ret;
-#else
-         ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
-                                                          domain.cm_vel_grad(k),
-                                                          domain.cm_vol_chng(k),
-                                                          domain.cm_state(k));
-#endif
-         int num_iters = cm_data.num_Newton_iters;
-         if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
-
-#if 0
-         if (num_iters > MAX_NONLINEAR_ITER) {
-            cout << "numModels = " << cm_data.num_models << ", numPairs = " << cm_data.num_point_value_pairs << endl;
-         }
-#endif
-
-         const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
-
-         Real_t sx  = domain.sx(k) = sigma_prime(1,1);
-         Real_t sy  = domain.sy(k) = sigma_prime(2,2);
-         Real_t sz  = - sx - sy;
-         Real_t txy = domain.txy(k) = sigma_prime(2,1);
-         Real_t txz = domain.txz(k) = sigma_prime(3,1);
-         Real_t tyz = domain.tyz(k) = sigma_prime(3,2);
-
-         domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
-                               + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
-      }
-
-#ifdef _OPENMP
-#pragma omp critical
-#endif
-      {
-         if (max_local_newton_iters > max_nonlinear_iters) {
-            max_nonlinear_iters = max_local_newton_iters;
-         }
-      }
-   }
-
-#if defined(COEVP_MPI)
-   {
-      int g_max_nonlinear_iters ;
-
-      MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
-                    MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
-      max_nonlinear_iters = g_max_nonlinear_iters ;
-   }
-#endif
-
-   return max_nonlinear_iters;
-}
 
 
 void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
@@ -4254,11 +4206,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
       LagrangeLeapFrog() ;
       /* problem->commNodes->Transfer(CommNodes::syncposvel) ; */
 
-#if defined(PROTOBUF)
-      int maxIters = UpdateStressForElemsServer();
-#else
       int maxIters = UpdateStressForElems();
-#endif
 
       UpdateStressForElems2(maxIters);
 #ifdef LULESH_SHOW_PROGRESS

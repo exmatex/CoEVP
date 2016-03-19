@@ -74,10 +74,12 @@ int main(int argc, char** argv)
        
 		MPI_Recv(&lulesh_work_id, 1, MPI_INT, MPI_ANY_SOURCE, 1, mpi_comm_taskhandler, &mpi_status);
 
+		printf("Task Handler %d recieved work from Lulesh Domain %d\n", rank, lulesh_work_id);
 		// we recieved a payload notification (apparently), let's find a worker to assign it to
 
 		MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 2, mpi_intercomm_taskpool, &mpi_status);
 
+		printf("Task Handler %d recieved a work request from Worker %d\n", rank, task_worker_id);
 		// send the lulesh worker id to the task, it can do the rest
 
 		MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);
