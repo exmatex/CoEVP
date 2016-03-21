@@ -83,7 +83,7 @@ Additional BSD Notice
 #endif
 
 #if defined(PROTOBUF)
-#include "shims.h"
+#include "pack.h"
 #endif
 
 #ifdef _OPENMP
@@ -2913,6 +2913,7 @@ void Lulesh::LagrangeLeapFrog()
 //  For use with libcircle, REDIS pub/sub, Apache Thrift, etc.
 //  Splits main loop into two loops: one to farm out work and the other to
 //  collect results.
+#if 0
 int Lulesh::UpdateStressForElemsServer()
 {
   //  Cleaned out a bunch of stuff from the serial UpdateStressForElems.
@@ -2920,9 +2921,116 @@ int Lulesh::UpdateStressForElemsServer()
   int max_local_newton_iters = 0;
   int numElem = domain.numElem() ;
 
+  // Somewhere in main, after appropriate cmdline args, we'll do this
+  int rank = CIRCLE_init(argc, argv, CIRCLE_DEFAULT_FLAGS);
+  CIRCLE_cb_process(&processTasks);
+  CIRCLE_enable_logging(CIRCLE_LOG_ERR);
+
+  // This IS the task. It will be a new LULESH function: execCircleTask()
+//  Get functions parameters (unpack protobuf-encoded string), call
+//  function, and write results to database.
+void processTasks(CIRCLE_handle *handle) {
+  char taskString[CIRCLE_MAX_STRING_LEN];
+  handle->dequeue(&taskString[0]);
+  //  unpack, advance(), pack, write to DB return
+  int  ts;
+  int  k;
+  sscanf(taskString, "%d %d", &ts, &k);
+
+  int numRanks;
+  int myRank;
+  MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
+  MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
+  char my_node[MPI_MAX_PROCESSOR_NAME];
+  int name_len;
+  MPI_Get_processor_name(my_node, &name_len);
+
+  //  Fake putting results into REDIS.
+  redisContext  *redis = redisConnect("cn2", 6379);   // [HACK] start manually on MPI node
+  if (redis != NULL && redis->err) {
+    throw std::runtime_error("Error connecting to redis for circle");
+  }
+  char key[100];
+  sprintf(key, "%d:%d", ts, k);
+  redisReply *reply = (redisReply *)redisCommand(redis, "SET %s %s", key, "results");
+  if (!reply) {
+    std::cerr << "No connection to redis for libcircle...continuing" << std::endl;
+  }
+  freeReplyObject(reply);
+  redisFree(redis);
+  
+  // std::cout << my_node << "/" << myRank << "/" << numRanks << " task string: " << taskString << std::endl;
+}
+
+
+  // This will be a new LULESH function: buildCircleTasks
+//  Setup (via protobuf) parameters to function call.  Would have an
+//  enqueue for each of the 'k' cells in the mesh.
+void buildTasks(CIRCLE_handle *handle) {
+  char taskString[CIRCLE_MAX_STRING_LEN];
+  for(int i=0; i<k; i++) {
+    //  "pack"
+    sprintf(taskString, "%d %d", timestep, i);
+    handle->enqueue(taskString);
+  }
+}
+
+// This will be a new LULESH function: doCircleTasks
+void doCircleTasks() {
+  CIRCLE_cb_create(&buildTasks);
+  CIRCLE_begin();
+}
+
+
+// Note the difference between timesteps and per-cell loop.
+// This function executes enqueued tasks. They fire at the
+// timestep loop level and are enqueued at the per-cell
+// loop level.
+// This function looks like it will be used here as is but
+// may actually live in the go() main timestep loop.
+  if(rank != 0) {
+    for(int i=0; i<nSteps; i++) {
+      CIRCLE_begin();
+      //  MPI_Barrier(MPI_COMM_WORLD);
+      //  At this point, all libcircle tasks are finished(?)
+    }
+    CIRCLE_finalize();
+    return 0;
+  }
+
+  //  Also in main loop of LULESH go()
+  //  So, if not rank 0...receive results
+  for(int i=0; i<nSteps; i++) {
+    timestep = i;
+    doCircleTasks();
+    // unpack, read DB, restore state/results
+  }
+
+
+
+
+
+
+
+
   for (Index_t k=0; k<numElem; ++k) {
     //  For now, the only server version is libcircle. This code will be changed when
     //  we add others such as REDIS pub/sub.
+
+
+    ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
+                                                          domain.cm_vel_grad(k),
+                                                          domain.cm_vol_chng(k),
+                                                          domain.cm_state(k));
+
+
+
+
+
+
+
+
+
     struct WrapReturn *wrap_ret = wrap_advance(domain, k);
     ConstitutiveData cm_data = *(wrap_ret->cm_data);
     delete wrap_ret;
@@ -2961,7 +3069,7 @@ int Lulesh::UpdateStressForElemsServer()
 
   return max_nonlinear_iters;
 }
-
+#endif  // Server
 
 int Lulesh::UpdateStressForElems()
 {
@@ -2985,9 +3093,13 @@ int Lulesh::UpdateStressForElems()
 #endif
 
 #if defined(PROTOBUF)
-         struct WrapReturn *wrap_ret = wrap_advance(domain, k);
-         ConstitutiveData cm_data = *(wrap_ret->cm_data);
-         delete wrap_ret;
+         ConstitutiveData  cm_data;
+         int kk;  // dummy
+         std::string packedParams = packAdvance(k, cm_data, domain.deltatime(), domain.cm_vel_grad(k),
+                                                domain.cm_vol_chng(k), domain.cm_state(k));
+         
+         std::string  packedReturn = unpackAdvanceAndCall(domain, packedParams, &kk, &cm_data, domain.cm_state(k));
+         unpackAdvance(packedReturn, &kk, &cm_data, domain.cm_state(k));
 #else
          ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
                                                           domain.cm_vel_grad(k),
@@ -4160,7 +4272,8 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
       /* problem->commNodes->Transfer(CommNodes::syncposvel) ; */
 
 #if defined(PROTOBUF)
-      int maxIters = UpdateStressForElemsServer();
+      //int maxIters = UpdateStressForElemsServer();
+      int maxIters = UpdateStressForElems();      // [Hack]
 #else
       int maxIters = UpdateStressForElems();
 #endif

@@ -133,12 +133,13 @@ dummy: ;
 %.o: %.cc .cxxflags
 	$(CXX) -c $(CXXFLAGS) -c -o $@ $< 
 
-LULESH_SRC=$(filter-out $(PBGENS) lctest.cc, $(shell ls *.cc))
+LULESH_SRC=$(filter-out $(PBGENS) lctest.cc shims.cc, $(shell ls *.cc))
 LULESH_OBJS=$(LULESH_SRC:.cc=.o)
 ifneq ($(strip $(PROTOBUF_LOC)),)
 LULESH_OBJS+=$(PBOBJS)
+LULESH_OBJS += shims.o
 # This fix by Christoph still doesn't work.
-#shims.o: advance.pb.h; 
+shims.o: advance.pb.h; 
 endif
 $(info $(LULESH_SRC))
 $(info $(LULESH_OBJS))
