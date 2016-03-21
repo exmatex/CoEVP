@@ -44,6 +44,7 @@ int main(int argc, char *argv[])
   int heightElems = 26;
   int edgeElems = 16;
   double domStopTime = 1.e-1;
+  int simStopCycle = 0;
   
   Lulesh luleshSystem;
 
@@ -66,6 +67,7 @@ int main(int argc, char *argv[])
   addArg("log",      'l', 1, 's',  &(logdb),   sizeof(logdb), "log to REDIS at hostname:port");
   addArg("Height Elems", 'H', 1, 'i', &(heightElems), 0, "Number of height elements to solve for");
   addArg("Edge Elems", 'E', 1, 'i', &(edgeElems), 0, "Number of height elements to solve for");
+  addArg("Domain Stop Cycle", 'C', 1, 'i', &(simStopCycle), 0, "Number of Simulated Cycles to Run For");
   addArg("Domain Stop Time", 'D', 1, 'd',  &(domStopTime), 0, "Number of Simulated Seconds to Run For"); 
   processArgs(argc,argv);
   
@@ -77,7 +79,7 @@ int main(int argc, char *argv[])
 
 
   // Initialize Taylor cylinder mesh
-  luleshSystem.Initialize(myRank, numRanks, edgeElems, heightElems, domStopTime);
+  luleshSystem.Initialize(myRank, numRanks, edgeElems, heightElems, domStopTime, simStopCycle);
 
 
 

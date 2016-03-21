@@ -361,6 +361,7 @@ public:
    Real_t& dtmax()                { return m_dtmax ; }
 
    Int_t&  cycle()                { return m_cycle ; }
+   Int_t& stopcycle()            { return m_stopcycle ; }
 
    Index_t&  numSymmNodesImpact()   { return m_numSymmNodesImpact ; }
    Index_t&  numSymmNodesBoundary() { return m_numSymmNodesBoundary ; }
@@ -522,6 +523,7 @@ private:
    Real_t  m_dtmax ;             /* maximum allowable time increment */
 
    Int_t   m_cycle ;             /* iteration count for simulation */
+   Int_t   m_stopcycle ;             /* maximum allowable iteration count for  simulation */
 
    Index_t   m_numSymmNodesImpact ;    
    Index_t   m_numSymmNodesBoundary ;

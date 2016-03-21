@@ -68,6 +68,7 @@ Additional BSD Notice
 #include <string.h>
 #include <stdexcept>
 #include <sstream>
+#include <climits>
 
 #if defined(COEVP_MPI)
 #include <mpi.h>
@@ -3029,7 +3030,7 @@ void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
 }
 
 
-void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime)
+void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime, int simStopCycle)
 {
 
    Index_t edgeElems = edgeDim ;
@@ -3512,6 +3513,14 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
    domain.dtmax()     = Real_t(1.0e-2) ;
    domain.time()    = Real_t(0.) ;
    domain.cycle()   = 0 ;
+   if(simStopCycle != 0)
+   {
+	domain.stopcycle() = simStopCycle;
+   }
+   else
+   {
+	domain.stopcycle() = INT_MAX; 
+   }
 
    domain.e_cut() = Real_t(1.0e-7) ;
    domain.p_cut() = Real_t(1.0e-7) ;
@@ -4105,7 +4114,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
    
    /* timestep to solution */
-   while(domain.time() < domain.stoptime() ) {
+   while(domain.time() < domain.stoptime() and domain.cycle() < domain.stopcycle()) {
 #if defined(LOGGER)
      logger.logStartTimer("outer");
 #endif
