@@ -21,8 +21,8 @@ int main(int argc, char *argv[])
 {
    int numRanks = 1;
    int myRank = 0;
-   int numTaskHandlers = 2;
-   int numTasks=4;
+   int numTaskHandlers = 4;
+   int numTasks=10;
 
 
 #if defined(COEVP_MPI)
@@ -101,13 +101,13 @@ int main(int argc, char *argv[])
 
 	  myHandler = (int) (((float)myRank / (float)numRanks) * (float)numTaskHandlers);
 
-	  printf("Lulesh Rank %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numRanks, myHandler);
+	  printf("Lulesh Rank %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
 
 	}
 	else
 	{
 
-     	printf("Inside Lulesh task\n");
+//     	printf("Inside Lulesh task\n");
 
 	  // let's broadcast the number of task handlers why not, this is using an intercommunicator so behaves a little difference
   
