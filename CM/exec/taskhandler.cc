@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <mpi.h>
-
+#include <list>  
 
 int main(int argc, char** argv)
 {
@@ -64,29 +64,67 @@ int main(int argc, char** argv)
 
     int lulesh_work_id;
     int task_worker_id;
+
+	int lulesh_work_probe;
+	int task_worker_probe;
 	MPI_Status mpi_status;
+	std::list<int> lulesh_work;
+	std::list<int> task_worker;
 
 	while(1)
-	{ 
-		// the alpha version does a blocking receive from lulesh before looking for available tasks
-        // work_id is just the index of a lulesh domain that has some work
-		// in this case I have to use the merged communicator as I may receive work from an overloaded task handler
-       
-		MPI_Recv(&lulesh_work_id, 1, MPI_INT, MPI_ANY_SOURCE, 1, mpi_comm_taskhandler, &mpi_status);
+	{
 
-		printf("Task Handler %d recieved work from Lulesh Domain %d\n", rank, lulesh_work_id);
-		// we recieved a payload notification (apparently), let's find a worker to assign it to
+		MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, mpi_comm_taskhandler, &lulesh_work_probe, &mpi_status);	
+		if(lulesh_work_probe)
+		{
+			// there is some incoming work
+			MPI_Recv(&lulesh_work_id, 1, MPI_INT, MPI_ANY_SOURCE, 1, mpi_comm_taskhandler, &mpi_status);
+			// do we have any registered idle workers?
+			if(task_worker.size()>0)
+			{
+				// pair up the task_worker with the work
+				task_worker_id = task_worker.front();
+				task_worker.pop_front();
+		        MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);
+			}
+			else if(numTaskHandlers>1)
+			{
+				// we received work but we don't have any workers to assign it to so let's round robin to other taskhandlers (if they exist)
+				if(localrank == numTaskHandlers-1)
+				{
+					//we're the last rank, wrap around to handler 0
+					MPI_Send(&lulesh_work_id, 1, MPI_INT, 0, 1, mpi_comm_taskhandler);
+				}
+				else
+				{
+					//send task to neighbouring handler
+					MPI_Send(&lulesh_work_id, 1, MPI_INT, localrank+1, 1, mpi_comm_taskhandler);
+				}
+			}
+			else
+			{
+				// we're on our own, so let's queue the work
+				lulesh_work.push_back(lulesh_work_id);
+			}
+		}
+		MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG,  mpi_intercomm_taskpool, &task_worker_probe, &mpi_status);	
+		if(task_worker_probe)
+		{
+			MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 2, mpi_intercomm_taskpool, &mpi_status);
+			if(lulesh_work.size()>0)
+			{
+				//imediately pair up with idle task_worker
+				lulesh_work_id = lulesh_work.front();
+				lulesh_work.pop_front();
+				MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);
+			}
+			else
+			{
+				task_worker.push_back(task_worker_id);
+//				std::cout << "Number of queued task workers:" << task_worker.size() << std::endl;	
+			}
+		}
 
-		MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 2, mpi_intercomm_taskpool, &mpi_status);
-
-		printf("Task Handler %d recieved a work request from Worker %d\n", rank, task_worker_id);
-		// send the lulesh worker id to the task, it can do the rest
-
-		MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);
- 
-		// Sweet, our incredibly hard work is done
-
-		printf("Task Handler %d recieved work from Lulesh domain %d and assigned it to task %d\n", rank, lulesh_work_id, task_worker_id);
 	}
 
   }
@@ -100,9 +138,6 @@ int main(int argc, char** argv)
 
   MPI_Comm_rank (mpi_comm_taskhandler, &rank);
   MPI_Comm_size (mpi_comm_taskhandler, &size);
-
-
-
 
 
   MPI_Finalize();
