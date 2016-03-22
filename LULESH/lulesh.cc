@@ -2935,9 +2935,16 @@ int Lulesh::UpdateStressForElems()
 	{
         int t_count = domain.cycle();
 		int scale=0;
-        while ( t_count /= timer )
-           scale++;
-		scale = pow(timer, scale);
+		if(timer != 1)
+		{
+	        while ( t_count /= timer)
+	           scale++;
+			scale = pow(timer, scale);
+		}
+		else
+		{
+			scale = 1;
+		}
 
 
 		if(domain.cycle() == scale)
