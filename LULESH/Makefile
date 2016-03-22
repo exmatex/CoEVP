@@ -38,10 +38,6 @@ CXXFLAGS = -std=c++11 -g -O3
 FORTRAN_LIBS = -lifcore
 #FORTRAN_LIBS = -lgfortran #-lquadmath
 
-ifeq ($(VPSC), yes)
-CXXFLAGS += -DUSE_VPSC
-endif
-
 ###### CONFIGURATION END ############
 
 CM_LIB = ../CM/lib/libcm.a
