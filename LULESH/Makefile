@@ -25,7 +25,7 @@ REDIS_LOC =
 LOGGER_LOC=
 # default to gcc
 # gcc compiler
-CXX = g++
+CXX ?= g++
 CC = gcc
 #CXXFLAGS = -std=c++0x -g -O3 -fopenmp
 CXXFLAGS = -std=c++11 -g -O3
