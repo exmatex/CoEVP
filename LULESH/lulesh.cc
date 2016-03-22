@@ -2931,13 +2931,13 @@ int Lulesh::UpdateStressForElems()
    int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
 
-   if(use_timer)
+   if(timer)
 	{
         int t_count = domain.cycle();
 		int scale=0;
-        while ( t_count /= 10 )
+        while ( t_count /= timer )
            scale++;
-		scale = pow(10, scale);
+		scale = pow(timer, scale);
 
 
 		if(domain.cycle() == scale)
@@ -3018,21 +3018,6 @@ int Lulesh::UpdateStressForElems()
 
       }
 
-   if(use_timer)
-    {
-		// simple arithmetic determines output frequency.
-		// what power of 10 are we on?
-//		int t_count = timestep;
-//		while ( t_count /= 10 )
-//		   int scale++;
-		// did we hit a new order of magnitude?
-		//if(t_count == 1 || timestep == 1)
-		//{
-		//	std::chrono::high_resolution_clock::now()
-		//}
-        //timings.push_back(std::chrono::high_resolution_clock::now());
-
-    }
 
 
 #ifdef _OPENMP

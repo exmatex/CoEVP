@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
   int  help   = 0;
   
   addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
-  addArg("timer",    'a', 0, 'i',  &(timer),               0, "use timing and write to output file");
+  addArg("timer",    'a', 1, 'i',  &(timer),               0, "use timing and write to output file");
   addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
   addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
   addArg("posix",    'x', 0, 'i',  &(posixing),            0, "use POSIX library");
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 	// only myRank == 0 will do timing
 	if(myRank==0)
 	{
-	    luleshSystem.use_timer = timer;
+	    luleshSystem.timer = timer;
 		luleshSystem.timerfile.open("timer.file");
 		if(luleshSystem.timerfile.is_open())
 		{
