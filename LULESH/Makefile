@@ -23,20 +23,22 @@ FLANN_LOC =
 REDIS_LOC =
 
 LOGGER_LOC=
-
+# default to gcc
 # gcc compiler
-#CXX = g++
-#CC = gcc
+CXX = g++
+CC = gcc
 #CXXFLAGS = -std=c++0x -g -O3 -fopenmp
 CXXFLAGS = -std=c++11 -g -O3
+FORTRAN_LIBS = -lgfortran -lquadmath
 # intel compiler
-#CXX = icc
-#CC = icc
+ifeq ($(COMPILER),intel)
+CXX = icc
+CC = icc
+FORTRAN_LIBS = -lifcore
+endif
 #CXXFLAGS = -std=c++0x -g -O3
 
 # fortran flags hardcoded for now
-FORTRAN_LIBS = -lifcore
-#FORTRAN_LIBS = -lgfortran #-lquadmath
 
 ###### CONFIGURATION END ############
 
@@ -46,6 +48,7 @@ INCLUDE_DIRS = -I. -I../CM/include
 
 ifeq ($(COEVP_MPI), yes)
 CXXFLAGS += -DCOEVP_MPI
+CC= mpicc
 CXX= mpic++
 endif
 

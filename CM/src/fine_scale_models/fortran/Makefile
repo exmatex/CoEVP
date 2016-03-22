@@ -1,20 +1,17 @@
-!FFLAGS = -gdwarf-2 -ffree-line-length-0 -pg
-!FFLAGS = -gdwarf-2 -pg -check all
-!FFLAGS = -gdwarf-2 -check all -real-size 64
+# flags for gcc
+#ifeq ($(CC), gcc)
+FC = gfortran 
+CXX = g++
+FFLAGS = -ffree-line-length-none -O3 -fdefault-real-8
+FLIBS = -lm -lgfortran -lquadmath
+#endif
 # flags for intel
-#ifeq ($(CC), icc)
+ifeq ($(COMPILER), intel)
 FC = ifort
 CXX = icc
 FFLAGS = -real-size 64
 FLIBS = -lm -lifcore
-#endif
-# flags for gcc
-#ifeq ($(CC), gcc)
-#FC = gfortran 
-#CXX = g++
-#FFLAGS = -ffree-line-length-none -O3 -fdefault-real-8
-#FLIBS = -lm -lgfortran -lquadmath
-#endif
+endif
 
 
 FILES = vpEtxt_interface_base.f90 vpscVpETxt_interface.f90 libraryR8.f vpsc_as_N2O.f init.f90 TaylorFort.f90
