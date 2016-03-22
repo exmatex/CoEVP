@@ -2948,13 +2948,13 @@ int Lulesh::UpdateStressForElems()
 
 			if(scale == 1)
 			{
-				std::cout << "Timer Output Frequency is " << scale << std::endl;
+				timerfile << "Timer Output Frequency is " << scale << std::endl;
 			}
 			else
 			{	
-				std::cout << "Changing Timer Output Frequency to " << scale << std::endl;
+				timerfile  << "Changing Timer Output Frequency to " << scale << std::endl;
 				std::chrono::duration<double> diff = timings.back() - timings.front();
-				std::cout  << "0 - " << domain.cycle() << ": " << diff.count() << std::endl;
+				timerfile  << "0 - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
 			}
 		}
 		else
@@ -2963,7 +2963,7 @@ int Lulesh::UpdateStressForElems()
 			{
 				timings.push_back(std::chrono::high_resolution_clock::now());
 				std::chrono::duration<double> diff = timings.back() - *std::prev(timings.end(),2);
-				std::cout  << domain.cycle() - scale << " - " << domain.cycle() << ": " << diff.count() << std::endl;
+				timerfile  << domain.cycle() - scale << " - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
 			}
 		}
 

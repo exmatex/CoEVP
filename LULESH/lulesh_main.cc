@@ -126,8 +126,6 @@ int main(int argc, char *argv[])
 	// only myRank == 0 will do timing
 	if(myRank==0)
 	{
-		luleshSystem.t_origin = std::chrono::high_resolution_clock::now();
-//		luleshSystem.timings.push_back(luleshSystem.t_origin);
 	    luleshSystem.use_timer = timer;
 		luleshSystem.timerfile.open("timer.file");
 		if(luleshSystem.timerfile.is_open())

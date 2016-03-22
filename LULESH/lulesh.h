@@ -15,8 +15,7 @@ public:
   // Factor to be multiply the time step by to compensate
   // for fast time scales in the fine-scale model
   Real_t finescale_dt_modifier;
-  bool use_timer;
-  std::chrono::high_resolution_clock::time_point t_origin;
+  int use_timer=0;
   std::list<std::chrono::high_resolution_clock::time_point> timings;
   std::ofstream timerfile;
   Domain domain;
