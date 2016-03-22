@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
   int  redising = 0;              //  By default, do not use REDIS for database
   int  posixing = 0;              // POSIX Key/Value store
   int  hioing = 0;                //  HIO global store
-  int  global_ns = 0;             //  By default, do not use a global earest neighbor
+  int  global_ns = 0;             //  By default, do not use a global nearest neighbor
   int  flanning = 0;              //  By default, do not use FLANN for nearest neighbor search
   int  logging = 0;               //  By default, do not use FLANN for nearest neighbor search
   int  flann_n_trees = 1;         // Default can be overridden using command line
@@ -41,6 +41,7 @@ int main(int argc, char *argv[])
   int  visit_data_interval = 0;  // Set this to 0 to disable VisIt data writing
   int  distributed_redis = 0;
   char logdb[1024] = {0};        // host and port of logging databse (e.g. cn1:6379)
+  int use_vpsc = 0;              // toggle VPSC as the fine-scale-Model
   
   Lulesh luleshSystem;
 
@@ -64,6 +65,7 @@ int main(int argc, char *argv[])
   addArg("debug",    'd', 0, 'i',  &(debug_topology),      0, "add debug info to SILO");
   addArg("distributed_redis", 'R', 0, 'i', &(distributed_redis), 0, "use distributed REDIS via twemproxy");
   addArg("log",      'l', 1, 's',  &(logdb),   sizeof(logdb), "log to REDIS at hostname:port");
+  addArg("use_vpsc", 'm', 0, 'i',  &(use_vpsc),            0, "use VPSC fine scale model");
   processArgs(argc,argv);
   
   if (help) {
@@ -103,6 +105,11 @@ int main(int argc, char *argv[])
   }
   if (strlen(logdb) != 0) {
     logging = 1;
+  }
+  if (use_vpsc) {
+   printf("Using VPSC fine-scale model\n");
+  } else {
+   printf("Using Taylor fine-scale model\n");
   }
   freeArgs();
    
@@ -161,7 +168,7 @@ int main(int argc, char *argv[])
 #endif
 
   // Construct fine scale models
-  luleshSystem.ConstructFineScaleModel(sampling,global_modelDB,global_ann,flanning,flann_n_trees,flann_n_checks,global_ns);
+  luleshSystem.ConstructFineScaleModel(sampling,global_modelDB,global_ann,flanning,flann_n_trees,flann_n_checks,global_ns,use_vpsc);
   
   // Exchange nodal mass
   luleshSystem.ExchangeNodalMass();

@@ -1,63 +1,63 @@
 /*
 
-                            Copyright (c) 2014.
-               Lawrence Livermore National Security, LLC.
-         Produced at the Lawrence Livermore National Laboratory
-                             LLNL-CODE-656392.
-                           All rights reserved.
+   Copyright (c) 2014.
+   Lawrence Livermore National Security, LLC.
+   Produced at the Lawrence Livermore National Laboratory
+   LLNL-CODE-656392.
+   All rights reserved.
 
-This file is part of CoEVP, Version 1.0. Please also read this link -- http://www.opensource.org/licenses/index.php
+   This file is part of CoEVP, Version 1.0. Please also read this link -- http://www.opensource.org/licenses/index.php
 
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions
-are met:
+   Redistribution and use in source and binary forms, with or without
+   modification, are permitted provided that the following conditions
+   are met:
 
-   * Redistributions of source code must retain the above copyright
-     notice, this list of conditions and the disclaimer below.
+ * Redistributions of source code must retain the above copyright
+ notice, this list of conditions and the disclaimer below.
 
-   * Redistributions in binary form must reproduce the above copyright
-     notice, this list of conditions and the disclaimer (as noted below)
-     in the documentation and/or other materials provided with the
-     distribution.
+ * Redistributions in binary form must reproduce the above copyright
+ notice, this list of conditions and the disclaimer (as noted below)
+ in the documentation and/or other materials provided with the
+ distribution.
 
-   * Neither the name of the LLNS/LLNL nor the names of its contributors
-     may be used to endorse or promote products derived from this software
-     without specific prior written permission.
+ * Neither the name of the LLNS/LLNL nor the names of its contributors
+ may be used to endorse or promote products derived from this software
+ without specific prior written permission.
 
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-ARE DISCLAIMED. IN NO EVENT SHALL LAWRENCE LIVERMORE NATIONAL SECURITY, LLC,
-THE U.S. DEPARTMENT OF ENERGY OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
-INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
-BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
-OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
-EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED. IN NO EVENT SHALL LAWRENCE LIVERMORE NATIONAL SECURITY, LLC,
+ THE U.S. DEPARTMENT OF ENERGY OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+ BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
+ OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 
-Additional BSD Notice
+ Additional BSD Notice
 
-1. This notice is required to be provided under our contract with the U.S.
-   Department of Energy (DOE). This work was produced at Lawrence Livermore
-   National Laboratory under Contract No. DE-AC52-07NA27344 with the DOE.
+ 1. This notice is required to be provided under our contract with the U.S.
+ Department of Energy (DOE). This work was produced at Lawrence Livermore
+ National Laboratory under Contract No. DE-AC52-07NA27344 with the DOE.
 
-2. Neither the United States Government nor Lawrence Livermore National
-   Security, LLC nor any of their employees, makes any warranty, express
-   or implied, or assumes any liability or responsibility for the accuracy,
-   completeness, or usefulness of any information, apparatus, product, or
-   process disclosed, or represents that its use would not infringe
-   privately-owned rights.
+ 2. Neither the United States Government nor Lawrence Livermore National
+ Security, LLC nor any of their employees, makes any warranty, express
+ or implied, or assumes any liability or responsibility for the accuracy,
+ completeness, or usefulness of any information, apparatus, product, or
+ process disclosed, or represents that its use would not infringe
+ privately-owned rights.
 
-3. Also, reference herein to any specific commercial products, process, or
-   services by trade name, trademark, manufacturer or otherwise does not
-   necessarily constitute or imply its endorsement, recommendation, or
-   favoring by the United States Government or Lawrence Livermore National
-   Security, LLC. The views and opinions of authors expressed herein do not
-   necessarily state or reflect those of the United States Government or
-   Lawrence Livermore National Security, LLC, and shall not be used for
-   advertising or product endorsement purposes.
+ 3. Also, reference herein to any specific commercial products, process, or
+ services by trade name, trademark, manufacturer or otherwise does not
+ necessarily constitute or imply its endorsement, recommendation, or
+ favoring by the United States Government or Lawrence Livermore National
+ Security, LLC. The views and opinions of authors expressed herein do not
+ necessarily state or reflect those of the United States Government or
+ Lawrence Livermore National Security, LLC, and shall not be used for
+ advertising or product endorsement purposes.
 
 */
 
@@ -182,7 +182,7 @@ enum { VolumeError = -1, QStopError = -2 } ;
 #if defined(COEVP_MPI)
 /* doRecv flag only works with regular block structure */
 void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t size,
-              bool recvMin = true)
+      bool recvMin = true)
 {
 
    if (domain->numSlices() == 1) return ;
@@ -216,8 +216,8 @@ void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t s
       int fromRank = myRank - 1 ;
       int recvCount = size * xferFields ;
       MPI_Irecv(&domain->commDataRecv[pmsg * maxPlaneComm],
-                recvCount, baseType, fromRank, msgType,
-                MPI_COMM_WORLD, &domain->recvRequest[pmsg]) ;
+            recvCount, baseType, fromRank, msgType,
+            MPI_COMM_WORLD, &domain->recvRequest[pmsg]) ;
       ++pmsg ;
    }
    if (planeMax) {
@@ -225,16 +225,16 @@ void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t s
       int fromRank = myRank + 1 ;
       int recvCount = size * xferFields ;
       MPI_Irecv(&domain->commDataRecv[pmsg * maxPlaneComm],
-                recvCount, baseType, fromRank, msgType,
-                MPI_COMM_WORLD, &domain->recvRequest[pmsg]) ;
+            recvCount, baseType, fromRank, msgType,
+            MPI_COMM_WORLD, &domain->recvRequest[pmsg]) ;
       ++pmsg ;
    }
 }
 
 void Lulesh::CommSend(Domain *domain, int msgType,
-              Index_t xferFields, Real_t **fieldData,
-              Index_t *iset,  Index_t size, Index_t offset,
-              bool sendMax = true)
+      Index_t xferFields, Real_t **fieldData,
+      Index_t *iset,  Index_t size, Index_t offset,
+      bool sendMax = true)
 {
 
    if (domain->numSlices() == 1) return ;
@@ -285,8 +285,8 @@ void Lulesh::CommSend(Domain *domain, int msgType,
       }
 
       MPI_Isend(destAddr, xferFields*size,
-                baseType, myRank - 1, msgType,
-                MPI_COMM_WORLD, &domain->sendRequest[pmsg]) ;
+            baseType, myRank - 1, msgType,
+            MPI_COMM_WORLD, &domain->sendRequest[pmsg]) ;
       ++pmsg ;
    }
 
@@ -311,8 +311,8 @@ void Lulesh::CommSend(Domain *domain, int msgType,
       }
 
       MPI_Isend(destAddr, xferFields*size,
-                baseType, myRank + 1, msgType,
-                MPI_COMM_WORLD, &domain->sendRequest[pmsg]) ;
+            baseType, myRank + 1, msgType,
+            MPI_COMM_WORLD, &domain->sendRequest[pmsg]) ;
       ++pmsg ;
    }
 
@@ -321,7 +321,7 @@ void Lulesh::CommSend(Domain *domain, int msgType,
 
 
 void Lulesh::CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
-             Index_t *iset, Index_t size, Index_t offset) {
+      Index_t *iset, Index_t size, Index_t offset) {
 
    if (domain->numSlices() == 1) return ;
 
@@ -373,7 +373,7 @@ void Lulesh::CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
 
 
 void Lulesh::CommSyncPosVel(Domain *domain,
-                    Index_t *iset, Index_t size, Index_t offset)
+      Index_t *iset, Index_t size, Index_t offset)
 {
 
    if (domain->numSlices() == 1) return ;
@@ -548,8 +548,8 @@ void Lulesh::TimeIncrement()
 
 #if defined(COEVP_MPI)
       MPI_Allreduce(&gnewdt, &newdt, 1,
-                    ((sizeof(Real_t) == 4) ? MPI_FLOAT : MPI_DOUBLE),
-                    MPI_MIN, MPI_COMM_WORLD) ;
+            ((sizeof(Real_t) == 4) ? MPI_FLOAT : MPI_DOUBLE),
+            MPI_MIN, MPI_COMM_WORLD) ;
 #else
       newdt = gnewdt ;
 #endif
@@ -572,7 +572,7 @@ void Lulesh::TimeIncrement()
 
    /* TRY TO PREVENT VERY SMALL SCALING ON THE NEXT CYCLE */
    if ((targetdt > domain.deltatime()) &&
-       (targetdt < (Real_t(4.0) * domain.deltatime() / Real_t(3.0))) ) {
+         (targetdt < (Real_t(4.0) * domain.deltatime() / Real_t(3.0))) ) {
       targetdt = Real_t(2.0) * domain.deltatime() / Real_t(3.0) ;
    }
 
@@ -586,8 +586,8 @@ void Lulesh::TimeIncrement()
 }
 
 void Lulesh::InitStressTermsForElems(Index_t numElem, 
-                             Real_t *sigxx, Real_t *sigyy, Real_t *sigzz,
-                             Real_t *sigxy, Real_t *sigxz, Real_t *sigyz)
+      Real_t *sigxx, Real_t *sigyy, Real_t *sigzz,
+      Real_t *sigxy, Real_t *sigxz, Real_t *sigyz)
 {
    //
    // pull in the stresses appropriate to the hydro integration
@@ -603,101 +603,101 @@ void Lulesh::InitStressTermsForElems(Index_t numElem,
 }
 
 void Lulesh::CalcElemShapeFunctionDerivatives( const Real_t* const x,
-                                       const Real_t* const y,
-                                       const Real_t* const z,
-                                       Real_t b[][8],
-                                       Real_t* const volume )
+      const Real_t* const y,
+      const Real_t* const z,
+      Real_t b[][8],
+      Real_t* const volume )
 {
-  const Real_t x0 = x[0] ;   const Real_t x1 = x[1] ;
-  const Real_t x2 = x[2] ;   const Real_t x3 = x[3] ;
-  const Real_t x4 = x[4] ;   const Real_t x5 = x[5] ;
-  const Real_t x6 = x[6] ;   const Real_t x7 = x[7] ;
+   const Real_t x0 = x[0] ;   const Real_t x1 = x[1] ;
+   const Real_t x2 = x[2] ;   const Real_t x3 = x[3] ;
+   const Real_t x4 = x[4] ;   const Real_t x5 = x[5] ;
+   const Real_t x6 = x[6] ;   const Real_t x7 = x[7] ;
 
-  const Real_t y0 = y[0] ;   const Real_t y1 = y[1] ;
-  const Real_t y2 = y[2] ;   const Real_t y3 = y[3] ;
-  const Real_t y4 = y[4] ;   const Real_t y5 = y[5] ;
-  const Real_t y6 = y[6] ;   const Real_t y7 = y[7] ;
+   const Real_t y0 = y[0] ;   const Real_t y1 = y[1] ;
+   const Real_t y2 = y[2] ;   const Real_t y3 = y[3] ;
+   const Real_t y4 = y[4] ;   const Real_t y5 = y[5] ;
+   const Real_t y6 = y[6] ;   const Real_t y7 = y[7] ;
 
-  const Real_t z0 = z[0] ;   const Real_t z1 = z[1] ;
-  const Real_t z2 = z[2] ;   const Real_t z3 = z[3] ;
-  const Real_t z4 = z[4] ;   const Real_t z5 = z[5] ;
-  const Real_t z6 = z[6] ;   const Real_t z7 = z[7] ;
+   const Real_t z0 = z[0] ;   const Real_t z1 = z[1] ;
+   const Real_t z2 = z[2] ;   const Real_t z3 = z[3] ;
+   const Real_t z4 = z[4] ;   const Real_t z5 = z[5] ;
+   const Real_t z6 = z[6] ;   const Real_t z7 = z[7] ;
 
-  Real_t fjxxi, fjxet, fjxze;
-  Real_t fjyxi, fjyet, fjyze;
-  Real_t fjzxi, fjzet, fjzze;
-  Real_t cjxxi, cjxet, cjxze;
-  Real_t cjyxi, cjyet, cjyze;
-  Real_t cjzxi, cjzet, cjzze;
+   Real_t fjxxi, fjxet, fjxze;
+   Real_t fjyxi, fjyet, fjyze;
+   Real_t fjzxi, fjzet, fjzze;
+   Real_t cjxxi, cjxet, cjxze;
+   Real_t cjyxi, cjyet, cjyze;
+   Real_t cjzxi, cjzet, cjzze;
 
-  fjxxi = .125 * ( (x6-x0) + (x5-x3) - (x7-x1) - (x4-x2) );
-  fjxet = .125 * ( (x6-x0) - (x5-x3) + (x7-x1) - (x4-x2) );
-  fjxze = .125 * ( (x6-x0) + (x5-x3) + (x7-x1) + (x4-x2) );
+   fjxxi = .125 * ( (x6-x0) + (x5-x3) - (x7-x1) - (x4-x2) );
+   fjxet = .125 * ( (x6-x0) - (x5-x3) + (x7-x1) - (x4-x2) );
+   fjxze = .125 * ( (x6-x0) + (x5-x3) + (x7-x1) + (x4-x2) );
 
-  fjyxi = .125 * ( (y6-y0) + (y5-y3) - (y7-y1) - (y4-y2) );
-  fjyet = .125 * ( (y6-y0) - (y5-y3) + (y7-y1) - (y4-y2) );
-  fjyze = .125 * ( (y6-y0) + (y5-y3) + (y7-y1) + (y4-y2) );
+   fjyxi = .125 * ( (y6-y0) + (y5-y3) - (y7-y1) - (y4-y2) );
+   fjyet = .125 * ( (y6-y0) - (y5-y3) + (y7-y1) - (y4-y2) );
+   fjyze = .125 * ( (y6-y0) + (y5-y3) + (y7-y1) + (y4-y2) );
 
-  fjzxi = .125 * ( (z6-z0) + (z5-z3) - (z7-z1) - (z4-z2) );
-  fjzet = .125 * ( (z6-z0) - (z5-z3) + (z7-z1) - (z4-z2) );
-  fjzze = .125 * ( (z6-z0) + (z5-z3) + (z7-z1) + (z4-z2) );
+   fjzxi = .125 * ( (z6-z0) + (z5-z3) - (z7-z1) - (z4-z2) );
+   fjzet = .125 * ( (z6-z0) - (z5-z3) + (z7-z1) - (z4-z2) );
+   fjzze = .125 * ( (z6-z0) + (z5-z3) + (z7-z1) + (z4-z2) );
 
-  /* compute cofactors */
-  cjxxi =    (fjyet * fjzze) - (fjzet * fjyze);
-  cjxet =  - (fjyxi * fjzze) + (fjzxi * fjyze);
-  cjxze =    (fjyxi * fjzet) - (fjzxi * fjyet);
+   /* compute cofactors */
+   cjxxi =    (fjyet * fjzze) - (fjzet * fjyze);
+   cjxet =  - (fjyxi * fjzze) + (fjzxi * fjyze);
+   cjxze =    (fjyxi * fjzet) - (fjzxi * fjyet);
 
-  cjyxi =  - (fjxet * fjzze) + (fjzet * fjxze);
-  cjyet =    (fjxxi * fjzze) - (fjzxi * fjxze);
-  cjyze =  - (fjxxi * fjzet) + (fjzxi * fjxet);
+   cjyxi =  - (fjxet * fjzze) + (fjzet * fjxze);
+   cjyet =    (fjxxi * fjzze) - (fjzxi * fjxze);
+   cjyze =  - (fjxxi * fjzet) + (fjzxi * fjxet);
 
-  cjzxi =    (fjxet * fjyze) - (fjyet * fjxze);
-  cjzet =  - (fjxxi * fjyze) + (fjyxi * fjxze);
-  cjzze =    (fjxxi * fjyet) - (fjyxi * fjxet);
+   cjzxi =    (fjxet * fjyze) - (fjyet * fjxze);
+   cjzet =  - (fjxxi * fjyze) + (fjyxi * fjxze);
+   cjzze =    (fjxxi * fjyet) - (fjyxi * fjxet);
 
-  /* calculate partials :
-     this need only be done for l = 0,1,2,3   since , by symmetry ,
-     (6,7,4,5) = - (0,1,2,3) .
-  */
-  b[0][0] =   -  cjxxi  -  cjxet  -  cjxze;
-  b[0][1] =      cjxxi  -  cjxet  -  cjxze;
-  b[0][2] =      cjxxi  +  cjxet  -  cjxze;
-  b[0][3] =   -  cjxxi  +  cjxet  -  cjxze;
-  b[0][4] = -b[0][2];
-  b[0][5] = -b[0][3];
-  b[0][6] = -b[0][0];
-  b[0][7] = -b[0][1];
+   /* calculate partials :
+      this need only be done for l = 0,1,2,3   since , by symmetry ,
+      (6,7,4,5) = - (0,1,2,3) .
+      */
+   b[0][0] =   -  cjxxi  -  cjxet  -  cjxze;
+   b[0][1] =      cjxxi  -  cjxet  -  cjxze;
+   b[0][2] =      cjxxi  +  cjxet  -  cjxze;
+   b[0][3] =   -  cjxxi  +  cjxet  -  cjxze;
+   b[0][4] = -b[0][2];
+   b[0][5] = -b[0][3];
+   b[0][6] = -b[0][0];
+   b[0][7] = -b[0][1];
 
-  b[1][0] =   -  cjyxi  -  cjyet  -  cjyze;
-  b[1][1] =      cjyxi  -  cjyet  -  cjyze;
-  b[1][2] =      cjyxi  +  cjyet  -  cjyze;
-  b[1][3] =   -  cjyxi  +  cjyet  -  cjyze;
-  b[1][4] = -b[1][2];
-  b[1][5] = -b[1][3];
-  b[1][6] = -b[1][0];
-  b[1][7] = -b[1][1];
+   b[1][0] =   -  cjyxi  -  cjyet  -  cjyze;
+   b[1][1] =      cjyxi  -  cjyet  -  cjyze;
+   b[1][2] =      cjyxi  +  cjyet  -  cjyze;
+   b[1][3] =   -  cjyxi  +  cjyet  -  cjyze;
+   b[1][4] = -b[1][2];
+   b[1][5] = -b[1][3];
+   b[1][6] = -b[1][0];
+   b[1][7] = -b[1][1];
 
-  b[2][0] =   -  cjzxi  -  cjzet  -  cjzze;
-  b[2][1] =      cjzxi  -  cjzet  -  cjzze;
-  b[2][2] =      cjzxi  +  cjzet  -  cjzze;
-  b[2][3] =   -  cjzxi  +  cjzet  -  cjzze;
-  b[2][4] = -b[2][2];
-  b[2][5] = -b[2][3];
-  b[2][6] = -b[2][0];
-  b[2][7] = -b[2][1];
+   b[2][0] =   -  cjzxi  -  cjzet  -  cjzze;
+   b[2][1] =      cjzxi  -  cjzet  -  cjzze;
+   b[2][2] =      cjzxi  +  cjzet  -  cjzze;
+   b[2][3] =   -  cjzxi  +  cjzet  -  cjzze;
+   b[2][4] = -b[2][2];
+   b[2][5] = -b[2][3];
+   b[2][6] = -b[2][0];
+   b[2][7] = -b[2][1];
 
-  /* calculate jacobian determinant (volume) */
-  *volume = Real_t(8.) * ( fjxet * cjxet + fjyet * cjyet + fjzet * cjzet);
+   /* calculate jacobian determinant (volume) */
+   *volume = Real_t(8.) * ( fjxet * cjxet + fjyet * cjyet + fjzet * cjzet);
 }
 
 void Lulesh::SumElemFaceNormal(Real_t *normalX0, Real_t *normalY0, Real_t *normalZ0,
-                       Real_t *normalX1, Real_t *normalY1, Real_t *normalZ1,
-                       Real_t *normalX2, Real_t *normalY2, Real_t *normalZ2,
-                       Real_t *normalX3, Real_t *normalY3, Real_t *normalZ3,
-                       const Real_t x0, const Real_t y0, const Real_t z0,
-                       const Real_t x1, const Real_t y1, const Real_t z1,
-                       const Real_t x2, const Real_t y2, const Real_t z2,
-                       const Real_t x3, const Real_t y3, const Real_t z3)
+      Real_t *normalX1, Real_t *normalY1, Real_t *normalZ1,
+      Real_t *normalX2, Real_t *normalY2, Real_t *normalZ2,
+      Real_t *normalX3, Real_t *normalY3, Real_t *normalZ3,
+      const Real_t x0, const Real_t y0, const Real_t z0,
+      const Real_t x1, const Real_t y1, const Real_t z1,
+      const Real_t x2, const Real_t y2, const Real_t z2,
+      const Real_t x3, const Real_t y3, const Real_t z3)
 {
    Real_t bisectX0 = Real_t(0.5) * (x3 + x2 - x1 - x0);
    Real_t bisectY0 = Real_t(0.5) * (y3 + y2 - y1 - y0);
@@ -726,11 +726,11 @@ void Lulesh::SumElemFaceNormal(Real_t *normalX0, Real_t *normalY0, Real_t *norma
 }
 
 void Lulesh::CalcElemNodeNormals(Real_t pfx[8],
-                         Real_t pfy[8],
-                         Real_t pfz[8],
-                         const Real_t x[8],
-                         const Real_t y[8],
-                         const Real_t z[8])
+      Real_t pfy[8],
+      Real_t pfz[8],
+      const Real_t x[8],
+      const Real_t y[8],
+      const Real_t z[8])
 {
    for (Index_t i = 0 ; i < 8 ; ++i) {
       pfx[i] = Real_t(0.0);
@@ -739,155 +739,155 @@ void Lulesh::CalcElemNodeNormals(Real_t pfx[8],
    }
    /* evaluate face one: nodes 0, 1, 2, 3 */
    SumElemFaceNormal(&pfx[0], &pfy[0], &pfz[0],
-                  &pfx[1], &pfy[1], &pfz[1],
-                  &pfx[2], &pfy[2], &pfz[2],
-                  &pfx[3], &pfy[3], &pfz[3],
-                  x[0], y[0], z[0], x[1], y[1], z[1],
-                  x[2], y[2], z[2], x[3], y[3], z[3]);
+         &pfx[1], &pfy[1], &pfz[1],
+         &pfx[2], &pfy[2], &pfz[2],
+         &pfx[3], &pfy[3], &pfz[3],
+         x[0], y[0], z[0], x[1], y[1], z[1],
+         x[2], y[2], z[2], x[3], y[3], z[3]);
    /* evaluate face two: nodes 0, 4, 5, 1 */
    SumElemFaceNormal(&pfx[0], &pfy[0], &pfz[0],
-                  &pfx[4], &pfy[4], &pfz[4],
-                  &pfx[5], &pfy[5], &pfz[5],
-                  &pfx[1], &pfy[1], &pfz[1],
-                  x[0], y[0], z[0], x[4], y[4], z[4],
-                  x[5], y[5], z[5], x[1], y[1], z[1]);
+         &pfx[4], &pfy[4], &pfz[4],
+         &pfx[5], &pfy[5], &pfz[5],
+         &pfx[1], &pfy[1], &pfz[1],
+         x[0], y[0], z[0], x[4], y[4], z[4],
+         x[5], y[5], z[5], x[1], y[1], z[1]);
    /* evaluate face three: nodes 1, 5, 6, 2 */
    SumElemFaceNormal(&pfx[1], &pfy[1], &pfz[1],
-                  &pfx[5], &pfy[5], &pfz[5],
-                  &pfx[6], &pfy[6], &pfz[6],
-                  &pfx[2], &pfy[2], &pfz[2],
-                  x[1], y[1], z[1], x[5], y[5], z[5],
-                  x[6], y[6], z[6], x[2], y[2], z[2]);
+         &pfx[5], &pfy[5], &pfz[5],
+         &pfx[6], &pfy[6], &pfz[6],
+         &pfx[2], &pfy[2], &pfz[2],
+         x[1], y[1], z[1], x[5], y[5], z[5],
+         x[6], y[6], z[6], x[2], y[2], z[2]);
    /* evaluate face four: nodes 2, 6, 7, 3 */
    SumElemFaceNormal(&pfx[2], &pfy[2], &pfz[2],
-                  &pfx[6], &pfy[6], &pfz[6],
-                  &pfx[7], &pfy[7], &pfz[7],
-                  &pfx[3], &pfy[3], &pfz[3],
-                  x[2], y[2], z[2], x[6], y[6], z[6],
-                  x[7], y[7], z[7], x[3], y[3], z[3]);
+         &pfx[6], &pfy[6], &pfz[6],
+         &pfx[7], &pfy[7], &pfz[7],
+         &pfx[3], &pfy[3], &pfz[3],
+         x[2], y[2], z[2], x[6], y[6], z[6],
+         x[7], y[7], z[7], x[3], y[3], z[3]);
    /* evaluate face five: nodes 3, 7, 4, 0 */
    SumElemFaceNormal(&pfx[3], &pfy[3], &pfz[3],
-                  &pfx[7], &pfy[7], &pfz[7],
-                  &pfx[4], &pfy[4], &pfz[4],
-                  &pfx[0], &pfy[0], &pfz[0],
-                  x[3], y[3], z[3], x[7], y[7], z[7],
-                  x[4], y[4], z[4], x[0], y[0], z[0]);
+         &pfx[7], &pfy[7], &pfz[7],
+         &pfx[4], &pfy[4], &pfz[4],
+         &pfx[0], &pfy[0], &pfz[0],
+         x[3], y[3], z[3], x[7], y[7], z[7],
+         x[4], y[4], z[4], x[0], y[0], z[0]);
    /* evaluate face six: nodes 4, 7, 6, 5 */
    SumElemFaceNormal(&pfx[4], &pfy[4], &pfz[4],
-                  &pfx[7], &pfy[7], &pfz[7],
-                  &pfx[6], &pfy[6], &pfz[6],
-                  &pfx[5], &pfy[5], &pfz[5],
-                  x[4], y[4], z[4], x[7], y[7], z[7],
-                  x[6], y[6], z[6], x[5], y[5], z[5]);
+         &pfx[7], &pfy[7], &pfz[7],
+         &pfx[6], &pfy[6], &pfz[6],
+         &pfx[5], &pfy[5], &pfz[5],
+         x[4], y[4], z[4], x[7], y[7], z[7],
+         x[6], y[6], z[6], x[5], y[5], z[5]);
 }
 
 void Lulesh::SumElemStressesToNodeForces( const Real_t B[][8],
-                                  const Real_t stress_xx,
-                                  const Real_t stress_yy,
-                                  const Real_t stress_zz,
-                                  const Real_t stress_xy,
-                                  const Real_t stress_xz,
-                                  const Real_t stress_yz,
-                                  Real_t* const fx,
-                                  Real_t* const fy,
-                                  Real_t* const fz )
+      const Real_t stress_xx,
+      const Real_t stress_yy,
+      const Real_t stress_zz,
+      const Real_t stress_xy,
+      const Real_t stress_xz,
+      const Real_t stress_yz,
+      Real_t* const fx,
+      Real_t* const fy,
+      Real_t* const fz )
 {
-  Real_t pfx0 = B[0][0] ;   Real_t pfx1 = B[0][1] ;
-  Real_t pfx2 = B[0][2] ;   Real_t pfx3 = B[0][3] ;
-  Real_t pfx4 = B[0][4] ;   Real_t pfx5 = B[0][5] ;
-  Real_t pfx6 = B[0][6] ;   Real_t pfx7 = B[0][7] ;
+   Real_t pfx0 = B[0][0] ;   Real_t pfx1 = B[0][1] ;
+   Real_t pfx2 = B[0][2] ;   Real_t pfx3 = B[0][3] ;
+   Real_t pfx4 = B[0][4] ;   Real_t pfx5 = B[0][5] ;
+   Real_t pfx6 = B[0][6] ;   Real_t pfx7 = B[0][7] ;
 
-  Real_t pfy0 = B[1][0] ;   Real_t pfy1 = B[1][1] ;
-  Real_t pfy2 = B[1][2] ;   Real_t pfy3 = B[1][3] ;
-  Real_t pfy4 = B[1][4] ;   Real_t pfy5 = B[1][5] ;
-  Real_t pfy6 = B[1][6] ;   Real_t pfy7 = B[1][7] ;
+   Real_t pfy0 = B[1][0] ;   Real_t pfy1 = B[1][1] ;
+   Real_t pfy2 = B[1][2] ;   Real_t pfy3 = B[1][3] ;
+   Real_t pfy4 = B[1][4] ;   Real_t pfy5 = B[1][5] ;
+   Real_t pfy6 = B[1][6] ;   Real_t pfy7 = B[1][7] ;
 
-  Real_t pfz0 = B[2][0] ;   Real_t pfz1 = B[2][1] ;
-  Real_t pfz2 = B[2][2] ;   Real_t pfz3 = B[2][3] ;
-  Real_t pfz4 = B[2][4] ;   Real_t pfz5 = B[2][5] ;
-  Real_t pfz6 = B[2][6] ;   Real_t pfz7 = B[2][7] ;
+   Real_t pfz0 = B[2][0] ;   Real_t pfz1 = B[2][1] ;
+   Real_t pfz2 = B[2][2] ;   Real_t pfz3 = B[2][3] ;
+   Real_t pfz4 = B[2][4] ;   Real_t pfz5 = B[2][5] ;
+   Real_t pfz6 = B[2][6] ;   Real_t pfz7 = B[2][7] ;
 
-  fx[0] = -( (stress_xx * pfx0) + (stress_xy * pfy0) + (stress_xz * pfz0) );
-  fx[1] = -( (stress_xx * pfx1) + (stress_xy * pfy1) + (stress_xz * pfz1) );
-  fx[2] = -( (stress_xx * pfx2) + (stress_xy * pfy2) + (stress_xz * pfz2) );
-  fx[3] = -( (stress_xx * pfx3) + (stress_xy * pfy3) + (stress_xz * pfz3) );
-  fx[4] = -( (stress_xx * pfx4) + (stress_xy * pfy4) + (stress_xz * pfz4) );
-  fx[5] = -( (stress_xx * pfx5) + (stress_xy * pfy5) + (stress_xz * pfz5) );
-  fx[6] = -( (stress_xx * pfx6) + (stress_xy * pfy6) + (stress_xz * pfz6) );
-  fx[7] = -( (stress_xx * pfx7) + (stress_xy * pfy7) + (stress_xz * pfz7) );
+   fx[0] = -( (stress_xx * pfx0) + (stress_xy * pfy0) + (stress_xz * pfz0) );
+   fx[1] = -( (stress_xx * pfx1) + (stress_xy * pfy1) + (stress_xz * pfz1) );
+   fx[2] = -( (stress_xx * pfx2) + (stress_xy * pfy2) + (stress_xz * pfz2) );
+   fx[3] = -( (stress_xx * pfx3) + (stress_xy * pfy3) + (stress_xz * pfz3) );
+   fx[4] = -( (stress_xx * pfx4) + (stress_xy * pfy4) + (stress_xz * pfz4) );
+   fx[5] = -( (stress_xx * pfx5) + (stress_xy * pfy5) + (stress_xz * pfz5) );
+   fx[6] = -( (stress_xx * pfx6) + (stress_xy * pfy6) + (stress_xz * pfz6) );
+   fx[7] = -( (stress_xx * pfx7) + (stress_xy * pfy7) + (stress_xz * pfz7) );
 
-  fy[0] = -( (stress_xy * pfx0) + (stress_yy * pfy0) + (stress_yz * pfz0) );
-  fy[1] = -( (stress_xy * pfx1) + (stress_yy * pfy1) + (stress_yz * pfz1) );
-  fy[2] = -( (stress_xy * pfx2) + (stress_yy * pfy2) + (stress_yz * pfz2) );
-  fy[3] = -( (stress_xy * pfx3) + (stress_yy * pfy3) + (stress_yz * pfz3) );
-  fy[4] = -( (stress_xy * pfx4) + (stress_yy * pfy4) + (stress_yz * pfz4) );
-  fy[5] = -( (stress_xy * pfx5) + (stress_yy * pfy5) + (stress_yz * pfz5) );
-  fy[6] = -( (stress_xy * pfx6) + (stress_yy * pfy6) + (stress_yz * pfz6) );
-  fy[7] = -( (stress_xy * pfx7) + (stress_yy * pfy7) + (stress_yz * pfz7) );
+   fy[0] = -( (stress_xy * pfx0) + (stress_yy * pfy0) + (stress_yz * pfz0) );
+   fy[1] = -( (stress_xy * pfx1) + (stress_yy * pfy1) + (stress_yz * pfz1) );
+   fy[2] = -( (stress_xy * pfx2) + (stress_yy * pfy2) + (stress_yz * pfz2) );
+   fy[3] = -( (stress_xy * pfx3) + (stress_yy * pfy3) + (stress_yz * pfz3) );
+   fy[4] = -( (stress_xy * pfx4) + (stress_yy * pfy4) + (stress_yz * pfz4) );
+   fy[5] = -( (stress_xy * pfx5) + (stress_yy * pfy5) + (stress_yz * pfz5) );
+   fy[6] = -( (stress_xy * pfx6) + (stress_yy * pfy6) + (stress_yz * pfz6) );
+   fy[7] = -( (stress_xy * pfx7) + (stress_yy * pfy7) + (stress_yz * pfz7) );
 
-  fz[0] = -( (stress_xz * pfx0) + (stress_yz * pfy0) + (stress_zz * pfz0) );
-  fz[1] = -( (stress_xz * pfx1) + (stress_yz * pfy1) + (stress_zz * pfz1) );
-  fz[2] = -( (stress_xz * pfx2) + (stress_yz * pfy2) + (stress_zz * pfz2) );
-  fz[3] = -( (stress_xz * pfx3) + (stress_yz * pfy3) + (stress_zz * pfz3) );
-  fz[4] = -( (stress_xz * pfx4) + (stress_yz * pfy4) + (stress_zz * pfz4) );
-  fz[5] = -( (stress_xz * pfx5) + (stress_yz * pfy5) + (stress_zz * pfz5) );
-  fz[6] = -( (stress_xz * pfx6) + (stress_yz * pfy6) + (stress_zz * pfz6) );
-  fz[7] = -( (stress_xz * pfx7) + (stress_yz * pfy7) + (stress_zz * pfz7) );
+   fz[0] = -( (stress_xz * pfx0) + (stress_yz * pfy0) + (stress_zz * pfz0) );
+   fz[1] = -( (stress_xz * pfx1) + (stress_yz * pfy1) + (stress_zz * pfz1) );
+   fz[2] = -( (stress_xz * pfx2) + (stress_yz * pfy2) + (stress_zz * pfz2) );
+   fz[3] = -( (stress_xz * pfx3) + (stress_yz * pfy3) + (stress_zz * pfz3) );
+   fz[4] = -( (stress_xz * pfx4) + (stress_yz * pfy4) + (stress_zz * pfz4) );
+   fz[5] = -( (stress_xz * pfx5) + (stress_yz * pfy5) + (stress_zz * pfz5) );
+   fz[6] = -( (stress_xz * pfx6) + (stress_yz * pfy6) + (stress_zz * pfz6) );
+   fz[7] = -( (stress_xz * pfx7) + (stress_yz * pfy7) + (stress_zz * pfz7) );
 }
 
 void Lulesh::IntegrateStressForElems( Index_t numElem,
-                              Real_t *sigxx, Real_t *sigyy, Real_t *sigzz,
-                              Real_t *sigxy, Real_t *sigxz, Real_t *sigyz,
-                              Real_t *determ)
+      Real_t *sigxx, Real_t *sigyy, Real_t *sigzz,
+      Real_t *sigxy, Real_t *sigxz, Real_t *sigyz,
+      Real_t *determ)
 {
-  Real_t B[3][8] ;// shape function derivatives
-  Real_t x_local[8] ;
-  Real_t y_local[8] ;
-  Real_t z_local[8] ;
-  Real_t fx_local[8] ;
-  Real_t fy_local[8] ;
-  Real_t fz_local[8] ;
+   Real_t B[3][8] ;// shape function derivatives
+   Real_t x_local[8] ;
+   Real_t y_local[8] ;
+   Real_t z_local[8] ;
+   Real_t fx_local[8] ;
+   Real_t fy_local[8] ;
+   Real_t fz_local[8] ;
 
-  // loop over all elements
-  for( Index_t k=0 ; k<numElem ; ++k )
-  {
-    const Index_t* const elemNodes = domain.nodelist(k);
+   // loop over all elements
+   for( Index_t k=0 ; k<numElem ; ++k )
+   {
+      const Index_t* const elemNodes = domain.nodelist(k);
 
-    // get nodal coordinates from global arrays and copy into local arrays.
-    for( Index_t lnode=0 ; lnode<8 ; ++lnode )
-    {
-      Index_t gnode = elemNodes[lnode];
-      x_local[lnode] = domain.x(gnode);
-      y_local[lnode] = domain.y(gnode);
-      z_local[lnode] = domain.z(gnode);
-    }
+      // get nodal coordinates from global arrays and copy into local arrays.
+      for( Index_t lnode=0 ; lnode<8 ; ++lnode )
+      {
+         Index_t gnode = elemNodes[lnode];
+         x_local[lnode] = domain.x(gnode);
+         y_local[lnode] = domain.y(gnode);
+         z_local[lnode] = domain.z(gnode);
+      }
 
-    /* Volume calculation involves extra work for numerical consistency. */
-    CalcElemShapeFunctionDerivatives(x_local, y_local, z_local,
-                                         B, &determ[k]);
+      /* Volume calculation involves extra work for numerical consistency. */
+      CalcElemShapeFunctionDerivatives(x_local, y_local, z_local,
+            B, &determ[k]);
 
-    CalcElemNodeNormals( B[0] , B[1], B[2],
-                          x_local, y_local, z_local );
+      CalcElemNodeNormals( B[0] , B[1], B[2],
+            x_local, y_local, z_local );
 
-    SumElemStressesToNodeForces( B, sigxx[k], sigyy[k], sigzz[k],
-                                    sigxy[k], sigxz[k], sigyz[k],
-                                    fx_local, fy_local, fz_local ) ;
+      SumElemStressesToNodeForces( B, sigxx[k], sigyy[k], sigzz[k],
+            sigxy[k], sigxz[k], sigyz[k],
+            fx_local, fy_local, fz_local ) ;
 
-    // copy nodal force contributions to global force arrray.
-    for( Index_t lnode=0 ; lnode<8 ; ++lnode )
-    {
-      Index_t gnode = elemNodes[lnode];
-      domain.fx(gnode) += fx_local[lnode];
-      domain.fy(gnode) += fy_local[lnode];
-      domain.fz(gnode) += fz_local[lnode];
-    }
-  }
+      // copy nodal force contributions to global force arrray.
+      for( Index_t lnode=0 ; lnode<8 ; ++lnode )
+      {
+         Index_t gnode = elemNodes[lnode];
+         domain.fx(gnode) += fx_local[lnode];
+         domain.fy(gnode) += fy_local[lnode];
+         domain.fz(gnode) += fz_local[lnode];
+      }
+   }
 }
 
 void Lulesh::CollectDomainNodesToElemNodes(const Index_t* elemToNode,
-                                   Real_t elemX[8],
-                                   Real_t elemY[8],
-                                   Real_t elemZ[8])
+      Real_t elemX[8],
+      Real_t elemY[8],
+      Real_t elemZ[8])
 {
    Index_t nd0i = elemToNode[0] ;
    Index_t nd1i = elemToNode[1] ;
@@ -928,12 +928,12 @@ void Lulesh::CollectDomainNodesToElemNodes(const Index_t* elemToNode,
 }
 
 void Lulesh::VoluDer(const Real_t x0, const Real_t x1, const Real_t x2,
-             const Real_t x3, const Real_t x4, const Real_t x5,
-             const Real_t y0, const Real_t y1, const Real_t y2,
-             const Real_t y3, const Real_t y4, const Real_t y5,
-             const Real_t z0, const Real_t z1, const Real_t z2,
-             const Real_t z3, const Real_t z4, const Real_t z5,
-             Real_t* dvdx, Real_t* dvdy, Real_t* dvdz)
+      const Real_t x3, const Real_t x4, const Real_t x5,
+      const Real_t y0, const Real_t y1, const Real_t y2,
+      const Real_t y3, const Real_t y4, const Real_t y5,
+      const Real_t z0, const Real_t z1, const Real_t z2,
+      const Real_t z3, const Real_t z4, const Real_t z5,
+      Real_t* dvdx, Real_t* dvdy, Real_t* dvdz)
 {
    const Real_t twelfth = Real_t(1.0) / Real_t(12.0) ;
 
@@ -957,51 +957,51 @@ void Lulesh::VoluDer(const Real_t x0, const Real_t x1, const Real_t x2,
 }
 
 void Lulesh::CalcElemVolumeDerivative(Real_t dvdx[8],
-                              Real_t dvdy[8],
-                              Real_t dvdz[8],
-                              const Real_t x[8],
-                              const Real_t y[8],
-                              const Real_t z[8])
+      Real_t dvdy[8],
+      Real_t dvdz[8],
+      const Real_t x[8],
+      const Real_t y[8],
+      const Real_t z[8])
 {
    VoluDer(x[1], x[2], x[3], x[4], x[5], x[7],
-           y[1], y[2], y[3], y[4], y[5], y[7],
-           z[1], z[2], z[3], z[4], z[5], z[7],
-           &dvdx[0], &dvdy[0], &dvdz[0]);
+         y[1], y[2], y[3], y[4], y[5], y[7],
+         z[1], z[2], z[3], z[4], z[5], z[7],
+         &dvdx[0], &dvdy[0], &dvdz[0]);
    VoluDer(x[0], x[1], x[2], x[7], x[4], x[6],
-           y[0], y[1], y[2], y[7], y[4], y[6],
-           z[0], z[1], z[2], z[7], z[4], z[6],
-           &dvdx[3], &dvdy[3], &dvdz[3]);
+         y[0], y[1], y[2], y[7], y[4], y[6],
+         z[0], z[1], z[2], z[7], z[4], z[6],
+         &dvdx[3], &dvdy[3], &dvdz[3]);
    VoluDer(x[3], x[0], x[1], x[6], x[7], x[5],
-           y[3], y[0], y[1], y[6], y[7], y[5],
-           z[3], z[0], z[1], z[6], z[7], z[5],
-           &dvdx[2], &dvdy[2], &dvdz[2]);
+         y[3], y[0], y[1], y[6], y[7], y[5],
+         z[3], z[0], z[1], z[6], z[7], z[5],
+         &dvdx[2], &dvdy[2], &dvdz[2]);
    VoluDer(x[2], x[3], x[0], x[5], x[6], x[4],
-           y[2], y[3], y[0], y[5], y[6], y[4],
-           z[2], z[3], z[0], z[5], z[6], z[4],
-           &dvdx[1], &dvdy[1], &dvdz[1]);
+         y[2], y[3], y[0], y[5], y[6], y[4],
+         z[2], z[3], z[0], z[5], z[6], z[4],
+         &dvdx[1], &dvdy[1], &dvdz[1]);
    VoluDer(x[7], x[6], x[5], x[0], x[3], x[1],
-           y[7], y[6], y[5], y[0], y[3], y[1],
-           z[7], z[6], z[5], z[0], z[3], z[1],
-           &dvdx[4], &dvdy[4], &dvdz[4]);
+         y[7], y[6], y[5], y[0], y[3], y[1],
+         z[7], z[6], z[5], z[0], z[3], z[1],
+         &dvdx[4], &dvdy[4], &dvdz[4]);
    VoluDer(x[4], x[7], x[6], x[1], x[0], x[2],
-           y[4], y[7], y[6], y[1], y[0], y[2],
-           z[4], z[7], z[6], z[1], z[0], z[2],
-           &dvdx[5], &dvdy[5], &dvdz[5]);
+         y[4], y[7], y[6], y[1], y[0], y[2],
+         z[4], z[7], z[6], z[1], z[0], z[2],
+         &dvdx[5], &dvdy[5], &dvdz[5]);
    VoluDer(x[5], x[4], x[7], x[2], x[1], x[3],
-           y[5], y[4], y[7], y[2], y[1], y[3],
-           z[5], z[4], z[7], z[2], z[1], z[3],
-           &dvdx[6], &dvdy[6], &dvdz[6]);
+         y[5], y[4], y[7], y[2], y[1], y[3],
+         z[5], z[4], z[7], z[2], z[1], z[3],
+         &dvdx[6], &dvdy[6], &dvdz[6]);
    VoluDer(x[6], x[5], x[4], x[3], x[2], x[0],
-           y[6], y[5], y[4], y[3], y[2], y[0],
-           z[6], z[5], z[4], z[3], z[2], z[0],
-           &dvdx[7], &dvdy[7], &dvdz[7]);
+         y[6], y[5], y[4], y[3], y[2], y[0],
+         z[6], z[5], z[4], z[3], z[2], z[0],
+         &dvdx[7], &dvdy[7], &dvdz[7]);
 }
 
 void Lulesh::CalcElemFBHourglassForce(Real_t *xd, Real_t *yd, Real_t *zd,  Real_t *hourgam0,
-                              Real_t *hourgam1, Real_t *hourgam2, Real_t *hourgam3,
-                              Real_t *hourgam4, Real_t *hourgam5, Real_t *hourgam6,
-                              Real_t *hourgam7, Real_t coefficient,
-                              Real_t *hgfx, Real_t *hgfy, Real_t *hgfz )
+      Real_t *hourgam1, Real_t *hourgam2, Real_t *hourgam3,
+      Real_t *hourgam4, Real_t *hourgam5, Real_t *hourgam6,
+      Real_t *hourgam7, Real_t coefficient,
+      Real_t *hgfx, Real_t *hgfy, Real_t *hgfz )
 {
    Index_t i00=0;
    Index_t i01=1;
@@ -1180,9 +1180,9 @@ void Lulesh::CalcElemFBHourglassForce(Real_t *xd, Real_t *yd, Real_t *zd,  Real_
 }
 
 void Lulesh::CalcFBHourglassForceForElems(Real_t *determ,
-            Real_t *x8n,      Real_t *y8n,      Real_t *z8n,
-            Real_t *dvdx,     Real_t *dvdy,     Real_t *dvdz,
-            Real_t hourg)
+      Real_t *x8n,      Real_t *y8n,      Real_t *z8n,
+      Real_t *dvdx,     Real_t *dvdy,     Real_t *dvdz,
+      Real_t hourg)
 {
    /*************************************************
     *
@@ -1235,8 +1235,8 @@ void Lulesh::CalcFBHourglassForceForElems(Real_t *determ,
    gamma[3][6] = Real_t( 1.);
    gamma[3][7] = Real_t(-1.);
 
-/*************************************************/
-/*    compute the hourglass modes */
+   /*************************************************/
+   /*    compute the hourglass modes */
 
 
    for(Index_t i2=0;i2<numElem;++i2){
@@ -1265,36 +1265,36 @@ void Lulesh::CalcFBHourglassForceForElems(Real_t *determ,
             z8n[i3+6] * gamma[i1][6] + z8n[i3+7] * gamma[i1][7];
 
          hourgam0[i1] = gamma[i1][0] -  volinv*(dvdx[i3  ] * hourmodx +
-                                                  dvdy[i3  ] * hourmody +
-                                                  dvdz[i3  ] * hourmodz );
+               dvdy[i3  ] * hourmody +
+               dvdz[i3  ] * hourmodz );
 
          hourgam1[i1] = gamma[i1][1] -  volinv*(dvdx[i3+1] * hourmodx +
-                                                  dvdy[i3+1] * hourmody +
-                                                  dvdz[i3+1] * hourmodz );
+               dvdy[i3+1] * hourmody +
+               dvdz[i3+1] * hourmodz );
 
          hourgam2[i1] = gamma[i1][2] -  volinv*(dvdx[i3+2] * hourmodx +
-                                                  dvdy[i3+2] * hourmody +
-                                                  dvdz[i3+2] * hourmodz );
+               dvdy[i3+2] * hourmody +
+               dvdz[i3+2] * hourmodz );
 
          hourgam3[i1] = gamma[i1][3] -  volinv*(dvdx[i3+3] * hourmodx +
-                                                  dvdy[i3+3] * hourmody +
-                                                  dvdz[i3+3] * hourmodz );
+               dvdy[i3+3] * hourmody +
+               dvdz[i3+3] * hourmodz );
 
          hourgam4[i1] = gamma[i1][4] -  volinv*(dvdx[i3+4] * hourmodx +
-                                                  dvdy[i3+4] * hourmody +
-                                                  dvdz[i3+4] * hourmodz );
+               dvdy[i3+4] * hourmody +
+               dvdz[i3+4] * hourmodz );
 
          hourgam5[i1] = gamma[i1][5] -  volinv*(dvdx[i3+5] * hourmodx +
-                                                  dvdy[i3+5] * hourmody +
-                                                  dvdz[i3+5] * hourmodz );
+               dvdy[i3+5] * hourmody +
+               dvdz[i3+5] * hourmodz );
 
          hourgam6[i1] = gamma[i1][6] -  volinv*(dvdx[i3+6] * hourmodx +
-                                                  dvdy[i3+6] * hourmody +
-                                                  dvdz[i3+6] * hourmodz );
+               dvdy[i3+6] * hourmody +
+               dvdz[i3+6] * hourmodz );
 
          hourgam7[i1] = gamma[i1][7] -  volinv*(dvdx[i3+7] * hourmodx +
-                                                  dvdy[i3+7] * hourmody +
-                                                  dvdz[i3+7] * hourmodz );
+               dvdy[i3+7] * hourmody +
+               dvdz[i3+7] * hourmodz );
 
       }
 
@@ -1345,9 +1345,9 @@ void Lulesh::CalcFBHourglassForceForElems(Real_t *determ,
       coefficient = - hourg * crqt * ss1 * mass1 / volume13;
 
       CalcElemFBHourglassForce(xd1,yd1,zd1,
-                      hourgam0,hourgam1,hourgam2,hourgam3,
-                      hourgam4,hourgam5,hourgam6,hourgam7,
-                      coefficient, hgfx, hgfy, hgfz);
+            hourgam0,hourgam1,hourgam2,hourgam3,
+            hourgam4,hourgam5,hourgam6,hourgam7,
+            coefficient, hgfx, hgfy, hgfz);
 
       domain.fx(n0si2) += hgfx[0];
       domain.fy(n0si2) += hgfy[0];
@@ -1458,12 +1458,12 @@ void Lulesh::CalcVolumeForceForElems()
 
       /* Sum contributions to total stress tensor */
       InitStressTermsForElems(numElem, sigxx, sigyy, sigzz,
-                                       sigxy, sigxz, sigyz);
+            sigxy, sigxz, sigyz);
 
       // call elemlib stress integration loop to produce nodal forces from
       // material stresses.
       IntegrateStressForElems( numElem, sigxx, sigyy, sigzz,
-                                        sigxy, sigxz, sigyz, determ) ;
+            sigxy, sigxz, sigyz, determ) ;
 
       // check for negative element volume
       for ( Index_t k=0 ; k<numElem ; ++k ) {
@@ -1490,30 +1490,30 @@ void Lulesh::CalcVolumeForceForElems()
 
 void Lulesh::CalcForceForNodes()
 {
-  Index_t numNode = domain.numNode() ;
+   Index_t numNode = domain.numNode() ;
 #if defined(COEVP_MPI)
-  Real_t *fieldData[3] ;
+   Real_t *fieldData[3] ;
 
-  CommRecv(&domain, MSG_COMM_SBN, 3, domain.commNodes()) ;
+   CommRecv(&domain, MSG_COMM_SBN, 3, domain.commNodes()) ;
 #endif
 
-  for (Index_t i=0; i<numNode; ++i) {
-     domain.fx(i) = Real_t(0.0) ;
-     domain.fy(i) = Real_t(0.0) ;
-     domain.fz(i) = Real_t(0.0) ;
-  }
+   for (Index_t i=0; i<numNode; ++i) {
+      domain.fx(i) = Real_t(0.0) ;
+      domain.fy(i) = Real_t(0.0) ;
+      domain.fz(i) = Real_t(0.0) ;
+   }
 
-  /* Calcforce calls partial, force, hourq */
-  CalcVolumeForceForElems() ;
+   /* Calcforce calls partial, force, hourq */
+   CalcVolumeForceForElems() ;
 
 #if defined(COEVP_MPI)
-  fieldData[0] = &domain.fx(0) ;
-  fieldData[1] = &domain.fy(0) ;
-  fieldData[2] = &domain.fz(0) ;
-  CommSend(&domain, MSG_COMM_SBN, 3, fieldData,
-           domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
-  CommSBN(&domain, 3, fieldData,
-          domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
+   fieldData[0] = &domain.fx(0) ;
+   fieldData[1] = &domain.fy(0) ;
+   fieldData[2] = &domain.fz(0) ;
+   CommSend(&domain, MSG_COMM_SBN, 3, fieldData,
+         domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
+   CommSBN(&domain, 3, fieldData,
+         domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
 #endif
 
 }
@@ -1530,23 +1530,23 @@ void Lulesh::CalcAccelerationForNodes()
 
 void Lulesh::ApplyAccelerationBoundaryConditionsForNodes()
 {
-  Index_t numBoundaryNodes = domain.numSymmNodesBoundary() ;
+   Index_t numBoundaryNodes = domain.numSymmNodesBoundary() ;
 
-  Index_t numImpactNodes   = domain.numSymmNodesImpact() ;
+   Index_t numImpactNodes   = domain.numSymmNodesImpact() ;
 
 #if defined(COEVP_MPI)
-  if (domain.sliceLoc() == 0)
+   if (domain.sliceLoc() == 0)
 #endif
-  {
-     for(Index_t i=0 ; i<numImpactNodes ; ++i)
-        domain.xdd(domain.symmX(i)) = Real_t(0.0) ;
-  }
-  
-  for(Index_t i=0 ; i<numBoundaryNodes ; ++i)
-     domain.ydd(domain.symmY(i)) = Real_t(0.0) ;
+   {
+      for(Index_t i=0 ; i<numImpactNodes ; ++i)
+         domain.xdd(domain.symmX(i)) = Real_t(0.0) ;
+   }
 
-  for(Index_t i=0 ; i<numBoundaryNodes ; ++i)
-     domain.zdd(domain.symmZ(i)) = Real_t(0.0) ;
+   for(Index_t i=0 ; i<numBoundaryNodes ; ++i)
+      domain.ydd(domain.symmY(i)) = Real_t(0.0) ;
+
+   for(Index_t i=0 ; i<numBoundaryNodes ; ++i)
+      domain.zdd(domain.symmZ(i)) = Real_t(0.0) ;
 }
 
 void Lulesh::CalcVelocityForNodes(const Real_t dt, const Real_t u_cut)
@@ -1555,19 +1555,19 @@ void Lulesh::CalcVelocityForNodes(const Real_t dt, const Real_t u_cut)
 
    for ( Index_t i = 0 ; i < numNode ; ++i )
    {
-     Real_t xdtmp, ydtmp, zdtmp ;
+      Real_t xdtmp, ydtmp, zdtmp ;
 
-     xdtmp = domain.xd(i) + domain.xdd(i) * dt ;
-     if( FABS(xdtmp) < u_cut ) xdtmp = Real_t(0.0);
-     domain.xd(i) = xdtmp ;
+      xdtmp = domain.xd(i) + domain.xdd(i) * dt ;
+      if( FABS(xdtmp) < u_cut ) xdtmp = Real_t(0.0);
+      domain.xd(i) = xdtmp ;
 
-     ydtmp = domain.yd(i) + domain.ydd(i) * dt ;
-     if( FABS(ydtmp) < u_cut ) ydtmp = Real_t(0.0);
-     domain.yd(i) = ydtmp ;
+      ydtmp = domain.yd(i) + domain.ydd(i) * dt ;
+      if( FABS(ydtmp) < u_cut ) ydtmp = Real_t(0.0);
+      domain.yd(i) = ydtmp ;
 
-     zdtmp = domain.zd(i) + domain.zdd(i) * dt ;
-     if( FABS(zdtmp) < u_cut ) zdtmp = Real_t(0.0);
-     domain.zd(i) = zdtmp ;
+      zdtmp = domain.zd(i) + domain.zdd(i) * dt ;
+      if( FABS(zdtmp) < u_cut ) zdtmp = Real_t(0.0);
+      domain.zd(i) = zdtmp ;
    }
 }
 
@@ -1577,171 +1577,171 @@ void Lulesh::CalcPositionForNodes(const Real_t dt)
 
    for ( Index_t i = 0 ; i < numNode ; ++i )
    {
-     domain.x(i) += domain.xd(i) * dt ;
-     domain.y(i) += domain.yd(i) * dt ;
-     domain.z(i) += domain.zd(i) * dt ;
+      domain.x(i) += domain.xd(i) * dt ;
+      domain.y(i) += domain.yd(i) * dt ;
+      domain.z(i) += domain.zd(i) * dt ;
    }
 }
 
 void Lulesh::LagrangeNodal1()
 {
-  /* time of boundary condition evaluation is beginning of step for force and
-   * acceleration boundary conditions. */
-  CalcForceForNodes();
+   /* time of boundary condition evaluation is beginning of step for force and
+    * acceleration boundary conditions. */
+   CalcForceForNodes();
 }
 
 void Lulesh::LagrangeNodal2()
 {
-  const Real_t delt = domain.deltatime() ;
-  Real_t u_cut = domain.u_cut() ;
+   const Real_t delt = domain.deltatime() ;
+   Real_t u_cut = domain.u_cut() ;
 
-  CalcAccelerationForNodes();
+   CalcAccelerationForNodes();
 
-  ApplyAccelerationBoundaryConditionsForNodes();
+   ApplyAccelerationBoundaryConditionsForNodes();
 
-  CalcVelocityForNodes( delt, u_cut ) ;
+   CalcVelocityForNodes( delt, u_cut ) ;
 
-  CalcPositionForNodes( delt );
+   CalcPositionForNodes( delt );
 }
 
 
 void Lulesh::LagrangeNodal()
 {
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
-  Real_t *fieldData[6] ;
+   Real_t *fieldData[6] ;
 #endif
 
-  const Real_t delt = domain.deltatime() ;
-  Real_t u_cut = domain.u_cut() ;
+   const Real_t delt = domain.deltatime() ;
+   Real_t u_cut = domain.u_cut() ;
 
-  /* time of boundary condition evaluation is beginning of step for force and
-   * acceleration boundary conditions. */
-  LagrangeNodal1();
+   /* time of boundary condition evaluation is beginning of step for force and
+    * acceleration boundary conditions. */
+   LagrangeNodal1();
 
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
-  CommRecv(&domain, MSG_SYNC_POS_VEL, 6, domain.commNodes(), false) ;
+   CommRecv(&domain, MSG_SYNC_POS_VEL, 6, domain.commNodes(), false) ;
 #endif
 
-  LagrangeNodal2();
+   LagrangeNodal2();
 
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_EARLY)
-  fieldData[0] = &domain.x(0) ;
-  fieldData[1] = &domain.y(0) ;
-  fieldData[2] = &domain.z(0) ;
-  fieldData[3] = &domain.xd(0) ;
-  fieldData[4] = &domain.yd(0) ;
-  fieldData[5] = &domain.zd(0) ;
+   fieldData[0] = &domain.x(0) ;
+   fieldData[1] = &domain.y(0) ;
+   fieldData[2] = &domain.z(0) ;
+   fieldData[3] = &domain.xd(0) ;
+   fieldData[4] = &domain.yd(0) ;
+   fieldData[5] = &domain.zd(0) ;
 
-  CommSend(&domain, MSG_SYNC_POS_VEL, 6, fieldData,
-           domain.planeNodeIds, domain.commNodes(), domain.sliceHeight(),
-           false) ;
-  CommSyncPosVel(&domain,
-           domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
+   CommSend(&domain, MSG_SYNC_POS_VEL, 6, fieldData,
+         domain.planeNodeIds, domain.commNodes(), domain.sliceHeight(),
+         false) ;
+   CommSyncPosVel(&domain,
+         domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
 #endif
 
-  return;
+   return;
 }
 
-static inline
+   static inline
 Real_t CalcElemVolume( const Real_t x0, const Real_t x1,
-               const Real_t x2, const Real_t x3,
-               const Real_t x4, const Real_t x5,
-               const Real_t x6, const Real_t x7,
-               const Real_t y0, const Real_t y1,
-               const Real_t y2, const Real_t y3,
-               const Real_t y4, const Real_t y5,
-               const Real_t y6, const Real_t y7,
-               const Real_t z0, const Real_t z1,
-               const Real_t z2, const Real_t z3,
-               const Real_t z4, const Real_t z5,
-               const Real_t z6, const Real_t z7 )
+      const Real_t x2, const Real_t x3,
+      const Real_t x4, const Real_t x5,
+      const Real_t x6, const Real_t x7,
+      const Real_t y0, const Real_t y1,
+      const Real_t y2, const Real_t y3,
+      const Real_t y4, const Real_t y5,
+      const Real_t y6, const Real_t y7,
+      const Real_t z0, const Real_t z1,
+      const Real_t z2, const Real_t z3,
+      const Real_t z4, const Real_t z5,
+      const Real_t z6, const Real_t z7 )
 {
-  Real_t twelveth = Real_t(1.0)/Real_t(12.0);
+   Real_t twelveth = Real_t(1.0)/Real_t(12.0);
 
-  Real_t dx61 = x6 - x1;
-  Real_t dy61 = y6 - y1;
-  Real_t dz61 = z6 - z1;
+   Real_t dx61 = x6 - x1;
+   Real_t dy61 = y6 - y1;
+   Real_t dz61 = z6 - z1;
 
-  Real_t dx70 = x7 - x0;
-  Real_t dy70 = y7 - y0;
-  Real_t dz70 = z7 - z0;
+   Real_t dx70 = x7 - x0;
+   Real_t dy70 = y7 - y0;
+   Real_t dz70 = z7 - z0;
 
-  Real_t dx63 = x6 - x3;
-  Real_t dy63 = y6 - y3;
-  Real_t dz63 = z6 - z3;
+   Real_t dx63 = x6 - x3;
+   Real_t dy63 = y6 - y3;
+   Real_t dz63 = z6 - z3;
 
-  Real_t dx20 = x2 - x0;
-  Real_t dy20 = y2 - y0;
-  Real_t dz20 = z2 - z0;
+   Real_t dx20 = x2 - x0;
+   Real_t dy20 = y2 - y0;
+   Real_t dz20 = z2 - z0;
 
-  Real_t dx50 = x5 - x0;
-  Real_t dy50 = y5 - y0;
-  Real_t dz50 = z5 - z0;
+   Real_t dx50 = x5 - x0;
+   Real_t dy50 = y5 - y0;
+   Real_t dz50 = z5 - z0;
 
-  Real_t dx64 = x6 - x4;
-  Real_t dy64 = y6 - y4;
-  Real_t dz64 = z6 - z4;
+   Real_t dx64 = x6 - x4;
+   Real_t dy64 = y6 - y4;
+   Real_t dz64 = z6 - z4;
 
-  Real_t dx31 = x3 - x1;
-  Real_t dy31 = y3 - y1;
-  Real_t dz31 = z3 - z1;
+   Real_t dx31 = x3 - x1;
+   Real_t dy31 = y3 - y1;
+   Real_t dz31 = z3 - z1;
 
-  Real_t dx72 = x7 - x2;
-  Real_t dy72 = y7 - y2;
-  Real_t dz72 = z7 - z2;
+   Real_t dx72 = x7 - x2;
+   Real_t dy72 = y7 - y2;
+   Real_t dz72 = z7 - z2;
 
-  Real_t dx43 = x4 - x3;
-  Real_t dy43 = y4 - y3;
-  Real_t dz43 = z4 - z3;
+   Real_t dx43 = x4 - x3;
+   Real_t dy43 = y4 - y3;
+   Real_t dz43 = z4 - z3;
 
-  Real_t dx57 = x5 - x7;
-  Real_t dy57 = y5 - y7;
-  Real_t dz57 = z5 - z7;
+   Real_t dx57 = x5 - x7;
+   Real_t dy57 = y5 - y7;
+   Real_t dz57 = z5 - z7;
 
-  Real_t dx14 = x1 - x4;
-  Real_t dy14 = y1 - y4;
-  Real_t dz14 = z1 - z4;
+   Real_t dx14 = x1 - x4;
+   Real_t dy14 = y1 - y4;
+   Real_t dz14 = z1 - z4;
 
-  Real_t dx25 = x2 - x5;
-  Real_t dy25 = y2 - y5;
-  Real_t dz25 = z2 - z5;
+   Real_t dx25 = x2 - x5;
+   Real_t dy25 = y2 - y5;
+   Real_t dz25 = z2 - z5;
 
 #define TRIPLE_PRODUCT(x1, y1, z1, x2, y2, z2, x3, y3, z3) \
    ((x1)*((y2)*(z3) - (z2)*(y3)) + (x2)*((z1)*(y3) - (y1)*(z3)) + (x3)*((y1)*(z2) - (z1)*(y2)))
 
-  Real_t volume =
-    TRIPLE_PRODUCT(dx31 + dx72, dx63, dx20,
-       dy31 + dy72, dy63, dy20,
-       dz31 + dz72, dz63, dz20) +
-    TRIPLE_PRODUCT(dx43 + dx57, dx64, dx70,
-       dy43 + dy57, dy64, dy70,
-       dz43 + dz57, dz64, dz70) +
-    TRIPLE_PRODUCT(dx14 + dx25, dx61, dx50,
-       dy14 + dy25, dy61, dy50,
-       dz14 + dz25, dz61, dz50);
+   Real_t volume =
+      TRIPLE_PRODUCT(dx31 + dx72, dx63, dx20,
+            dy31 + dy72, dy63, dy20,
+            dz31 + dz72, dz63, dz20) +
+      TRIPLE_PRODUCT(dx43 + dx57, dx64, dx70,
+            dy43 + dy57, dy64, dy70,
+            dz43 + dz57, dz64, dz70) +
+      TRIPLE_PRODUCT(dx14 + dx25, dx61, dx50,
+            dy14 + dy25, dy61, dy50,
+            dz14 + dz25, dz61, dz50);
 
 #undef TRIPLE_PRODUCT
 
-  volume *= twelveth;
+   volume *= twelveth;
 
-  return volume ;
+   return volume ;
 }
 
-static inline
+   static inline
 Real_t CalcElemVolume( const Real_t x[8], const Real_t y[8], const Real_t z[8] )
 {
-return CalcElemVolume( x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7],
-                       y[0], y[1], y[2], y[3], y[4], y[5], y[6], y[7],
-                       z[0], z[1], z[2], z[3], z[4], z[5], z[6], z[7]);
+   return CalcElemVolume( x[0], x[1], x[2], x[3], x[4], x[5], x[6], x[7],
+         y[0], y[1], y[2], y[3], y[4], y[5], y[6], y[7],
+         z[0], z[1], z[2], z[3], z[4], z[5], z[6], z[7]);
 }
 
-static inline
+   static inline
 Real_t AreaFace( const Real_t x0, const Real_t x1,
-                 const Real_t x2, const Real_t x3,
-                 const Real_t y0, const Real_t y1,
-                 const Real_t y2, const Real_t y3,
-                 const Real_t z0, const Real_t z1,
-                 const Real_t z2, const Real_t z3)
+      const Real_t x2, const Real_t x3,
+      const Real_t y0, const Real_t y1,
+      const Real_t y2, const Real_t y3,
+      const Real_t z0, const Real_t z1,
+      const Real_t z2, const Real_t z3)
 {
    Real_t fx = (x2 - x0) - (x3 - x1);
    Real_t fy = (y2 - y0) - (y3 - y1);
@@ -1757,42 +1757,42 @@ Real_t AreaFace( const Real_t x0, const Real_t x1,
    return area ;
 }
 
-static inline
+   static inline
 Real_t CalcElemCharacteristicLength( const Real_t x[8],
-                                     const Real_t y[8],
-                                     const Real_t z[8],
-                                     const Real_t volume)
+      const Real_t y[8],
+      const Real_t z[8],
+      const Real_t volume)
 {
    Real_t a, charLength = Real_t(0.0);
 
    a = AreaFace(x[0],x[1],x[2],x[3],
-                y[0],y[1],y[2],y[3],
-                z[0],z[1],z[2],z[3]) ;
+         y[0],y[1],y[2],y[3],
+         z[0],z[1],z[2],z[3]) ;
    charLength = std::max(a,charLength) ;
 
    a = AreaFace(x[4],x[5],x[6],x[7],
-                y[4],y[5],y[6],y[7],
-                z[4],z[5],z[6],z[7]) ;
+         y[4],y[5],y[6],y[7],
+         z[4],z[5],z[6],z[7]) ;
    charLength = std::max(a,charLength) ;
 
    a = AreaFace(x[0],x[1],x[5],x[4],
-                y[0],y[1],y[5],y[4],
-                z[0],z[1],z[5],z[4]) ;
+         y[0],y[1],y[5],y[4],
+         z[0],z[1],z[5],z[4]) ;
    charLength = std::max(a,charLength) ;
 
    a = AreaFace(x[1],x[2],x[6],x[5],
-                y[1],y[2],y[6],y[5],
-                z[1],z[2],z[6],z[5]) ;
+         y[1],y[2],y[6],y[5],
+         z[1],z[2],z[6],z[5]) ;
    charLength = std::max(a,charLength) ;
 
    a = AreaFace(x[2],x[3],x[7],x[6],
-                y[2],y[3],y[7],y[6],
-                z[2],z[3],z[7],z[6]) ;
+         y[2],y[3],y[7],y[6],
+         z[2],z[3],z[7],z[6]) ;
    charLength = std::max(a,charLength) ;
 
    a = AreaFace(x[3],x[0],x[4],x[7],
-                y[3],y[0],y[4],y[7],
-                z[3],z[0],z[4],z[7]) ;
+         y[3],y[0],y[4],y[7],
+         z[3],z[0],z[4],z[7]) ;
    charLength = std::max(a,charLength) ;
 
    charLength = Real_t(4.0) * volume / SQRT(charLength);
@@ -1801,181 +1801,181 @@ Real_t CalcElemCharacteristicLength( const Real_t x[8],
 }
 
 void Lulesh::CalcElemVelocityGradient( const Real_t* const xvel,
-                               const Real_t* const yvel,
-                               const Real_t* const zvel,
-                               const Real_t b[][8],
-                               const Real_t detJ,
-                               Real_t* const d, Real_t* const w )
+      const Real_t* const yvel,
+      const Real_t* const zvel,
+      const Real_t b[][8],
+      const Real_t detJ,
+      Real_t* const d, Real_t* const w )
 {
-  const Real_t inv_detJ = Real_t(1.0) / detJ ;
-  Real_t dyddx, dxddy, dzddx, dxddz, dzddy, dyddz;
-  const Real_t* const pfx = b[0];
-  const Real_t* const pfy = b[1];
-  const Real_t* const pfz = b[2];
+   const Real_t inv_detJ = Real_t(1.0) / detJ ;
+   Real_t dyddx, dxddy, dzddx, dxddz, dzddy, dyddz;
+   const Real_t* const pfx = b[0];
+   const Real_t* const pfy = b[1];
+   const Real_t* const pfz = b[2];
 
-  d[0] = inv_detJ * ( pfx[0] * (xvel[0]-xvel[6])
-                     + pfx[1] * (xvel[1]-xvel[7])
-                     + pfx[2] * (xvel[2]-xvel[4])
-                     + pfx[3] * (xvel[3]-xvel[5]) );
+   d[0] = inv_detJ * ( pfx[0] * (xvel[0]-xvel[6])
+         + pfx[1] * (xvel[1]-xvel[7])
+         + pfx[2] * (xvel[2]-xvel[4])
+         + pfx[3] * (xvel[3]-xvel[5]) );
 
-  d[1] = inv_detJ * ( pfy[0] * (yvel[0]-yvel[6])
-                     + pfy[1] * (yvel[1]-yvel[7])
-                     + pfy[2] * (yvel[2]-yvel[4])
-                     + pfy[3] * (yvel[3]-yvel[5]) );
+   d[1] = inv_detJ * ( pfy[0] * (yvel[0]-yvel[6])
+         + pfy[1] * (yvel[1]-yvel[7])
+         + pfy[2] * (yvel[2]-yvel[4])
+         + pfy[3] * (yvel[3]-yvel[5]) );
 
-  d[2] = inv_detJ * ( pfz[0] * (zvel[0]-zvel[6])
-                     + pfz[1] * (zvel[1]-zvel[7])
-                     + pfz[2] * (zvel[2]-zvel[4])
-                     + pfz[3] * (zvel[3]-zvel[5]) );
+   d[2] = inv_detJ * ( pfz[0] * (zvel[0]-zvel[6])
+         + pfz[1] * (zvel[1]-zvel[7])
+         + pfz[2] * (zvel[2]-zvel[4])
+         + pfz[3] * (zvel[3]-zvel[5]) );
 
-  dyddx  = inv_detJ * ( pfx[0] * (yvel[0]-yvel[6])
-                      + pfx[1] * (yvel[1]-yvel[7])
-                      + pfx[2] * (yvel[2]-yvel[4])
-                      + pfx[3] * (yvel[3]-yvel[5]) );
+   dyddx  = inv_detJ * ( pfx[0] * (yvel[0]-yvel[6])
+         + pfx[1] * (yvel[1]-yvel[7])
+         + pfx[2] * (yvel[2]-yvel[4])
+         + pfx[3] * (yvel[3]-yvel[5]) );
 
-  dxddy  = inv_detJ * ( pfy[0] * (xvel[0]-xvel[6])
-                      + pfy[1] * (xvel[1]-xvel[7])
-                      + pfy[2] * (xvel[2]-xvel[4])
-                      + pfy[3] * (xvel[3]-xvel[5]) );
+   dxddy  = inv_detJ * ( pfy[0] * (xvel[0]-xvel[6])
+         + pfy[1] * (xvel[1]-xvel[7])
+         + pfy[2] * (xvel[2]-xvel[4])
+         + pfy[3] * (xvel[3]-xvel[5]) );
 
-  dzddx  = inv_detJ * ( pfx[0] * (zvel[0]-zvel[6])
-                      + pfx[1] * (zvel[1]-zvel[7])
-                      + pfx[2] * (zvel[2]-zvel[4])
-                      + pfx[3] * (zvel[3]-zvel[5]) );
+   dzddx  = inv_detJ * ( pfx[0] * (zvel[0]-zvel[6])
+         + pfx[1] * (zvel[1]-zvel[7])
+         + pfx[2] * (zvel[2]-zvel[4])
+         + pfx[3] * (zvel[3]-zvel[5]) );
 
-  dxddz  = inv_detJ * ( pfz[0] * (xvel[0]-xvel[6])
-                      + pfz[1] * (xvel[1]-xvel[7])
-                      + pfz[2] * (xvel[2]-xvel[4])
-                      + pfz[3] * (xvel[3]-xvel[5]) );
+   dxddz  = inv_detJ * ( pfz[0] * (xvel[0]-xvel[6])
+         + pfz[1] * (xvel[1]-xvel[7])
+         + pfz[2] * (xvel[2]-xvel[4])
+         + pfz[3] * (xvel[3]-xvel[5]) );
 
-  dzddy  = inv_detJ * ( pfy[0] * (zvel[0]-zvel[6])
-                      + pfy[1] * (zvel[1]-zvel[7])
-                      + pfy[2] * (zvel[2]-zvel[4])
-                      + pfy[3] * (zvel[3]-zvel[5]) );
+   dzddy  = inv_detJ * ( pfy[0] * (zvel[0]-zvel[6])
+         + pfy[1] * (zvel[1]-zvel[7])
+         + pfy[2] * (zvel[2]-zvel[4])
+         + pfy[3] * (zvel[3]-zvel[5]) );
 
-  dyddz  = inv_detJ * ( pfz[0] * (yvel[0]-yvel[6])
-                      + pfz[1] * (yvel[1]-yvel[7])
-                      + pfz[2] * (yvel[2]-yvel[4])
-                      + pfz[3] * (yvel[3]-yvel[5]) );
-  d[5]  = Real_t( .5) * ( dxddy + dyddx );
-  d[4]  = Real_t( .5) * ( dxddz + dzddx );
-  d[3]  = Real_t( .5) * ( dzddy + dyddz );
-  w[2]  = Real_t( .5) * ( dyddx - dxddy );
-  w[1]  = Real_t( .5) * ( dxddz - dzddx );
-  w[0]  = Real_t( .5) * ( dzddy - dyddz );
+   dyddz  = inv_detJ * ( pfz[0] * (yvel[0]-yvel[6])
+         + pfz[1] * (yvel[1]-yvel[7])
+         + pfz[2] * (yvel[2]-yvel[4])
+         + pfz[3] * (yvel[3]-yvel[5]) );
+   d[5]  = Real_t( .5) * ( dxddy + dyddx );
+   d[4]  = Real_t( .5) * ( dxddz + dzddx );
+   d[3]  = Real_t( .5) * ( dzddy + dyddz );
+   w[2]  = Real_t( .5) * ( dyddx - dxddy );
+   w[1]  = Real_t( .5) * ( dxddz - dzddx );
+   w[0]  = Real_t( .5) * ( dzddy - dyddz );
 }
 
 void Lulesh::CalcKinematicsForElems( Index_t numElem, Real_t dt )
 {
-  // loop over all elements
+   // loop over all elements
 #ifdef _OPENMP
 #pragma omp parallel for
 #endif
-  for( Index_t k=0 ; k<numElem ; ++k )
-  {
-    Real_t B[3][8] ; /** shape function derivatives */
-    Real_t D[6] ;
-    Real_t W[3] ;
-    Real_t x_local[8] ;
-    Real_t y_local[8] ;
-    Real_t z_local[8] ;
-    Real_t xd_local[8] ;
-    Real_t yd_local[8] ;
-    Real_t zd_local[8] ;
-    Real_t detJ = Real_t(0.0) ;
+   for( Index_t k=0 ; k<numElem ; ++k )
+   {
+      Real_t B[3][8] ; /** shape function derivatives */
+      Real_t D[6] ;
+      Real_t W[3] ;
+      Real_t x_local[8] ;
+      Real_t y_local[8] ;
+      Real_t z_local[8] ;
+      Real_t xd_local[8] ;
+      Real_t yd_local[8] ;
+      Real_t zd_local[8] ;
+      Real_t detJ = Real_t(0.0) ;
 
-    Real_t volume ;
-    Real_t relativeVolume ;
-    const Index_t* const elemToNode = domain.nodelist(k) ;
+      Real_t volume ;
+      Real_t relativeVolume ;
+      const Index_t* const elemToNode = domain.nodelist(k) ;
 
-    // get nodal coordinates from global arrays and copy into local arrays.
-    for( Index_t lnode=0 ; lnode<8 ; ++lnode )
-    {
-      Index_t gnode = elemToNode[lnode];
-      x_local[lnode] = domain.x(gnode);
-      y_local[lnode] = domain.y(gnode);
-      z_local[lnode] = domain.z(gnode);
-    }
+      // get nodal coordinates from global arrays and copy into local arrays.
+      for( Index_t lnode=0 ; lnode<8 ; ++lnode )
+      {
+         Index_t gnode = elemToNode[lnode];
+         x_local[lnode] = domain.x(gnode);
+         y_local[lnode] = domain.y(gnode);
+         z_local[lnode] = domain.z(gnode);
+      }
 
-    // volume calculations
-    volume = CalcElemVolume(x_local, y_local, z_local );
-    relativeVolume = volume / domain.volo(k) ;
-    domain.vnew(k) = relativeVolume ;
-    domain.delv(k) = relativeVolume - domain.v(k) ;
+      // volume calculations
+      volume = CalcElemVolume(x_local, y_local, z_local );
+      relativeVolume = volume / domain.volo(k) ;
+      domain.vnew(k) = relativeVolume ;
+      domain.delv(k) = relativeVolume - domain.v(k) ;
 
-    // set characteristic length
-    domain.arealg(k) = CalcElemCharacteristicLength(x_local,
-                                                  y_local,
-                                                  z_local,
-                                                  volume);
+      // set characteristic length
+      domain.arealg(k) = CalcElemCharacteristicLength(x_local,
+            y_local,
+            z_local,
+            volume);
 
-    // get nodal velocities from global array and copy into local arrays.
-    for( Index_t lnode=0 ; lnode<8 ; ++lnode )
-    {
-      Index_t gnode = elemToNode[lnode];
-      xd_local[lnode] = domain.xd(gnode);
-      yd_local[lnode] = domain.yd(gnode);
-      zd_local[lnode] = domain.zd(gnode);
-    }
+      // get nodal velocities from global array and copy into local arrays.
+      for( Index_t lnode=0 ; lnode<8 ; ++lnode )
+      {
+         Index_t gnode = elemToNode[lnode];
+         xd_local[lnode] = domain.xd(gnode);
+         yd_local[lnode] = domain.yd(gnode);
+         zd_local[lnode] = domain.zd(gnode);
+      }
 
-    // compute the velocity gradient at the new time (i.e., before the
-    // nodal positions get backed up a half step below).  Question:
-    // where are the velocities centered at this point?
+      // compute the velocity gradient at the new time (i.e., before the
+      // nodal positions get backed up a half step below).  Question:
+      // where are the velocities centered at this point?
 
-    CalcElemShapeFunctionDerivatives( x_local,
-                                      y_local,
-                                      z_local,
-                                      B, &detJ );
+      CalcElemShapeFunctionDerivatives( x_local,
+            y_local,
+            z_local,
+            B, &detJ );
 
-    CalcElemVelocityGradient( xd_local,
-                              yd_local,
-                              zd_local,
-                              B, detJ, D, W );
+      CalcElemVelocityGradient( xd_local,
+            yd_local,
+            zd_local,
+            B, detJ, D, W );
 
-    Tensor2Gen L;
+      Tensor2Gen L;
 
-    L(1,1) = D[0];         // dxddx
-    L(1,2) = D[5] - W[2];  // dyddx
-    L(1,3) = D[4] + W[1];  // dzddx
-    L(2,1) = D[5] + W[2];  // dxddy 
-    L(2,2) = D[1];         // dyddy
-    L(2,3) = D[3] - W[0];  // dzddy
-    L(3,1) = D[4] - W[1];  // dxddz
-    L(3,2) = D[3] + W[0];  // dyddz
-    L(3,3) = D[2];         // dzddz
+      L(1,1) = D[0];         // dxddx
+      L(1,2) = D[5] - W[2];  // dyddx
+      L(1,3) = D[4] + W[1];  // dzddx
+      L(2,1) = D[5] + W[2];  // dxddy 
+      L(2,2) = D[1];         // dyddy
+      L(2,3) = D[3] - W[0];  // dzddy
+      L(3,1) = D[4] - W[1];  // dxddz
+      L(3,2) = D[3] + W[0];  // dyddz
+      L(3,3) = D[2];         // dzddz
 
-    domain.cm_vel_grad(k) = L;
-    domain.cm_vol_chng(k) = relativeVolume/domain.v(k);
+      domain.cm_vel_grad(k) = L;
+      domain.cm_vol_chng(k) = relativeVolume/domain.v(k);
 
-    Real_t dt2 = Real_t(0.5) * dt;
-    for ( Index_t j=0 ; j<8 ; ++j )
-    {
-       x_local[j] -= dt2 * xd_local[j];
-       y_local[j] -= dt2 * yd_local[j];
-       z_local[j] -= dt2 * zd_local[j];
-    }
+      Real_t dt2 = Real_t(0.5) * dt;
+      for ( Index_t j=0 ; j<8 ; ++j )
+      {
+         x_local[j] -= dt2 * xd_local[j];
+         y_local[j] -= dt2 * yd_local[j];
+         z_local[j] -= dt2 * zd_local[j];
+      }
 
-    CalcElemShapeFunctionDerivatives( x_local,
-                                      y_local,
-                                      z_local,
-                                      B, &detJ );
+      CalcElemShapeFunctionDerivatives( x_local,
+            y_local,
+            z_local,
+            B, &detJ );
 
-    CalcElemVelocityGradient( xd_local,
-                              yd_local,
-                              zd_local,
-                              B, detJ, D, W );
+      CalcElemVelocityGradient( xd_local,
+            yd_local,
+            zd_local,
+            B, detJ, D, W );
 
-    // put velocity gradient quantities into their global arrays.
-    domain.dxx(k) = D[0];
-    domain.dyy(k) = D[1];
-    domain.dzz(k) = D[2];
-    domain.dyz(k) = D[3];
-    domain.dxz(k) = D[4];
-    domain.dxy(k) = D[5];
-    domain.wxx(k) = W[0];
-    domain.wyy(k) = W[1];
-    domain.wzz(k) = W[2];
-  }
+      // put velocity gradient quantities into their global arrays.
+      domain.dxx(k) = D[0];
+      domain.dyy(k) = D[1];
+      domain.dzz(k) = D[2];
+      domain.dyz(k) = D[3];
+      domain.dxz(k) = D[4];
+      domain.dxy(k) = D[5];
+      domain.wxx(k) = W[0];
+      domain.wyy(k) = W[1];
+      domain.wzz(k) = W[2];
+   }
 }
 
 void Lulesh::CalcLagrangeElements(Real_t deltatime)
@@ -1987,25 +1987,25 @@ void Lulesh::CalcLagrangeElements(Real_t deltatime)
       // element loop to do some stuff not included in the elemlib function.
       for ( Index_t k=0 ; k<numElem ; ++k )
       {
-        // calc strain rate and apply as constraint (only done in FB element)
-        Real_t vdov = domain.dxx(k) + domain.dyy(k) + domain.dzz(k) ;
-        Real_t vdovthird = vdov/Real_t(3.0) ;
-        
-        // make the rate of deformation tensor deviatoric
-        domain.vdov(k) = vdov ;
-        domain.dxx(k) -= vdovthird ;
-        domain.dyy(k) -= vdovthird ;
-        domain.dzz(k) -= vdovthird ;
+         // calc strain rate and apply as constraint (only done in FB element)
+         Real_t vdov = domain.dxx(k) + domain.dyy(k) + domain.dzz(k) ;
+         Real_t vdovthird = vdov/Real_t(3.0) ;
 
-        // See if any volumes are negative, and take appropriate action.
-        if (domain.vnew(k) <= Real_t(0.0))
-        {
+         // make the rate of deformation tensor deviatoric
+         domain.vdov(k) = vdov ;
+         domain.dxx(k) -= vdovthird ;
+         domain.dyy(k) -= vdovthird ;
+         domain.dzz(k) -= vdovthird ;
+
+         // See if any volumes are negative, and take appropriate action.
+         if (domain.vnew(k) <= Real_t(0.0))
+         {
 #if defined(COEVP_MPI)
-           MPI_Abort(MPI_COMM_WORLD, VolumeError) ;
+            MPI_Abort(MPI_COMM_WORLD, VolumeError) ;
 #else
-           exit(VolumeError) ;
+            exit(VolumeError) ;
 #endif
-        }
+         }
       }
    }
 }
@@ -2157,14 +2157,14 @@ void Lulesh::CalcMonotonicQGradientsForElems()
 }
 
 void Lulesh::CalcMonotonicQRegionForElems(// parameters
-                          Real_t qlc_monoq,
-                          Real_t qqc_monoq,
-                          Real_t monoq_limiter_mult,
-                          Real_t monoq_max_slope,
-                          Real_t ptiny,
+      Real_t qlc_monoq,
+      Real_t qqc_monoq,
+      Real_t monoq_limiter_mult,
+      Real_t monoq_max_slope,
+      Real_t ptiny,
 
-                          // the elementset length
-                          Index_t elength )
+      // the elementset length
+      Index_t elength )
 {
    for ( Index_t ielem = 0 ; ielem < elength; ++ielem ) {
       Real_t qlin, qquad ;
@@ -2313,14 +2313,14 @@ void Lulesh::CalcMonotonicQForElems()
       Real_t qlc_monoq = domain.qlc_monoq();
       Real_t qqc_monoq = domain.qqc_monoq();
       CalcMonotonicQRegionForElems(// parameters
-                           qlc_monoq,
-                           qqc_monoq,
-                           monoq_limiter_mult,
-                           monoq_max_slope,
-                           ptiny,
+            qlc_monoq,
+            qqc_monoq,
+            monoq_limiter_mult,
+            monoq_max_slope,
+            ptiny,
 
-                           // the elemset length
-                           elength );
+            // the elemset length
+            elength );
    }
 }
 
@@ -2353,7 +2353,7 @@ void Lulesh::CalcQForElems()
 
    showMeMonoQ = 0 ;
    CommSend(&domain, MSG_MONOQ, 1 /* 3 */, fieldData,
-            domain.planeElemIds, domain.commElems(), domain.sliceHeight() - 1) ;
+         domain.planeElemIds, domain.commElems(), domain.sliceHeight() - 1) ;
    CommMonoQ(&domain, domain.planeElemIds, domain.commElems(), domain.sliceHeight() - 1) ;
    showMeMonoQ = 0 ;
 
@@ -2392,11 +2392,11 @@ void Lulesh::CalcQForElems2()
 }
 
 void Lulesh::CalcPressureForElems(Real_t* p_new, Real_t* bvc,
-                          Real_t* pbvc, Real_t* e_old,
-                          Real_t* compression, Real_t *vnewc,
-                          Real_t pmin,
-                          Real_t p_cut, Real_t eosvmax,
-                          Index_t length)
+      Real_t* pbvc, Real_t* e_old,
+      Real_t* compression, Real_t *vnewc,
+      Real_t pmin,
+      Real_t p_cut, Real_t eosvmax,
+      Index_t length)
 {
    Real_t c1s = Real_t(2.0)/Real_t(3.0) ;
    for (Index_t i = 0; i < length ; ++i) {
@@ -2410,15 +2410,15 @@ void Lulesh::CalcPressureForElems(Real_t* p_new, Real_t* bvc,
 }
 
 void Lulesh::CalcEnergyForElems(Real_t* p_new, Real_t* e_new, Real_t* q_new,
-                        Real_t* bvc, Real_t* pbvc,
-                        Real_t* p_old, Real_t* e_old, Real_t* q_old,
-                        Real_t* compression, Real_t* compHalfStep,
-                        Real_t* vnewc, Real_t* work, Real_t* delvc, Real_t pmin,
-                        Real_t p_cut, Real_t  e_cut, Real_t q_cut, Real_t emin,
-                        Real_t* qq, Real_t* ql,
-                        Real_t rho0,
-                        Real_t eosvmax,
-                        Index_t length)
+      Real_t* bvc, Real_t* pbvc,
+      Real_t* p_old, Real_t* e_old, Real_t* q_old,
+      Real_t* compression, Real_t* compHalfStep,
+      Real_t* vnewc, Real_t* work, Real_t* delvc, Real_t pmin,
+      Real_t p_cut, Real_t  e_cut, Real_t q_cut, Real_t emin,
+      Real_t* qq, Real_t* ql,
+      Real_t rho0,
+      Real_t eosvmax,
+      Index_t length)
 {
    const Real_t sixth = Real_t(1.0) / Real_t(6.0) ;
    Real_t *pHalfStep = Allocate<Real_t>(length) ;
@@ -2433,7 +2433,7 @@ void Lulesh::CalcEnergyForElems(Real_t* p_new, Real_t* e_new, Real_t* q_new,
    }
 
    CalcPressureForElems(pHalfStep, bvc, pbvc, e_new, compHalfStep, vnewc,
-                   pmin, p_cut, eosvmax, length);
+         pmin, p_cut, eosvmax, length);
 
    for (Index_t i = 0 ; i < length ; ++i) {
       Real_t vhalf = Real_t(1.) / (Real_t(1.) + compHalfStep[i]) ;
@@ -2455,7 +2455,7 @@ void Lulesh::CalcEnergyForElems(Real_t* p_new, Real_t* e_new, Real_t* q_new,
 
       e_new[i] = e_new[i] + Real_t(0.5) * delvc[i]
          * (  Real_t(3.0)*(p_old[i]     + q_old[i])
-              - Real_t(4.0)*(pHalfStep[i] + q_new[i])) ;
+               - Real_t(4.0)*(pHalfStep[i] + q_new[i])) ;
    }
 
    for (Index_t i = 0 ; i < length ; ++i) {
@@ -2471,7 +2471,7 @@ void Lulesh::CalcEnergyForElems(Real_t* p_new, Real_t* e_new, Real_t* q_new,
    }
 
    CalcPressureForElems(p_new, bvc, pbvc, e_new, compression, vnewc,
-                   pmin, p_cut, eosvmax, length);
+         pmin, p_cut, eosvmax, length);
 
    for (Index_t i = 0 ; i < length ; ++i){
       Real_t q_tilde ;
@@ -2493,8 +2493,8 @@ void Lulesh::CalcEnergyForElems(Real_t* p_new, Real_t* e_new, Real_t* q_new,
       }
 
       e_new[i] = e_new[i] - (  Real_t(7.0)*(p_old[i]     + q_old[i])
-                               - Real_t(8.0)*(pHalfStep[i] + q_new[i])
-                               + (p_new[i] + q_tilde)) * delvc[i]*sixth ;
+            - Real_t(8.0)*(pHalfStep[i] + q_new[i])
+            + (p_new[i] + q_tilde)) * delvc[i]*sixth ;
 
       if (FABS(e_new[i]) < e_cut) {
          e_new[i] = Real_t(0.)  ;
@@ -2505,7 +2505,7 @@ void Lulesh::CalcEnergyForElems(Real_t* p_new, Real_t* e_new, Real_t* q_new,
    }
 
    CalcPressureForElems(p_new, bvc, pbvc, e_new, compression, vnewc,
-                   pmin, p_cut, eosvmax, length);
+         pmin, p_cut, eosvmax, length);
 
    for (Index_t i = 0 ; i < length ; ++i){
 
@@ -2531,8 +2531,8 @@ void Lulesh::CalcEnergyForElems(Real_t* p_new, Real_t* e_new, Real_t* q_new,
 }
 
 void Lulesh::CalcSoundSpeedForElems(Real_t *vnewc, Real_t rho0, Real_t *enewc,
-                            Real_t *pnewc, Real_t *pbvc,
-                            Real_t *bvc, Real_t ss4o3, Index_t nz)
+      Real_t *pnewc, Real_t *pbvc,
+      Real_t *bvc, Real_t ss4o3, Index_t nz)
 {
    for (Index_t i = 0; i < nz ; ++i) {
       Index_t iz = domain.matElemlist(i);
@@ -2555,11 +2555,11 @@ void Lulesh::CalcWorkForElems(Real_t *vc, Real_t *work, Index_t length)
 
 #if 1
       work[i] = vc[i] * (domain.sx(i)*domain.dxx(i) +
-                         domain.sy(i)*domain.dyy(i) +
-                         (-domain.sx(i)-domain.sy(i))*domain.dzz(i)
-                 + 2. * (domain.txy(i)*domain.dxy(i) +
-                         domain.txz(i)*domain.dxz(i) +
-                         domain.tyz(i)*domain.dyz(i)) );
+            domain.sy(i)*domain.dyy(i) +
+            (-domain.sx(i)-domain.sy(i))*domain.dzz(i)
+            + 2. * (domain.txy(i)*domain.dxy(i) +
+               domain.txz(i)*domain.dxz(i) +
+               domain.tyz(i)*domain.dyz(i)) );
 #else
       work[i] = Real_t(0.);
 #endif
@@ -2650,10 +2650,10 @@ void Lulesh::EvalEOSForElems(Real_t *vnewc, Index_t length)
    CalcWorkForElems(vnewc, work, length);
 
    CalcEnergyForElems(p_new, e_new, q_new, bvc, pbvc,
-                 p_old, e_old,  q_old, compression, compHalfStep,
-                 vnewc, work,  delvc, pmin,
-                 p_cut, e_cut, q_cut, emin,
-                 qq, ql, rho0, eosvmax, length);
+         p_old, e_old,  q_old, compression, compHalfStep,
+         vnewc, work,  delvc, pmin,
+         p_cut, e_cut, q_cut, emin,
+         qq, ql, rho0, eosvmax, length);
 
 
    for (Index_t i=0; i<length; ++i) {
@@ -2672,7 +2672,7 @@ void Lulesh::EvalEOSForElems(Real_t *vnewc, Index_t length)
    }
 
    CalcSoundSpeedForElems(vnewc, rho0, e_new, p_new,
-             pbvc, bvc, ss4o3, length) ;
+         pbvc, bvc, ss4o3, length) ;
 
    Release(&pbvc) ;
    Release(&bvc) ;
@@ -2692,58 +2692,58 @@ void Lulesh::EvalEOSForElems(Real_t *vnewc, Index_t length)
 
 void Lulesh::ApplyMaterialPropertiesForElems()
 {
-  Index_t length = domain.numElem() ;
+   Index_t length = domain.numElem() ;
 
-  if (length != 0) {
-    /* Expose all of the variables needed for material evaluation */
-    Real_t eosvmin = domain.eosvmin() ;
-    Real_t eosvmax = domain.eosvmax() ;
-    Real_t *vnewc = Allocate<Real_t>(length) ;
+   if (length != 0) {
+      /* Expose all of the variables needed for material evaluation */
+      Real_t eosvmin = domain.eosvmin() ;
+      Real_t eosvmax = domain.eosvmax() ;
+      Real_t *vnewc = Allocate<Real_t>(length) ;
 
-    for (Index_t i=0 ; i<length ; ++i) {
-       Index_t zn = domain.matElemlist(i) ;
-       vnewc[i] = domain.vnew(zn) ;
-    }
+      for (Index_t i=0 ; i<length ; ++i) {
+         Index_t zn = domain.matElemlist(i) ;
+         vnewc[i] = domain.vnew(zn) ;
+      }
 
-    if (eosvmin != Real_t(0.)) {
-       for(Index_t i=0 ; i<length ; ++i) {
-          if (vnewc[i] < eosvmin)
-             vnewc[i] = eosvmin ;
-       }
-    }
+      if (eosvmin != Real_t(0.)) {
+         for(Index_t i=0 ; i<length ; ++i) {
+            if (vnewc[i] < eosvmin)
+               vnewc[i] = eosvmin ;
+         }
+      }
 
-    if (eosvmax != Real_t(0.)) {
-       for(Index_t i=0 ; i<length ; ++i) {
-          if (vnewc[i] > eosvmax)
-             vnewc[i] = eosvmax ;
-       }
-    }
+      if (eosvmax != Real_t(0.)) {
+         for(Index_t i=0 ; i<length ; ++i) {
+            if (vnewc[i] > eosvmax)
+               vnewc[i] = eosvmax ;
+         }
+      }
 
-    for (Index_t i=0; i<length; ++i) {
-       Index_t zn = domain.matElemlist(i) ;
-       Real_t vc = domain.v(zn) ;
-       if (eosvmin != Real_t(0.)) {
-          if (vc < eosvmin)
-             vc = eosvmin ;
-       }
-       if (eosvmax != Real_t(0.)) {
-          if (vc > eosvmax)
-             vc = eosvmax ;
-       }
-       if (vc <= 0.) {
+      for (Index_t i=0; i<length; ++i) {
+         Index_t zn = domain.matElemlist(i) ;
+         Real_t vc = domain.v(zn) ;
+         if (eosvmin != Real_t(0.)) {
+            if (vc < eosvmin)
+               vc = eosvmin ;
+         }
+         if (eosvmax != Real_t(0.)) {
+            if (vc > eosvmax)
+               vc = eosvmax ;
+         }
+         if (vc <= 0.) {
 #if defined(COEVP_MPI)
-          MPI_Abort(MPI_COMM_WORLD, VolumeError) ;
+            MPI_Abort(MPI_COMM_WORLD, VolumeError) ;
 #else
-          exit(VolumeError) ;
+            exit(VolumeError) ;
 #endif
-       }
-    }
+         }
+      }
 
-    EvalEOSForElems(vnewc, length);
+      EvalEOSForElems(vnewc, length);
 
-    Release(&vnewc) ;
+      Release(&vnewc) ;
 
-  }
+   }
 }
 
 void Lulesh::UpdateVolumesForElems()
@@ -2767,21 +2767,21 @@ void Lulesh::UpdateVolumesForElems()
 
 void Lulesh::LagrangeElements()
 {
-  const Real_t deltatime = domain.deltatime() ;
+   const Real_t deltatime = domain.deltatime() ;
 
-  CalcLagrangeElements(deltatime) ;
+   CalcLagrangeElements(deltatime) ;
 
-  /* Calculate Q.  (Monotonic q option requires communication) */
-  CalcQForElems() ;
+   /* Calculate Q.  (Monotonic q option requires communication) */
+   CalcQForElems() ;
 
 }
 
 void Lulesh::LagrangeElements2(){
-  CalcQForElems2();
+   CalcQForElems2();
 
-  ApplyMaterialPropertiesForElems() ;
+   ApplyMaterialPropertiesForElems() ;
 
-  UpdateVolumesForElems() ;
+   UpdateVolumesForElems() ;
 }
 
 void Lulesh::CalcCourantConstraintForElems()
@@ -2809,7 +2809,7 @@ void Lulesh::CalcCourantConstraintForElems()
 
       dtf = domain.arealg(indx) / dtf ;
 
-   /* determine minimum timestep with its corresponding elem */
+      /* determine minimum timestep with its corresponding elem */
       if (domain.vdov(indx) != Real_t(0.)) {
          if ( dtf < dtcourant ) {
             dtcourant = dtf ;
@@ -2889,15 +2889,15 @@ void Lulesh::LagrangeLeapFrog()
    fieldData[5] = &domain.zd(0) ;
 
    CommSend(&domain, MSG_SYNC_POS_VEL, 6, fieldData,
-            domain.planeNodeIds, domain.commNodes(), domain.sliceHeight(),
-            false) ;
+         domain.planeNodeIds, domain.commNodes(), domain.sliceHeight(),
+         false) ;
 #endif
 
    CalcTimeConstraintsForElems();
 
 #if defined(COEVP_MPI) && defined(SEDOV_SYNC_POS_VEL_LATE)
    CommSyncPosVel(&domain,
-           domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
+         domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
 #endif
 
    // LagrangeRelease() ;  Creation/destruction of temps may be important to capture 
@@ -2905,7 +2905,7 @@ void Lulesh::LagrangeLeapFrog()
 
 int Lulesh::UpdateStressForElems()
 {
-//#define MAX_NONLINEAR_ITER 5
+   //#define MAX_NONLINEAR_ITER 5
    int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
 
@@ -2924,9 +2924,9 @@ int Lulesh::UpdateStressForElems()
          cout << "Processing FS element " << k << endl;
 #endif
          ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
-                                                          domain.cm_vel_grad(k),
-                                                          domain.cm_vol_chng(k),
-                                                          domain.cm_state(k));
+               domain.cm_vel_grad(k),
+               domain.cm_vol_chng(k),
+               domain.cm_state(k));
 
          int num_iters = cm_data.num_Newton_iters;
          if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
@@ -2947,7 +2947,7 @@ int Lulesh::UpdateStressForElems()
          Real_t tyz = domain.tyz(k) = sigma_prime(3,2);
 
          domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
-                               + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
+               + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
       }
 
 #ifdef _OPENMP
@@ -2965,7 +2965,7 @@ int Lulesh::UpdateStressForElems()
       int g_max_nonlinear_iters ;
 
       MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
-                    MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
+            MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
       max_nonlinear_iters = g_max_nonlinear_iters ;
    }
 #endif
@@ -3006,8 +3006,8 @@ void Lulesh::Initialize(int myRank, int numRanks)
 
    Index_t edgeElems = 16 ;
    Index_t gheightElems = 26 ;
-// Index_t gheightElems = 8 ;
-// Index_t edgeElems = 4 ;
+   // Index_t gheightElems = 8 ;
+   // Index_t edgeElems = 4 ;
    Index_t edgeNodes = edgeElems+1 ;
 
    Index_t xBegin, xEnd ;
@@ -3057,12 +3057,12 @@ void Lulesh::Initialize(int myRank, int numRanks)
       xBegin = (chunkSize+1)*remainder + (myRank - remainder)*chunkSize ;
       xEnd = xBegin + chunkSize ;
    }
-// domain->sizeX = xEnd - xBegin ;
+   // domain->sizeX = xEnd - xBegin ;
 
    int heightElems = xEnd - xBegin ;
 
 #else
-   
+
    domain.sliceLoc() = 0 ;
    domain.numSlices() = 1 ;
 
@@ -3071,7 +3071,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    xEnd = heightElems ;
 
 #endif
-   
+
    domain.sliceHeight() = heightElems ;
 
    int heightNodes = heightElems+1 ;
@@ -3093,20 +3093,20 @@ void Lulesh::Initialize(int myRank, int numRanks)
 
    //   int coreElems = int (0.33333333333333333*edgeElems) ;
    int coreElems = int (0.25*edgeElems) ;
-// int coreElems = int (0.5*edgeElems) ;
+   // int coreElems = int (0.5*edgeElems) ;
    int wingElems = edgeElems - coreElems ;
    int coreNodes = coreElems + 1 ;
    int wingNodes = edgeNodes - coreNodes ;
 
    /* X axis is axis of symmetry */
-   
+
    domain.numElem() = coreElems*edgeElems*heightElems +
-                      coreElems*heightElems*wingElems ;
+      coreElems*heightElems*wingElems ;
    domain.numNode() = coreNodes*edgeNodes*heightNodes +
-                      (coreNodes-1)*heightNodes*wingNodes ;
+      (coreNodes-1)*heightNodes*wingNodes ;
    domain.numSymmNodesBoundary() = edgeNodes*heightNodes ;
    domain.numSymmNodesImpact()   = edgeNodes*coreNodes +
-                                   wingNodes*(coreNodes-1) ;
+      wingNodes*(coreNodes-1) ;
 
    domElems = domain.numElem() ;
 
@@ -3129,7 +3129,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    /* account for face communication */
    Index_t comBufSize =
       (planeMin + planeMax) *
-       domain.maxPlaneSize() * MAX_FIELDS_PER_MPI_COMM ;
+      domain.maxPlaneSize() * MAX_FIELDS_PER_MPI_COMM ;
 
    if (comBufSize > 0) {
       domain.commDataSend = new Real_t[comBufSize] ;
@@ -3171,7 +3171,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    domain.AllocateNodalPersistent(domain.numNode()) ;
 
    domain.AllocateNodesets(domain.numSymmNodesBoundary(),
-                           domain.numSymmNodesImpact()) ;
+         domain.numSymmNodesImpact()) ;
 
    /* initialize nodal coordinates */
 
@@ -3191,7 +3191,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
          }
          for (Index_t col=xBegin; col<(xEnd+1); ++col)
 #else
-         tx = Real_t(0.) ;
+            tx = Real_t(0.) ;
          for (Index_t col=0; col<heightNodes; ++col)
 #endif
          {
@@ -3218,22 +3218,22 @@ void Lulesh::Initialize(int myRank, int numRanks)
          /* "x" direction in 2d cartesian plane */
          ty = domain_length[1]* /* problem scale factor */
 
-              ( Real_t(coreElems)/Real_t(edgeNodes) + /* core distance */
+            ( Real_t(coreElems)/Real_t(edgeNodes) + /* core distance */
 
-                (cos(M_PI_4*Real_t(plane)/Real_t(coreNodes-1)) -
-                 Real_t(coreElems)/Real_t(edgeNodes)) *  /* interpolate */
-                 Real_t(row+1 - coreNodes)/Real_t(wingNodes) /* wing distance */
-              ) ;
+              (cos(M_PI_4*Real_t(plane)/Real_t(coreNodes-1)) -
+               Real_t(coreElems)/Real_t(edgeNodes)) *  /* interpolate */
+              Real_t(row+1 - coreNodes)/Real_t(wingNodes) /* wing distance */
+            ) ;
 
          /* "y" direction in 2d cartesian plane */
          tz = domain_length[2]* /* problem scale factor */
 
-              (Real_t(plane)/Real_t(edgeNodes) + /* core distance */
+            (Real_t(plane)/Real_t(edgeNodes) + /* core distance */
 
-               (sin(M_PI_4*Real_t(plane)/Real_t(coreNodes-1))
-                 - Real_t(plane)/Real_t(edgeNodes)) *    /* interpolate */
-               Real_t(row+1 - coreNodes)/Real_t(wingNodes) /* wing distance */
-               );
+             (sin(M_PI_4*Real_t(plane)/Real_t(coreNodes-1))
+              - Real_t(plane)/Real_t(edgeNodes)) *    /* interpolate */
+             Real_t(row+1 - coreNodes)/Real_t(wingNodes) /* wing distance */
+            );
 
 #if defined(COEVP_MPI)||defined(__CHARMC__)
          tx = domain_length[0]*Real_t(xBegin)/Real_t(edgeNodes) ;
@@ -3243,7 +3243,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
 
          for (Index_t col=xBegin; col<(xEnd+1); ++col)
 #else
-         tx = Real_t(0.) ;
+            tx = Real_t(0.) ;
 
          for (Index_t col=0; col<heightNodes; ++col)
 #endif
@@ -3259,7 +3259,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
       nidx += coreNodes*heightNodes ;
       // tz += ds ;  /* may accumulate roundoff... */
    }
- 
+
    /* build wing in Z direction */
    nidx = coreNodes*edgeNodes*heightNodes ;
    for (Index_t plane=coreNodes; plane<edgeNodes; ++plane) {
@@ -3268,22 +3268,22 @@ void Lulesh::Initialize(int myRank, int numRanks)
          /* "x" direction in 2d cartesian plane */
          tz = domain_length[2]*  /* problem scale factor */
 
-              ( Real_t(coreElems)/Real_t(edgeNodes) + /* core distance */
+            ( Real_t(coreElems)/Real_t(edgeNodes) + /* core distance */
 
-                (cos(M_PI_4*Real_t(row)/Real_t(coreNodes-1)) -
-                 Real_t(coreElems)/Real_t(edgeNodes)) *    /* interpolate */
-                 Real_t(plane+1 - coreNodes)/Real_t(wingNodes) /* wing dist */
-              ) ;
+              (cos(M_PI_4*Real_t(row)/Real_t(coreNodes-1)) -
+               Real_t(coreElems)/Real_t(edgeNodes)) *    /* interpolate */
+              Real_t(plane+1 - coreNodes)/Real_t(wingNodes) /* wing dist */
+            ) ;
 
          /* "y" direction in 2d cartesian plane */
          ty = domain_length[1]* /* problem scale factor */
 
-              (Real_t(row)/Real_t(edgeNodes) + /* core distance */
+            (Real_t(row)/Real_t(edgeNodes) + /* core distance */
 
-               (sin(M_PI_4*Real_t(row)/Real_t(coreNodes-1))
-                 - Real_t(row)/Real_t(edgeNodes)) *         /* interpoate */
-               Real_t(plane+1-coreNodes)/Real_t(wingNodes)    /* wing dist */
-              ) ;
+             (sin(M_PI_4*Real_t(row)/Real_t(coreNodes-1))
+              - Real_t(row)/Real_t(edgeNodes)) *         /* interpoate */
+             Real_t(plane+1-coreNodes)/Real_t(wingNodes)    /* wing dist */
+            ) ;
 
 #if defined(COEVP_MPI)||defined(__CHARMC__)
          tx = domain_length[0]*Real_t(xBegin)/Real_t(edgeNodes) ;
@@ -3293,7 +3293,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
 
          for (Index_t col=xBegin; col<(xEnd+1); ++col)
 #else
-         tx = Real_t(0.) ;
+            tx = Real_t(0.) ;
 
          for (Index_t col=0; col<heightNodes; ++col)
 #endif
@@ -3399,7 +3399,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    }
    /* create the bridge elements between disjoint meshes */
    nidx = (coreNodes-1)*edgeNodes*heightNodes +
-          (coreNodes-1)*heightNodes ;
+      (coreNodes-1)*heightNodes ;
    for (Index_t row=coreElems ; row<edgeElems; ++row) {
 #if defined(COEVP_MPI)||defined(__CHARMC__)
       if (domain.numSlices() != 1) {
@@ -3419,7 +3419,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    }
    zidx -= heightElems*wingElems ;
    nidx = (coreNodes-1)*edgeNodes*heightNodes +
-          (coreNodes-1)*heightNodes - heightNodes ;
+      (coreNodes-1)*heightNodes - heightNodes ;
    for (Index_t col=0; col<heightElems; ++col) {
       Index_t *localNode = domain.nodelist(zidx) ;
       localNode[4] = nidx                               ;
@@ -3432,7 +3432,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    ++nidx ;
 
    nidx = coreNodes*edgeNodes*heightNodes +
-          (coreNodes-1)*heightNodes - heightNodes ;
+      (coreNodes-1)*heightNodes - heightNodes ;
    for (Index_t plane=coreElems+1; plane<edgeElems; ++plane) {
       for (Index_t col=0; col<heightElems; ++col) {
          Index_t *localNode = domain.nodelist(zidx) ;
@@ -3452,7 +3452,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    if (domain.numSlices() != 1) {
       if (planeElems != domain.commElems()) {
          printf("%d %d error computing comm elems\n",
-                planeElems, domain.commElems()) ;
+               planeElems, domain.commElems()) ;
          exit(-1) ;
       }
    }
@@ -3520,10 +3520,10 @@ void Lulesh::Initialize(int myRank, int numRanks)
       Index_t *elemToNode = domain.nodelist(i) ;
       for( Index_t lnode=0 ; lnode<8 ; ++lnode )
       {
-        Index_t gnode = elemToNode[lnode];
-        x_local[lnode] = domain.x(gnode);
-        y_local[lnode] = domain.y(gnode);
-        z_local[lnode] = domain.z(gnode);
+         Index_t gnode = elemToNode[lnode];
+         x_local[lnode] = domain.x(gnode);
+         y_local[lnode] = domain.y(gnode);
+         z_local[lnode] = domain.z(gnode);
       }
 
       // volume calculations
@@ -3551,14 +3551,14 @@ void Lulesh::Initialize(int myRank, int numRanks)
       for (int plane=0; plane<coreNodes; ++plane) {
          for (int row=0; row<edgeNodes; ++row) {
             domain.xd(row*heightNodes +
-                      plane*edgeNodes*heightNodes) = Real_t(1.75e-2) ;
+                  plane*edgeNodes*heightNodes) = Real_t(1.75e-2) ;
          }
       }
       for (int plane=0; plane<wingNodes; ++plane) {
-        for (int row=0; row<(coreNodes-1); ++row) {
+         for (int row=0; row<(coreNodes-1); ++row) {
             domain.xd(coreNodes*edgeNodes*heightNodes +
-                      row*heightNodes +
-                      plane*(coreNodes-1)*heightNodes) = Real_t(1.75e-2) ;
+                  row*heightNodes +
+                  plane*(coreNodes-1)*heightNodes) = Real_t(1.75e-2) ;
          }
       }
    }
@@ -3578,7 +3578,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
    for (int plane=0;plane<wingNodes; ++plane) {
       for (int col=0; col<heightNodes; ++col) {
          domain.symmY(nidx++) = coreNodes*edgeNodes*heightNodes +
-                                plane*(coreNodes-1)*heightNodes + col ;
+            plane*(coreNodes-1)*heightNodes + col ;
       }
    }
    /* X Symmetry */
@@ -3590,14 +3590,14 @@ void Lulesh::Initialize(int myRank, int numRanks)
       for (int plane=0; plane<coreNodes; ++plane) {
          for (int row=0; row<edgeNodes; ++row) {
             domain.symmX(nidx++) = plane*edgeNodes*heightNodes +
-                                   row*heightNodes ;
+               row*heightNodes ;
          }
       }
       for (int plane=0; plane<wingNodes; ++plane) {
          for (int row=0; row<(coreNodes-1); ++row) {
             domain.symmX(nidx++) = coreNodes*edgeNodes*heightNodes +
-                                   plane*(coreNodes-1)*heightNodes +
-                                   row*heightNodes ;
+               plane*(coreNodes-1)*heightNodes +
+               row*heightNodes ;
          }
       }
    }
@@ -3627,24 +3627,24 @@ void Lulesh::Initialize(int myRank, int numRanks)
 
    /* First, patch letap to connect Z wing to Y wing */
    for (int i=domElems - wingElems*heightElems; i<domElems; ++i) {
-         domain.letap(i) = coreElems*edgeElems*heightElems - (domElems - i) ;
+      domain.letap(i) = coreElems*edgeElems*heightElems - (domElems - i) ;
    }
    /* Adjust the connectivity of the notch plane and the Z wing */
    for (int plane=0; plane<wingElems; ++plane) {
       for (int col=0; col<heightElems; ++col) {
          domain.letam(coreElems*edgeElems*heightElems +
-                      (coreElems-1)*heightElems*wingElems +
-                      plane*heightElems + col) = 
-                         coreElems*edgeElems*heightElems +
-                         (coreElems-1)*heightElems - heightElems +
-                         plane*(coreElems-1)*heightElems + col ;
+               (coreElems-1)*heightElems*wingElems +
+               plane*heightElems + col) = 
+            coreElems*edgeElems*heightElems +
+            (coreElems-1)*heightElems - heightElems +
+            plane*(coreElems-1)*heightElems + col ;
 
          domain.letap(coreElems*edgeElems*heightElems +
-                      (coreElems-1)*heightElems - heightElems +
-                      plane*(coreElems-1)*heightElems + col)  =
-                         coreElems*edgeElems*heightElems +
-                         (coreElems-1)*heightElems*wingElems +
-                         plane*heightElems + col ;
+               (coreElems-1)*heightElems - heightElems +
+               plane*(coreElems-1)*heightElems + col)  =
+            coreElems*edgeElems*heightElems +
+            (coreElems-1)*heightElems*wingElems +
+            plane*heightElems + col ;
       }
    }
 
@@ -3655,11 +3655,11 @@ void Lulesh::Initialize(int myRank, int numRanks)
       domain.lzetam(i) = i ;
 #if 0
       domain.lzetap(domElems-edgeElems*heightElems+i) =
-                            domElems-edgeElems*heightElems+i ;
+         domElems-edgeElems*heightElems+i ;
 #endif
    }
    for (Index_t i=edgeElems*heightElems;
-        i<coreElems*edgeElems*heightElems+(coreElems-1)*heightElems; ++i) {
+         i<coreElems*edgeElems*heightElems+(coreElems-1)*heightElems; ++i) {
       domain.lzetam(i) = i - edgeElems*heightElems ;
       domain.lzetap(i-edgeElems*heightElems) = i ;
    }
@@ -3669,13 +3669,13 @@ void Lulesh::Initialize(int myRank, int numRanks)
    }
    /* set lzetam and lzetap for Z wing elements, minus notch plane */
    for (int i=coreElems*edgeElems*heightElems;
-        i < coreElems*edgeElems*heightElems+(coreElems-1)*heightElems;
-        ++i) {
+         i < coreElems*edgeElems*heightElems+(coreElems-1)*heightElems;
+         ++i) {
       domain.lzetap(i) = i + (coreElems-1)*heightElems ;
    }
    for (int i=coreElems*edgeElems*heightElems+(coreElems-1)*heightElems;
-        i<coreElems*edgeElems*heightElems + (coreElems-1)*wingElems*heightElems;
-        ++i) {
+         i<coreElems*edgeElems*heightElems + (coreElems-1)*wingElems*heightElems;
+         ++i) {
       domain.lzetam(i) = i - (coreElems-1)*heightElems ;
       domain.lzetap(i) = i + (coreElems-1)*heightElems ;
    }
@@ -3689,20 +3689,20 @@ void Lulesh::Initialize(int myRank, int numRanks)
    /* patch lzetap for notch plane row of elements */
    for (int col=0; col<heightElems; ++col) {
       domain.lzetap(coreElems*edgeElems*heightElems -
-                    wingElems*heightElems - heightElems + col) =
-                       domElems - wingElems*heightElems + col ;
+            wingElems*heightElems - heightElems + col) =
+         domElems - wingElems*heightElems + col ;
       domain.lzetam(domElems - wingElems*heightElems + col) =
-                    coreElems*edgeElems*heightElems - wingElems*heightElems -
-                    heightElems + col ;
+         coreElems*edgeElems*heightElems - wingElems*heightElems -
+         heightElems + col ;
    }
 #else
    for (Index_t i=0; i<edgeElems*heightElems; ++i) {
       domain.lzetam(i) = i ;
       domain.lzetap(domElems-edgeElems*heightElems+i) =
-                            domElems-edgeElems*heightElems+i ;
+         domElems-edgeElems*heightElems+i ;
    }
    for (Index_t i=edgeElems*heightElems;
-        i<coreElems*edgeElems*heightElems; ++i) {
+         i<coreElems*edgeElems*heightElems; ++i) {
       domain.lzetam(i) = i - edgeElems*heightElems ;
       domain.lzetap(i-edgeElems*heightElems) = i ;
    }
@@ -3712,14 +3712,14 @@ void Lulesh::Initialize(int myRank, int numRanks)
    }
    /* set lzetam and lzetap for Z wing elements, minus notch plane */
    for (int i=coreElems*edgeElems*heightElems;
-        i<coreElems*edgeElems*heightElems + (coreElems-1)*wingElems*heightElems;
-        ++i) {
+         i<coreElems*edgeElems*heightElems + (coreElems-1)*wingElems*heightElems;
+         ++i) {
       domain.lzetam(i) = i - (coreElems-1)*heightElems ;
       domain.lzetap(i) = i + (coreElems-1)*heightElems ;
    }
    /* patch lzetam */
    for (int i=coreElems*edgeElems*heightElems;
-        i<coreElems*edgeElems*heightElems + (coreElems-1)*heightElems; ++i) {
+         i<coreElems*edgeElems*heightElems + (coreElems-1)*heightElems; ++i) {
       domain.lzetam(i) = i - edgeElems*heightElems ;
    }
    /* set lzetam, lzetap for notch plane */
@@ -3730,11 +3730,11 @@ void Lulesh::Initialize(int myRank, int numRanks)
    /* patch lzetap for notch plane row of elements */
    for (int col=0; col<heightElems; ++col) {
       domain.lzetap(coreElems*edgeElems*heightElems -
-                    wingElems*heightElems - heightElems + col) =
-                       domElems - wingElems*heightElems + col ;
+            wingElems*heightElems - heightElems + col) =
+         domElems - wingElems*heightElems + col ;
       domain.lzetam(domElems - wingElems*heightElems + col) =
-                    coreElems*edgeElems*heightElems - wingElems*heightElems -
-                    heightElems + col ;
+         coreElems*edgeElems*heightElems - wingElems*heightElems -
+         heightElems + col ;
    }
 #endif
 
@@ -3786,7 +3786,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
       domain.elemBC(i) |= ZETA_P_FREE ;
    }
    for (int i= domElems - wingElems*heightElems - (coreElems-1)*heightElems;
-        i<domElems - wingElems*heightElems; ++i) {
+         i<domElems - wingElems*heightElems; ++i) {
       domain.elemBC(i) |= ZETA_P_FREE ;
    }
 
@@ -3794,13 +3794,13 @@ void Lulesh::Initialize(int myRank, int numRanks)
       for (int col=0; col<heightElems; ++col) {
          domain.elemBC(plane*edgeElems*heightElems + col) |= ETA_M_SYMM ;
          domain.elemBC(plane*edgeElems*heightElems +
-                       (edgeElems-1)*heightElems +col) |= ETA_P_FREE ;
+               (edgeElems-1)*heightElems +col) |= ETA_P_FREE ;
       }
    }
    for (int plane=0; plane <wingElems; ++plane) {
       for (int col=0; col<heightElems; ++col) {
          domain.elemBC(coreElems*edgeElems*heightElems +
-                       plane*(coreElems-1)*heightElems + col) |= ETA_M_SYMM ;
+               plane*(coreElems-1)*heightElems + col) |= ETA_M_SYMM ;
       }
    }
 
@@ -3809,51 +3809,51 @@ void Lulesh::Initialize(int myRank, int numRanks)
       for (int row=0; row<edgeElems; ++row) {
          domain.elemBC(plane*edgeElems*heightElems + row*heightElems) |=
 #if defined(COEVP_MPI)
-		 ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+            ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
 #else
-		 XI_M_SYMM ;	
+         XI_M_SYMM ;	
 #endif
          domain.elemBC(plane*edgeElems*heightElems +
-                        row*heightElems + heightElems-1) |= 
+               row*heightElems + heightElems-1) |= 
 #if defined(COEVP_MPI)
-                           ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
+            ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
 #else
-                           XI_P_FREE ;
+         XI_P_FREE ;
 #endif
       }
    }
    for (int plane=0; plane<wingElems; ++plane) {
       for (int row=0; row<(coreElems-1); ++row) {
          domain.elemBC(coreElems*edgeElems*heightElems +
-                       plane*(coreElems-1)*heightElems + row*heightElems) |= 
+               plane*(coreElems-1)*heightElems + row*heightElems) |= 
 #if defined(COEVP_MPI)
-		 ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+            ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
 #else
-	         XI_M_SYMM ;
+         XI_M_SYMM ;
 #endif
          domain.elemBC(coreElems*edgeElems*heightElems +
-                       plane*(coreElems-1)*heightElems +
-                       row*heightElems + heightElems-1) |=
+               plane*(coreElems-1)*heightElems +
+               row*heightElems + heightElems-1) |=
 #if defined(COEVP_MPI)
-                          ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
+            ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
 #else
-                          XI_P_FREE ;
+         XI_P_FREE ;
 #endif
       }
       domain.elemBC(coreElems*edgeElems*heightElems +
-                    wingElems*(coreElems-1)*heightElems + plane*heightElems) |= 
+            wingElems*(coreElems-1)*heightElems + plane*heightElems) |= 
 #if defined(COEVP_MPI)
-	      ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+         ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
 #else
-	         XI_M_SYMM ;
+      XI_M_SYMM ;
 #endif
       domain.elemBC(coreElems*edgeElems*heightElems +
-                    wingElems*(coreElems-1)*heightElems +
-                    plane*heightElems + heightElems-1) |=
+            wingElems*(coreElems-1)*heightElems +
+            plane*heightElems + heightElems-1) |=
 #if defined(COEVP_MPI)
-                       ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
+         ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
 #else
-                          XI_P_FREE ;
+      XI_P_FREE ;
 #endif
 
    }
@@ -3870,7 +3870,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
 }
 
 
-void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_modelDB, ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns)
+void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_modelDB, ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns, int use_vpsc)
 {
    Index_t domElems = domain.numElem();
 
@@ -3880,24 +3880,25 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
 #endif
    for (Index_t i=0; i<domElems; ++i) {
 
-#if(USE_VPSC)
-      // New vpsc inititialization
-      vpsc* plasticity_model = new vpsc;
-      plasticity_model->vpsc_init_class();
-#else
-      // Old Taylor initialization
-      //
-      // Construct the fine-scale plasticity model
-      double D_0 = 1.e-2;
-      double m = 1./20.;
-      double g = 2.e-3; // (Mbar)
-      //      double m = 1./2.;
-      //      double g = 1.e-4; // (Mbar) Gives a reasonable looking result for m = 1./2.
-      //      double m = 1.;
-      //      double g = 2.e-6; // (Mbar) Gives a reasonable looking result for m = 1.
-      
-      Plasticity* plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
-#endif
+      Plasticity* plasticity_model;
+
+      if (use_vpsc == 1) {
+         // New vpsc inititialization
+         plasticity_model = (vpsc*) (new vpsc);
+      } else {
+         // Old Taylor initialization
+         //
+         // Construct the fine-scale plasticity model
+         double D_0 = 1.e-2;
+         double m = 1./20.;
+         double g = 2.e-3; // (Mbar)
+         //      double m = 1./2.;
+         //      double g = 1.e-4; // (Mbar) Gives a reasonable looking result for m = 1./2.
+         //      double m = 1.;
+         //      double g = 2.e-6; // (Mbar) Gives a reasonable looking result for m = 1.
+
+         plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
+      }
 
       // Construct the equation of state
       EOS* eos_model;
@@ -3907,7 +3908,7 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
             "On the modeling of the Taylor cylinder impact test for orthotropic
             textured materials: experiments and simulations", Inter. J.
             Plasticity 15 (1999), pp. 139-166.
-         */
+            */
          double k1 = 1.968;  // Mbar
          double k2 = 2.598;  // Mbar
          double k3 = 2.566;  // Mbar
@@ -3918,7 +3919,7 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
       {
          /* Bulk pressure model from N. Barton, "Cold Energy Integration",
             UCRL-TR-220933 (2006).  Tantalum parameters from private communication.
-         */
+            */
 
          double K0 = 1.94;      // Mbar
          double a  = 0.42;      // dimensionless
@@ -3947,35 +3948,35 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
 
          // get nodal coordinates from global arrays and copy into local arrays.
          for( Index_t lnode=0 ; lnode<8 ; ++lnode )
-            {
-               Index_t gnode = elemToNode[lnode];
-               x_local[lnode] = domain.x(gnode);
-               y_local[lnode] = domain.y(gnode);
-               z_local[lnode] = domain.z(gnode);
-            }
+         {
+            Index_t gnode = elemToNode[lnode];
+            x_local[lnode] = domain.x(gnode);
+            y_local[lnode] = domain.y(gnode);
+            z_local[lnode] = domain.z(gnode);
+         }
 
          // get nodal velocities from global array and copy into local arrays.
          for( Index_t lnode=0 ; lnode<8 ; ++lnode )
-            {
-               Index_t gnode = elemToNode[lnode];
-               xd_local[lnode] = domain.xd(gnode);
-               yd_local[lnode] = domain.yd(gnode);
-               zd_local[lnode] = domain.zd(gnode);
-            }
-         
+         {
+            Index_t gnode = elemToNode[lnode];
+            xd_local[lnode] = domain.xd(gnode);
+            yd_local[lnode] = domain.yd(gnode);
+            zd_local[lnode] = domain.zd(gnode);
+         }
+
          // compute the velocity gradient at the new time (i.e., before the
          // nodal positions get backed up a half step below).  Question:
          // where are the velocities centered at this point?
 
          CalcElemShapeFunctionDerivatives( x_local,
-                                           y_local,
-                                           z_local,
-                                           B, &detJ );
+               y_local,
+               z_local,
+               B, &detJ );
 
          CalcElemVelocityGradient( xd_local,
-                                   yd_local,
-                                   zd_local,
-                                   B, detJ, D, W );
+               yd_local,
+               zd_local,
+               B, detJ, D, W );
 
          Tensor2Gen L;
 
@@ -3991,38 +3992,38 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
 
          int point_dimension = plasticity_model->pointDimension();
          ApproxNearestNeighbors* ann;
-	 ModelDatabase *modelDB;
-	 if (global_modelDB) {
-	     modelDB = global_modelDB;
-	 } else {
-	     modelDB = new ModelDB_HashMap();
-	 }
+         ModelDatabase *modelDB;
+         if (global_modelDB) {
+            modelDB = global_modelDB;
+         } else {
+            modelDB = new ModelDB_HashMap();
+         }
 
          if (global_ann) {
-	   ann = global_ann;
-	 } else {
-           if (flanning) {
+            ann = global_ann;
+         } else {
+            if (flanning) {
 #ifdef FLANN
-             ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension, flann_n_trees, flann_n_checks));
+               ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsFLANN(point_dimension, flann_n_trees, flann_n_checks));
 #else
-            throw std::runtime_error("FLANN not compiled in"); 
+               throw std::runtime_error("FLANN not compiled in"); 
 #endif
-           } else {
-             std::string mtreeDirectoryName = ".";
-             ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
-                                                                             "kriging_model_database",
-                                                                             mtreeDirectoryName,
-                                                                             &(std::cout),
-                                                                             false));
-           }
-	 }
-	 if ( global_ns && !global_ann){// only true for 1st element
-	   global_ann=ann; 
-	 }
-	    
+            } else {
+               std::string mtreeDirectoryName = ".";
+               ann = (ApproxNearestNeighbors*)(new ApproxNearestNeighborsMTree(point_dimension,
+                        "kriging_model_database",
+                        mtreeDirectoryName,
+                        &(std::cout),
+                        false));
+            }
+         }
+         if ( global_ns && !global_ann){// only true for 1st element
+            global_ann=ann; 
+         }
+
          size_t state_size;
          domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, modelDB, L, bulk_modulus, shear_modulus, eos_model,
-                                                                  plasticity_model, sampling, state_size));
+                  plasticity_model, sampling, state_size));
          domain.cm_state(i) = operator new(state_size);
          domain.cm(i)->getState(domain.cm_state(i));
       }
@@ -4053,7 +4054,7 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
       zav /= Real_t(8.) ;
 
       cout << "Plotting fine-scale model evaluations in element " << fsm_count_elem
-           << " at (" << xav << "," << yav << "," << zav << ")" << endl;
+         << " at (" << xav << "," << yav << "," << zav << ")" << endl;
    }
 
    printf("Fine scale models initialized\n");
@@ -4069,9 +4070,9 @@ void Lulesh::ExchangeNodalMass()
 #if defined(COEVP_MPI)
    Real_t *fieldData = &domain.nodalMass(0) ;
    CommSend(&domain, MSG_COMM_SBN, 1, &fieldData,
-            domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
+         domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
    CommSBN(&domain, 1, &fieldData,
-           domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
+         domain.planeNodeIds, domain.commNodes(), domain.sliceHeight()) ;
 #endif
 
 
@@ -4087,17 +4088,17 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #if defined(LOGGER)   // did I mention that I hate this define stuff?
    Logger  &logger = Locator::getLogger();
 #endif
-   
+
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
 #if defined(LOGGER)
-     logger.logStartTimer("outer");
+      logger.logStartTimer("outer");
 #endif
 #ifdef SILO
       char meshName[64] ;
       if ((visit_data_interval !=0) && (domain.cycle() % visit_data_interval == 0)) {
          DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(),
-                   ((domain.numSlices() == 1) ? file_parts : 0), sampling, debug_topology ) ;
+               ((domain.numSlices() == 1) ? file_parts : 0), sampling, debug_topology ) ;
       }
 #endif
       TimeIncrement() ;
@@ -4114,10 +4115,10 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 
       {
          printf("step = %d, time = %e, dt=%e\n",
-                domain.cycle(), double(domain.time()), double(domain.deltatime()) ) ;
+               domain.cycle(), double(domain.time()), double(domain.deltatime()) ) ;
          fflush(stdout);
       }
-      
+
 #ifdef PRINT_PERFORMANCE_DIAGNOSTICS
       if ( sampling ) {
 
@@ -4144,8 +4145,8 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
       }
 #endif
 #if defined(LOGGER)
-   logger.logIncrTimer("outer");
-   logger.incrTimeStep();
+      logger.logIncrTimer("outer");
+      logger.incrTimeStep();
 #endif
    }  /* while */
 
@@ -4215,7 +4216,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #ifdef SILO
    if ((visit_data_interval != 0) && (domain.cycle() % visit_data_interval != 0)) {
       DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(), 
-                 ((domain.numSlices() == 1) ? file_parts : 0), sampling, debug_topology ) ;
+            ((domain.numSlices() == 1) ? file_parts : 0), sampling, debug_topology ) ;
    }
 #endif
 
@@ -4229,7 +4230,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 
    for (Index_t i=0; i<domain.numNode(); ++i) {
       checkpoint_file << i << " " << domain.x(i) << " " << domain.y(i) << " " << domain.z(i)
-                      << " " << domain.xd(i) << " " << domain.yd(i) << " " << domain.zd(i) << endl;
+         << " " << domain.xd(i) << " " << domain.yd(i) << " " << domain.zd(i) << endl;
    }
 
    checkpoint_file.close();
