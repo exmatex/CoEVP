@@ -42,11 +42,11 @@ int main(int argc, char *argv[])
   int  distributed_redis = 0;
   char logdb[1024] = {0};        // host and port of logging databse (e.g. cn1:6379)
   int use_vpsc = 0;              // toggle VPSC as the fine-scale-Model
+  int heightElems = 26;
+  int edgeElems = 16;
+  double domStopTime = 1.e-1;
   
   Lulesh luleshSystem;
-
-  // Initialize Taylor cylinder mesh
-  luleshSystem.Initialize(myRank, numRanks);
 
   //  Parse command line optoins
   int  help   = 0;
@@ -66,6 +66,9 @@ int main(int argc, char *argv[])
   addArg("distributed_redis", 'R', 0, 'i', &(distributed_redis), 0, "use distributed REDIS via twemproxy");
   addArg("log",      'l', 1, 's',  &(logdb),   sizeof(logdb), "log to REDIS at hostname:port");
   addArg("use_vpsc", 'm', 0, 'i',  &(use_vpsc),            0, "use VPSC fine scale model");
+  addArg("Height Elems", 'H', 1, 'i', &(heightElems), 0, "Number of height elements to solve for");
+  addArg("Edge Elems", 'E', 1, 'i', &(edgeElems), 0, "Number of height elements to solve for");
+  addArg("Domain Stop Time", 'D', 1, 'd',  &(domStopTime), 0, "Number of Simulated Seconds to Run For"); 
   processArgs(argc,argv);
   
   if (help) {
@@ -73,6 +76,13 @@ int main(int argc, char *argv[])
     freeArgs();
     exit(1);
   } 
+
+
+  // Initialize Taylor cylinder mesh
+  luleshSystem.Initialize(myRank, numRanks, edgeElems, heightElems, domStopTime);
+
+
+
   if (sampling) {
     printf("Using adaptive sampling...\n");
   } else {

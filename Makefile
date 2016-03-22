@@ -1,4 +1,4 @@
-.PHONY: all clean clean-all lulesh libcm redis flann silo test logger twemproxy
+.PHONY: all clean clean-all lulesh libcm redis flann silo test logger twemproxy protobuf circle
 
 all: lulesh
 
@@ -24,7 +24,7 @@ libcm: twemproxy
 endif
 # LOGGER depends on REDIS=yes
 # IF REDIS=no, logging ends up being a NO OP
-LOGGER=yes
+LOGGER=no
 ifeq ($(LOGGER)$(REDIS), yesno)
 LOGGER=no
 endif
@@ -32,14 +32,25 @@ ifeq ($(LOGGER)$(REDIS), yesyes)
 LOGGER_LOC=../logger
 libcm: logger
 endif
+PROTOBUF=no
+ifeq ($(PROTOBUF),yes)
+PROTOBUF_LOC=../serverize/protobuf
+CIRCLE_LOC=../serverize/circle
+libcm: protobuf
+endif
 FSTRACE=no
+USE_SSL=yes
+ifeq ($(USE_SSL),no)
+CURLFLAG=-k
+WGETFLAG=--no-check-certificate
+endif
 
 libcm: vpsc taylor
 
 lulesh: LULESH/lulesh
 
 LULESH/lulesh: libcm
-	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC) LOGGER_LOC=$(LOGGER_LOC) FSTRACE=$(FSTRACE) $(FORTRAN_FLAGS)
+	${MAKE} -C LULESH FLANN_LOC=$(FLANN_LOC) SILO_LOC=$(SILO_LOC) REDIS_LOC=$(REDIS_LOC) LOGGER_LOC=$(LOGGER_LOC) ROTOBUF_LOC=$(PROTOBUF_LOC) CIRCLE_LOC=$(CIRCLE_LOC) FSTRACE=$(FSTRACE) $(FORTRAN_FLAGS)
 
 vpsc:
 	${MAKE} -C CM/src/fine_scale_models/fortran modules
@@ -48,22 +59,28 @@ taylor:
 	${MAKE} -C CM/src/fine_scale_models/fortran Taylor
 
 libcm:
-	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN) TWEMPROXY=$(TWEMPROXY) FSTRACE=$(FSTRACE) LOGGER=$(LOGGER)
+	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN) TWEMPROXY=$(TWEMPROXY) FSTRACE=$(FSTRACE) LOGGER=$(LOGGER) PROTOBUF=$(PROTOBUF)
 
 redis:
-	${MAKE} -C redis
+	${MAKE} -C redis CURLFLAG=$(CURLFLAG) WGETFLAG=$(WGETFLAG)
 
 silo:
-	${MAKE} -C silo
+	${MAKE} -C silo CURLFLAG=$(CURLFLAG) WGETFLAG=$(WGETFLAG)
 
 flann:
-	${MAKE} -C flann
+	${MAKE} -C flann CURLFLAG=$(CURLFLAG) WGETFLAG=$(WGETFLAG)
 
 twemproxy:
-	${MAKE} -C twemproxy
+	${MAKE} -C twemproxy CURLFLAG=$(CURLFLAG) WGETFLAG=$(WGETFLAG)
 
 logger: redis
 	${MAKE} -C logger REDIS=$(REDIS) REDIS_LOC=$(REDIS_LOC)
+
+protobuf:
+	${MAKE} -C serverize protobuf CURLFLAG=$(CURLFLAG) WGETFLAG=$(WGETFLAG)
+
+circle:
+	${MAKE} -C serverize/circle
 
 clean:
 	${MAKE} -C CM/src/fine_scale_models/fortran clean
@@ -77,6 +94,8 @@ clean-all: clean
 	${MAKE} -C silo clean
 	${MAKE} -C twemproxy clean
 	${MAKE} -C logger clean
+	${MAKE} -C serverize/protobuf clean
+	${MAKE} -C serverize/circle clean
 
 get_reference:
 	mkdir -p test/reference

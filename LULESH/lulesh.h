@@ -164,7 +164,7 @@ void DumpToVisit(Domain& domain, char *baseName, char *meshName,
 void DumpSAMI(Domain *domain, char *name);
 */
 
-void Initialize(int myRank, int numRanks);
+void Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime);
 void ConstructFineScaleModel(bool sampling,ModelDatabase * global_modelDB,ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns, int use_vpsc);
 void ExchangeNodalMass();
 void go(int myRank, int numRanks, int sampling, int visit_data_interval,int file_parts, int debug_topology);

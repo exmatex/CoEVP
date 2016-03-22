@@ -6,9 +6,9 @@ all: ${FLANN_HEADER}
 
 $(FLANN_DIR).tar.gz:
 ifeq (, $(shell which curl))
-	wget -O $@ https://github.com/mariusmuja/flann/archive/${FLANN_PV}-src.tar.gz
+	wget -O $@ https://github.com/mariusmuja/flann/archive/${FLANN_PV}-src.tar.gz $(WGETFLAG)
 else
-	curl -o $@ -L https://github.com/mariusmuja/flann/archive/${FLANN_PV}-src.tar.gz
+	curl -o $@ -L https://github.com/mariusmuja/flann/archive/${FLANN_PV}-src.tar.gz $(CURLFLAG)
 endif
 
 $(FLANN_HEADER): ${FLANN_DIR}.tar.gz

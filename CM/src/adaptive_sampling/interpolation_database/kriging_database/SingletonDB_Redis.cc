@@ -19,22 +19,7 @@
 #include <unistd.h>
 #include <cstdarg>
 
-
-///TODO: Find a way to use to_string_hack() because this is bad
-
-std::string to_string_hack(unsigned long long inVal)
-{
-	char buf[256];
-	sprintf(buf, "%llu", inVal);
-	std::string retString(buf);
-	return buf;
-}
-
-static std::string uint128_to_string(const uint128_t &in){
-   uint64_t *in64 = (uint64_t *)&in; 
-   return to_string_hack((unsigned long long) *in64)+to_string_hack((unsigned long long)*(in64+1));
-}
-
+#include "KeyToString.h"
       
 //  Will eventually be something like add_points
 void  SingletonDB_Redis::push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length) {

@@ -78,6 +78,14 @@
 #include "Locator.h"
 #endif
 
+#if defined(MSGPACK)
+#include "msgpack.hpp"
+#endif
+
+#if defined(PROTOBUF)
+#include "shims.h"
+#endif
+
 #ifdef _OPENMP
 #include <omp.h>
 #endif
@@ -352,6 +360,7 @@ void Lulesh::CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
          Real_t *destAddr = fieldData[fi] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[iset[i]] += srcAddr[i] ;
+
          }
          srcAddr += size ;
       }
@@ -364,6 +373,10 @@ void Lulesh::CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
          Real_t *destAddr = &fieldData[fi][offset] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[iset[i]] += srcAddr[i] ;
+#ifdef COMM_TEST
+            if (domain->sliceLoc() == 0)
+                printf("receiveDataNodes: %d %d %d %d from P1  %d %d %d = %.10e %.10e\n", domain->sliceLoc(), xferFields, fi, offset, size, i, iset[i], srcAddr[i], destAddr[iset[i]]);
+#endif
          }
          srcAddr += size ;
       }
@@ -426,6 +439,10 @@ void Lulesh::CommSyncPosVel(Domain *domain,
          Real_t *destAddr = &fieldData[fi][offset] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[iset[i]] = srcAddr[i] ;
+#ifdef COMM_TEST
+            if (domain->sliceLoc() == 0)
+                printf("receiveDataNodes: %d %d %d %d from P1  %d %d %d = %.10e %.10e\n", domain->sliceLoc(), xferFields, fi, offset, size, i, iset[i], srcAddr[i], destAddr[iset[i]]);
+#endif
          }
          srcAddr += size ;
       }
@@ -482,6 +499,7 @@ void Lulesh::CommMonoQ(Domain *domain, Index_t *iset, Index_t size, Index_t offs
          Real_t *destAddr = fieldData[fi] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[i] = srcAddr[i] ;
+
             if (showMeMonoQ) {
                printf("%e[%d] ", srcAddr[i], iset[i]) ;
             }
@@ -499,12 +517,17 @@ void Lulesh::CommMonoQ(Domain *domain, Index_t *iset, Index_t size, Index_t offs
       srcAddr = &domain->commDataRecv[pmsg * maxPlaneComm] ;
       MPI_Wait(&domain->recvRequest[pmsg], &status) ;
       if (showMeMonoQ) {
-         printf("%d, %d, %d <- %d: ", domain->cycle(), offset, domain->sliceLoc(), domain->sliceLoc() + 1) ;
+      //   printf("%d, %d, %d <- %d: ", domain->cycle(), offset, domain->sliceLoc(), domain->sliceLoc() + 1) ;
       }
       for (Index_t fi=0 ; fi<xferFields; ++fi) {
          Real_t *destAddr = fieldData[fi] ;
          for (Index_t i=0; i<size; ++i) {
             destAddr[i] = srcAddr[i] ;
+
+#ifdef COMM_TEST
+            if (domain->sliceLoc() == 0)
+                printf("receiveDataElems: %d %d %d %d from P1  %d %d %d = %.10e\n", domain->sliceLoc(), xferFields, fi, offset, size, i, i, srcAddr[i]);
+#endif
             if (showMeMonoQ) {
                printf("%e[%d] ", srcAddr[i], iset[i]+offset) ;
             }
@@ -1534,8 +1557,8 @@ void Lulesh::ApplyAccelerationBoundaryConditionsForNodes()
 
    Index_t numImpactNodes   = domain.numSymmNodesImpact() ;
 
-#if defined(COEVP_MPI)
-   if (domain.sliceLoc() == 0)
+#if defined(COEVP_MPI)||defined(__CHARMC__)
+  if (domain.sliceLoc() == 0)
 #endif
    {
       for(Index_t i=0 ; i<numImpactNodes ; ++i)
@@ -2923,11 +2946,17 @@ int Lulesh::UpdateStressForElems()
 #ifdef FSTRACE
          cout << "Processing FS element " << k << endl;
 #endif
-         ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
-               domain.cm_vel_grad(k),
-               domain.cm_vol_chng(k),
-               domain.cm_state(k));
 
+#if defined(PROTOBUF)
+         struct WrapReturn *wrap_ret = wrap_advance(domain, k);
+         ConstitutiveData cm_data = *(wrap_ret->cm_data);
+         delete wrap_ret;
+#else
+         ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
+                                                          domain.cm_vel_grad(k),
+                                                          domain.cm_vol_chng(k),
+                                                          domain.cm_state(k));
+#endif
          int num_iters = cm_data.num_Newton_iters;
          if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
 
@@ -3001,13 +3030,13 @@ void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
 }
 
 
-void Lulesh::Initialize(int myRank, int numRanks)
+void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime)
 {
 
-   Index_t edgeElems = 16 ;
-   Index_t gheightElems = 26 ;
-   // Index_t gheightElems = 8 ;
-   // Index_t edgeElems = 4 ;
+   Index_t edgeElems = edgeDim ;
+   Index_t gheightElems = heightDim ;
+// Index_t gheightElems = 8 ;
+// Index_t edgeElems = 4 ;
    Index_t edgeNodes = edgeElems+1 ;
 
    Index_t xBegin, xEnd ;
@@ -3478,7 +3507,7 @@ void Lulesh::Initialize(int myRank, int numRanks)
 
    domain.deltatimemultlb() = Real_t(1.1) ;
    domain.deltatimemultub() = Real_t(1.2) ;
-   domain.stoptime()  = Real_t(1.e-1) ;
+   domain.stoptime()  = domainStopTime;
    domain.dtcourant() = Real_t(1.0e+20) ;
    domain.dthydro()   = Real_t(1.0e+20) ;
    domain.dtmax()     = Real_t(1.0e-2) ;
@@ -3808,15 +3837,16 @@ void Lulesh::Initialize(int myRank, int numRanks)
    for (int plane=0; plane<coreElems; ++plane) {
       for (int row=0; row<edgeElems; ++row) {
          domain.elemBC(plane*edgeElems*heightElems + row*heightElems) |=
-#if defined(COEVP_MPI)
-            ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+#if defined(COEVP_MPI)||defined(__CHARMC__)
+		 ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
 #else
          XI_M_SYMM ;	
 #endif
          domain.elemBC(plane*edgeElems*heightElems +
-               row*heightElems + heightElems-1) |= 
-#if defined(COEVP_MPI)
-            ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
+
+                        row*heightElems + heightElems-1) |= 
+#if defined(COEVP_MPI)||defined(__CHARMC__)
+                           ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
 #else
          XI_P_FREE ;
 #endif
@@ -3825,33 +3855,33 @@ void Lulesh::Initialize(int myRank, int numRanks)
    for (int plane=0; plane<wingElems; ++plane) {
       for (int row=0; row<(coreElems-1); ++row) {
          domain.elemBC(coreElems*edgeElems*heightElems +
-               plane*(coreElems-1)*heightElems + row*heightElems) |= 
-#if defined(COEVP_MPI)
-            ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+                       plane*(coreElems-1)*heightElems + row*heightElems) |= 
+#if defined(COEVP_MPI)||defined(__CHARMC__)
+		 ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
 #else
          XI_M_SYMM ;
 #endif
          domain.elemBC(coreElems*edgeElems*heightElems +
-               plane*(coreElems-1)*heightElems +
-               row*heightElems + heightElems-1) |=
-#if defined(COEVP_MPI)
-            ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
+                       plane*(coreElems-1)*heightElems +
+                       row*heightElems + heightElems-1) |=
+#if defined(COEVP_MPI)||defined(__CHARMC__)
+                          ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
 #else
          XI_P_FREE ;
 #endif
       }
       domain.elemBC(coreElems*edgeElems*heightElems +
-            wingElems*(coreElems-1)*heightElems + plane*heightElems) |= 
-#if defined(COEVP_MPI)
-         ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
+                    wingElems*(coreElems-1)*heightElems + plane*heightElems) |= 
+#if defined(COEVP_MPI)||defined(__CHARMC__)
+	      ((domain.sliceLoc() == 0) ? XI_M_SYMM : XI_M_COMM ) ;
 #else
       XI_M_SYMM ;
 #endif
       domain.elemBC(coreElems*edgeElems*heightElems +
-            wingElems*(coreElems-1)*heightElems +
-            plane*heightElems + heightElems-1) |=
-#if defined(COEVP_MPI)
-         ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
+                    wingElems*(coreElems-1)*heightElems +
+                    plane*heightElems + heightElems-1) |=
+#if defined(COEVP_MPI)||defined(__CHARMC__)
+                       ((domain.sliceLoc() == domain.numSlices()-1) ? XI_P_FREE : XI_P_COMM ) ;
 #else
       XI_P_FREE ;
 #endif

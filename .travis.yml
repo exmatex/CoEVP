@@ -1,3 +1,6 @@
+branches:
+  except:
+    
 sudo: false
 
 language: cpp
@@ -36,6 +39,7 @@ env:
     - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=yes LOGGER=no
     - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=yes
     - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no USE_SSL=no
     - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=no  NP=1
     - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes               LOGGER=no  NP=4
 
@@ -45,7 +49,7 @@ before_script:
   - export OMPI_CXX="g++-4.9"
   
 script:
-  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} FFLAGS="-fdefault-real-8 -fdefault-double-8" FORTRAN_LIBS="-lgfortran" FC="${FC}" && 
+  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} FFLAGS="-fdefault-real-8 -fdefault-double-8" FORTRAN_LIBS="-lgfortran" FC="${FC} USE_SSL=${USE_SSL}" && 
     make get_reference &&
     { [[ ${SILO} = no ]] || make test COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} MPIRUN="${NP:+mpirun -np ${NP}}"; }
 

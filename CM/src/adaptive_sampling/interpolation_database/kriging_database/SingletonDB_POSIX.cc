@@ -1,10 +1,6 @@
 #include "SingletonDB_POSIX.h"
 #include <sys/stat.h>
 
-#ifndef POSIX_PATH
-#define POSIX_PATH "posix"
-#endif
-
 #include <sys/stat.h>
 #include <iostream>
 #include <string>
@@ -15,11 +11,8 @@
 #include <cstdio>
 //#include <unistd.h>
 
-static std::string uint128_to_string(const uint128_t &in){
-   uint64_t *in64 = (uint64_t *)&in; 
-   return std::to_string(*in64)+std::to_string(*(in64+1));
-}
-      
+#include "KeyToString.h"
+
 
 inline bool file_exists (const std::string& name) {
     if (FILE *file = fopen(name.c_str(), "r")) {
@@ -109,7 +102,28 @@ std::vector<double> SingletonDB_POSIX::pull_key(const uint128_t &key) {
 
 SingletonDB_POSIX::SingletonDB_POSIX() {
   std::cout << "POSIX DB, validating/creating path:" << std::endl;
-  dbPath = POSIX_PATH;
+  std::ifstream configFile;
+  configFile.open("config.posix", std::ifstream::in);
+  if(configFile.good() == true)
+  {
+      ///TODO: Make this remotely safe. Possibly by using the boost json parser we already need anyway
+      std::string configLine;
+      getline(configFile, configLine);
+      //Remove "data_roots ="
+      configLine.erase(0, 12);
+      //If there is a leading space, get rid of it
+      if(configLine[0] == ' ')
+      {
+       configLine.erase(0, 1);
+      }
+      //And now just copy the string
+      dbPath = configLine;
+      configFile.close();
+  }
+  else
+  {
+      dbPath = "posix";
+  }
 
   struct stat st = {0};
   if (stat(dbPath.c_str(), &st) == -1) {
