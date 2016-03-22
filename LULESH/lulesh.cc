@@ -2925,12 +2925,8 @@ void Lulesh::LagrangeLeapFrog()
    // LagrangeRelease() ;  Creation/destruction of temps may be important to capture 
 }
 
-int Lulesh::UpdateStressForElems()
+void Lulesh::OutputTiming()
 {
-//#define MAX_NONLINEAR_ITER 5
-   int max_nonlinear_iters = 0;
-   int numElem = domain.numElem() ;
-
    if(timer)
 	{
         int t_count = domain.cycle();
@@ -2975,6 +2971,17 @@ int Lulesh::UpdateStressForElems()
 		}
 
 	}
+
+
+}
+
+int Lulesh::UpdateStressForElems()
+{
+//#define MAX_NONLINEAR_ITER 5
+   int max_nonlinear_iters = 0;
+   int numElem = domain.numElem() ;
+
+	this->OutputTiming();
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -3078,8 +3085,36 @@ void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
 }
 
 
-void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime)
+void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime, int timerSamplingRate)
 {
+	if(myRank == 0)
+	{
+		this->timer = timerSamplingRate;
+		if(this->timer != 0)
+		{
+			this->timerfile.open("timer.file");
+			if(this->timerfile.is_open())
+			{
+				///TODO: Figure out implementation neutral way to write configuration... probably using domain
+				/*
+				for(int i=0;i<argc;i++)
+				{
+					this->timerfile << argv[i] << " ";
+				}
+				
+				this->timerfile << std::endl;
+				*/
+			}
+			else
+			{
+				std::cout << "Could not open timer.file" << std::endl;
+			}
+		}
+	}
+	else
+	{
+		this->timer = 0;
+	}
 
    Index_t edgeElems = edgeDim ;
    Index_t gheightElems = heightDim ;

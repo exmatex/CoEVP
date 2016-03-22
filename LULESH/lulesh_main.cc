@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 
 
   // Initialize Taylor cylinder mesh
-  luleshSystem.Initialize(myRank, numRanks, edgeElems, heightElems, domStopTime);
+  luleshSystem.Initialize(myRank, numRanks, edgeElems, heightElems, domStopTime, timer);
 
 
 
@@ -119,14 +119,14 @@ int main(int argc, char *argv[])
   }
   freeArgs();
 
-
+/*
   if(timer)
   {
 	// open output filestream here to avoid overhead
 	// only myRank == 0 will do timing
 	if(myRank==0)
 	{
-	    luleshSystem.timer = timer;
+		//luleshSystem.timer = timer;
 		luleshSystem.timerfile.open("timer.file");
 		if(luleshSystem.timerfile.is_open())
 		{
@@ -145,7 +145,7 @@ int main(int argc, char *argv[])
 	}
 
   }
-
+*/
 
    
    /*************************************/
