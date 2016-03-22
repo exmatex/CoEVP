@@ -2,7 +2,8 @@
 #define __LULESH_H__
 
 #include "domain.h"
-
+#include <list>
+#include <chrono>
 #define MAX_NONLINEAR_ITER 5
 #define SEDOV_SYNC_POS_VEL_EARLY 1
 
@@ -14,7 +15,10 @@ public:
   // Factor to be multiply the time step by to compensate
   // for fast time scales in the fine-scale model
   Real_t finescale_dt_modifier;
-
+  bool use_timer;
+  std::chrono::high_resolution_clock::time_point t_origin;
+  std::list<std::chrono::high_resolution_clock::time_point> timings;
+  std::ofstream timerfile;
   Domain domain;
 
 Lulesh(){ finescale_dt_modifier = Real_t(1.); }

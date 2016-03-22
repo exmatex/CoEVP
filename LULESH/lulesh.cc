@@ -2931,6 +2931,44 @@ int Lulesh::UpdateStressForElems()
    int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
 
+   if(use_timer)
+	{
+        int t_count = domain.cycle();
+		int scale=0;
+        while ( t_count /= 10 )
+           scale++;
+		scale = pow(10, scale);
+
+
+		if(domain.cycle() == scale)
+		{
+			
+			timings.push_back(std::chrono::high_resolution_clock::now());
+
+
+			if(scale == 1)
+			{
+				std::cout << "Timer Output Frequency is " << scale << std::endl;
+			}
+			else
+			{	
+				std::cout << "Changing Timer Output Frequency to " << scale << std::endl;
+				std::chrono::duration<double> diff = timings.back() - timings.front();
+				std::cout  << "0 - " << domain.cycle() << ": " << diff.count() << std::endl;
+			}
+		}
+		else
+		{
+			if(domain.cycle() % scale == 0)
+			{
+				timings.push_back(std::chrono::high_resolution_clock::now());
+				std::chrono::duration<double> diff = timings.back() - *std::prev(timings.end(),2);
+				std::cout  << domain.cycle() - scale << " - " << domain.cycle() << ": " << diff.count() << std::endl;
+			}
+		}
+
+	}
+
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -2976,7 +3014,26 @@ int Lulesh::UpdateStressForElems()
 
          domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
                                + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
+		
+
       }
+
+   if(use_timer)
+    {
+		// simple arithmetic determines output frequency.
+		// what power of 10 are we on?
+//		int t_count = timestep;
+//		while ( t_count /= 10 )
+//		   int scale++;
+		// did we hit a new order of magnitude?
+		//if(t_count == 1 || timestep == 1)
+		//{
+		//	std::chrono::high_resolution_clock::now()
+		//}
+        //timings.push_back(std::chrono::high_resolution_clock::now());
+
+    }
+
 
 #ifdef _OPENMP
 #pragma omp critical
