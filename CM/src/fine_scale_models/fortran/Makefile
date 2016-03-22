@@ -1,7 +1,7 @@
 # flags for gcc
 #ifeq ($(CC), gcc)
-FC = gfortran 
-CXX = g++
+FC ?= gfortran 
+CXX ?= g++
 FFLAGS = -ffree-line-length-none -O3 -fdefault-real-8
 FLIBS = -lm -lgfortran -lquadmath
 #endif
