@@ -8,13 +8,9 @@ class vpsc
 {
    public:
 
-         //vpsc() {vpsc_init_class();};
-         vpsc() {};
-	
+      vpsc() {vpsc_init_class();};
 
       ~vpsc(){;}
-
-         //{ vpsc_init_class();  };
 
       virtual void vpsc_init_class();
 
@@ -25,7 +21,7 @@ class vpsc
       virtual void printState();
 
       virtual void getScalingsForSampling( vector<double>& input_scaling,
-                                           vector<double>& output_scaling ) const;
+            vector<double>& output_scaling ) const;
 
       virtual void advance( const double delta_t, void* state);
 
