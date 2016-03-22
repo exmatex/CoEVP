@@ -2926,11 +2926,63 @@ void Lulesh::LagrangeLeapFrog()
    // LagrangeRelease() ;  Creation/destruction of temps may be important to capture 
 }
 
+void Lulesh::OutputTiming()
+{
+   if(timer)
+	{
+        int t_count = domain.cycle();
+		int scale=0;
+		if(timer != 1)
+		{
+	        while ( t_count /= timer)
+	           scale++;
+			scale = pow(timer, scale);
+		}
+		else
+		{
+			scale = 1;
+		}
+
+
+		if(domain.cycle() == scale)
+		{
+			
+			timings.push_back(std::chrono::high_resolution_clock::now());
+
+
+			if(scale == 1)
+			{
+				timerfile << "Timer Output Frequency is " << scale << std::endl;
+			}
+			else
+			{	
+				timerfile  << "Changing Timer Output Frequency to " << scale << std::endl;
+				std::chrono::duration<double> diff = timings.back() - timings.front();
+				timerfile  << "0 - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
+			}
+		}
+		else
+		{
+			if(domain.cycle() % scale == 0)
+			{
+				timings.push_back(std::chrono::high_resolution_clock::now());
+				std::chrono::duration<double> diff = timings.back() - *std::prev(timings.end(),2);
+				timerfile  << domain.cycle() - scale << " - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
+			}
+		}
+
+	}
+
+
+}
+
 int Lulesh::UpdateStressForElems()
 {
 //#define MAX_NONLINEAR_ITER 5
    int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
+
+	this->OutputTiming();
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -2977,7 +3029,11 @@ int Lulesh::UpdateStressForElems()
 
          domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
                                + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
+		
+
       }
+
+
 
 #ifdef _OPENMP
 #pragma omp critical
@@ -3030,8 +3086,36 @@ void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
 }
 
 
-void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime, int simStopCycle)
+void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime, int simStopCycle, int timerSamplingRate)
 {
+	if(myRank == 0)
+	{
+		this->timer = timerSamplingRate;
+		if(this->timer != 0)
+		{
+			this->timerfile.open("timer.file");
+			if(this->timerfile.is_open())
+			{
+				///TODO: Figure out implementation neutral way to write configuration... probably using domain
+				/*
+				for(int i=0;i<argc;i++)
+				{
+					this->timerfile << argv[i] << " ";
+				}
+				
+				this->timerfile << std::endl;
+				*/
+			}
+			else
+			{
+				std::cout << "Could not open timer.file" << std::endl;
+			}
+		}
+	}
+	else
+	{
+		this->timer = 0;
+	}
 
    Index_t edgeElems = edgeDim ;
    Index_t gheightElems = heightDim ;

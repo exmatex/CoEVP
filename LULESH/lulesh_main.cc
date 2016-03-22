@@ -4,6 +4,7 @@
 #include <mpi.h>
 #endif
 
+#include <chrono>
 #include "lulesh.h"
 #include "SingletonDB.h"
 #include "ModelDB_SingletonDB.h"
@@ -21,12 +22,13 @@ int main(int argc, char *argv[])
 {
    int numRanks = 1;
    int myRank = 0;
+
 #if defined(COEVP_MPI)
    MPI_Init(&argc, &argv) ;
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
    MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
 #endif
-  
+  int  timer = 0;
   int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
   int  redising = 0;              //  By default, do not use REDIS for database
   int  posixing = 0;              // POSIX Key/Value store
@@ -52,6 +54,7 @@ int main(int argc, char *argv[])
   int  help   = 0;
   
   addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
+  addArg("timer",    'a', 1, 'i',  &(timer),               0, "use timing and write to output file");
   addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
   addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
   addArg("posix",    'x', 0, 'i',  &(posixing),            0, "use POSIX library");
@@ -79,7 +82,7 @@ int main(int argc, char *argv[])
 
 
   // Initialize Taylor cylinder mesh
-  luleshSystem.Initialize(myRank, numRanks, edgeElems, heightElems, domStopTime, simStopCycle);
+  luleshSystem.Initialize(myRank, numRanks, edgeElems, heightElems, domStopTime, simStopCycle, timer);
 
 
 
@@ -117,6 +120,35 @@ int main(int argc, char *argv[])
     logging = 1;
   }
   freeArgs();
+
+/*
+  if(timer)
+  {
+	// open output filestream here to avoid overhead
+	// only myRank == 0 will do timing
+	if(myRank==0)
+	{
+		//luleshSystem.timer = timer;
+		luleshSystem.timerfile.open("timer.file");
+		if(luleshSystem.timerfile.is_open())
+		{
+			for(int i=0;i<argc;i++)
+			{
+				luleshSystem.timerfile << argv[i] << " ";
+			}
+			
+			luleshSystem.timerfile << std::endl;
+			
+	  	}
+		else
+		{
+			std::cout << "Could not open timer.file" << std::endl;
+		}
+	}
+
+  }
+*/
+
    
    /*************************************/
    /* Initialize ModelDB Interface      */
