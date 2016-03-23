@@ -2934,7 +2934,11 @@ void Lulesh::FinalTime()
 		//Do one final probe. We will be off by a small amount but it should be fairly insignificant for any meaningful run and it is higher than our actual time anyway
 		timings.push_back(std::chrono::high_resolution_clock::now());
 		std::chrono::duration<double> diff = timings.back() - timings.front();
-		timerfile  << domain.cycle() << "\t" << diff.count() <<  std::endl;
+		auto a = std::chrono::high_resolution_clock::now();
+		timerfile  << "Total Cycles: " << domain.cycle() << " Time: " << diff.count() << " s" << std::endl;
+		auto b = std::chrono::high_resolution_clock::now();
+		write_timing += (b - a).count();
+		std::cout << "Write Timings: " << write_timing << " ns" <<  std::endl;
 	}
 }
 
@@ -2961,25 +2965,30 @@ void Lulesh::OutputTiming()
 			
 			timings.push_back(std::chrono::high_resolution_clock::now());
 
-
-			if(scale == 1)
+			if(scale == 1 && time_output)
 			{
 				timerfile << "Timer Output Frequency is " << scale << std::endl;
 			}
-			else
+			else if(time_output)
 			{	
+				auto a = std::chrono::high_resolution_clock::now();
 				timerfile  << "Changing Timer Output Frequency to " << scale << std::endl;
+				auto b = std::chrono::high_resolution_clock::now();
+                write_timing += (b - a).count();
 				std::chrono::duration<double> diff = timings.back() - timings.front();
 				timerfile  << "0 - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
 			}
 		}
 		else
 		{
-			if(domain.cycle() % scale == 0)
+			if(domain.cycle() % scale == 0 && time_output)
 			{
 				timings.push_back(std::chrono::high_resolution_clock::now());
 				std::chrono::duration<double> diff = timings.back() - *std::prev(timings.end(),2);
+				auto a = std::chrono::high_resolution_clock::now();
 				timerfile  << domain.cycle() - scale << " - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
+				auto b = std::chrono::high_resolution_clock::now();
+				write_timing += (b - a).count();
 			}
 		}
 
@@ -3099,9 +3108,26 @@ void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
 
 void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime, int simStopCycle, int timerSamplingRate)
 {
+	this->time_output = 0;
+	this->write_timing = 0.0;
+//	this->write_timing = 0.0;
 	if(myRank == 0)
 	{
-		this->timer = timerSamplingRate;
+		if(timerSamplingRate < 0)
+		{
+			this->time_output = 1;
+			this->timer = -timerSamplingRate;
+		}
+		else if(timerSamplingRate == 0)
+		{
+			this->timer = 1;
+		}
+		else
+		{
+			this->timer = timerSamplingRate;
+		}
+
+//		this->timer = timerSamplingRate;
 		if(this->timer != 0)
 		{
 			this->timerfile.open("timer.file");
