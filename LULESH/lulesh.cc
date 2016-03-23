@@ -2934,11 +2934,7 @@ void Lulesh::FinalTime()
 		//Do one final probe. We will be off by a small amount but it should be fairly insignificant for any meaningful run and it is higher than our actual time anyway
 		timings.push_back(std::chrono::high_resolution_clock::now());
 		std::chrono::duration<double> diff = timings.back() - timings.front();
-		auto a = std::chrono::high_resolution_clock::now();
 		timerfile  << "Total Cycles: " << domain.cycle() << " Time: " << diff.count() << " s" << std::endl;
-		auto b = std::chrono::high_resolution_clock::now();
-		write_timing += (b - a).count();
-		std::cout << "Write Timings: " << write_timing << " ns" <<  std::endl;
 	}
 }
 
@@ -2971,10 +2967,7 @@ void Lulesh::OutputTiming()
 			}
 			else if(time_output)
 			{	
-				auto a = std::chrono::high_resolution_clock::now();
 				timerfile  << "Changing Timer Output Frequency to " << scale << std::endl;
-				auto b = std::chrono::high_resolution_clock::now();
-                write_timing += (b - a).count();
 				std::chrono::duration<double> diff = timings.back() - timings.front();
 				timerfile  << "0 - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
 			}
@@ -2985,10 +2978,7 @@ void Lulesh::OutputTiming()
 			{
 				timings.push_back(std::chrono::high_resolution_clock::now());
 				std::chrono::duration<double> diff = timings.back() - *std::prev(timings.end(),2);
-				auto a = std::chrono::high_resolution_clock::now();
 				timerfile  << domain.cycle() - scale << " - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
-				auto b = std::chrono::high_resolution_clock::now();
-				write_timing += (b - a).count();
 			}
 		}
 
@@ -3109,8 +3099,6 @@ void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
 void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime, int simStopCycle, int timerSamplingRate)
 {
 	this->time_output = 0;
-	this->write_timing = 0.0;
-//	this->write_timing = 0.0;
 	if(myRank == 0)
 	{
 		if(timerSamplingRate < 0)

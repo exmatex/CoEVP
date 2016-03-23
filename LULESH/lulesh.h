@@ -18,7 +18,6 @@ public:
   int timer;
   int time_output;
   std::list<std::chrono::high_resolution_clock::time_point> timings;
-  double write_timing;
 //  std::chrono::duration<double> write_timing;
 //  std::chrono::high_resolution_clock::time_point write_timing;
   std::ofstream timerfile;
