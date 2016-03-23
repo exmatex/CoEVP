@@ -576,6 +576,7 @@ void Lulesh::TimeIncrement()
 #else
       newdt = gnewdt ;
 #endif
+	this->OutputTiming();
 
       ratio = newdt / olddt ;
       if (ratio >= Real_t(1.0)) {
@@ -2926,6 +2927,17 @@ void Lulesh::LagrangeLeapFrog()
    // LagrangeRelease() ;  Creation/destruction of temps may be important to capture 
 }
 
+void Lulesh::FinalTime()
+{
+	if(timer)
+	{
+		//Do one final probe. We will be off by a small amount but it should be fairly insignificant for any meaningful run and it is higher than our actual time anyway
+		timings.push_back(std::chrono::high_resolution_clock::now());
+		std::chrono::duration<double> diff = timings.back() - timings.front();
+		timerfile  << domain.cycle() << "\t" << diff.count() <<  std::endl;
+	}
+}
+
 void Lulesh::OutputTiming()
 {
    if(timer)
@@ -2982,7 +2994,6 @@ int Lulesh::UpdateStressForElems()
    int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
 
-	this->OutputTiming();
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -4258,6 +4269,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
    }  /* while */
 
+	FinalTime();
 
 #ifdef WRITE_FSM_EVAL_COUNT
    fsm_count_file.close();

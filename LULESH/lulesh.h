@@ -158,6 +158,7 @@ void CalcHydroConstraintForElems();
 void CalcTimeConstraintsForElems();
 void LagrangeLeapFrog();
 void OutputTiming();
+void FinalTime();
 int UpdateStressForElems();
 void UpdateStressForElems2(int reducedIters);
 /*
