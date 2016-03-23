@@ -29,6 +29,7 @@ extern "C"
          const double* weights,
          const double* twinVFRates,
          const double* reorientationRates,
+         const double* c_scaling,
          const int* diagnostics
             ); 
    // call the VPSC fortran executable (with all data needed without any additional file accesses)
@@ -126,7 +127,7 @@ vpsc::printState()
 }
 
    void
-vpsc::vpsc_init_class()
+vpsc::vpsc_init_class(const double c_scaling)
 {
    diagnostics = 0;
 
@@ -213,6 +214,7 @@ vpsc::vpsc_init_class()
          weights,
          twinVFRates,
          reorientationRates,
+         &c_scaling,
          &diagnostics
             ); // populate all the required data structures 
 

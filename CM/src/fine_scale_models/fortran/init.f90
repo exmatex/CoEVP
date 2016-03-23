@@ -75,6 +75,7 @@ SUBROUTINE vpsc_init(&
       twinVFRates,         &
       reorientationRates,  &
       ! extra
+      c_scaling,           &
       diagnostics          &
       )
 
@@ -135,6 +136,7 @@ SUBROUTINE vpsc_init(&
    !
    integer :: kgr,i,j,f_eval, iGlobal
    integer :: diagnostics
+   real(idp) :: c_scaling
    !
    ! 
    if (diagnostics == 1) then
@@ -197,7 +199,7 @@ SUBROUTINE vpsc_init(&
    close(56)
    !
 
-      f_eval=init_vpsc(it,fnameIn,phaseDataList,MPICommF)
+      f_eval=init_vpsc(it,fnameIn,phaseDataList,MPICommF, c_scaling)
    !
       if (f_eval /= 0) then
          write(*,*) 'PROBLEM IN init_vpsc'

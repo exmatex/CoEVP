@@ -21,6 +21,8 @@ SRCS = $(wildcard $(FILES))
 OBJS = vpEtxt_interface_base.o vpscVpETxt_interface.o libraryR8.o vpsc_as_N2O.o init.o
 MODS = vpetxt_interface_base.mod vpscvpetxt_interface.mod
 
+all: Taylor modules
+
 Taylor: TaylorFort.f90
 	$(FC) -c TaylorFort.f90
 

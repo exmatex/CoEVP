@@ -83,11 +83,12 @@ cas   SUBROUTINE VPSC_INPUT
 cas
       subroutine vpsc_input_as 
      #   (vpscin, orients, itnphase, ngrains, volfrac, ! INPUT
-cRL
+!RL
      #    nstrengthsMax,itngrtot,                      ! INPUT
 
-cRL     #    strengths, shapes, ntwinsys, porosity)       ! OUTPUT
-     #    strengths, nstrengths, shapes, ntwinsys, porosity)       ! OUTPUT
+!RL     #    strengths, shapes, ntwinsys, porosity)       ! OUTPUT
+     #    strengths, nstrengths, shapes, ntwinsys, porosity,        ! OUTPUT
+     &      c_scaling)                                ! input 
 cas
       INCLUDE 'vpsc_as.dim'
       DIMENSION AUX5(5),AUX55(5,5),AUX3(3),AUX33(3,3),AUX3333(3,3,3,3)
@@ -103,6 +104,8 @@ cass
       dimension shapes(6,itnphase+1), orients(3,itngrtot)
       dimension ngrains(itnphase),volfrac(itnphase)
       dimension ntwinsys(itnphase),nstrengths(itnphase)
+
+      real*8 c_scaling
 cass
       UR0= 20     ! VPSCIN 
       UR1= 21     ! FILECRYS
@@ -251,6 +254,9 @@ C *** READS SETTINGS FOR CONVERGENCE PROCEDURES.
       READ(UR0,*) ITMAXEXT,ITMAXINT,ITMAXSO
       READ(UR0,*) IRSVAR,JXRSINI,JXRSFIN,JXRSTEP
       READ(UR0,*) IBCINV
+
+!     modify the convergence criterion 
+      errm = errm*c_scaling
 
 C *** INITIALIZE GAUSS-LEGENDRE COORDINATES AND ARRAYS USED IN THE DOUBLE
 C *** INTEGRALS GIVING THE ESHELBY TENSORS

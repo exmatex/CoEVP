@@ -8,11 +8,11 @@ class vpsc
 {
    public:
 
-      vpsc() {vpsc_init_class();};
+      vpsc(const double c_scaling) {vpsc_init_class(c_scaling);};
 
       ~vpsc(){;}
 
-      virtual void vpsc_init_class();
+      virtual void vpsc_init_class(const double c_scaling);
 
       virtual Tensor2Sym tensorFunction( const Tensor2Sym& in ) const;
 

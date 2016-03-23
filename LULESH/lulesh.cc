@@ -3900,7 +3900,7 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
 }
 
 
-void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_modelDB, ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns, int use_vpsc)
+void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_modelDB, ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns, int use_vpsc, double c_scaling)
 {
    Index_t domElems = domain.numElem();
 
@@ -3914,7 +3914,7 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
 
       if (use_vpsc == 1) {
          // New vpsc inititialization
-         plasticity_model = (vpsc*) (new vpsc);
+         plasticity_model = (vpsc*) (new vpsc(c_scaling));
       } else {
          // Old Taylor initialization
          //

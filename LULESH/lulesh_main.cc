@@ -42,6 +42,7 @@ int main(int argc, char *argv[])
   int  distributed_redis = 0;
   char logdb[1024] = {0};        // host and port of logging databse (e.g. cn1:6379)
   int use_vpsc = 0;              // toggle VPSC as the fine-scale-Model
+  double c_scaling = 1.0;
   int heightElems = 26;
   int edgeElems = 16;
   double domStopTime = 1.e-1;
@@ -66,6 +67,7 @@ int main(int argc, char *argv[])
   addArg("distributed_redis", 'R', 0, 'i', &(distributed_redis), 0, "use distributed REDIS via twemproxy");
   addArg("log",      'l', 1, 's',  &(logdb),   sizeof(logdb), "log to REDIS at hostname:port");
   addArg("use_vpsc", 'm', 0, 'i',  &(use_vpsc),            0, "use VPSC fine scale model");
+  addArg("convergence scaling", 'C', 1, 'd',  &(c_scaling), 0, "scaling factor for VPSC convergence"); 
   addArg("Height Elems", 'H', 1, 'i', &(heightElems), 0, "Number of height elements to solve for");
   addArg("Edge Elems", 'E', 1, 'i', &(edgeElems), 0, "Number of height elements to solve for");
   addArg("Domain Stop Time", 'D', 1, 'd',  &(domStopTime), 0, "Number of Simulated Seconds to Run For"); 
@@ -178,7 +180,7 @@ int main(int argc, char *argv[])
 #endif
 
   // Construct fine scale models
-  luleshSystem.ConstructFineScaleModel(sampling,global_modelDB,global_ann,flanning,flann_n_trees,flann_n_checks,global_ns,use_vpsc);
+  luleshSystem.ConstructFineScaleModel(sampling,global_modelDB,global_ann,flanning,flann_n_trees,flann_n_checks,global_ns,use_vpsc, c_scaling);
   
   // Exchange nodal mass
   luleshSystem.ExchangeNodalMass();

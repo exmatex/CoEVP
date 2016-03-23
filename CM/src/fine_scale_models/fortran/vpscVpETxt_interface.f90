@@ -54,7 +54,7 @@ CONTAINS
        & it, &
        & fnameIn, & 
        & phaseDataList, &
-       & MPICommF) RESULT(status)
+       & MPICommF, c_scaling) RESULT(status)
     !
     !USE rot_params_mod, ONLY : BUNGE_p
     !
@@ -76,6 +76,7 @@ CONTAINS
     ! fortran style MPI communicator number;
     ! not needed yet but included for completeness:
     INTEGER, INTENT(IN) :: MPICommF 
+    real(idp), intent(in) :: c_scaling
     !
     ! ------------------------------------------------------------
     ! local variables
@@ -158,8 +159,9 @@ CONTAINS
          & shapes, &            ! output
 !RL         & nTwinSys, &       ! output
          & nTwSysPhase, &       ! output
-         & porosity &           ! output
+         & porosity, &           ! output
 !RL         & maxStrengthsPerPhase & ! parameter, for dimensioning !NB: new input
+         & c_scaling &
          & )
     CALL load_conditions_as
     CALL update_Schmid
