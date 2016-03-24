@@ -68,6 +68,7 @@
 #include <string.h>
 #include <stdexcept>
 #include <sstream>
+#include <climits>
 
 #if defined(COEVP_MPI)
 #include <mpi.h>
@@ -576,6 +577,7 @@ void Lulesh::TimeIncrement()
 #else
       newdt = gnewdt ;
 #endif
+	this->OutputTiming();
 
       ratio = newdt / olddt ;
       if (ratio >= Real_t(1.0)) {
@@ -2926,11 +2928,121 @@ void Lulesh::LagrangeLeapFrog()
    // LagrangeRelease() ;  Creation/destruction of temps may be important to capture 
 }
 
+void Lulesh::FinalTime()
+{
+	if(timer)
+	{
+		//Do one final probe. We will be off by a small amount but it should be fairly insignificant for any meaningful run and it is higher than our actual time anyway
+		if(!time_output)
+		{
+			std::list<std::chrono::high_resolution_clock::time_point>::iterator it;
+			for (int i=1;i<domain.cycle();i++)
+			{
+				int t_count = i;
+		        int scale=0;
+    		    if(timer != 1)
+      	  		{
+	        	    while ( t_count /= timer)
+    	        	scale++;
+	    	        scale = pow(timer, scale);
+	    	    }
+		        else
+    		    {
+	        	    scale = 1;
+		        }
+
+
+				if(i == scale)
+		        {
+            
+	        	    if(scale == 1)
+		            {
+						it=timings.begin();
+	    	         	timerfile << "Timer Output Frequency is " << scale << std::endl;
+	            	}
+		            else
+		            {   
+						it++;	
+	    	            timerfile  << "Changing Timer Output Frequency to " << scale << std::endl;
+	        	        std::chrono::duration<double> diff = *it - timings.front();
+	            	    timerfile  << "0 - " << i << ": " << diff.count() << " s" << std::endl;
+		            }
+				}
+				else
+				{
+		            if(i % scale == 0)
+	    	        {
+						it ++;
+	            	    std::chrono::duration<double> diff = *it - *std::prev(it,1);
+	                	timerfile  << i - scale << " - " << i << ": " << diff.count() << " s" << std::endl;
+		            }
+				}
+			}
+
+		}
+		timings.push_back(std::chrono::high_resolution_clock::now());
+		std::chrono::duration<double> diff = timings.back() - timings.front();
+		timerfile  << "Total Cycles: " << domain.cycle() << " Time: " << diff.count() << " s" << std::endl;
+	}
+ }
+
+void Lulesh::OutputTiming()
+{
+   if(timer)
+	{
+        int t_count = domain.cycle();
+		int scale=0;
+		if(timer != 1)
+		{
+	        while ( t_count /= timer)
+	           scale++;
+			scale = pow(timer, scale);
+		}
+		else
+		{
+			scale = 1;
+		}
+
+
+		if(domain.cycle() == scale)
+		{
+			
+			timings.push_back(std::chrono::high_resolution_clock::now());
+			if(scale == 1 && time_output)
+			{
+				timerfile << "Timer Output Frequency is " << scale << std::endl;
+			}
+			else if(time_output)
+			{	
+				timerfile  << "Changing Timer Output Frequency to " << scale << std::endl;
+				std::chrono::duration<double> diff = timings.back() - timings.front();
+				timerfile  << "0 - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
+			}
+		}
+		else
+		{
+			if(domain.cycle() % scale == 0)
+			{
+				timings.push_back(std::chrono::high_resolution_clock::now());
+				if(time_output)
+				{
+					std::chrono::duration<double> diff = timings.back() - *std::prev(timings.end(),2);
+					timerfile  << domain.cycle() - scale << " - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
+				}
+			}
+		}
+
+	}
+
+
+}
+
 int Lulesh::UpdateStressForElems()
 {
    //#define MAX_NONLINEAR_ITER 5
    int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
+
 
 #ifdef _OPENMP
 #pragma omp parallel
@@ -2976,8 +3088,12 @@ int Lulesh::UpdateStressForElems()
          Real_t tyz = domain.tyz(k) = sigma_prime(3,2);
 
          domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
-               + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
+                               + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
+		
+
       }
+
+
 
 #ifdef _OPENMP
 #pragma omp critical
@@ -3030,8 +3146,51 @@ void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
 }
 
 
-void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime)
+void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime, int simStopCycle, int timerSamplingRate)
 {
+	this->time_output = 0;
+	if(myRank == 0)
+	{
+		if(timerSamplingRate < 0)
+		{
+			this->time_output = 1;
+			this->timer = -timerSamplingRate;
+		}
+		else if(timerSamplingRate == 0)
+		{
+			this->timer = 1;
+		}
+		else
+		{
+			this->timer = timerSamplingRate;
+		}
+
+//		this->timer = timerSamplingRate;
+		if(this->timer != 0)
+		{
+			this->timerfile.open("timer.file");
+			if(this->timerfile.is_open())
+			{
+				///TODO: Figure out implementation neutral way to write configuration... probably using domain
+				/*
+				for(int i=0;i<argc;i++)
+				{
+					this->timerfile << argv[i] << " ";
+				}
+				
+				this->timerfile << std::endl;
+				*/
+			}
+			else
+			{
+				std::cout << "Could not open timer.file" << std::endl;
+			}
+		}
+	}
+	else
+	{
+		this->timer = 0;
+	}
 
    Index_t edgeElems = edgeDim ;
    Index_t gheightElems = heightDim ;
@@ -3513,6 +3672,14 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
    domain.dtmax()     = Real_t(1.0e-2) ;
    domain.time()    = Real_t(0.) ;
    domain.cycle()   = 0 ;
+   if(simStopCycle != 0)
+   {
+	domain.stopcycle() = simStopCycle;
+   }
+   else
+   {
+	domain.stopcycle() = INT_MAX; 
+   }
 
    domain.e_cut() = Real_t(1.0e-7) ;
    domain.p_cut() = Real_t(1.0e-7) ;
@@ -4120,7 +4287,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
 
    /* timestep to solution */
-   while(domain.time() < domain.stoptime() ) {
+   while(domain.time() < domain.stoptime() and domain.cycle() < domain.stopcycle()) {
 #if defined(LOGGER)
       logger.logStartTimer("outer");
 #endif
@@ -4180,6 +4347,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
    }  /* while */
 
+	FinalTime();
 
 #ifdef WRITE_FSM_EVAL_COUNT
    fsm_count_file.close();

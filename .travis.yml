@@ -29,8 +29,8 @@ addons:
       
 env:
   matrix: 
-    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no
-    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no
+    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no SILODIFF=/bin/true
+    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no SILODIFF=/bin/true
     - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no
     - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no
     - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=no  LOGGER=yes
@@ -51,7 +51,7 @@ before_script:
 script:
   - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} USE_SSL=${USE_SSL} FFLAGS="-fdefault-real-8 -fdefault-double-8" FORTRAN_LIBS="-lgfortran" FC="${FC}" && 
     make get_reference &&
-    { [[ ${SILO} = no ]] || make test COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} MPIRUN="${NP:+mpirun -np ${NP}}"; }
+    make test COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} MPIRUN="${NP:+mpirun -np ${NP}}" ${SILODIFF:+SILODIFF=${SILODIFF} LULESH_OPTS=}
 
 cache:
   directories:

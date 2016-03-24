@@ -123,7 +123,6 @@ test/.luleshopts: dummy
 STEPS=0500
 #bit hackish, but let's assume we have $(STEPS) steps
 test/taylor_$(STEPS).silo: LULESH/lulesh test/.mpirunflags test/.luleshopts
-	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
 	mkdir -p test
 	cd test && $(MPIRUN) ../LULESH/lulesh $(LULESH_OPTS)
 
