@@ -2932,11 +2932,58 @@ void Lulesh::FinalTime()
 	if(timer)
 	{
 		//Do one final probe. We will be off by a small amount but it should be fairly insignificant for any meaningful run and it is higher than our actual time anyway
+		if(!time_output)
+		{
+			std::list<std::chrono::high_resolution_clock::time_point>::iterator it;
+			for (int i=1;i<domain.cycle();i++)
+			{
+				int t_count = i;
+		        int scale=0;
+    		    if(timer != 1)
+      	  		{
+	        	    while ( t_count /= timer)
+    	        	scale++;
+	    	        scale = pow(timer, scale);
+	    	    }
+		        else
+    		    {
+	        	    scale = 1;
+		        }
+
+
+				if(i == scale)
+		        {
+            
+	        	    if(scale == 1)
+		            {
+						it=timings.begin();
+	    	         	timerfile << "Timer Output Frequency is " << scale << std::endl;
+	            	}
+		            else
+		            {   
+						it++;	
+	    	            timerfile  << "Changing Timer Output Frequency to " << scale << std::endl;
+	        	        std::chrono::duration<double> diff = *it - timings.front();
+	            	    timerfile  << "0 - " << i << ": " << diff.count() << " s" << std::endl;
+		            }
+				}
+				else
+				{
+		            if(i % scale == 0)
+	    	        {
+						it ++;
+	            	    std::chrono::duration<double> diff = *it - *std::prev(it,1);
+	                	timerfile  << i - scale << " - " << i << ": " << diff.count() << " s" << std::endl;
+		            }
+				}
+			}
+
+		}
 		timings.push_back(std::chrono::high_resolution_clock::now());
 		std::chrono::duration<double> diff = timings.back() - timings.front();
 		timerfile  << "Total Cycles: " << domain.cycle() << " Time: " << diff.count() << " s" << std::endl;
 	}
-}
+ }
 
 void Lulesh::OutputTiming()
 {
@@ -2960,7 +3007,6 @@ void Lulesh::OutputTiming()
 		{
 			
 			timings.push_back(std::chrono::high_resolution_clock::now());
-
 			if(scale == 1 && time_output)
 			{
 				timerfile << "Timer Output Frequency is " << scale << std::endl;
@@ -2974,11 +3020,14 @@ void Lulesh::OutputTiming()
 		}
 		else
 		{
-			if(domain.cycle() % scale == 0 && time_output)
+			if(domain.cycle() % scale == 0)
 			{
 				timings.push_back(std::chrono::high_resolution_clock::now());
-				std::chrono::duration<double> diff = timings.back() - *std::prev(timings.end(),2);
-				timerfile  << domain.cycle() - scale << " - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
+				if(time_output)
+				{
+					std::chrono::duration<double> diff = timings.back() - *std::prev(timings.end(),2);
+					timerfile  << domain.cycle() - scale << " - " << domain.cycle() << ": " << diff.count() << " s" << std::endl;
+				}
 			}
 		}
 
