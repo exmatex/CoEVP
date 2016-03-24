@@ -2961,12 +2961,12 @@ int Lulesh::UpdateStressForElems()
         MPI_Send(&rank, 1, MPI_INT, lulesh_worker_id, 4, mpi_intercomm_parent);
 
         // this is where we receive work from the lulesh domain and ultimately send it back
-		MPI_Recv(&lulesh_cell_id, sizeof(lulesh_cell_id), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent,MPI_STATUS_IGNORE);	
+		MPI_Recv(&lulesh_cell_id, sizeof(lulesh_cell_id), MPI_BYTE, lulesh_worker_id, 10, mpi_intercomm_parent,MPI_STATUS_IGNORE);	
 //		printf("Task %d was paired up with Lulesh cell %d\n", rank, lulesh_cell_id);
-		MPI_Recv(&deltatime, sizeof(deltatime), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
-		MPI_Recv(&cm_vel_grad, sizeof(cm_vel_grad), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
-		MPI_Recv(&cm_vol_chng, sizeof(cm_vol_chng), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
-		MPI_Recv(domain.cm_state(0), sizeof(domain.cm(0)->getStateSize()), MPI_BYTE, lulesh_worker_id, 5, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+		MPI_Recv(&deltatime, sizeof(deltatime), MPI_BYTE, lulesh_worker_id, 11, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+		MPI_Recv(&cm_vel_grad, sizeof(cm_vel_grad), MPI_BYTE, lulesh_worker_id, 12, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+		MPI_Recv(&cm_vol_chng, sizeof(cm_vol_chng), MPI_BYTE, lulesh_worker_id, 13, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+		MPI_Recv(domain.cm_state(0), sizeof(domain.cm(0)->getStateSize()), MPI_BYTE, lulesh_worker_id, 14, mpi_intercomm_parent, MPI_STATUS_IGNORE);
 		num_samples = domain.cm(0)->getNumSamples();
 		num_successful_interpolations = domain.cm(0)->getNumSuccessfulInterpolations();
 
@@ -2985,11 +2985,11 @@ int Lulesh::UpdateStressForElems()
 		num_successful_interpolations = domain.cm(0)->getNumSuccessfulInterpolations() - num_successful_interpolations;
 		
 //        cout << "   Samples vs Interpolations: " << num_samples << " " << num_successful_interpolations << std::endl;
-		MPI_Send(&lulesh_cell_id, sizeof(lulesh_cell_id),  MPI_BYTE, lulesh_worker_id, 6, mpi_intercomm_parent);
-		MPI_Send(&cm_data, sizeof(cm_data), MPI_BYTE, lulesh_worker_id, 6, mpi_intercomm_parent);
-		MPI_Send(domain.cm_state(0), sizeof(domain.cm(0)->getStateSize()), MPI_BYTE, lulesh_worker_id, 6, mpi_intercomm_parent);
-		MPI_Send(&num_samples, sizeof(num_samples), MPI_BYTE, lulesh_worker_id, 6, mpi_intercomm_parent);
-		MPI_Send(&num_successful_interpolations, sizeof(num_successful_interpolations), MPI_BYTE, lulesh_worker_id, 6, mpi_intercomm_parent);
+		MPI_Send(&lulesh_cell_id, sizeof(lulesh_cell_id),  MPI_BYTE, lulesh_worker_id, 20, mpi_intercomm_parent);
+		MPI_Send(&cm_data, sizeof(cm_data), MPI_BYTE, lulesh_worker_id, 21, mpi_intercomm_parent);
+		MPI_Send(domain.cm_state(0), sizeof(domain.cm(0)->getStateSize()), MPI_BYTE, lulesh_worker_id, 22, mpi_intercomm_parent);
+		MPI_Send(&num_samples, sizeof(num_samples), MPI_BYTE, lulesh_worker_id, 23, mpi_intercomm_parent);
+		MPI_Send(&num_successful_interpolations, sizeof(num_successful_interpolations), MPI_BYTE, lulesh_worker_id, 24, mpi_intercomm_parent);
 //        printf("Task %d is done working with domain %d\n", rank, lulesh_worker_id);
 
 	}
@@ -3007,45 +3007,52 @@ int Lulesh::UpdateStressForElems()
 	    MPI_Send(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler);
 	}
 
-      for (Index_t k=0; k<numElem; ++k) {
+	Index_t cell_count = 0;
+	Index_t k;
+	while(cell_count < numElem)
+	{
 	   // recieve the task/worker for my payload
 //		printf("Lulesh Domain %d is receiving a request for work.\n", myDomainID);
 
-		MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 4, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+        MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, mpi_intercomm_taskpool, &mpi_status);
+		// some nausea inducing logic here, if we have a tag > = 20 we are receiving, if we have a tag less than 10 we are sending
+		if(mpi_status.MPI_TAG == 4)
+		{
+			// we are receiving a request for work, so send the result
+	 		MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 4, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
 
 //		printf("Lulesh Domain %d received request for work from task %d\n", myDomainID, task_worker_id);
-
 		// now we send the work using our mpi custom datatype
-		MPI_Send(&k, sizeof(k), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
-		MPI_Send(&domain.deltatime(), sizeof(domain.deltatime()), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
-		MPI_Send(&domain.cm_vel_grad(k), sizeof(domain.cm_vel_grad(k)), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
-		MPI_Send(&domain.cm_vol_chng(k), sizeof(domain.cm_vol_chng(k)), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
-		MPI_Send(domain.cm_state(k), sizeof(domain.cm(k)->getStateSize()), MPI_BYTE, task_worker_id, 5, mpi_intercomm_taskpool);
+			MPI_Send(&cell_count, sizeof(cell_count), MPI_BYTE, task_worker_id, 10, mpi_intercomm_taskpool);
+			MPI_Send(&domain.deltatime(), sizeof(domain.deltatime()), MPI_BYTE, task_worker_id, 11, mpi_intercomm_taskpool);//, &mpi_request);
+			MPI_Send(&domain.cm_vel_grad(cell_count), sizeof(domain.cm_vel_grad(cell_count)), MPI_BYTE, task_worker_id, 12, mpi_intercomm_taskpool);//, &mpi_request);
+			MPI_Send(&domain.cm_vol_chng(cell_count), sizeof(domain.cm_vol_chng(cell_count)), MPI_BYTE, task_worker_id, 13, mpi_intercomm_taskpool);//, &mpi_request);
+			MPI_Send(domain.cm_state(cell_count), sizeof(domain.cm(cell_count)->getStateSize()), MPI_BYTE, task_worker_id, 14, mpi_intercomm_taskpool);//, &mpi_request);
+			cell_count ++;
+
 //		printf("Lulesh Domain %d sent work to  %d\n", myDomainID, task_worker_id);
 
-	}
+		}
 // why loop over mk? because we don't need to use the loop index anymore, we receive the domain cell index in the response from the task_worker
 // just easier to loop over the known number of responses we will get
-	  Index_t k;
-      for (Index_t mk=0; mk<numElem; ++mk) {
 		
 
-
+		else
+		{
 //		std::cout << "Lulesh state size:" << domain.cm(1)->getStateSize() << "\n";
 
-		ConstitutiveData cm_data;
+			ConstitutiveData cm_data;
 
 //		printf("Sizeof CM data scratch space %d\n", sizeof(cm_data));
 		// who tries to communicate first? we'll probe to find out then get all data from them
-		MPI_Probe(MPI_ANY_SOURCE, 6, mpi_intercomm_taskpool, &mpi_status);
-		MPI_Recv(&k, sizeof(k), MPI_BYTE, mpi_status.MPI_SOURCE, 6, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-		MPI_Recv(&cm_data, sizeof(cm_data), MPI_BYTE, mpi_status.MPI_SOURCE, 6, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-		MPI_Recv(domain.cm_state(k), sizeof(domain.cm(k)->getStateSize()), MPI_BYTE, mpi_status.MPI_SOURCE, 6, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-		MPI_Recv(&num_samples, sizeof(num_samples), MPI_BYTE, mpi_status.MPI_SOURCE, 6, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-		MPI_Recv(&num_successful_interpolations, sizeof(num_successful_interpolations), MPI_BYTE, mpi_status.MPI_SOURCE, 6, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+			MPI_Recv(&k, sizeof(k), MPI_BYTE, mpi_status.MPI_SOURCE, 20, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+			MPI_Recv(&cm_data, sizeof(cm_data), MPI_BYTE, mpi_status.MPI_SOURCE, 21, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+			MPI_Recv(domain.cm_state(k), sizeof(domain.cm(k)->getStateSize()), MPI_BYTE, mpi_status.MPI_SOURCE, 22, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+			MPI_Recv(&num_samples, sizeof(num_samples), MPI_BYTE, mpi_status.MPI_SOURCE, 23, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+			MPI_Recv(&num_successful_interpolations, sizeof(num_successful_interpolations), MPI_BYTE, mpi_status.MPI_SOURCE, 24, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
 
-		mpi_task_pool_num_samples += num_samples;
-		mpi_task_pool_num_successful_interpolations += num_successful_interpolations;
+			mpi_task_pool_num_samples += num_samples;
+			mpi_task_pool_num_successful_interpolations += num_successful_interpolations;
 
 //		printf("Lulesh Domain %d received result for cell %d \n",myDomainID,k); 
 
@@ -3084,6 +3091,10 @@ int Lulesh::UpdateStressForElems()
 
 	  }
 
+#if defined(MPI_TASK_POOL)
+	}
+#endif
+
 
 	  if (max_local_newton_iters > max_nonlinear_iters) {
 	    max_nonlinear_iters = max_local_newton_iters;
@@ -3106,6 +3117,7 @@ int Lulesh::UpdateStressForElems()
 	// end of  main loop
 	  
 	  return max_nonlinear_iters;
+
 
 }
 

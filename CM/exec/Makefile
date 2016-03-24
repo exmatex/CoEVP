@@ -119,12 +119,6 @@ FS_DEPS = $(FS_SRC:.cc=.d)
 KINTEST_OBJS = kintest.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
 KINTEST_DEPS = kintest.d
 
-# Standalone kinematic task and handler
-
-KINTASK_OBJS = kintask.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
-KINTASK_DEPS = kintask.d
-
-TASKHANDLER_OBJS = taskhandler.o
 
 
 # Constitutive model library
@@ -138,7 +132,7 @@ CXXFLAGS += -I$(AS_LOC) -I$(MTL_LOC) -I$(INTERPDB_LOC) -I$(INTERPDB_LOC)/kriging
 CXXFLAGS += -I$(DB_LOC) -I$(DB_LOC)/mtreedb -I$(UTILS_LOC) -I$(UTILS_LOC)/toolbox/base
 CXXFLAGS += -I$(UTILS_LOC)/toolbox/database -I$(UTILS_LOC)/toolbox/stream
 CXXFLAGS += -I$(TENSOR_LOC) -I$(CM_LOC) -I$(EOS_LOC) -I$(FS_LOC)
-CXXFLAGS += -DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN -DMPI_TASK_POOL
+CXXFLAGS += -DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN 
 
 ifeq ($(REDIS), yes)
 REDIS_LOC = ../../redis/hiredis
@@ -185,10 +179,6 @@ libcm: ../lib/libcm.a
 kintest: $(KINTEST_OBJS)
 	$(CXX) $(CXXFLAGS) $(KINTEST_OBJS) $(LIBS) -o kintest
 
-kintask: $(KINTASK_OBJS) $(TASKHANDLER_OBJS)
-	$(CXX) $(CXXFLAGS) $(KINTASK_OBJS) $(LIBS) -o kintask
-	$(CXX) $(CXXFLAGS) $(TASKHANDLER_OBJS) -o taskhandler
-
 dummy: ;
 
 .cxxflags: dummy
@@ -215,14 +205,13 @@ dummy: ;
 -include $(TENSOR_DEPS)
 -include $(EOS_DEPS)
 -include $(KINTEST_DEPS)
--include $(KINTASK_DEPS)
 
 
 clean:
 	$(RM) $(AS_OBJS) $(AS_DEPS) $(CM_OBJS) $(CM_DEPS) $(FS_OBJS) $(FS_DEPS)
-	$(RM) $(TENSOR_OBJS) $(TENSOR_DEPS) $(EOS_OBJS) $(EOS_DEPS) $(KINTEST_OBJS) $(KINTEST_DEPS) $(KINTASK_OBJS) $(KINTASK_DEPS) $(TASKHANDLER_OBJS) *.a
+	$(RM) $(TENSOR_OBJS) $(TENSOR_DEPS) $(EOS_OBJS) $(EOS_DEPS) $(KINTEST_OBJS) $(KINTEST_DEPS) *.a
 
 realclean: clean
-	$(RM) -r kintest kintask taskhandler ../include/* ../lib/*
+	$(RM) -r kintest  ../include/* ../lib/*
    
 

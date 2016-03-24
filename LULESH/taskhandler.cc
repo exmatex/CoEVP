@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     MPI_Comm mpi_intercomm_taskpool;
 	char *command;
 	char **command_argv;
-	command = "/home/vernon/CoEVP/LULESH/lulesh";
+	command = "lulesh";
     command_argv = (char **)malloc(4 * sizeof(char *));
     command_argv[0] = "-s";
     command_argv[1] = "-E 4" ;

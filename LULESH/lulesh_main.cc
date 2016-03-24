@@ -21,8 +21,8 @@ int main(int argc, char *argv[])
 {
    int numRanks = 1;
    int myRank = 0;
-   int numTaskHandlers = 4;
-   int numTasks=10;
+   int numTaskHandlers = 2;
+   int numTasks=4;
 
 
 #if defined(COEVP_MPI)
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 	  MPI_Comm mpi_intercomm_taskhandler;
 	  printf("Spawning %d MPI Task Handlers\n", numTaskHandlers);
 
-	  MPI_Comm_spawn("../CM/exec/taskhandler", MPI_ARGV_NULL, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
+	  MPI_Comm_spawn("taskhandler", MPI_ARGV_NULL, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
   
 
 	  // here it gets complicated. we need to new intracoomunicator including our spawned task handlers, so we can doa collect launch of the kintask process
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
 	  // we build a shared intracommunicator, so let's use it to do a collective mpi_spawn on our tasks
 	  char *command;
    	  char **command_argv;
-      command = "/home/vernon/CoEVP/LULESH/lulesh"; 
+      command = "lulesh"; 
       command_argv = (char **)malloc(4 * sizeof(char *));
       command_argv[0] = "-s";
       command_argv[1] = "-E 4";

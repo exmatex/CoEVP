@@ -27,6 +27,7 @@ public:
 	    MPI_Comm mpi_intercomm_taskpool;
 		MPI_Comm mpi_intercomm_parent;
 		MPI_Status mpi_status;
+//		MPI_Request mpi_request;
 		int myDomainID;
 		int myHandler;
 		int mpi_task_pool_num_samples = 0;

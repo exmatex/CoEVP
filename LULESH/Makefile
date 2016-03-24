@@ -137,8 +137,12 @@ dummy: ;
 %.o: %.cc .cxxflags
 	$(CXX) -c $(CXXFLAGS) -c -o $@ $< 
 
+
+TASKHANDLER_OBJS = taskhandler.o
+
 LULESH_SRC=$(filter-out $(PBGENS) lctest.cc, $(shell ls *.cc))
-LULESH_OBJS=$(LULESH_SRC:.cc=.o)
+LULESH_OBJS=$(filter-out $(TASKHANDLER_OBJS), $(LULESH_SRC:.cc=.o))
+
 ifneq ($(strip $(PROTOBUF_LOC)),)
 LULESH_OBJS+=$(PBOBJS)
 # This fix by Christoph still doesn't work.
@@ -147,11 +151,16 @@ endif
 $(info $(LULESH_SRC))
 $(info $(LULESH_OBJS))
 
+
 # Al added the -lrt library on 2/22/2016 because Travis builds were failing with an undefined reference
 # to clock_gettime. Documentation says that -lrt is required, but it was working OK without on Darwin.
 # It does build successfully on Darwin with -lrt too.
-lulesh:  $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
+lulesh:  $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB) 
 	$(CXX) $(OPTFLAGS) -o $@ $(LULESH_OBJS) $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(PROTOBUF_LIB) $(LAPACK) -lrt -lm $(EXTRA_LIBS)
+	$(MAKE) taskhandler
+taskhandler: $(TASKHANDLER_OBJS) 
+	$(CXX) $(CXXFLAGS) $(TASKHANDLER_OBJS) -o taskhandler
+
 
 clean:
-	rm -f *~ lulesh $(LULESH_OBJS) $(PBGENS) $(PBOBJS)
+	rm -f *~ lulesh $(LULESH_OBJS) $(PBGENS) $(PBOBJS) $(TASKHANDLER_OBJS) taskhandler
