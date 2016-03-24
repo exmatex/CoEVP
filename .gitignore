@@ -14,3 +14,4 @@ dump.rdb
 redis/hiredis
 redis/redis
 test
+*.mod
