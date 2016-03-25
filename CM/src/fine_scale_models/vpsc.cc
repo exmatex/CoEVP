@@ -1,5 +1,6 @@
 #include "vpsc.h"
 #include <stdlib.h>
+#include <string.h>
 
 extern "C"
 {
@@ -130,9 +131,18 @@ vpsc::printState()
 vpsc::vpsc_init_class(const double c_scaling)
 {
    diagnostics = 0;
-
-   char fnameIn[80]="../CM/src/fine_scale_models/data/vpsc_as_try.in";
    char str[1000];
+   char fnameIn[80];
+
+   if(std::getenv("VPSC_INPUT_PATH")==NULL)
+   {
+	   strcpy(fnameIn, "../CM/src/fine_scale_models/data/vpsc_as_try.in");
+   }
+   else
+   {
+	  strcpy(fnameIn,std::getenv("VPSC_INPUT_PATH"));
+   }
+
    FILE *inFile=NULL;
    int nPhaseMax = 2;
 
