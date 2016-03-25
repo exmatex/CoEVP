@@ -35,11 +35,6 @@ int main(int argc, char** argv)
     // now we do a collective call to initialize the task pool (along with lulesh so the tasks can do call backs to lulesh when done)
     MPI_Comm mpi_intercomm_taskpool;
 
-    for(int i=0;i<argc;i++)
-    {
-        std::cout << argv[i] << std::endl;
-    }
-        std::cout << (argv+2)[0] << std::endl;
 
 //    MPI_Comm_spawn("/home/vernon/CoEVP/LULESH/lulesh", command_argv, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
     MPI_Comm_spawn(argv[1], (argv+2), numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);

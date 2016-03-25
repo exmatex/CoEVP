@@ -21,10 +21,18 @@ int main(int argc, char *argv[])
 {
    int numRanks = 1;
    int myRank = 0;
-   int numTaskHandlers = 2;
-   int numTasks=4;
+  
+   int numTaskHandlers = 1;
+   int numTasks=2;
 
-
+   if(std::getenv("NTASKS")!=NULL)
+   {
+	  numTasks = atoi(std::getenv("NTASKS"));
+   }
+   if(std::getenv("NHANDLERS")!=NULL)
+   {
+	  numTaskHandlers = atoi(std::getenv("NHANDLERS"));
+   }
 #if defined(COEVP_MPI)
    MPI_Init(&argc, &argv) ;
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
@@ -63,7 +71,7 @@ int main(int argc, char *argv[])
 
 	  printf("Spawning %d MPI Task Handlers\n", numTaskHandlers);
 
-	  MPI_Comm_spawn("taskhandler", command_argv, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
+	  MPI_Comm_spawn((char *)"taskhandler", command_argv, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
  
 	  // here it gets complicated. we need to new intracoomunicator including our spawned task handlers, so we can doa collect launch of the lulesh process
 	  MPI_Intercomm_merge(mpi_intercomm_taskhandler, 1, &mpi_comm_taskhandler); 
