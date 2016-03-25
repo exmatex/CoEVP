@@ -30,9 +30,6 @@ int main(int argc, char *argv[])
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
    MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
 
-
-
-
 #if defined(MPI_TASK_POOL)
 
 // I'm really sorry but to avoid initialization headaches, lulesh is both the producer and consumer of work
@@ -55,25 +52,20 @@ int main(int argc, char *argv[])
 
    	  char **command_argv;
 	  
-      command_argv = (char **)malloc(argc+3 * sizeof(char *));
-   		for(int i=0;i<argc;i++)
-		{
-			std::cout << argv[i] << std::endl;
-			command_argv[i] = argv[i];
-		}
-		command_argv[argc] = "-E 4";
-		command_argv[argc+1] = "-H 1";
-		command_argv[argc+2] = NULL;
-		
-
+	  command_argv = (char **)malloc(argc+3 * sizeof(char *));
+   	  for(int i=0;i<argc;i++)
+	  {
+		command_argv[i] = argv[i];
+	  }
+	  command_argv[argc] = (char *)"-E 4";
+	  command_argv[argc+1] = (char *)"-H 1";
+	  command_argv[argc+2] = NULL;
 
 	  printf("Spawning %d MPI Task Handlers\n", numTaskHandlers);
 
 	  MPI_Comm_spawn("taskhandler", command_argv, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
-  
-
-	  // here it gets complicated. we need to new intracoomunicator including our spawned task handlers, so we can doa collect launch of the kintask process
-
+ 
+	  // here it gets complicated. we need to new intracoomunicator including our spawned task handlers, so we can doa collect launch of the lulesh process
 	  MPI_Intercomm_merge(mpi_intercomm_taskhandler, 1, &mpi_comm_taskhandler); 
 
 	  MPI_Comm_rank (mpi_comm_taskhandler, &rank);
@@ -86,14 +78,10 @@ int main(int argc, char *argv[])
 
 	  MPI_Bcast(&numTasks, 1, MPI_INT, size-1, mpi_comm_taskhandler);
 
-	  // we build a shared intracommunicator, so let's use it to do a collective mpi_spawn on our tasks
-	
+	  // we build a shared intracommunicator, so let's use it to do a collective mpi_spawn on our tasks	
 
-	  MPI_Bcast(&numTasks, 1, MPI_INT, size-1, mpi_comm_taskhandler);
-
-    
 	  printf("LULESH collective spawning %d tasks\n", numTasks);
-      MPI_Comm_spawn(command_argv[0], command_argv+1, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
+	  MPI_Comm_spawn(command_argv[0], (command_argv+1), numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
 
 	  // we have to take part in the collective bcast cool to let all tasks lnow the number of tasks
 	  MPI_Bcast(&numTaskHandlers, 1, MPI_INT, MPI_PROC_NULL, mpi_intercomm_taskpool);
