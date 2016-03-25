@@ -36,16 +36,22 @@ int main(int argc, char** argv)
 
     // now we do a collective call to initialize the task pool (along with lulesh so the tasks can do call backs to lulesh when done)
     MPI_Comm mpi_intercomm_taskpool;
-	char *command;
-	char **command_argv;
-	command = "lulesh";
-    command_argv = (char **)malloc(4 * sizeof(char *));
-    command_argv[0] = "-s";
-    command_argv[1] = "-E 4" ;
-    command_argv[2] = "-H 1";
-    command_argv[3] = NULL;	
+
+       char **command_argv;
+        
+        command_argv = (char **)malloc(argc+3 * sizeof(char *));
+        for(int i=0;i<argc;i++)
+        {
+            std::cout << argv[i] << std::endl;
+            command_argv[i] = argv[i];
+        }
+		command_argv[argc] = "-E 4";
+        command_argv[argc+1] = "-H 1";
+        command_argv[argc+2] = NULL;
+
+
 //    MPI_Comm_spawn("/home/vernon/CoEVP/LULESH/lulesh", command_argv, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
-    MPI_Comm_spawn(command, command_argv, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
+    MPI_Comm_spawn(command_argv[1], command_argv+2, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
 //      MPI_Comm_spawn("/home/vernon/CoEVP/CM/exec/kintask", MPI_ARGV_NULL, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
 
     // collective broadcast of number of task handlers to all tasks, MPI_ROOT as we are using an intercommunicator

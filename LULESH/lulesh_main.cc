@@ -50,14 +50,26 @@ int main(int argc, char *argv[])
   if (mpi_intercomm_parent == MPI_COMM_NULL)  
   {
 
-
-
-
 	  int rank, size;
 	  MPI_Comm mpi_intercomm_taskhandler;
+
+   	  char **command_argv;
+	  
+      command_argv = (char **)malloc(argc+3 * sizeof(char *));
+   		for(int i=0;i<argc;i++)
+		{
+			std::cout << argv[i] << std::endl;
+			command_argv[i] = argv[i];
+		}
+		command_argv[argc] = "-E 4";
+		command_argv[argc+1] = "-H 1";
+		command_argv[argc+2] = NULL;
+		
+
+
 	  printf("Spawning %d MPI Task Handlers\n", numTaskHandlers);
 
-	  MPI_Comm_spawn("taskhandler", MPI_ARGV_NULL, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
+	  MPI_Comm_spawn("taskhandler", command_argv, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
   
 
 	  // here it gets complicated. we need to new intracoomunicator including our spawned task handlers, so we can doa collect launch of the kintask process
@@ -75,24 +87,13 @@ int main(int argc, char *argv[])
 	  MPI_Bcast(&numTasks, 1, MPI_INT, size-1, mpi_comm_taskhandler);
 
 	  // we build a shared intracommunicator, so let's use it to do a collective mpi_spawn on our tasks
-	  char *command;
-   	  char **command_argv;
-      command = "lulesh"; 
-      command_argv = (char **)malloc(4 * sizeof(char *));
-      command_argv[0] = "-s";
-      command_argv[1] = "-E 4";
-      command_argv[2] = "-H 1";
-      command_argv[3] = NULL;
-
 	
+
+	  MPI_Bcast(&numTasks, 1, MPI_INT, size-1, mpi_comm_taskhandler);
+
     
 	  printf("LULESH collective spawning %d tasks\n", numTasks);
-//      MPI_Comm_spawn("/home/vernon/CoEVP/LULESH/lulesh", command_argv, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
-      MPI_Comm_spawn(command, command_argv, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
-
-//	  MPI_Comm_spawn("/home/vernon/CoEVP/CM/exec/kintask", MPI_ARGV_NULL, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
-
-
+      MPI_Comm_spawn(command_argv[0], command_argv+1, numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
 
 	  // we have to take part in the collective bcast cool to let all tasks lnow the number of tasks
 	  MPI_Bcast(&numTaskHandlers, 1, MPI_INT, MPI_PROC_NULL, mpi_intercomm_taskpool);
@@ -107,7 +108,6 @@ int main(int argc, char *argv[])
 	else
 	{
 
-//     	printf("Inside Lulesh task\n");
 
 	  // let's broadcast the number of task handlers why not, this is using an intercommunicator so behaves a little difference
   
@@ -122,8 +122,6 @@ int main(int argc, char *argv[])
  
       numRanks = 1;
 	  myRank = 0;
-
-
 
 	}
 
