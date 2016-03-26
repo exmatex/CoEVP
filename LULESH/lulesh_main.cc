@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
   if (mpi_intercomm_parent == MPI_COMM_NULL && numTaskHandlers)  
   {
 
-  
+      MPI_Comm mpi_intercomm_taskhandler;
       std::cout << "Running CoEVP with MPI in task_pool mode." << std::endl;
 	  int rank, size;
 
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 	  printf("Lulesh Rank %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
 
 	}
-	elif(mpi_intercomm_parent != MPI_COMM_NULL)
+	else if(mpi_intercomm_parent != MPI_COMM_NULL)
 	{
 
 
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
   luleshSystem.mpi_intercomm_parent = mpi_intercomm_parent;
   luleshSystem.myDomainID = myDomainID;
   luleshSystem.myHandler = myHandler;
-  #endif
+
 #endif
 
   //  Parse command line optoins

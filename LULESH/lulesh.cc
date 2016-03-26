@@ -3045,7 +3045,6 @@ void Lulesh::StartMPIWorkers()
 #if defined(COEVP_MPI)
 
 // let's become a task worker if appropriate
-  int task_worker_id;
 
 // to avoid initialization headaches, lulesh is both the producer and consumer of work
 // so we have to check if we were instantiated by another mpi process
@@ -3102,6 +3101,7 @@ int Lulesh::UpdateStressForElemsTaskPool()
    int max_local_newton_iters = 0;
    
 #if defined(COEVP_MPI)
+   int task_worker_id;
      //  Cleaned out a bunch of stuff from the serial UpdateStressForElems.
    int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
@@ -3118,7 +3118,7 @@ int Lulesh::UpdateStressForElemsTaskPool()
 	while(cell_count < numElem)
 	{
 	   // recieve the task/worker for my payload
-
+        Task task;
         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, mpi_intercomm_taskpool, &mpi_status);
 		// some nausea inducing logic here, if we have a tag > = 20 we are receiving, if we have a tag less than 10 we are sending
 		if(mpi_status.MPI_TAG == 4)
@@ -3160,7 +3160,7 @@ int Lulesh::UpdateStressForElemsTaskPool()
             int num_iters = result.cm_data.num_Newton_iters;
             if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
     
-            const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
+            const Tensor2Sym& sigma_prime = result.cm_data.sigma_prime;
     //		std::cout << sigma_prime << std::endl;
             Real_t sx  = domain.sx(k) = sigma_prime(1,1);
             Real_t sy  = domain.sy(k) = sigma_prime(2,2);
@@ -3177,16 +3177,15 @@ int Lulesh::UpdateStressForElemsTaskPool()
 	  if (max_local_newton_iters > max_nonlinear_iters) {
 	    max_nonlinear_iters = max_local_newton_iters;
 	  }
+    }
 
 	  //  Basically means that LULESH is distributed. This code will change
 	  //  when we couple server-based advance() with distributed LULESH.
-	  {
 	    int g_max_nonlinear_iters ;
 	
 	    MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
 	                  MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
 	    max_nonlinear_iters = g_max_nonlinear_iters ;
-	  }
 
 	#endif
  
@@ -4443,6 +4442,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
   
    /* timestep to solution */
+   int maxIters = 0;
    while(domain.time() < domain.stoptime() and domain.cycle() < domain.stopcycle()) {
 #if defined(LOGGER)
      logger.logStartTimer("outer");
@@ -4456,14 +4456,15 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
       TimeIncrement() ;
       LagrangeLeapFrog() ;
+      
       /* problem->commNodes->Transfer(CommNodes::syncposvel) ; */
-      if(myDomainID)
+      if(myDomainID>0)
       {
-         int maxIters = UpdateStressForElemsTaskPool();        
+         maxIters = UpdateStressForElemsTaskPool();        
       }
       else
       {
-         int maxIters = UpdateStressForElems();
+         maxIters = UpdateStressForElems();
       }
       UpdateStressForElems2(maxIters);
 #ifdef LULESH_SHOW_PROGRESS

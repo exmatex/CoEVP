@@ -39,7 +39,6 @@ public:
   };
 
 	#if defined(COEVP_MPI)
-	#if defined(MPI_TASK_POOL)
     	MPI_Comm mpi_comm_taskhandler;
 	    MPI_Comm mpi_intercomm_taskpool;
 		MPI_Comm mpi_intercomm_parent;
@@ -49,7 +48,6 @@ public:
 		int myHandler;
 		int mpi_task_pool_num_samples = 0;
 		int mpi_task_pool_num_successful_interpolations = 0;
-	#endif
 	#endif
 
   // Factor to be multiply the time step by to compensate
