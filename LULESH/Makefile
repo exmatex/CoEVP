@@ -145,8 +145,7 @@ LULESH_OBJS=$(filter-out $(TASKHANDLER_OBJS), $(LULESH_SRC:.cc=.o))
 
 ifneq ($(strip $(PROTOBUF_LOC)),)
 LULESH_OBJS+=$(PBOBJS)
-# This fix by Christoph still doesn't work.
-#shims.o: advance.pb.h; 
+shims.o: advance.pb.h; 
 endif
 $(info $(LULESH_SRC))
 $(info $(LULESH_OBJS))
