@@ -3073,16 +3073,16 @@ void Lulesh::StartMPIWorkers()
 
 		MPI_Recv(&task, sizeof(task), MPI_BYTE, lulesh_worker_id, 10, mpi_intercomm_parent,MPI_STATUS_IGNORE);	
 		MPI_Recv(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 11, mpi_intercomm_parent, MPI_STATUS_IGNORE);
-		result.num_samples = domain.cm(0)->getNumSamples();
-		result.num_successful_interpolations = domain.cm(0)->getNumSuccessfulInterpolations();
+		//result.num_samples = domain.cm(0)->getNumSamples();
+		//result.num_successful_interpolations = domain.cm(0)->getNumSuccessfulInterpolations();
 
         result.cm_data = domain.cm(0)->advance(task.deltatime,
                                                           task.cm_vel_grad,
                                                           task.cm_vol_chng,
                                                           domain.cm_state(0));		
 
-		result.num_samples = domain.cm(0)->getNumSamples() - result.num_samples;
-		result.num_successful_interpolations = domain.cm(0)->getNumSuccessfulInterpolations() - result.num_successful_interpolations;
+		//result.num_samples = domain.cm(0)->getNumSamples() - result.num_samples;
+		//result.num_successful_interpolations = domain.cm(0)->getNumSuccessfulInterpolations() - result.num_successful_interpolations;
 		result.lulesh_cell_id = task.lulesh_cell_id;
 		
         // TODO: make this isend 
@@ -3113,9 +3113,10 @@ int Lulesh::UpdateStressForElemsTaskPool()
 	    MPI_Isend(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler, &request);
 	}
 
-	Index_t cell_count = 0;
+	Index_t out_cell_count = 0;
+    Index_t in_cell_count = 0;
 	Index_t k;
-	while(cell_count < numElem)
+	while(out_cell_count < numElem && in_cell_count < numElem)
 	{
 	   // recieve the task/worker for my payload
         Task task;
@@ -3125,20 +3126,18 @@ int Lulesh::UpdateStressForElemsTaskPool()
 		{
 			// we are receiving a request for work, so send the result
 	 		MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 4, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-			task.lulesh_cell_id = cell_count;
+			task.lulesh_cell_id = out_cell_count;
 			task.deltatime = domain.deltatime();
-			task.cm_vel_grad = domain.cm_vel_grad(cell_count);
-			task.cm_vol_chng = domain.cm_vol_chng(cell_count);
+			task.cm_vel_grad = domain.cm_vel_grad(task.lulesh_cell_id);
+			task.cm_vol_chng = domain.cm_vol_chng(task.lulesh_cell_id);
 
 		// now we send the work using our struct
 			MPI_Send(&task, sizeof(task), MPI_BYTE, task_worker_id, 10, mpi_intercomm_taskpool);
-			MPI_Send(domain.cm_state(cell_count), sizeof(size_t)*domain.cm(cell_count)->getStateSize(), MPI_BYTE, task_worker_id, 11, mpi_intercomm_taskpool);//, &mpi_request);
-			cell_count ++;
+			MPI_Send(domain.cm_state(task.lulesh_cell_id), sizeof(size_t)*domain.cm(task.lulesh_cell_id)->getStateSize(), MPI_BYTE, task_worker_id, 11, mpi_intercomm_taskpool);//, &mpi_request);
+			out_cell_count ++;
 //		printf("Lulesh Domain %d sent work to  %d\n", myDomainID, task_worker_id);
 
 		}
-// why loop over mk? because we don't need to use the loop index anymore, we receive the domain cell index in the response from the task_worker
-// just easier to loop over the known number of responses we will get
 		
 		else
 		{
@@ -3149,6 +3148,7 @@ int Lulesh::UpdateStressForElemsTaskPool()
 		// who tries to communicate first? we'll probe to find out then get all data from them
         // we could post a bunch of irecvs and process them after they have arrived, but let's do this version first.
 			MPI_Recv(&result, sizeof(result), MPI_BYTE, mpi_status.MPI_SOURCE, 20, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+            in_cell_count ++;
 			k = result.lulesh_cell_id;
 			//MPI_Recv(&cm_data, sizeof(cm_data), MPI_BYTE, mpi_status.MPI_SOURCE, 21, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
 			//MPI_Recv(domain.cm_state(k), sizeof(size_t)*domain.cm(k)->getStateSize(), MPI_BYTE, mpi_status.MPI_SOURCE, 22, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
@@ -3200,7 +3200,7 @@ int Lulesh::UpdateStressForElems()
    int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
 
-
+   std::cout << "Regular solve" << std::endl;
 #ifdef _OPENMP
 #pragma omp parallel
 #endif
@@ -4458,7 +4458,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
       LagrangeLeapFrog() ;
       
       /* problem->commNodes->Transfer(CommNodes::syncposvel) ; */
-      if(myDomainID>0)
+      if(myDomainID)
       {
          maxIters = UpdateStressForElemsTaskPool();        
       }

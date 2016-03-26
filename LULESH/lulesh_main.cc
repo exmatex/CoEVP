@@ -50,8 +50,8 @@ int main(int argc, char *argv[])
   MPI_Comm mpi_intercomm_taskpool;
 
 // create a common intercommunicator between the lulesh domains and the task handlers
-  int myDomainID;
-  int myHandler;
+  int myDomainID = 0;
+  int myHandler = 0;
 
 
   if (mpi_intercomm_parent == MPI_COMM_NULL && numTaskHandlers)  

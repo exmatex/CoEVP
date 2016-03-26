@@ -46,8 +46,8 @@ public:
 //		MPI_Request mpi_request;
 		int myDomainID;
 		int myHandler;
-		int mpi_task_pool_num_samples = 0;
-		int mpi_task_pool_num_successful_interpolations = 0;
+		int mpi_task_pool_num_samples;
+		int mpi_task_pool_num_successful_interpolations;
 	#endif
 
   // Factor to be multiply the time step by to compensate
