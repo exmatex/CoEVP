@@ -54,12 +54,13 @@ int main(int argc, char** argv)
     // at this point we are ready to start pairing tasks with lulesh ranks
 
 
-    int lulesh_work_id;
-    int task_worker_id;
+//    int lulesh_work_id;
+//    int task_worker_id;
 
 	int lulesh_work_probe;
 	int task_worker_probe;
 	MPI_Status mpi_status;
+    MPI_Request mpi_request;
 	std::list<int> lulesh_work;
 	std::list<int> task_worker;
 
@@ -70,14 +71,15 @@ int main(int argc, char** argv)
 		if(lulesh_work_probe)
 		{
 			// there is some incoming work
+            int lulesh_work_id;
 			MPI_Recv(&lulesh_work_id, 1, MPI_INT, MPI_ANY_SOURCE, 1, mpi_comm_taskhandler, &mpi_status);
 			// do we have any registered idle workers?
 			if(task_worker.size()>0)
 			{
 				// pair up the task_worker with the work
-				task_worker_id = task_worker.front();
+				int task_worker_id = task_worker.front();
 				task_worker.pop_front();
-		        MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);
+		        MPI_Isend(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool, &mpi_request);
 			}
 			else if(numTaskHandlers>1)
 			{
@@ -85,12 +87,12 @@ int main(int argc, char** argv)
 				if(localrank == numTaskHandlers-1)
 				{
 					//we're the last rank, wrap around to handler 0
-					MPI_Send(&lulesh_work_id, 1, MPI_INT, 0, 1, mpi_comm_taskhandler);
+					MPI_Isend(&lulesh_work_id, 1, MPI_INT, 0, 1, mpi_comm_taskhandler, &mpi_request);
 				}
 				else
 				{
 					//send task to neighbouring handler
-					MPI_Send(&lulesh_work_id, 1, MPI_INT, localrank+1, 1, mpi_comm_taskhandler);
+					MPI_Isend(&lulesh_work_id, 1, MPI_INT, localrank+1, 1, mpi_comm_taskhandler, &mpi_request);
 				}
 			}
 			else
@@ -102,13 +104,14 @@ int main(int argc, char** argv)
 		MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG,  mpi_intercomm_taskpool, &task_worker_probe, &mpi_status);	
 		if(task_worker_probe)
 		{
+            int task_worker_id;
 			MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 2, mpi_intercomm_taskpool, &mpi_status);
 			if(lulesh_work.size()>0)
 			{
 				//imediately pair up with idle task_worker
-				lulesh_work_id = lulesh_work.front();
+				int lulesh_work_id = lulesh_work.front();
 				lulesh_work.pop_front();
-				MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);
+				MPI_Isend(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool, &mpi_request);
 			}
 			else
 			{
