@@ -4,6 +4,7 @@
 #include <mpi.h>
 #endif
 
+#include <chrono>
 #include "lulesh.h"
 #include "SingletonDB.h"
 #include "ModelDB_SingletonDB.h"
@@ -22,25 +23,26 @@ int main(int argc, char *argv[])
    int numRanks = 1;
    int myRank = 0;
 
-   int numTasks=0;  
+  
    int numTaskHandlers = 0;
+   int numTasks=0;
 
    if(std::getenv("NTASKS")!=NULL)
    {
 	  numTasks = atoi(std::getenv("NTASKS"));
-	  if(std::getenv("NHANDLERS")!=NULL)
-   	  {
-	  	numTaskHandlers = atoi(std::getenv("NHANDLERS"));
-	  }
+      if(std::getenv("NHANDLERS")!=NULL)
+      {
+      	  numTaskHandlers = atoi(std::getenv("NHANDLERS"));
+      }
    }
+
 #if defined(COEVP_MPI)
    MPI_Init(&argc, &argv) ;
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
    MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
 
-#if defined(MPI_TASK_POOL)
 
-// I'm really sorry but to avoid initialization headaches, lulesh is both the producer and consumer of work
+// to avoid initialization headaches, lulesh is both the producer and consumer of work
 // so we have to check if we were instantiated by another mpi process
   MPI_Comm mpi_intercomm_parent;
   MPI_Comm_get_parent(&mpi_intercomm_parent);
@@ -48,16 +50,16 @@ int main(int argc, char *argv[])
   MPI_Comm mpi_intercomm_taskpool;
 
 // create a common intercommunicator between the lulesh domains and the task handlers
-  int myDomainID;
-  int myHandler;
+  int myDomainID = 0;
+  int myHandler = 0;
 
 
-  if (mpi_intercomm_parent == MPI_COMM_NULL)  
+  if (mpi_intercomm_parent == MPI_COMM_NULL && numTaskHandlers)  
   {
-	if(numTaskHandlers>0)
-	{
+
+      MPI_Comm mpi_intercomm_taskhandler;
+      std::cout << "Running CoEVP with MPI in task_pool mode." << std::endl;
 	  int rank, size;
-	  MPI_Comm mpi_intercomm_taskhandler;
 
    	  char **command_argv;
 	  
@@ -102,31 +104,29 @@ int main(int argc, char *argv[])
 	  printf("Lulesh Rank %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
 
 	}
-  }
-  else
-  {
+	else if(mpi_intercomm_parent != MPI_COMM_NULL)
+	{
 
 
-	  // let's broadcast the number of task handlers why not, this is using an intercommunicator so behaves a little difference
-  
-	  int numTaskHandlers;
+	  // let's broadcast the number of task handlers why not, this is using an intercommunicator so behaves a little different
  
 	  MPI_Bcast(&numTaskHandlers, 1, MPI_INT, 0, mpi_intercomm_parent);
   
 	  myHandler = (int) (((float)myRank / (float)numRanks) * (float)numTaskHandlers);
 	  printf("Lulesh Task Worker %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
 
-		// we need to convince lulesh to ignore mpi domain decomposition, hopefully this hack will do it
+		// we need to convince the lulesh worker to ignore mpi domain decomposition, hopefully this hack will do it
  
       numRanks = 1;
 	  myRank = 0;
-
 	}
+    else
+    {
+         std::cout << "Running CoEVP with MPI in regular mode." << std::endl;
+    }
 
 #endif
-
-#endif
-  
+  int  timer = 0;
   int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
   int  redising = 0;              //  By default, do not use REDIS for database
   int  posixing = 0;              // POSIX Key/Value store
@@ -144,23 +144,25 @@ int main(int argc, char *argv[])
   int heightElems = 26;
   int edgeElems = 16;
   double domStopTime = 1.e-1;
+  int simStopCycle = 0;
   
   Lulesh luleshSystem;
 
 #if defined(COEVP_MPI)
-  #if defined(MPI_TASK_POOL)
+
   luleshSystem.mpi_comm_taskhandler=mpi_comm_taskhandler;
   luleshSystem.mpi_intercomm_taskpool = mpi_intercomm_taskpool;
   luleshSystem.mpi_intercomm_parent = mpi_intercomm_parent;
   luleshSystem.myDomainID = myDomainID;
   luleshSystem.myHandler = myHandler;
-  #endif
+
 #endif
 
   //  Parse command line optoins
   int  help   = 0;
   
   addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
+  addArg("timer",    'a', 1, 'i',  &(timer),               0, "use timing and write to output file");
   addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
   addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
   addArg("posix",    'x', 0, 'i',  &(posixing),            0, "use POSIX library");
@@ -176,6 +178,7 @@ int main(int argc, char *argv[])
   addArg("log",      'l', 1, 's',  &(logdb),   sizeof(logdb), "log to REDIS at hostname:port");
   addArg("Height Elems", 'H', 1, 'i', &(heightElems), 0, "Number of height elements to solve for");
   addArg("Edge Elems", 'E', 1, 'i', &(edgeElems), 0, "Number of height elements to solve for");
+  addArg("Domain Stop Cycle", 'C', 1, 'i', &(simStopCycle), 0, "Number of Simulated Cycles to Run For");
   addArg("Domain Stop Time", 'D', 1, 'd',  &(domStopTime), 0, "Number of Simulated Seconds to Run For"); 
   processArgs(argc,argv);
   
@@ -187,7 +190,7 @@ int main(int argc, char *argv[])
 
 
   // Initialize Taylor cylinder mesh
-  luleshSystem.Initialize(myRank, numRanks, edgeElems, heightElems, domStopTime);
+  luleshSystem.Initialize(myRank, numRanks, edgeElems, heightElems, domStopTime, simStopCycle, timer);
 
 
 
@@ -225,7 +228,7 @@ int main(int argc, char *argv[])
     logging = 1;
   }
   freeArgs();
-   
+
    /*************************************/
    /* Initialize ModelDB Interface      */
    /*************************************/

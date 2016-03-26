@@ -1,6 +1,6 @@
 PROTOBUF_PV=2.6.1
 PROTOBUF_DIR=protobuf-${PROTOBUF_PV}
-PROTOBUF_INSTALL=../protobuf
+PROTOBUF_INSTALL=protobuf
 PROTOBUF_BIN=${PROTOBUF_INSTALL}/bin/protoc
 
 CIRCLE_PV=0.2.1-rc.1
@@ -14,21 +14,21 @@ protobuf: ${PROTOBUF_BIN}
 
 $(PROTOBUF_DIR).tar.gz:
 ifeq (, $(shell which curl))
-	wget -O $@ https://github.com/google/protobuf/releases/download/v${PROTOBUF_PV}/protobuf-${PROTOBUF_PV}.tar.gz
+	wget -O $@ https://github.com/google/protobuf/releases/download/v${PROTOBUF_PV}/protobuf-${PROTOBUF_PV}.tar.gz $(WGETFLAG)
 else
-	curl -o $@ -L https://github.com/google/protobuf/releases/download/v${PROTOBUF_PV}/protobuf-${PROTOBUF_PV}.tar.gz
+	curl -o $@ -L https://github.com/google/protobuf/releases/download/v${PROTOBUF_PV}/protobuf-${PROTOBUF_PV}.tar.gz $(CURLFLAG)
 endif
 
 $(PROTOBUF_BIN): ${PROTOBUF_DIR}.tar.gz
 	tar -xzvf $<
-	mkdir -p ${PROTOBUF_INSTALL}
+	mkdir ${PROTOBUF_INSTALL}
 	cd ${PROTOBUF_DIR}; ./configure --prefix=${PWD}/${PROTOBUF_INSTALL}; make; make install
 
 $(CIRCLE_DIR).tar.gz:
 ifeq (, $(shell which curl))
-	wget -O $@ https://github.com/hpc/libcircle/releases/download/${CIRCLE_PV}/libcircle-${CIRCLE_PV}.tar.gz
+	wget -O $@ https://github.com/hpc/libcircle/releases/download/${CIRCLE_PV}/libcircle-${CIRCLE_PV}.tar.gz $(WGETFLAG)
 else
-	curl -o $@ -L https://github.com/hpc/libcircle/releases/download/${CIRCLE_PV}/libcircle-${CIRCLE_PV}.tar.gz
+	curl -o $@ -L https://github.com/hpc/libcircle/releases/download/${CIRCLE_PV}/libcircle-${CIRCLE_PV}.tar.gz $(CURLFLAG)
 endif
 
 $(CIRCLE_LIB): ${CIRCLE_DIR}.tar.gz

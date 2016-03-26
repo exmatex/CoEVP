@@ -39,6 +39,11 @@ CIRCLE_LOC=../serverize/circle
 libcm: protobuf
 endif
 FSTRACE=no
+USE_SSL=yes
+ifeq ($(USE_SSL),no)
+CURLFLAG=-k
+WGETFLAG=--no-check-certificate
+endif
 
 lulesh: LULESH/lulesh
 
@@ -49,22 +54,22 @@ libcm:
 	${MAKE} -C CM/exec REDIS=$(REDIS) FLANN=$(FLANN) TWEMPROXY=$(TWEMPROXY) FSTRACE=$(FSTRACE) LOGGER=$(LOGGER) PROTOBUF=$(PROTOBUF)
 
 redis:
-	${MAKE} -C redis
+	${MAKE} -C redis CURLFLAG=$(CURLFLAG) WGETFLAG=$(WGETFLAG)
 
 silo:
-	${MAKE} -C silo
+	${MAKE} -C silo CURLFLAG=$(CURLFLAG) WGETFLAG=$(WGETFLAG)
 
 flann:
-	${MAKE} -C flann
+	${MAKE} -C flann CURLFLAG=$(CURLFLAG) WGETFLAG=$(WGETFLAG)
 
 twemproxy:
-	${MAKE} -C twemproxy
+	${MAKE} -C twemproxy CURLFLAG=$(CURLFLAG) WGETFLAG=$(WGETFLAG)
 
 logger: redis
 	${MAKE} -C logger REDIS=$(REDIS) REDIS_LOC=$(REDIS_LOC)
 
 protobuf:
-	${MAKE} -C serverize protobuf
+	${MAKE} -C serverize protobuf CURLFLAG=$(CURLFLAG) WGETFLAG=$(WGETFLAG)
 
 circle:
 	${MAKE} -C serverize/circle
@@ -109,7 +114,6 @@ test/.luleshopts: dummy
 STEPS=0500
 #bit hackish, but let's assume we have $(STEPS) steps
 test/taylor_$(STEPS).silo: LULESH/lulesh test/.mpirunflags test/.luleshopts
-	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
 	mkdir -p test
 	cd test && $(MPIRUN) ../LULESH/lulesh $(LULESH_OPTS)
 
