@@ -24,16 +24,16 @@ int main(int argc, char *argv[])
    int myRank = 0;
 
   
-   int numTaskHandlers = 1;
-   int numTasks=2;
+   int numTaskHandlers = 0;
+   int numTasks=0;
 
    if(std::getenv("NTASKS")!=NULL)
    {
 	  numTasks = atoi(std::getenv("NTASKS"));
-   }
-   if(std::getenv("NHANDLERS")!=NULL)
-   {
-	  numTaskHandlers = atoi(std::getenv("NHANDLERS"));
+      if(std::getenv("NHANDLERS")!=NULL)
+      {
+      	  numTaskHandlers = atoi(std::getenv("NHANDLERS"));
+      }
    }
 
 #if defined(COEVP_MPI)
@@ -41,9 +41,8 @@ int main(int argc, char *argv[])
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
    MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
 
-#if defined(MPI_TASK_POOL)
 
-// I'm really sorry but to avoid initialization headaches, lulesh is both the producer and consumer of work
+// to avoid initialization headaches, lulesh is both the producer and consumer of work
 // so we have to check if we were instantiated by another mpi process
   MPI_Comm mpi_intercomm_parent;
   MPI_Comm_get_parent(&mpi_intercomm_parent);
@@ -55,11 +54,12 @@ int main(int argc, char *argv[])
   int myHandler;
 
 
-  if (mpi_intercomm_parent == MPI_COMM_NULL)  
+  if (mpi_intercomm_parent == MPI_COMM_NULL && numTaskHandlers)  
   {
 
+  
+      std::cout << "Running CoEVP with MPI in task_pool mode." << std::endl;
 	  int rank, size;
-	  MPI_Comm mpi_intercomm_taskhandler;
 
    	  char **command_argv;
 	  
@@ -104,27 +104,26 @@ int main(int argc, char *argv[])
 	  printf("Lulesh Rank %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
 
 	}
-	else
+	elif(mpi_intercomm_parent != MPI_COMM_NULL)
 	{
 
 
-	  // let's broadcast the number of task handlers why not, this is using an intercommunicator so behaves a little difference
-  
-	  int numTaskHandlers;
+	  // let's broadcast the number of task handlers why not, this is using an intercommunicator so behaves a little different
  
 	  MPI_Bcast(&numTaskHandlers, 1, MPI_INT, 0, mpi_intercomm_parent);
   
 	  myHandler = (int) (((float)myRank / (float)numRanks) * (float)numTaskHandlers);
 	  printf("Lulesh Task Worker %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
 
-		// we need to convince lulesh to ignore mpi domain decomposition, hopefully this hack will do it
+		// we need to convince the lulesh worker to ignore mpi domain decomposition, hopefully this hack will do it
  
       numRanks = 1;
 	  myRank = 0;
-
 	}
-
-#endif
+    else
+    {
+         std::cout << "Running CoEVP with MPI in regular mode." << std::endl;
+    }
 
 #endif
   int  timer = 0;
@@ -150,7 +149,7 @@ int main(int argc, char *argv[])
   Lulesh luleshSystem;
 
 #if defined(COEVP_MPI)
-  #if defined(MPI_TASK_POOL)
+
   luleshSystem.mpi_comm_taskhandler=mpi_comm_taskhandler;
   luleshSystem.mpi_intercomm_taskpool = mpi_intercomm_taskpool;
   luleshSystem.mpi_intercomm_parent = mpi_intercomm_parent;
@@ -230,35 +229,6 @@ int main(int argc, char *argv[])
   }
   freeArgs();
 
-/*
-  if(timer)
-  {
-	// open output filestream here to avoid overhead
-	// only myRank == 0 will do timing
-	if(myRank==0)
-	{
-		//luleshSystem.timer = timer;
-		luleshSystem.timerfile.open("timer.file");
-		if(luleshSystem.timerfile.is_open())
-		{
-			for(int i=0;i<argc;i++)
-			{
-				luleshSystem.timerfile << argv[i] << " ";
-			}
-			
-			luleshSystem.timerfile << std::endl;
-			
-	  	}
-		else
-		{
-			std::cout << "Could not open timer.file" << std::endl;
-		}
-	}
-
-  }
-*/
-
-   
    /*************************************/
    /* Initialize ModelDB Interface      */
    /*************************************/

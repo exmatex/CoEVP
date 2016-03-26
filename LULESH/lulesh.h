@@ -22,6 +22,22 @@ private:
 
 public:
 
+  struct Task
+  {
+	Index_t lulesh_cell_id;
+	Real_t deltatime;
+	Tensor2Gen cm_vel_grad;
+	double cm_vol_chng;
+  };	
+
+  struct Result
+  {
+	Index_t lulesh_cell_id;
+	int num_samples;
+  	int num_successful_interpolations;
+    ConstitutiveData cm_data;
+  };
+
 	#if defined(COEVP_MPI)
 	#if defined(MPI_TASK_POOL)
     	MPI_Comm mpi_comm_taskhandler;
@@ -186,8 +202,11 @@ void CalcTimeConstraintsForElems();
 void LagrangeLeapFrog();
 void OutputTiming();
 void FinalTime();
+void StartMPIWorkers();
+
 int UpdateStressForElems();
-int UpdateStressForElemsServer();
+int UpdateStressForElemsTaskPool();
+
 void UpdateStressForElems2(int reducedIters);
 /*
 void DumpDomainToVisit(DBfile *db, Domain& domain, int myRank);
