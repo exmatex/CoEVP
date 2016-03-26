@@ -3098,12 +3098,13 @@ void Lulesh::StartMPIWorkers()
 
 int Lulesh::UpdateStressForElemsTaskPool()
 {
-   int max_local_newton_iters = 0;
+   int max_nonlinear_iters = 0;
    
 #if defined(COEVP_MPI)
    int task_worker_id;
      //  Cleaned out a bunch of stuff from the serial UpdateStressForElems.
-   int max_nonlinear_iters = 0;
+   
+   int max_local_newton_iters = 0;
    int numElem = domain.numElem() ;
 
    MPI_Request request;
@@ -3116,7 +3117,7 @@ int Lulesh::UpdateStressForElemsTaskPool()
 	Index_t out_cell_count = 0;
     Index_t in_cell_count = 0;
 	Index_t k;
-	while(out_cell_count < numElem && in_cell_count < numElem)
+	while(out_cell_count < numElem)
 	{
 	   // recieve the task/worker for my payload
         Task task;
@@ -3148,7 +3149,6 @@ int Lulesh::UpdateStressForElemsTaskPool()
 		// who tries to communicate first? we'll probe to find out then get all data from them
         // we could post a bunch of irecvs and process them after they have arrived, but let's do this version first.
 			MPI_Recv(&result, sizeof(result), MPI_BYTE, mpi_status.MPI_SOURCE, 20, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-            in_cell_count ++;
 			k = result.lulesh_cell_id;
 			//MPI_Recv(&cm_data, sizeof(cm_data), MPI_BYTE, mpi_status.MPI_SOURCE, 21, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
 			//MPI_Recv(domain.cm_state(k), sizeof(size_t)*domain.cm(k)->getStateSize(), MPI_BYTE, mpi_status.MPI_SOURCE, 22, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
@@ -3172,11 +3172,12 @@ int Lulesh::UpdateStressForElemsTaskPool()
             domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
                                     + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
 
-	  }
+        }
 
 	  if (max_local_newton_iters > max_nonlinear_iters) {
 	    max_nonlinear_iters = max_local_newton_iters;
-	  }
+       }
+      
     }
 
 	  //  Basically means that LULESH is distributed. This code will change
@@ -3200,7 +3201,6 @@ int Lulesh::UpdateStressForElems()
    int max_nonlinear_iters = 0;
    int numElem = domain.numElem() ;
 
-   std::cout << "Regular solve" << std::endl;
 #ifdef _OPENMP
 #pragma omp parallel
 #endif

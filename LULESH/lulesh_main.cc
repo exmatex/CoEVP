@@ -36,6 +36,8 @@ int main(int argc, char *argv[])
       }
    }
 
+     int myDomainID = 0;
+   
 #if defined(COEVP_MPI)
    MPI_Init(&argc, &argv) ;
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
@@ -50,7 +52,6 @@ int main(int argc, char *argv[])
   MPI_Comm mpi_intercomm_taskpool;
 
 // create a common intercommunicator between the lulesh domains and the task handlers
-  int myDomainID = 0;
   int myHandler = 0;
 
 
@@ -148,12 +149,13 @@ int main(int argc, char *argv[])
   
   Lulesh luleshSystem;
 
+  luleshSystem.myDomainID = myDomainID;
+
 #if defined(COEVP_MPI)
 
   luleshSystem.mpi_comm_taskhandler=mpi_comm_taskhandler;
   luleshSystem.mpi_intercomm_taskpool = mpi_intercomm_taskpool;
   luleshSystem.mpi_intercomm_parent = mpi_intercomm_parent;
-  luleshSystem.myDomainID = myDomainID;
   luleshSystem.myHandler = myHandler;
 
 #endif

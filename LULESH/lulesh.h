@@ -37,14 +37,14 @@ public:
   	int num_successful_interpolations;
     ConstitutiveData cm_data;
   };
-
+		
+        int myDomainID;
 	#if defined(COEVP_MPI)
     	MPI_Comm mpi_comm_taskhandler;
 	    MPI_Comm mpi_intercomm_taskpool;
 		MPI_Comm mpi_intercomm_parent;
 		MPI_Status mpi_status;
 //		MPI_Request mpi_request;
-		int myDomainID;
 		int myHandler;
 		int mpi_task_pool_num_samples;
 		int mpi_task_pool_num_successful_interpolations;
