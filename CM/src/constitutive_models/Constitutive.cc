@@ -186,7 +186,7 @@ Constitutive::getNumSamples() const
       samples = m_sampler->getNumSamples();
    }
    else {
-      //cout << "Constitutive::getNumSamples(): Adaptive sampling is not enabled!" << endl;
+      cout << "Constitutive::getNumSamples(): Adaptive sampling is not enabled!" << endl;
    }
 
    return samples;
@@ -202,7 +202,7 @@ Constitutive::getNumSuccessfulInterpolations() const
       interps = m_sampler->getNumSuccessfulInterpolations();
    }
    else {
-      //cout << "Constitutive::getNumSuccessfulInterpolations(): Adaptive sampling is not enabled!" << endl;
+      cout << "Constitutive::getNumSuccessfulInterpolations(): Adaptive sampling is not enabled!" << endl;
    }
 
    return interps;

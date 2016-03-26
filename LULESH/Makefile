@@ -156,7 +156,7 @@ $(info $(LULESH_OBJS))
 # to clock_gettime. Documentation says that -lrt is required, but it was working OK without on Darwin.
 # It does build successfully on Darwin with -lrt too.
 lulesh:  $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB) 
-	$(CXX) $(OPTFLAGS) -o $@ $(LULESH_OBJS) $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(PROTOBUF_LIB) $(LAPACK) -lrt -lm $(EXTRA_LIBS)
+	$(CXX) $(OPTFLAGS) -o $@ $(LULESH_OBJS) $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(PROTOBUF_LIB) $(LAPACK) -lrt $(EXTRA_LIBS) -lm
 	$(MAKE) taskhandler
 taskhandler: $(TASKHANDLER_OBJS) 
 	$(CXX) $(CXXFLAGS) $(TASKHANDLER_OBJS) -o taskhandler

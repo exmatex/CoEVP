@@ -4,6 +4,7 @@
 #include <mpi.h>
 #endif
 
+#include <chrono>
 #include "lulesh.h"
 #include "SingletonDB.h"
 #include "ModelDB_SingletonDB.h"
@@ -21,6 +22,7 @@ int main(int argc, char *argv[])
 {
    int numRanks = 1;
    int myRank = 0;
+
   
    int numTaskHandlers = 1;
    int numTasks=2;
@@ -33,6 +35,7 @@ int main(int argc, char *argv[])
    {
 	  numTaskHandlers = atoi(std::getenv("NHANDLERS"));
    }
+
 #if defined(COEVP_MPI)
    MPI_Init(&argc, &argv) ;
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
@@ -124,7 +127,7 @@ int main(int argc, char *argv[])
 #endif
 
 #endif
-  
+  int  timer = 0;
   int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
   int  redising = 0;              //  By default, do not use REDIS for database
   int  posixing = 0;              // POSIX Key/Value store
@@ -142,6 +145,7 @@ int main(int argc, char *argv[])
   int heightElems = 26;
   int edgeElems = 16;
   double domStopTime = 1.e-1;
+  int simStopCycle = 0;
   
   Lulesh luleshSystem;
 
@@ -159,6 +163,7 @@ int main(int argc, char *argv[])
   int  help   = 0;
   
   addArg("help",     'h', 0, 'i',  &(help),                0, "print this message");
+  addArg("timer",    'a', 1, 'i',  &(timer),               0, "use timing and write to output file");
   addArg("sample",   's', 0, 'i',  &(sampling),            0, "use adaptive sampling");
   addArg("redis",    'r', 0, 'i',  &(redising),            0, "use REDIS library");
   addArg("posix",    'x', 0, 'i',  &(posixing),            0, "use POSIX library");
@@ -174,6 +179,7 @@ int main(int argc, char *argv[])
   addArg("log",      'l', 1, 's',  &(logdb),   sizeof(logdb), "log to REDIS at hostname:port");
   addArg("Height Elems", 'H', 1, 'i', &(heightElems), 0, "Number of height elements to solve for");
   addArg("Edge Elems", 'E', 1, 'i', &(edgeElems), 0, "Number of height elements to solve for");
+  addArg("Domain Stop Cycle", 'C', 1, 'i', &(simStopCycle), 0, "Number of Simulated Cycles to Run For");
   addArg("Domain Stop Time", 'D', 1, 'd',  &(domStopTime), 0, "Number of Simulated Seconds to Run For"); 
   processArgs(argc,argv);
   
@@ -185,7 +191,7 @@ int main(int argc, char *argv[])
 
 
   // Initialize Taylor cylinder mesh
-  luleshSystem.Initialize(myRank, numRanks, edgeElems, heightElems, domStopTime);
+  luleshSystem.Initialize(myRank, numRanks, edgeElems, heightElems, domStopTime, simStopCycle, timer);
 
 
 
@@ -223,6 +229,35 @@ int main(int argc, char *argv[])
     logging = 1;
   }
   freeArgs();
+
+/*
+  if(timer)
+  {
+	// open output filestream here to avoid overhead
+	// only myRank == 0 will do timing
+	if(myRank==0)
+	{
+		//luleshSystem.timer = timer;
+		luleshSystem.timerfile.open("timer.file");
+		if(luleshSystem.timerfile.is_open())
+		{
+			for(int i=0;i<argc;i++)
+			{
+				luleshSystem.timerfile << argv[i] << " ";
+			}
+			
+			luleshSystem.timerfile << std::endl;
+			
+	  	}
+		else
+		{
+			std::cout << "Could not open timer.file" << std::endl;
+		}
+	}
+
+  }
+*/
+
    
    /*************************************/
    /* Initialize ModelDB Interface      */

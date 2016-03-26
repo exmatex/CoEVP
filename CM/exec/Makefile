@@ -119,8 +119,6 @@ FS_DEPS = $(FS_SRC:.cc=.d)
 KINTEST_OBJS = kintest.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
 KINTEST_DEPS = kintest.d
 
-
-
 # Constitutive model library
 
 CMLIB_SRC  = $(CM_SRC) $(EOS_SRC) $(FS_SRC) $(AS_SRC) $(TENSOR_SRC)
@@ -132,7 +130,7 @@ CXXFLAGS += -I$(AS_LOC) -I$(MTL_LOC) -I$(INTERPDB_LOC) -I$(INTERPDB_LOC)/kriging
 CXXFLAGS += -I$(DB_LOC) -I$(DB_LOC)/mtreedb -I$(UTILS_LOC) -I$(UTILS_LOC)/toolbox/base
 CXXFLAGS += -I$(UTILS_LOC)/toolbox/database -I$(UTILS_LOC)/toolbox/stream
 CXXFLAGS += -I$(TENSOR_LOC) -I$(CM_LOC) -I$(EOS_LOC) -I$(FS_LOC)
-CXXFLAGS += -DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN 
+CXXFLAGS += -DDBL_SNAN_IS_BROKEN -DFLT_SNAN_IS_BROKEN
 
 ifeq ($(REDIS), yes)
 REDIS_LOC = ../../redis/hiredis
@@ -206,12 +204,11 @@ dummy: ;
 -include $(EOS_DEPS)
 -include $(KINTEST_DEPS)
 
-
 clean:
 	$(RM) $(AS_OBJS) $(AS_DEPS) $(CM_OBJS) $(CM_DEPS) $(FS_OBJS) $(FS_DEPS)
 	$(RM) $(TENSOR_OBJS) $(TENSOR_DEPS) $(EOS_OBJS) $(EOS_DEPS) $(KINTEST_OBJS) $(KINTEST_DEPS) *.a
 
 realclean: clean
-	$(RM) -r kintest  ../include/* ../lib/*
-   
+	$(RM) -r kintest ../include/* ../lib/*
+
 
