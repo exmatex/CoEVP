@@ -2967,22 +2967,15 @@ int Lulesh::UpdateStressForElems()
     while(1)
     {
   
-//        printf("Lulesh Task %d notifies Task Handler %d about its availability.\n", rank, myHandler);
 
         MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_parent);
         // If we sent succesfully, then we are ready to discover some work
         MPI_Recv(&lulesh_worker_id, 1, MPI_INT, myHandler, 3, mpi_intercomm_parent, MPI_STATUS_IGNORE);
 
-//        printf("Task %d was paired up with Lulesh domain %d\n", rank, lulesh_worker_id);
 
         MPI_Send(&rank, 1, MPI_INT, lulesh_worker_id, 4, mpi_intercomm_parent);
 
         // this is where we receive work from the lulesh domain and ultimately send it back
-//		MPI_Recv(&lulesh_cell_id, sizeof(lulesh_cell_id), MPI_BYTE, lulesh_worker_id, 10, mpi_intercomm_parent,MPI_STATUS_IGNORE);	
-//		printf("Task %d was paired up with Lulesh cell %d\n", rank, lulesh_cell_id);
-//		MPI_Recv(&deltatime, sizeof(deltatime), MPI_BYTE, lulesh_worker_id, 11, mpi_intercomm_parent, MPI_STATUS_IGNORE);
-//		MPI_Recv(&cm_vel_grad, sizeof(cm_vel_grad), MPI_BYTE, lulesh_worker_id, 12, mpi_intercomm_parent, MPI_STATUS_IGNORE);
-//		MPI_Recv(&cm_vol_chng, sizeof(cm_vol_chng), MPI_BYTE, lulesh_worker_id, 13, mpi_intercomm_parent, MPI_STATUS_IGNORE);
 
 		MPI_Recv(&task, sizeof(task), MPI_BYTE, lulesh_worker_id, 10, mpi_intercomm_parent,MPI_STATUS_IGNORE);	
 		MPI_Recv(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 11, mpi_intercomm_parent, MPI_STATUS_IGNORE);
@@ -2994,24 +2987,14 @@ int Lulesh::UpdateStressForElems()
                                                           task.cm_vol_chng,
                                                           domain.cm_state(0));		
 
-//		std::cout << "CM Data on task worker: " << reinterpret_cast<char*>(&cm_data) << "\n";
-//		printf("Task %d completed advance call from %d. State Size: %d \n", rank, lulesh_worker_id, domain.cm(1)->getStateSize());
-
-//		printf("Task %d on Lulesh Worker %d number of iters %d size of cm_data %d\n", rank, lulesh_worker_id, cm_data.num_Newton_iters, sizeof(cm_data));
-
 
 		result.num_samples = domain.cm(0)->getNumSamples() - result.num_samples;
 		result.num_successful_interpolations = domain.cm(0)->getNumSuccessfulInterpolations() - result.num_successful_interpolations;
 		result.lulesh_cell_id = task.lulesh_cell_id;
 		
-//        cout << "   Samples vs Interpolations: " << num_samples << " " << num_successful_interpolations << std::endl;
-//		MPI_Send(&lulesh_cell_id, sizeof(lulesh_cell_id),  MPI_BYTE, lulesh_worker_id, 20, mpi_intercomm_parent);
 		MPI_Send(&result, sizeof(result),  MPI_BYTE, lulesh_worker_id, 20, mpi_intercomm_parent);
 		MPI_Send(&cm_data, sizeof(cm_data), MPI_BYTE, lulesh_worker_id, 21, mpi_intercomm_parent);
 		MPI_Send(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 22, mpi_intercomm_parent);
-//		MPI_Send(&num_samples, sizeof(num_samples), MPI_BYTE, lulesh_worker_id, 23, mpi_intercomm_parent);
-//		MPI_Send(&num_successful_interpolations, sizeof(num_successful_interpolations), MPI_BYTE, lulesh_worker_id, 24, mpi_intercomm_parent);
-//        printf("Task %d is done working with domain %d\n", rank, lulesh_worker_id);
 
 	}
 

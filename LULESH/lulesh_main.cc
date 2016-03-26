@@ -21,17 +21,17 @@ int main(int argc, char *argv[])
 {
    int numRanks = 1;
    int myRank = 0;
-  
-   int numTaskHandlers = 1;
-   int numTasks=2;
+
+   int numTasks=0;  
+   int numTaskHandlers = 0;
 
    if(std::getenv("NTASKS")!=NULL)
    {
 	  numTasks = atoi(std::getenv("NTASKS"));
-   }
-   if(std::getenv("NHANDLERS")!=NULL)
-   {
-	  numTaskHandlers = atoi(std::getenv("NHANDLERS"));
+	  if(std::getenv("NHANDLERS")!=NULL)
+   	  {
+	  	numTaskHandlers = atoi(std::getenv("NHANDLERS"));
+	  }
    }
 #if defined(COEVP_MPI)
    MPI_Init(&argc, &argv) ;
@@ -54,7 +54,8 @@ int main(int argc, char *argv[])
 
   if (mpi_intercomm_parent == MPI_COMM_NULL)  
   {
-
+	if(numTaskHandlers>0)
+	{
 	  int rank, size;
 	  MPI_Comm mpi_intercomm_taskhandler;
 
@@ -101,8 +102,9 @@ int main(int argc, char *argv[])
 	  printf("Lulesh Rank %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
 
 	}
-	else
-	{
+  }
+  else
+  {
 
 
 	  // let's broadcast the number of task handlers why not, this is using an intercommunicator so behaves a little difference
