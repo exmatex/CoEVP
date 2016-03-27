@@ -2,6 +2,7 @@
 
 # Use MPI
 COEVP_MPI =
+TASKHANDLER = 
 
 # Silo (www.hdfgroup.org/HDF5) and HDF5 (www.hdfgroup.org/HDF5) library
 # locations.  These macros can be left undefined if visualization is not required.
@@ -36,9 +37,7 @@ INCLUDE_DIRS = -I. -I../CM/include
 
 ifeq ($(COEVP_MPI), yes)
 CXXFLAGS += -DCOEVP_MPI
-ifeq ($(MPI_TASK_POOL), yes)
-CXXFLAGS += -DMPI_TASK_POOL
-endif
+TASKHANDLER = taskhandler
 CXX= mpic++
 endif
 
@@ -116,7 +115,7 @@ CXXFLAGS += $(INCLUDE_DIRS)
 
 OPTFLAGS = $(CXXFLAGS) $(CCFLAGS)
 
-all: lulesh
+all: lulesh  $(TASKHANDLER)
 
 dummy: ;
 
@@ -156,9 +155,9 @@ $(info $(LULESH_OBJS))
 # It does build successfully on Darwin with -lrt too.
 lulesh:  $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB) 
 	$(CXX) $(OPTFLAGS) -o $@ $(LULESH_OBJS) $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(PROTOBUF_LIB) $(LAPACK) -lrt $(EXTRA_LIBS) -lm
-	$(MAKE) taskhandler
+
 taskhandler: $(TASKHANDLER_OBJS) 
-	$(CXX) $(CXXFLAGS) $(TASKHANDLER_OBJS) -o taskhandler
+	$(CXX) $(CXXFLAGS) $(TASKHANDLER_OBJS) -o $(TASKHANDLER)
 
 
 clean:
