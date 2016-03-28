@@ -3051,17 +3051,18 @@ void Lulesh::StartMPIWorkers()
 
   Task task;
 
-  int lulesh_worker_id;
-    void *cm_state = operator new(domain.cm(0)->getStateSize());
+//    void *cm_state = operator new(domain.cm(0)->getStateSize());
 
 	// let's reprove for rank, just because
     int rank;
     MPI_Comm_rank (MPI_COMM_WORLD, &rank);
-    MPI_Request request;
+    MPI_Request mpi_request;
 
     while(1)
     {
         Result result;  
+		int lulesh_worker_id;
+
         MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_parent);
         // If we sent succesfully, then we are ready to discover some work
         MPI_Recv(&lulesh_worker_id, 1, MPI_INT, myHandler, 3, mpi_intercomm_parent, MPI_STATUS_IGNORE);
@@ -3084,10 +3085,11 @@ void Lulesh::StartMPIWorkers()
 		//result.num_samples = domain.cm(0)->getNumSamples() - result.num_samples;
 		//result.num_successful_interpolations = domain.cm(0)->getNumSuccessfulInterpolations() - result.num_successful_interpolations;
 		result.lulesh_cell_id = task.lulesh_cell_id;
-		
+	
         // TODO: make this isend 
-		MPI_Send(&result, sizeof(result),  MPI_BYTE, lulesh_worker_id, 20, mpi_intercomm_parent);
-//		MPI_Send(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 22, mpi_intercomm_parent);
+		//std::cout << "Size: " << domain.cm(0)->getStateSize() << std::endl;
+		MPI_Send(&result, sizeof(result),  MPI_BYTE, lulesh_worker_id, 20, mpi_intercomm_parent);//, &mpi_request);
+//		MPI_Send(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 21, mpi_intercomm_parent);
 
 	}
     
@@ -3101,8 +3103,6 @@ int Lulesh::UpdateStressForElemsTaskPool()
    int max_nonlinear_iters = 0;
    
 #if defined(COEVP_MPI)
-   int task_worker_id;
-     //  Cleaned out a bunch of stuff from the serial UpdateStressForElems.
    
    int max_local_newton_iters = 0;
    int numElem = domain.numElem() ;
@@ -3111,20 +3111,19 @@ int Lulesh::UpdateStressForElemsTaskPool()
 
 	for (Index_t k=0; k<numElem; ++k) {
        // let us stick our request for a task_worker here
-	    MPI_Isend(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler, &request);
+	    MPI_Send(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler);//, &request);
 	}
 
 	Index_t out_cell_count = 0;
     Index_t in_cell_count = 0;
-	Index_t k;
-	while(out_cell_count < numElem)
+	while(in_cell_count < numElem)
 	{
 	   // recieve the task/worker for my payload
         Task task;
         MPI_Probe(MPI_ANY_SOURCE, MPI_ANY_TAG, mpi_intercomm_taskpool, &mpi_status);
-		// some nausea inducing logic here, if we have a tag > = 20 we are receiving, if we have a tag less than 10 we are sending
 		if(mpi_status.MPI_TAG == 4)
 		{
+		   int task_worker_id;
 			// we are receiving a request for work, so send the result
 	 		MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 4, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
 			task.lulesh_cell_id = out_cell_count;
@@ -3139,37 +3138,32 @@ int Lulesh::UpdateStressForElemsTaskPool()
 //		printf("Lulesh Domain %d sent work to  %d\n", myDomainID, task_worker_id);
 
 		}
-		
 		else
 		{
-//		std::cout << "Lulesh state size:" << domain.cm(1)->getStateSize() << "\n";
-
             Result result;
 
 		// who tries to communicate first? we'll probe to find out then get all data from them
         // we could post a bunch of irecvs and process them after they have arrived, but let's do this version first.
 			MPI_Recv(&result, sizeof(result), MPI_BYTE, mpi_status.MPI_SOURCE, 20, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-			k = result.lulesh_cell_id;
-			//MPI_Recv(&cm_data, sizeof(cm_data), MPI_BYTE, mpi_status.MPI_SOURCE, 21, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-			//MPI_Recv(domain.cm_state(k), sizeof(size_t)*domain.cm(k)->getStateSize(), MPI_BYTE, mpi_status.MPI_SOURCE, 22, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+//			MPI_Recv(domain.cm_state(result.lulesh_cell_id), sizeof(size_t)*domain.cm(result.lulesh_cell_id)->getStateSize(), MPI_BYTE, mpi_status.MPI_SOURCE, 21, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+			in_cell_count++;
 
-			mpi_task_pool_num_samples += result.num_samples;
-			mpi_task_pool_num_successful_interpolations += result.num_successful_interpolations;
+//			mpi_task_pool_num_samples += result.num_samples;
+//			mpi_task_pool_num_successful_interpolations += result.num_successful_interpolations;
 
 
             int num_iters = result.cm_data.num_Newton_iters;
             if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
     
             const Tensor2Sym& sigma_prime = result.cm_data.sigma_prime;
-    //		std::cout << sigma_prime << std::endl;
-            Real_t sx  = domain.sx(k) = sigma_prime(1,1);
-            Real_t sy  = domain.sy(k) = sigma_prime(2,2);
+            Real_t sx  = domain.sx(result.lulesh_cell_id) = sigma_prime(1,1);
+            Real_t sy  = domain.sy(result.lulesh_cell_id) = sigma_prime(2,2);
             Real_t sz  = - sx - sy;
-            Real_t txy = domain.txy(k) = sigma_prime(2,1);
-            Real_t txz = domain.txz(k) = sigma_prime(3,1);
-            Real_t tyz = domain.tyz(k) = sigma_prime(3,2);
+            Real_t txy = domain.txy(result.lulesh_cell_id) = sigma_prime(2,1);
+            Real_t txz = domain.txz(result.lulesh_cell_id) = sigma_prime(3,1);
+            Real_t tyz = domain.tyz(result.lulesh_cell_id) = sigma_prime(3,2);
         
-            domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
+            domain.mises(result.lulesh_cell_id) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
                                     + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
 
         }

@@ -79,20 +79,21 @@ int main(int argc, char** argv)
 				// pair up the task_worker with the work
 				int task_worker_id = task_worker.front();
 				task_worker.pop_front();
-		        MPI_Isend(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool, &mpi_request);
+		        MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);//, &mpi_request);
 			}
 			else if(numTaskHandlers>1)
 			{
 				// we received work but we don't have any workers to assign it to so let's round robin to other taskhandlers (if they exist)
+//				std::cout<<"Load balancing task"<<std::endl;
 				if(localrank == numTaskHandlers-1)
 				{
 					//we're the last rank, wrap around to handler 0
-					MPI_Isend(&lulesh_work_id, 1, MPI_INT, 0, 1, mpi_comm_taskhandler, &mpi_request);
+					MPI_Send(&lulesh_work_id, 1, MPI_INT, 0, 1, mpi_comm_taskhandler);//, &mpi_request);
 				}
 				else
 				{
 					//send task to neighbouring handler
-					MPI_Isend(&lulesh_work_id, 1, MPI_INT, localrank+1, 1, mpi_comm_taskhandler, &mpi_request);
+					MPI_Send(&lulesh_work_id, 1, MPI_INT, localrank+1, 1, mpi_comm_taskhandler);//, &mpi_request);
 				}
 			}
 			else
@@ -111,7 +112,7 @@ int main(int argc, char** argv)
 				//imediately pair up with idle task_worker
 				int lulesh_work_id = lulesh_work.front();
 				lulesh_work.pop_front();
-				MPI_Isend(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool, &mpi_request);
+				MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);//, &mpi_request);
 			}
 			else
 			{

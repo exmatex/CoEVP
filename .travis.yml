@@ -41,6 +41,8 @@ env:
     - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no USE_SSL=no
     - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=no  NP=1
     - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes               LOGGER=no  NP=4
+    - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes               LOGGER=no  NP=2 NTASKS=2 NHANDLERS=2 
+
 
 before_script:
   - export PATH="/usr/lib/ccache:$PATH"
