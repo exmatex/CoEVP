@@ -64,14 +64,16 @@ int main(int argc, char *argv[])
 
    	  char **command_argv;
 	  
-	  command_argv = (char **)malloc(argc+3 * sizeof(char *));
+	  command_argv = (char **)malloc(argc+5 * sizeof(char *));
    	  for(int i=0;i<argc;i++)
 	  {
 		command_argv[i] = argv[i];
 	  }
 	  command_argv[argc] = (char *)"-E 4";
 	  command_argv[argc+1] = (char *)"-H 1";
-	  command_argv[argc+2] = NULL;
+	  command_argv[argc+2] = (char *)"-v 0";
+	  command_argv[argc+3] = (char *)"-a 0";
+	  command_argv[argc+4] = NULL;
 
 	  printf("Spawning %d MPI Task Handlers\n", numTaskHandlers);
 
