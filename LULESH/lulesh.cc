@@ -2929,41 +2929,37 @@ void Lulesh::LagrangeLeapFrog()
 //  Get functions parameters (unpack protobuf-encoded string), call
 //  function, and write results to database.
 void  Lulesh::processCircleTasks(CIRCLE_handle *handle) {
-  std::cout << "In processCircleTasks()..." << std::endl;
   char taskString[CIRCLE_MAX_STRING_LEN];
   handle->dequeue(&taskString[0]);
-  //  unpack, advance(), pack, write return values to database
   ConstitutiveData  cm_data;
-  int k;
-  std::string packedParams = taskString;
-  std::cout << packedParams.length() << std::endl;
-  double      deltatime;
-  Tensor2Gen  cm_vel_grad;
-  double      cm_vol_chng;
+  int k = atoi(taskString);
+  //std::cout << "processCircleTasks(): " << k << " =? " << taskString << std::endl;
+  //std::string packedParams = taskString;
+  //double      deltatime;
+  // Tensor2Gen  cm_vel_grad;
+  // double      cm_vol_chng;
 
-  //  Unfortunately, we need to use two globals to make this thing work.
-  //  We need a function pointer to the advance call. This is stored in the domain
-  //  structure--one function pointer per element (they're really all the same, but
-  //  supposedly they may be unique some day). So, we have a global pointer,
-  //  circleDomain, pointing the the Lulesh's objects domain structure.
-  //  Second, we need a global reference to the database that returns results.
-  //  We could have used a singleton for this (or resource manager ala the logging
-  //  stuff) but we're just hacking this for now.
-  //
-  //  Note also that we unpack directly into the domain's state buffer. In fact, we're
-  //  just copying over what we previously packed.  Similarly, we're returning directly
-  //  into the domain state buffer from advance(). Pack/unpack of this state is not
-  //  necessary HERE, but is written to be more general in cases where we might
-  //  not have (NEED) a global domain pointer.
-  unpackAdvance(packedParams, &k, &cm_data, &deltatime, &cm_vel_grad, &cm_vol_chng, circleDomain->cm_state(k));
-  cm_data = circleDomain->cm(k)->advance(deltatime, cm_vel_grad, cm_vol_chng, circleDomain->cm_state(k));
-  std::string packedResults = packAdvance(k, cm_data, deltatime, cm_vel_grad, cm_vol_chng, circleDomain->cm_state(k));
+  // unpackAdvance(packedParams, &k, &cm_data, &deltatime, &cm_vel_grad, &cm_vol_chng, circleDomain->cm_state(k));
+  //cm_data = circleDomain->cm(k)->advance(deltatime, cm_vel_grad, cm_vol_chng, circleDomain->cm_state(k));
 
+
+  cm_data = circleDomain->cm(k)->advance(circleDomain->deltatime(),
+                                         circleDomain->cm_vel_grad(k),
+                                         circleDomain->cm_vol_chng(k),
+                                         circleDomain->cm_state(k));
+
+  //  std::string packedResults = packAdvance(k, cm_data, deltatime, cm_vel_grad, cm_vol_chng, circleDomain->cm_state(k));
+  std::string packedResults = packAdvance(k, cm_data,
+                                          circleDomain->deltatime(),
+                                          circleDomain->cm_vel_grad(k),
+                                          circleDomain->cm_vol_chng(k),
+                                          circleDomain->cm_state(k));
+  
   //  Return results (packed) via REDIS.
-  char key[100];
+  char key[10];
   sprintf(key, "%d", k);
-  //sprintf(key, "%d:%d", ts, k);
-  redisReply *reply = (redisReply *)redisCommand(circleDB, "SET %s %s", key, packedResults.c_str());
+  redisReply *reply = (redisReply *)redisCommand(circleDB, "SET %s %b",
+                                                 key, packedResults.c_str(), packedResults.length()+1);
   if (!reply) {
     std::cerr << "No connection to redis for libcircle...continuing" << std::endl;
   }
@@ -2974,19 +2970,21 @@ void  Lulesh::processCircleTasks(CIRCLE_handle *handle) {
 //  Setup (via protobuf) parameters to function call.  Would have an
 //  enqueue for each of the 'k' cells in the mesh.
 void Lulesh::buildCircleTasks(CIRCLE_handle *handle) {
-  std::cout << "...in buildCircleTasks(), numElems: " << circleDomain->numElem() << std::endl;
-  ConstitutiveData  cm_data;                       // Fake--don't need for pack
+  char taskString[CIRCLE_MAX_STRING_LEN];
+  //  std::cout << "...in buildCircleTasks(), numElems: " << circleDomain->numElem() << std::endl;
+  //  ConstitutiveData  cm_data;                       // Fake--don't need for pack
   //  [HACK] Using global pointer to Lulesh's domain object
   //  for(int k=0; k<circleDomain->numElem(); k++) {
-  for(int k=0; k<1; k++) {
-    std::string packedParams = packAdvance(k, cm_data,
-                                           circleDomain->deltatime(),
-                                           circleDomain->cm_vel_grad(k),
-                                           circleDomain->cm_vol_chng(k),
-                                           circleDomain->cm_state(k));
-    char  *taskString = new char[packedParams.length()+1];
-    std::strcpy(taskString, packedParams.c_str());
-    std::cout << packedParams.length() << std::endl;
+  for(int k=0; k<circleDomain->numElem(); k++) {
+    //    std::string packedParams = packAdvance(k, cm_data,
+    //circleDomain->deltatime(),
+    //                                     circleDomain->cm_vel_grad(k),
+    //                                     circleDomain->cm_vol_chng(k),
+    //                                     circleDomain->cm_state(k));
+    //char  *taskString = new char[packedParams.length()+1];
+    //std::strcpy(taskString, packedParams.c_str());
+    //std::cout << packedParams.length() << std::endl;
+    sprintf(taskString, "%d", k);
     handle->enqueue(taskString);
   }
 }
@@ -3011,8 +3009,6 @@ int Lulesh::UpdateStressForElemsServer()
   int myRank;
   MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
 
-  std::cout << "...in UpdateStressForElemsServer on rank " << myRank << std::endl;
-  
   // Note the difference between timesteps and per-cell loop.
   // This function executes enqueued tasks. They fire at the
   // timestep loop level and are enqueued at the per-cell
@@ -3020,14 +3016,14 @@ int Lulesh::UpdateStressForElemsServer()
   // This function looks like it will be used here as is but
   // may actually live in the go() main timestep loop.
   if(myRank != 0) {
-    std::cout << "On rank " << myRank << ", starting CIRCLE_begin()..." << std::endl;
+    //std::cout << "On rank " << myRank << ", starting CIRCLE_begin()..." << std::endl;
     CIRCLE_begin();      // execute the enqueued tasks
-    std::cout << "...on rank " << myRank << ", back from CIRCLE_begin()..." << std::endl;
+    //std::cout << "...on rank " << myRank << ", back from CIRCLE_begin()..." << std::endl;
   } else {
     //  So, if not rank 0...receive results
-    std::cout << "On rank " << myRank << ", starting doCircleTasks()..." << std::endl;
+    //std::cout << "On rank " << myRank << ", starting doCircleTasks()..." << std::endl;
     doCircleTasks();   // enqueue and dispatch a bunch of task, wait for completion
-    std::cout << "...on rank " << myRank << ", back from doCircleTasks()..." << std::endl;
+    //std::cout << "...on rank " << myRank << ", back from doCircleTasks()..." << std::endl;
     // make sure to get k=numElem results back
     // unpack, read DB, restore state/results
     // Start of results "loop"
@@ -3052,16 +3048,17 @@ int Lulesh::UpdateStressForElemsServer()
     }
 
     for (int j=0; j<reply->elements; j++) {         // start of "results" loop
+      //std::cout << j << " ";
       redisReply  *k_reply = (redisReply *)reply->element[j];  // key
       if (k_reply->type != REDIS_REPLY_STRING) {
         throw std::runtime_error("Wrong redis return type for libcircle getting a key");
       }
-      redisReply  *v_reply = (redisReply *)redisCommand(circleDB, "GET %", k_reply->str);
+      redisReply  *v_reply = (redisReply *)redisCommand(circleDB, "GET %s", k_reply->str);
       if (v_reply->type != REDIS_REPLY_STRING) {
         throw std::runtime_error("Wrong redis return type for libcircle getting a value");
       }
       int  key = atoi(k_reply->str);
-      std::string returnResults = v_reply->str;
+      std::string returnResults(reinterpret_cast<char const*>(v_reply->str), v_reply->len);
       unpackAdvance(returnResults, &k, &cm_data, &deltatime, &cm_vel_grad, &cm_vol_chng, circleDomain->cm_state(key));
       if (key != k) {
         std::cerr << "Uh oh, key from redis does not match key from unpackAdvance()!" << std::endl;
@@ -3086,8 +3083,8 @@ int Lulesh::UpdateStressForElemsServer()
                               + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
 
     }    //  end of results "loop"
-
-    freeReplyObject(reply);   //  free the KEYS * results (and sub-results)
+    //freeReplyObject(reply);   //  free the KEYS * results (and sub-results)
+    //std::cout << "\n........out of results loop" << std::endl;
     reply = (redisReply *)redisCommand(circleDB, "FLUSHDB");
     if (!reply) {
       std::cerr << "No connection to redis for libcircle...continuing" << std::endl;
