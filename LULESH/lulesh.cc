@@ -3089,7 +3089,7 @@ void Lulesh::StartMPIWorkers()
         // TODO: make this isend 
 		//std::cout << "Size: " << domain.cm(0)->getStateSize() << std::endl;
 		MPI_Send(&result, sizeof(result),  MPI_BYTE, lulesh_worker_id, 20, mpi_intercomm_parent);//, &mpi_request);
-//		MPI_Send(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 21, mpi_intercomm_parent);
+		MPI_Send(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 21, mpi_intercomm_parent);
 
 	}
     
@@ -3145,7 +3145,7 @@ int Lulesh::UpdateStressForElemsTaskPool()
 		// who tries to communicate first? we'll probe to find out then get all data from them
         // we could post a bunch of irecvs and process them after they have arrived, but let's do this version first.
 			MPI_Recv(&result, sizeof(result), MPI_BYTE, mpi_status.MPI_SOURCE, 20, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-//			MPI_Recv(domain.cm_state(result.lulesh_cell_id), sizeof(size_t)*domain.cm(result.lulesh_cell_id)->getStateSize(), MPI_BYTE, mpi_status.MPI_SOURCE, 21, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+			MPI_Recv(domain.cm_state(result.lulesh_cell_id), sizeof(size_t)*domain.cm(result.lulesh_cell_id)->getStateSize(), MPI_BYTE, mpi_status.MPI_SOURCE, 21, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
 			in_cell_count++;
 
 //			mpi_task_pool_num_samples += result.num_samples;
