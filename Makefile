@@ -115,6 +115,9 @@ STEPS=0500
 #bit hackish, but let's assume we have $(STEPS) steps
 test/taylor_$(STEPS).silo: LULESH/lulesh test/.mpirunflags test/.luleshopts
 	mkdir -p test
+	ifdef $(NTASKS)
+		cp LULESH/taskhandler test/.
+	endif
 	cd test && NTASKS=$(NTASKS) NHANDLERS=$(NHANDLERS) $(MPIRUN) ../LULESH/lulesh $(LULESH_OPTS)
 
 SILODIFF_OPTS=-A 1e-8 -E _hdf5libinfo
