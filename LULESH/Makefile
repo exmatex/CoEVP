@@ -24,6 +24,9 @@ REDIS_LOC =
 
 LOGGER_LOC=
 
+PROTOBUF_LOC=
+CIRCLE_LOC=
+
 #CXX = g++
 #CXXFLAGS = -std=c++0x -g -O3 -fopenmp
 CXXFLAGS = -std=c++11 -g -O3
@@ -81,9 +84,17 @@ PBGENS   = $(PBSRCS:.proto=.pb.cc) $(PBSRCS:.proto=.pb.h)
 ifneq ($(strip $(PROTOBUF_LOC)),)
 INCLUDE_DIRS += -I$(PROTOBUF_LOC)/include
 PROTOBUF_LIB += -Wl,-rpath,$(realpath $(PROTOBUF_LOC))/lib -L $(PROTOBUF_LOC)/lib -lprotobuf
+#  Include the libcircle stuff (these two are coupled for now)
+INCLUDE_DIRS += -I$(CIRCLE_LOC)/include
+PROTOBUF_LIB += -Wl,-rpath,$(realpath $(CIRCLE_LOC))/lib -L $(CIRCLE_LOC)/lib -lcircle
 CXXFLAGS += -DPROTOBUF
 PROTO_LIB = $(PROTOBUF_LOC)/lib/libprotobuf.a   # make lulesh depend on protobuf library
+CIRCLE_LIB = $(CIRCLE_LOC)/lib/libcircle.a   # make lulesh depend on libcircle library
 PROTOC = $(PROTOBUF_LOC)/bin/protoc
+# [HACK] We need COEVP_MPI to get MPI for libcircle, but don't need -DCOEVP_MPI on
+# compile lines (because we use defines to control execution path, not compilation!
+NO_MPI_FLAG = $(filter-out -DCOEVP_MPI, $(CXXFLAGS))
+CXXFLAGS := $(NO_MPI_FLAG)
 endif
 
 HDF5_LIB =
@@ -148,7 +159,7 @@ $(info $(LULESH_OBJS))
 # to clock_gettime. Documentation says that -lrt is required, but it was working OK without on Darwin.
 # It does build successfully on Darwin with -lrt too.
 lulesh:  $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
-	$(CXX) $(OPTFLAGS) -o $@ $(LULESH_OBJS) $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(PROTOBUF_LIB) $(LAPACK) -lrt -lm $(EXTRA_LIBS)
+	$(CXX) $(OPTFLAGS) -o $@ $(LULESH_OBJS) $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(PROTOBUF_LIB) $(CIRCLE_LIB) $(LAPACK) -lrt -lm $(EXTRA_LIBS)
 
 clean:
 	rm -f *~ lulesh $(LULESH_OBJS) $(PBGENS) $(PBOBJS)

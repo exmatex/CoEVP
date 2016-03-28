@@ -3,6 +3,13 @@
 
 #include "domain.h"
 
+//  Needed to define static callback functions.
+#if defined(PROTOBUF)
+#include <libcircle.h>
+#endif
+
+
+
 #define MAX_NONLINEAR_ITER 5
 #define SEDOV_SYNC_POS_VEL_EARLY 1
 
@@ -170,6 +177,12 @@ void ConstructFineScaleModel(bool sampling,ModelDatabase * global_modelDB,Approx
 void ExchangeNodalMass();
 void go(int myRank, int numRanks, int sampling, int visit_data_interval,int file_parts, int debug_topology);
 
+#if defined(PROTOBUF)
+//  Should refactor this out into some server class.
+ static void doCircleTasks();
+ static void buildCircleTasks(CIRCLE_handle *handle);
+ static void processCircleTasks(CIRCLE_handle *handle);
+#endif
 };
 
 #endif

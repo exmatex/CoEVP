@@ -161,23 +161,20 @@ std::string  packAdvance(int k, ConstitutiveData &cm_data, double deltatime,
 //  Unpack returned results from advance() call. Note that we are returning these
 //  MULTIPLE results through pointers passed in to this function (k, cd, state).
 //  They had better have been properly allocated and initialized in the caller!
-void  unpackAdvance(std::string buf, int *k, ConstitutiveData *cd, void *state) {
+void  unpackAdvance(std::string buf, int *k, ConstitutiveData *cd,
+                    double *deltatime, Tensor2Gen *cm_vel_grad, double *cm_vol_chng, void *state) {
   //  First de-serialize the three (non-state) arguments
   pack::Args  args;
   args.ParseFromString(buf);
   // std::cout << args.DebugString();
 
-  double      deltatime;
-  Tensor2Gen  cm_vel_grad;
-  double      cm_vol_chng;
-
   *k = args.k();
-  deltatime = args.delta_t();
+  *deltatime = args.delta_t();
   pack::Tensor_2_Gen  L_new = args.l_new();
   for (int i=0; i<9; i++) {
-    cm_vel_grad.a[i] = L_new.a(i);
+    cm_vel_grad->a[i] = L_new.a(i);
   }
-  cm_vol_chng = args.volume_change();
+  *cm_vol_chng = args.volume_change();
 
   //  WARNING: we are returning into the state pointer passed in. We
   //  reasonably assume that it is allocated to the correct size.
