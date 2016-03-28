@@ -75,7 +75,13 @@ int main(int argc, char *argv[])
 
 	  printf("Spawning %d MPI Task Handlers\n", numTaskHandlers);
 
-	  MPI_Comm_spawn((char *)"taskhandler", command_argv, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
+	  string launch_path(argv[0]);
+      const int str_index = launch_path.find_last_of("\\/");
+	  launch_path = launch_path.substr(0, str_index) + "/taskhandler";
+	  char* taskhandler_path = const_cast<char*> (launch_path.c_str());
+	  std::cout << "Taskhandler relative path: " << taskhandler_path << std::endl;	  
+
+	  MPI_Comm_spawn(taskhandler_path, command_argv, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
  
 	  // here it gets complicated. we need to new intracoomunicator including our spawned task handlers, so we can doa collect launch of the lulesh process
 	  MPI_Intercomm_merge(mpi_intercomm_taskhandler, 1, &mpi_comm_taskhandler); 
