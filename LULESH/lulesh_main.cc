@@ -37,7 +37,11 @@ int main(int argc, char *argv[])
    //  Can't do MPI and libcircle at the same time--libcircle deals with
    //  MPI in it's own way.
 #if defined(PROTOBUF)
-   myRank = CIRCLE_init(argc, argv, CIRCLE_DEFAULT_FLAGS);
+   //  We're NOT doing domain decomposition with MPI--just libcircle.
+   //  so, as far as lulesh knows, there is only one rank. The libcircle
+   //  code exclusively uses the other ranks--no need for lulesh to even
+   //  know about that.
+   int bogusRank = CIRCLE_init(argc, argv, CIRCLE_DEFAULT_FLAGS);
    CIRCLE_cb_process(Lulesh::processCircleTasks);
    CIRCLE_enable_logging(CIRCLE_LOG_ERR);
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
