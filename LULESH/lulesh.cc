@@ -3066,7 +3066,11 @@ void Lulesh::StartMPIWorkers()
         MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_parent);
         // If we sent succesfully, then we are ready to discover some work
         MPI_Recv(&lulesh_worker_id, 1, MPI_INT, myHandler, 3, mpi_intercomm_parent, MPI_STATUS_IGNORE);
-
+		if(lulesh_worker_id==-1)
+		{
+			MPI_Finalize();
+			exit(0);
+		}
 
         MPI_Send(&rank, 1, MPI_INT, lulesh_worker_id, 4, mpi_intercomm_parent);
 
@@ -3094,7 +3098,8 @@ void Lulesh::StartMPIWorkers()
 	}
     
    #endif
-	exit(0);
+   exit(1);
+
 }
 
 
@@ -3173,6 +3178,8 @@ int Lulesh::UpdateStressForElemsTaskPool()
        }
       
     }
+
+	  std::cout << "Completed Lulesh step: " << domain.cycle() << std::endl;
 
 	  //  Basically means that LULESH is distributed. This code will change
 	  //  when we couple server-based advance() with distributed LULESH.
@@ -4476,14 +4483,6 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
       
 #ifdef PRINT_PERFORMANCE_DIAGNOSTICS
 
-#if defined(MPI_TASK_POOL)
-      if ( sampling ) {
-         cout << "   Interpolation efficiency = " << (double)mpi_task_pool_num_successful_interpolations / (double)mpi_task_pool_num_samples << endl;
-      }
-
-#else
-
-
       if ( sampling ) {
 
          int total_samples = 0;
@@ -4498,7 +4497,6 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 
       }
 
-#endif
 #endif
 #endif
 
@@ -4516,7 +4514,28 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
    }  /* while */
 
+// clean up task pool
+#if defined(COEVP_MPI)
+	if(myDomainID)
+	{
+		int exit_signal = -1;
+	    int domain_size;
+		int rank;
+		int taskhandler_size;
+    	MPI_Comm_size (MPI_COMM_WORLD, &domain_size);
+		MPI_Comm_size (mpi_comm_taskhandler, &taskhandler_size);
+		MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+		for(int i=0; i < taskhandler_size-domain_size; i++)
+		{
+			MPI_Send(&exit_signal, 1, MPI_INT, i, 1, mpi_comm_taskhandler);
+		}
+	}
+#endif
+
+	std::cout << "left while loop" <<std::endl;
 	FinalTime();
+	std::cout << "wrote_final_time" <<std::endl;
+
 
 #ifdef WRITE_FSM_EVAL_COUNT
    fsm_count_file.close();
@@ -4587,6 +4606,8 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
    }
 #endif
 
+	std::cout << "wrote_silo_output" <<std::endl;
+
 #ifdef WRITE_CHECKPOINT
 
    // Write a checkpoint file for testing
@@ -4602,5 +4623,8 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 
    checkpoint_file.close();
 #endif
+
+   std::cout << "finished full loop" <<std::endl;
+
 }
 

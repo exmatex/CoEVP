@@ -73,6 +73,19 @@ int main(int argc, char** argv)
 			// there is some incoming work
             int lulesh_work_id;
 			MPI_Recv(&lulesh_work_id, 1, MPI_INT, MPI_ANY_SOURCE, 1, mpi_comm_taskhandler, &mpi_status);
+			if(lulesh_work_id == -1)
+			{
+				if(localrank==0)
+				{
+					int exit_signal = -1;
+					for(int i=0;i<numTasks;i++)
+					{
+						MPI_Send(&exit_signal, 1, MPI_INT, i, 3, mpi_intercomm_taskpool);
+					}
+				}
+				MPI_Finalize();
+				exit(0);
+			}
 			// do we have any registered idle workers?
 			if(task_worker.size()>0)
 			{
