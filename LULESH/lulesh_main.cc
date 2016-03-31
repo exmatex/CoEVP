@@ -37,7 +37,6 @@ int main(int argc, char *argv[])
    }
 
      int myDomainID = 0;
-   
 #if defined(COEVP_MPI)
    MPI_Init(&argc, &argv) ;
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
@@ -53,7 +52,7 @@ int main(int argc, char *argv[])
 
 // create a common intercommunicator between the lulesh domains and the task handlers
   int myHandler = 0;
-
+  
 
   if (mpi_intercomm_parent == MPI_COMM_NULL && numTaskHandlers)  
   {
@@ -71,16 +70,25 @@ int main(int argc, char *argv[])
 	  }
 	  command_argv[argc] = (char *)"-E 4";
 	  command_argv[argc+1] = (char *)"-H 1";
-	  command_argv[argc+2] = (char *)"-v 0";
-	  command_argv[argc+3] = (char *)"-a 0";
+	  command_argv[argc+2] = (char *)"-a 0";
+	  command_argv[argc+3] = (char *)"-v 0";
 	  command_argv[argc+4] = NULL;
 
 	  printf("Spawning %d MPI Task Handlers\n", numTaskHandlers);
 
 	  string launch_path(argv[0]);
       const int str_index = launch_path.find_last_of("\\/");
-	  launch_path = launch_path.substr(0, str_index) + "/taskhandler";
-	  char* taskhandler_path = const_cast<char*> (launch_path.c_str());
+      char* taskhandler_path;
+	  std::cout << "str_index " << str_index << " str_length " << launch_path.length() << std::endl;
+	  if(str_index==-1)
+	  {
+		taskhandler_path = (char*)("taskhandler");
+	  }
+	  else
+	  {
+		launch_path = launch_path.substr(0, str_index) + "/taskhandler";
+	    taskhandler_path = const_cast<char*> (launch_path.c_str());
+      }
 	  std::cout << "Taskhandler relative path: " << taskhandler_path << std::endl;	  
 
 	  MPI_Comm_spawn(taskhandler_path, command_argv, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
@@ -310,7 +318,10 @@ int main(int argc, char *argv[])
 #endif
   
 #if defined(COEVP_MPI)
+   std::cout << "Finalizing" << std::endl;
    MPI_Finalize() ;
+   std::cout << "Done!" << std::endl;
+
 #endif
 
   return 0;

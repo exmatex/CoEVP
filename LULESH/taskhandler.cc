@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <mpi.h>
 #include <list>  
-
+#include <unistd.h>
 int main(int argc, char** argv)
 {
   int localrank, numTaskHandlers, rank, size, numTasks;
@@ -80,9 +80,12 @@ int main(int argc, char** argv)
 					int exit_signal = -1;
 					for(int i=0;i<numTasks;i++)
 					{
+						std::cout << "Tearing down task: " << i << std::endl;
 						MPI_Send(&exit_signal, 1, MPI_INT, i, 3, mpi_intercomm_taskpool);
 					}
+					std::cout << "Done cleaning up tasks." << std::endl;
 				}
+ 				MPI_Barrier(mpi_intercomm_taskpool);
 				MPI_Finalize();
 				exit(0);
 			}
@@ -92,7 +95,7 @@ int main(int argc, char** argv)
 				// pair up the task_worker with the work
 				int task_worker_id = task_worker.front();
 				task_worker.pop_front();
-		        MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);//, &mpi_request);
+		        MPI_Isend(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool, &mpi_request);
 			}
 			else if(numTaskHandlers>1)
 			{
@@ -101,12 +104,12 @@ int main(int argc, char** argv)
 				if(localrank == numTaskHandlers-1)
 				{
 					//we're the last rank, wrap around to handler 0
-					MPI_Send(&lulesh_work_id, 1, MPI_INT, 0, 1, mpi_comm_taskhandler);//, &mpi_request);
+					MPI_Isend(&lulesh_work_id, 1, MPI_INT, 0, 1, mpi_comm_taskhandler, &mpi_request);
 				}
 				else
 				{
 					//send task to neighbouring handler
-					MPI_Send(&lulesh_work_id, 1, MPI_INT, localrank+1, 1, mpi_comm_taskhandler);//, &mpi_request);
+					MPI_Isend(&lulesh_work_id, 1, MPI_INT, localrank+1, 1, mpi_comm_taskhandler, &mpi_request);
 				}
 			}
 			else

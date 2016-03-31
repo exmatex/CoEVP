@@ -74,6 +74,7 @@ Additional BSD Notice
 #if defined(COEVP_MPI)
 #include <mpi.h>
 #include <typeinfo>
+#include <unistd.h>
 #endif
 
 #if defined(LOGGER)      // CoEVP Makefile enforces assert LOGGER=REDIS=yes
@@ -578,7 +579,7 @@ void Lulesh::TimeIncrement()
 #else
       newdt = gnewdt ;
 #endif
-	this->OutputTiming();
+	  if(timer) OutputTiming();
 
       ratio = newdt / olddt ;
       if (ratio >= Real_t(1.0)) {
@@ -2992,6 +2993,8 @@ void Lulesh::OutputTiming()
 {
    if(timer)
 	{
+		std::cout << "Timing:" << timer << std::endl;
+
         int t_count = domain.cycle();
 		int scale=0;
 		if(timer != 1)
@@ -3010,7 +3013,7 @@ void Lulesh::OutputTiming()
 		{
 			
 			timings.push_back(std::chrono::high_resolution_clock::now());
-			if(scale == 1 && time_output)
+			if((scale == 1) && time_output)
 			{
 				timerfile << "Timer Output Frequency is " << scale << std::endl;
 			}
@@ -3063,15 +3066,17 @@ void Lulesh::StartMPIWorkers()
         Result result;  
 		int lulesh_worker_id;
 
-        MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_parent);
+        MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_parent);//, &mpi_request);
         // If we sent succesfully, then we are ready to discover some work
-        MPI_Recv(&lulesh_worker_id, 1, MPI_INT, myHandler, 3, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+        MPI_Recv(&lulesh_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 3, mpi_intercomm_parent, MPI_STATUS_IGNORE);
 		if(lulesh_worker_id==-1)
 		{
+			std::cout << "Stopping task: " << rank << std::endl;
+			MPI_Barrier(mpi_intercomm_parent);
 			MPI_Finalize();
 			exit(0);
 		}
-
+		
         MPI_Send(&rank, 1, MPI_INT, lulesh_worker_id, 4, mpi_intercomm_parent);
 
         // this is where we receive work from the lulesh domain and ultimately send it back
@@ -3094,7 +3099,6 @@ void Lulesh::StartMPIWorkers()
 		//std::cout << "Size: " << domain.cm(0)->getStateSize() << std::endl;
 		MPI_Send(&result, sizeof(result),  MPI_BYTE, lulesh_worker_id, 20, mpi_intercomm_parent);//, &mpi_request);
 		MPI_Send(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 21, mpi_intercomm_parent);
-
 	}
     
    #endif
@@ -3112,16 +3116,16 @@ int Lulesh::UpdateStressForElemsTaskPool()
    int max_local_newton_iters = 0;
    int numElem = domain.numElem() ;
 
-   MPI_Request request;
+   MPI_Request mpi_request;
 
 	for (Index_t k=0; k<numElem; ++k) {
        // let us stick our request for a task_worker here
-	    MPI_Send(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler);//, &request);
+	    MPI_Isend(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler, &mpi_request);
 	}
 
 	Index_t out_cell_count = 0;
     Index_t in_cell_count = 0;
-	while(in_cell_count < numElem)
+	while((in_cell_count < numElem) && (out_cell_count < numElem))
 	{
 	   // recieve the task/worker for my payload
         Task task;
@@ -3151,7 +3155,6 @@ int Lulesh::UpdateStressForElemsTaskPool()
         // we could post a bunch of irecvs and process them after they have arrived, but let's do this version first.
 			MPI_Recv(&result, sizeof(result), MPI_BYTE, mpi_status.MPI_SOURCE, 20, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
 			MPI_Recv(domain.cm_state(result.lulesh_cell_id), sizeof(size_t)*domain.cm(result.lulesh_cell_id)->getStateSize(), MPI_BYTE, mpi_status.MPI_SOURCE, 21, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-			in_cell_count++;
 
 //			mpi_task_pool_num_samples += result.num_samples;
 //			mpi_task_pool_num_successful_interpolations += result.num_successful_interpolations;
@@ -3170,6 +3173,8 @@ int Lulesh::UpdateStressForElemsTaskPool()
         
             domain.mises(result.lulesh_cell_id) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
                                     + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
+
+			in_cell_count++;
 
         }
 
@@ -3310,16 +3315,13 @@ void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
 void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime, int simStopCycle, int timerSamplingRate)
 {
 	this->time_output = 0;
-	if(myRank == 0)
+	std::cout << "Timer: " <<timer << std::endl;
+	if((myRank == 0) && timerSamplingRate)
 	{
 		if(timerSamplingRate < 0)
 		{
 			this->time_output = 1;
 			this->timer = -timerSamplingRate;
-		}
-		else if(timerSamplingRate == 0)
-		{
-			this->timer = 1;
 		}
 		else
 		{
@@ -3369,7 +3371,7 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
    Index_t chunkSize ;
    Index_t remainder ;
 
-   if (sizeof(Real_t) != 4 && sizeof(Real_t) != 8) {
+   if ((sizeof(Real_t) != 4) && (sizeof(Real_t) != 8)) {
       printf("MPI operations only support float and double right now...\n");
 #if defined(COEVP_MPI)
       MPI_Abort(MPI_COMM_WORLD, -1) ;
@@ -4450,7 +4452,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
 #ifdef SILO
       char meshName[64] ;
-      if ((visit_data_interval !=0) && (domain.cycle() % visit_data_interval == 0)) {
+      if ((myDomainID == 0) && (visit_data_interval !=0) && (domain.cycle() % visit_data_interval == 0)) {
          DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(),
                    ((domain.numSlices() == 1) ? file_parts : 0), sampling, debug_topology ) ;
       }
@@ -4527,13 +4529,15 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 		MPI_Comm_rank (MPI_COMM_WORLD, &rank);
 		for(int i=0; i < taskhandler_size-domain_size; i++)
 		{
+			std::cout << "Tearing down task handler: " << i << std::endl;
 			MPI_Send(&exit_signal, 1, MPI_INT, i, 1, mpi_comm_taskhandler);
 		}
+		std::cout << "Cleaned up task handlers." << myDomainID << std::endl;
+//		MPI_Barrier(mpi_intercomm_taskpool);
 	}
 #endif
 
-	std::cout << "left while loop" <<std::endl;
-	FinalTime();
+	if(timer) FinalTime();
 	std::cout << "wrote_final_time" <<std::endl;
 
 
@@ -4600,7 +4604,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
    }
 
 #ifdef SILO
-   if ((visit_data_interval != 0) && (domain.cycle() % visit_data_interval != 0)) {
+   if ((myDomainID == 0) && (visit_data_interval != 0) && (domain.cycle() % visit_data_interval != 0)) {
       DumpDomain(&domain, domain.sliceLoc(), domain.numSlices(), 
                  ((domain.numSlices() == 1) ? file_parts : 0), sampling, debug_topology ) ;
    }
