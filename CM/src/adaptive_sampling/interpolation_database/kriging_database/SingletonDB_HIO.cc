@@ -28,20 +28,21 @@ void  SingletonDB_HIO::push(const uint128_t &key, const std::vector<double>& buf
 //   hrc = hio_init_single(&hio, HIO_CONFIG, "", HIO_NAMESPACE);
 //   check_hio_return(hrc);
 
-	switch(dstate)
+    switch(dstate)
     {
 		case HREAD:
-			hrc = hio_dataset_close(&dataset);
-		    check_hio_return(hrc, hio, "HIO: Close Dataset Read Handle"); 
-    		hrc  = hio_dataset_open(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_WRITE, HIO_SET_ELEMENT_UNIQUE);
+			hrc = hio_dataset_close(dataset);
+	         	check_hio_return(hrc, hio, "HIO: Close Dataset Read Handle"); 
+    			hrc  = hio_dataset_alloc(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_WRITE, HIO_SET_ELEMENT_UNIQUE);
+			check_hio_return(hrc, hio, "HIO: Alloc Dataset Write Handle");
+			hrc = hio_dataset_open(dataset);
 			check_hio_return(hrc, hio, "HIO: Open Dataset Write Handle");
 			dstate = HWRITE;
 			break;
-	}
+    }
 
     hio_element_t element;
 
-//   size_t sz;
     int64_t sz = buf.size();
 
     std::string skey=uint128_to_string(key);
@@ -81,9 +82,11 @@ std::vector<double> SingletonDB_HIO::pull(const uint128_t &key) {
     switch(dstate)
     {
         case HWRITE:
-            hrc = hio_dataset_close(&dataset);
+            hrc = hio_dataset_close(dataset);
             check_hio_return(hrc, hio, "HIO: Close Dataset Write Handle"); 
-            hrc  = hio_dataset_open(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_READ, HIO_SET_ELEMENT_UNIQUE);
+            hrc  = hio_dataset_alloc(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_READ, HIO_SET_ELEMENT_UNIQUE);
+            check_hio_return(hrc, hio, "HIO: Alloc Dataset Read Handle");
+	    hrc = hio_dataset_open(dataset);
             check_hio_return(hrc, hio, "HIO: Open Dataset Read Handle");
             dstate = HREAD;
             break;
@@ -135,7 +138,7 @@ SingletonDB_HIO::SingletonDB_HIO() {
     hrc = hio_init_single(&hio, HIO_CONFIG, "", HIO_NAMESPACE);
     check_hio_return(hrc, hio, "HIO: Open HIO Context");   
    
-// shameful prefix generation to deal with current HIO thread safety issues
+// prefix generation to deal with current HIO thread safety issues
 
     char hostname[1024];
     hostname[1023] = '\0';
@@ -146,11 +149,14 @@ SingletonDB_HIO::SingletonDB_HIO() {
 
 	// create or open the dataset for the first time
 
-    hrc  = hio_dataset_open(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_CREAT|HIO_FLAG_WRITE, HIO_SET_ELEMENT_UNIQUE);
+
+
+
+    hrc  = hio_dataset_alloc(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_CREAT|HIO_FLAG_WRITE, HIO_SET_ELEMENT_UNIQUE);
     check_hio_return(hrc, hio, "HIO: Create Dataset");
     if(hrc != HIO_SUCCESS)
     {
-    	hrc  = hio_dataset_open(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_WRITE, HIO_SET_ELEMENT_UNIQUE);
+	   	hrc  = hio_dataset_alloc(hio, &dataset, prefix.c_str(), 0, HIO_FLAG_WRITE, HIO_SET_ELEMENT_UNIQUE);
 		check_hio_return(hrc, hio, "HIO: Open existing Dataset");
 		if(hrc != HIO_SUCCESS)
 		{
@@ -158,8 +164,16 @@ SingletonDB_HIO::SingletonDB_HIO() {
 			exit(1);
 
 		}
-	}
-	dstate = HWRITE;
+    }
+    hrc  = hio_dataset_open(dataset);
+    if(hrc != HIO_SUCCESS)
+    {
+           std::perror("HIO: Can't create or open existing dataset. Check HIO lib compatibility?\n");
+           exit(1);
+
+    }
+    dstate = HWRITE;
+    
 }
 
 
