@@ -68,6 +68,7 @@ Additional BSD Notice
 #include <string.h>
 #include <stdexcept>
 #include <sstream>
+#include <chrono>
 
 #if defined(COEVP_MPI)
 #include <mpi.h>
@@ -3016,18 +3017,27 @@ int Lulesh::UpdateStressForElemsServer()
   int max_local_newton_iters = 0;
   int numElem = circleDomain->numElem();
 
-  int myRank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
+  int circleRank, circleRanks;
+  MPI_Comm_rank(MPI_COMM_WORLD, &circleRank) ;
+  MPI_Comm_size(MPI_COMM_WORLD, &circleRanks);
+  std::chrono::time_point<std::chrono::system_clock> start, end;
 
   // Note the difference between timesteps and per-cell loop.
   // This function executes enqueued tasks. They fire at the
   // timestep loop level and are enqueued at the per-cell
   // loop level.
-  if(myRank != 0) {
+  if(circleRank != 0) {
     CIRCLE_begin();      // execute the enqueued tasks
   } else {
     //  So, if not rank 0...receive results
+    start = std::chrono::system_clock::now();
     doCircleTasks();   // enqueue and dispatch a bunch of task, wait for completion
+    end = std::chrono::system_clock::now();
+    std::chrono::duration<double> et = end-start;
+    std::cout << "circle work: " << et.count() << "[total] "
+              << et.count()/(float)(circleRanks-1) << "[per worker] "
+              << et.count()/(float)(circleDomain->numElem()) << "[per cell]"
+              << std::endl;
     // make sure to get k=numElem results back
     ConstitutiveData  cm_data;
     int numElems = circleDomain->numElem();
@@ -3047,6 +3057,7 @@ int Lulesh::UpdateStressForElemsServer()
     if(reply->elements != numElems) {
       throw std::runtime_error(std::to_string(numElems) + " keys expected, got " + std::to_string(reply->elements));
     }
+    start = std::chrono::system_clock::now();
     for (int j=0; j<reply->elements; j++) {         // start of "results" loop
       //std::cout << j << " ";
       redisReply  *k_reply = (redisReply *)reply->element[j];  // key
@@ -3062,7 +3073,7 @@ int Lulesh::UpdateStressForElemsServer()
       std::string returnResults(reinterpret_cast<char const*>(v_reply->str), v_reply->len);
       unpackAdvance(returnResults, &kk, &cm_data, &deltatime, &cm_vel_grad, &cm_vol_chng, circleDomain->cm_state(k));
       if (kk != k) {
-        std::cerr << "Uh oh, key from redis does not match key from processCircletasks()!" << std::endl;
+        std::cerr << "Uh oh, key from redis does not match key from processCircleTasks()!" << std::endl;
       }
     
       freeReplyObject(k_reply);
@@ -3084,6 +3095,11 @@ int Lulesh::UpdateStressForElemsServer()
                               + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
 
     }    //  end of results "loop"
+    end = std::chrono::system_clock::now();
+    et = end-start;
+    std::cout << "db work: " << et.count() << "[total] "
+              << et.count()/(float)(circleDomain->numElem()) << "[per cell]"
+              << std::endl;
     //freeReplyObject(reply);   //  free the KEYS * results (and sub-results)
     //std::cout << "\n........out of results loop" << std::endl;
     reply = (redisReply *)redisCommand(circleDB, "FLUSHDB");
@@ -4292,7 +4308,19 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
    
    /* timestep to solution */
-   while(domain.time() < domain.stoptime() ) {
+   int steppypoo = 0;
+   //   while((domain.time() < domain.stoptime()) || (steppypoo == 511)) {
+
+   int circleRank, circleRanks;
+     MPI_Comm_rank(MPI_COMM_WORLD, &circleRank);
+     MPI_Comm_size(MPI_COMM_WORLD, &circleRanks);
+     
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+  if (circleRank == 0) {
+    start = std::chrono::system_clock::now();
+  }
+   while(steppypoo < 25) {
+     steppypoo++;
 #if defined(LOGGER)
      logger.logStartTimer("outer");
 #endif
@@ -4313,7 +4341,6 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
       MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
       if (myRank != 0)
         continue;
-      
 #else
       int maxIters = UpdateStressForElems();
 #endif
@@ -4362,7 +4389,16 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
    logger.incrTimeStep();
 #endif
    }  /* while */
-
+   if (circleRank == 0) {
+     end = std::chrono::system_clock::now();
+     std::chrono::duration<double> et = end-start;
+     std::cout << "cells: " << domain.numElem()
+               << " iters: " << steppypoo
+               << " workers: " << circleRanks-1
+               << " et: " << et.count()
+               << " sec/cell: " << et.count() / (float)domain.numElem()
+               << std::endl;
+   }
 
 #ifdef WRITE_FSM_EVAL_COUNT
    fsm_count_file.close();
@@ -4450,3 +4486,45 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 #endif
 }
 
+
+//  [HACK] libcircle ONLY version of go()
+void Lulesh::gogo(int myRank, int numRanks, int sampling, int visit_data_interval,int file_parts, int debug_topology)
+{
+  int steppypoo = 0;
+  int circleRank, circleRanks;
+  MPI_Comm_rank(MPI_COMM_WORLD, &circleRank);
+  MPI_Comm_size(MPI_COMM_WORLD, &circleRanks);
+     
+  std::chrono::time_point<std::chrono::system_clock> start, end;
+  if (circleRank == 0) {
+    start = std::chrono::system_clock::now();
+  }
+  while(steppypoo < 25) {
+    steppypoo++;
+    TimeIncrement() ;
+    LagrangeLeapFrog() ;
+
+    int maxIters = UpdateStressForElemsServer();
+    if (circleRank != 0)
+      continue;
+
+    UpdateStressForElems2(maxIters);
+    if (circleRank == 0) {
+      printf("step = %d, time = %e, dt=%e\n",
+             domain.cycle(), double(domain.time()), double(domain.deltatime()) ) ;
+      fflush(stdout);
+    }
+  }  /* while */
+  if (circleRank == 0) {
+    end = std::chrono::system_clock::now();
+    std::chrono::duration<double> et = end-start;
+    std::cout << "cells: " << domain.numElem()
+              << " iters: " << steppypoo
+              << " workers: " << circleRanks-1
+              << " et: " << et.count()
+              << " sec/iter: " << et.count() / (float)steppypoo
+              << " sec/cell: " << et.count() / (float)domain.numElem()
+              << std::endl;
+  }
+}
+      

@@ -16,6 +16,7 @@
 #if defined(PROTOBUF)
 #include <libcircle.h>
 #include <mpi.h>
+#include <unistd.h>
 #include "hiredis.h"
 //  Hacky globals necessary for static libcircle callbacks to get handle to advance() function.
 Domain *circleDomain;
@@ -218,19 +219,23 @@ int main(int argc, char *argv[])
        throw std::runtime_error("Error connecting to redis for libcircle, please start one on "
                                 + std::string(circledb));
      }
-     redisReply *reply = (redisReply *) redisCommand(circleDB, "DBSIZE");
-     if (!reply) {
-       throw std::runtime_error("No connection to redis server for libcircle, please start one on "
-                                + std::string(circledb));
+     int circleRank;
+     MPI_Comm_rank(MPI_COMM_WORLD, &circleRank);
+     if (circleRank == 0) {
+       redisReply *reply = (redisReply *) redisCommand(circleDB, "DBSIZE");
+       if (!reply) {
+         throw std::runtime_error("No connection to redis server for libcircle, please start one on "
+                                  + std::string(circledb));
+       }
+       if (reply->type != REDIS_REPLY_INTEGER){
+         throw std::runtime_error("Wrong redis return type (when opening for libcircle)");
+       }
+       if(reply->integer > 0) {
+         std::cout << "...existing database found (" << reply->integer << " keys), erasing it" << std::endl;
+         redisCommand(circleDB, "FLUSHDB");    // Never supposed to fail :-)
+       }
+       freeReplyObject(reply);
      }
-     if (reply->type != REDIS_REPLY_INTEGER){
-       throw std::runtime_error("Wrong redis return type (when opening for libcircle)");
-     }
-     if(reply->integer > 0) {
-       std::cout << "...existing database found (" << reply->integer << " keys), erasing it" << std::endl;
-       redisCommand(circleDB, "FLUSHDB");    // Never supposed to fail :-)
-     }
-     freeReplyObject(reply);
      std::cout << "...connected for libcircle" << std::endl;
    }
 #endif
@@ -242,8 +247,14 @@ int main(int argc, char *argv[])
   luleshSystem.ExchangeNodalMass();
 
   // Simulate 
-  luleshSystem.go(myRank,numRanks,sampling,visit_data_interval,file_parts,debug_topology);
-
+#if defined(PROTOBUF)
+   if (circling) {
+     luleshSystem.gogo(myRank,numRanks,sampling,visit_data_interval,file_parts,debug_topology);
+   } else {
+     luleshSystem.go(myRank,numRanks,sampling,visit_data_interval,file_parts,debug_topology);
+   }
+#endif
+   
   // Only do this is we have actually opened a REDIS connection.
 #if defined(LOGGER)
   if (logging) {

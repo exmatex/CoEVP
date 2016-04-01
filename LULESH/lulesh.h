@@ -176,6 +176,7 @@ void Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double dom
 void ConstructFineScaleModel(bool sampling,ModelDatabase * global_modelDB,ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns);
 void ExchangeNodalMass();
 void go(int myRank, int numRanks, int sampling, int visit_data_interval,int file_parts, int debug_topology);
+void gogo(int myRank, int numRanks, int sampling, int visit_data_interval,int file_parts, int debug_topology);
 
 #if defined(PROTOBUF)
 //  Should refactor this out into some server class.
