@@ -183,11 +183,13 @@ ElastoViscoPlasticity::soundSpeedSquared( const double reference_density,
 ConstitutiveData
 ElastoViscoPlasticity::advance( const double delta_t, const Tensor2Gen& L_new, const double volume_change, void* state )
 {
+#if 1
   int r;
   for (int i=0; i<1000; i++) {
     srand(r);
     r = rand();
   }
+#endif
   
    void* plasticity_model_state = setState(state);
 

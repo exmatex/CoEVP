@@ -3034,7 +3034,7 @@ int Lulesh::UpdateStressForElemsServer()
     doCircleTasks();   // enqueue and dispatch a bunch of task, wait for completion
     end = std::chrono::system_clock::now();
     std::chrono::duration<double> et = end-start;
-    std::cout << "circle work: " << et.count() << "[total] "
+    std::cout << "\ncircle work: " << et.count() << "[total] "
               << et.count()/(float)(circleRanks-1) << "[per worker] "
               << et.count()/(float)(circleDomain->numElem()) << "[per cell]"
               << std::endl;
@@ -3059,7 +3059,7 @@ int Lulesh::UpdateStressForElemsServer()
     }
     start = std::chrono::system_clock::now();
     for (int j=0; j<reply->elements; j++) {         // start of "results" loop
-      //std::cout << j << " ";
+      //std::cout << j << " " << std::flush;
       redisReply  *k_reply = (redisReply *)reply->element[j];  // key
       if (k_reply->type != REDIS_REPLY_STRING) {
         throw std::runtime_error("Wrong redis return type for libcircle getting a key");
@@ -3082,6 +3082,7 @@ int Lulesh::UpdateStressForElemsServer()
       int num_iters = cm_data.num_Newton_iters;
       if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
 
+#if 0
       const Tensor2Sym& sigma_prime = cm_data.sigma_prime;
 
       Real_t sx  = domain.sx(k) = sigma_prime(1,1);
@@ -3093,6 +3094,7 @@ int Lulesh::UpdateStressForElemsServer()
 
       domain.mises(k) = SQRT( Real_t(0.5) * ( (sy - sz)*(sy - sz) + (sz - sx)*(sz - sx) + (sx - sy)*(sx - sy) )
                               + Real_t(3.0) * ( txy*txy + txz*txz + tyz*tyz) );
+#endif
 
     }    //  end of results "loop"
     end = std::chrono::system_clock::now();
@@ -3100,7 +3102,6 @@ int Lulesh::UpdateStressForElemsServer()
     std::cout << "db work: " << et.count() << "[total] "
               << et.count()/(float)(circleDomain->numElem()) << "[per cell]"
               << std::endl;
-    //freeReplyObject(reply);   //  free the KEYS * results (and sub-results)
     //std::cout << "\n........out of results loop" << std::endl;
     reply = (redisReply *)redisCommand(circleDB, "FLUSHDB");
     if (!reply) {
@@ -3111,16 +3112,6 @@ int Lulesh::UpdateStressForElemsServer()
     if (max_local_newton_iters > max_nonlinear_iters) {
       max_nonlinear_iters = max_local_newton_iters;
     }
-
-    // Initial libcircle runs are with serial lulesh. Need to figure
-    // out how to modify libcircle to handle multiple communicators.
-    // Louis might have a way to do this.
-#if defined(COEVP_MPI)
-    int g_max_nonlinear_iters ;
-    MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
-                  MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
-    max_nonlinear_iters = g_max_nonlinear_iters ;
-#endif
     return max_nonlinear_iters;
   }   //  else
 }
@@ -4494,27 +4485,33 @@ void Lulesh::gogo(int myRank, int numRanks, int sampling, int visit_data_interva
   int circleRank, circleRanks;
   MPI_Comm_rank(MPI_COMM_WORLD, &circleRank);
   MPI_Comm_size(MPI_COMM_WORLD, &circleRanks);
+  char my_node[MPI_MAX_PROCESSOR_NAME];
+  int name_len;
+  MPI_Get_processor_name(my_node, &name_len);
+  std::cout << my_node << "-" << circleRank << std::endl;
      
   std::chrono::time_point<std::chrono::system_clock> start, end;
   if (circleRank == 0) {
     start = std::chrono::system_clock::now();
   }
+  
   while(steppypoo < 25) {
     steppypoo++;
-    TimeIncrement() ;
-    LagrangeLeapFrog() ;
+    if (circleRank == 0) {                             //  RANK 0 only
+      TimeIncrement() ;
+      LagrangeLeapFrog() ;
 
-    int maxIters = UpdateStressForElemsServer();
-    if (circleRank != 0)
-      continue;
-
-    UpdateStressForElems2(maxIters);
-    if (circleRank == 0) {
+      int maxIters = UpdateStressForElemsServer();
+      
+      UpdateStressForElems2(maxIters);
       printf("step = %d, time = %e, dt=%e\n",
              domain.cycle(), double(domain.time()), double(domain.deltatime()) ) ;
       fflush(stdout);
+    } else {                                          // all other ranks
+      int bogus = UpdateStressForElemsServer();
     }
   }  /* while */
+  
   if (circleRank == 0) {
     end = std::chrono::system_clock::now();
     std::chrono::duration<double> et = end-start;
