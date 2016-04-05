@@ -88,6 +88,7 @@ Additional BSD Notice
 #include "hiredis.h"
 #include <libcircle.h>
 #include <mpi.h>
+#include <unistd.h>
 #endif
 
 #ifdef _OPENMP
@@ -3047,6 +3048,7 @@ int Lulesh::UpdateStressForElemsServer()
     double      cm_vol_chng;
     char        cleanKey[10];
 
+    //sleep(5);
     redisReply *reply = (redisReply *)redisCommand(circleDB, "KEYS R:*");   // [HACK] O(n) operation!
     if (!reply) {
       std::cerr << "No connection to redis for libcircle...continuing" << std::endl;
@@ -3057,9 +3059,10 @@ int Lulesh::UpdateStressForElemsServer()
     if(reply->elements != numElems) {
       throw std::runtime_error(std::to_string(numElems) + " keys expected, got " + std::to_string(reply->elements));
     }
+    std::cout << reply->elements << "=?" << numElems << std::endl;
     start = std::chrono::system_clock::now();
     for (int j=0; j<reply->elements; j++) {         // start of "results" loop
-      //std::cout << j << " " << std::flush;
+      //std::cout << j << std::flush;
       redisReply  *k_reply = (redisReply *)reply->element[j];  // key
       if (k_reply->type != REDIS_REPLY_STRING) {
         throw std::runtime_error("Wrong redis return type for libcircle getting a key");
@@ -3068,6 +3071,7 @@ int Lulesh::UpdateStressForElemsServer()
       if (v_reply->type != REDIS_REPLY_STRING) {
         throw std::runtime_error("Wrong redis return type for libcircle getting a value");
       }
+      std::cout << "K: " << k_reply->str << "   j: " << j << std::endl;
       //  Peel off the R:
       sscanf(k_reply->str, "R:%i", &k);
       std::string returnResults(reinterpret_cast<char const*>(v_reply->str), v_reply->len);
