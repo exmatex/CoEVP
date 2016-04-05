@@ -43,6 +43,7 @@ public:
     	MPI_Comm mpi_comm_taskhandler;
 	    MPI_Comm mpi_intercomm_taskpool;
 		MPI_Comm mpi_intercomm_parent;
+		MPI_Comm myComm;
 		MPI_Status mpi_status;
 //		MPI_Request mpi_request;
 		int myHandler;

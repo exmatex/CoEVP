@@ -40,8 +40,11 @@ int main(int argc, char *argv[])
    
 #if defined(COEVP_MPI)
    MPI_Init(&argc, &argv) ;
-   MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
-   MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
+   MPI_Comm myComm;
+   MPI_Comm_dup(MPI_COMM_WORLD, &myComm);
+   
+   MPI_Comm_size(myComm, &numRanks) ;
+   MPI_Comm_rank(myComm, &myRank) ;
 
 
 // to avoid initialization headaches, lulesh is both the producer and consumer of work
@@ -83,7 +86,7 @@ int main(int argc, char *argv[])
 	  char* taskhandler_path = const_cast<char*> (launch_path.c_str());
 	  std::cout << "Taskhandler relative path: " << taskhandler_path << std::endl;	  
 
-	  MPI_Comm_spawn(taskhandler_path, command_argv, numTaskHandlers, MPI_INFO_NULL, 0, MPI_COMM_WORLD, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
+	  MPI_Comm_spawn(taskhandler_path, command_argv, numTaskHandlers, MPI_INFO_NULL, 0, myComm, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
  
 	  // here it gets complicated. we need to new intracoomunicator including our spawned task handlers, so we can doa collect launch of the lulesh process
 	  MPI_Intercomm_merge(mpi_intercomm_taskhandler, 1, &mpi_comm_taskhandler); 
@@ -165,6 +168,7 @@ int main(int argc, char *argv[])
   luleshSystem.mpi_intercomm_taskpool = mpi_intercomm_taskpool;
   luleshSystem.mpi_intercomm_parent = mpi_intercomm_parent;
   luleshSystem.myHandler = myHandler;
+  luleshSystem.myComm = myComm;
 
 #endif
 
@@ -279,7 +283,7 @@ int main(int argc, char *argv[])
    if (logging) {
 #if defined(COEVP_MPI)
      int my_rank;
-     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+     MPI_Comm_rank(myComm, &my_rank);
      char my_node[MPI_MAX_PROCESSOR_NAME];
      int name_len;
      MPI_Get_processor_name(my_node, &name_len);

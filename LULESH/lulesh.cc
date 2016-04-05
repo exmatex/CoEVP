@@ -227,7 +227,7 @@ void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t s
       int recvCount = size * xferFields ;
       MPI_Irecv(&domain->commDataRecv[pmsg * maxPlaneComm],
                 recvCount, baseType, fromRank, msgType,
-                MPI_COMM_WORLD, &domain->recvRequest[pmsg]) ;
+                myComm, &domain->recvRequest[pmsg]) ;
       ++pmsg ;
    }
    if (planeMax) {
@@ -236,7 +236,7 @@ void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t s
       int recvCount = size * xferFields ;
       MPI_Irecv(&domain->commDataRecv[pmsg * maxPlaneComm],
                 recvCount, baseType, fromRank, msgType,
-                MPI_COMM_WORLD, &domain->recvRequest[pmsg]) ;
+                myComm, &domain->recvRequest[pmsg]) ;
       ++pmsg ;
    }
 }
@@ -296,7 +296,7 @@ void Lulesh::CommSend(Domain *domain, int msgType,
 
       MPI_Isend(destAddr, xferFields*size,
                 baseType, myRank - 1, msgType,
-                MPI_COMM_WORLD, &domain->sendRequest[pmsg]) ;
+                myComm, &domain->sendRequest[pmsg]) ;
       ++pmsg ;
    }
 
@@ -322,7 +322,7 @@ void Lulesh::CommSend(Domain *domain, int msgType,
 
       MPI_Isend(destAddr, xferFields*size,
                 baseType, myRank + 1, msgType,
-                MPI_COMM_WORLD, &domain->sendRequest[pmsg]) ;
+                myComm, &domain->sendRequest[pmsg]) ;
       ++pmsg ;
    }
 
@@ -574,7 +574,7 @@ void Lulesh::TimeIncrement()
 #if defined(COEVP_MPI)
       MPI_Allreduce(&gnewdt, &newdt, 1,
                     ((sizeof(Real_t) == 4) ? MPI_FLOAT : MPI_DOUBLE),
-                    MPI_MIN, MPI_COMM_WORLD) ;
+                    MPI_MIN, myComm) ;
 #else
       newdt = gnewdt ;
 #endif
@@ -1448,7 +1448,7 @@ void Lulesh::CalcHourglassControlForElems(Real_t determ[], Real_t hgcoef)
       /* Do a check for negative volumes */
       if ( domain.v(i) <= Real_t(0.0) ) {
 #if defined(COEVP_MPI)
-         MPI_Abort(MPI_COMM_WORLD, VolumeError) ;
+         MPI_Abort(myComm, VolumeError) ;
 #else
          exit(VolumeError) ;
 #endif
@@ -1495,7 +1495,7 @@ void Lulesh::CalcVolumeForceForElems()
       for ( Index_t k=0 ; k<numElem ; ++k ) {
          if (determ[k] <= Real_t(0.0)) {
 #if defined(COEVP_MPI)
-            MPI_Abort(MPI_COMM_WORLD, VolumeError) ;
+            MPI_Abort(myComm, VolumeError) ;
 #else
             exit(VolumeError) ;
 #endif
@@ -2027,7 +2027,7 @@ void Lulesh::CalcLagrangeElements(Real_t deltatime)
         if (domain.vnew(k) <= Real_t(0.0))
         {
 #if defined(COEVP_MPI)
-           MPI_Abort(MPI_COMM_WORLD, VolumeError) ;
+           MPI_Abort(myComm, VolumeError) ;
 #else
            exit(VolumeError) ;
 #endif
@@ -2409,7 +2409,7 @@ void Lulesh::CalcQForElems2()
          cout << "At element " << idx << ", q = " << domain.q(idx) <<
             ", qstop = " << qstop << endl;
 #if defined(COEVP_MPI)
-         MPI_Abort(MPI_COMM_WORLD, QStopError) ;
+         MPI_Abort(myComm, QStopError) ;
 #else
          exit(QStopError) ;
 #endif
@@ -2758,7 +2758,7 @@ void Lulesh::ApplyMaterialPropertiesForElems()
        }
        if (vc <= 0.) {
 #if defined(COEVP_MPI)
-          MPI_Abort(MPI_COMM_WORLD, VolumeError) ;
+          MPI_Abort(myComm, VolumeError) ;
 #else
           exit(VolumeError) ;
 #endif
@@ -3055,7 +3055,7 @@ void Lulesh::StartMPIWorkers()
 
 	// let's reprove for rank, just because
     int rank;
-    MPI_Comm_rank (MPI_COMM_WORLD, &rank);
+    MPI_Comm_rank (myComm, &rank);
     MPI_Request mpi_request;
 
     while(1)
@@ -3179,7 +3179,7 @@ int Lulesh::UpdateStressForElemsTaskPool()
 	    int g_max_nonlinear_iters ;
 	
 	    MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
-	                  MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
+	                  MPI_INT, MPI_MAX, myComm) ;
 	    max_nonlinear_iters = g_max_nonlinear_iters ;
 
 	#endif
@@ -3261,7 +3261,7 @@ int Lulesh::UpdateStressForElems()
       int g_max_nonlinear_iters ;
 
       MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
-                    MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
+                    MPI_INT, MPI_MAX, myComm) ;
       max_nonlinear_iters = g_max_nonlinear_iters ;
    }
 #endif
@@ -3287,7 +3287,7 @@ void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
    }
 
 #if 0
-   MPI_Barrier(MPI_COMM_WORLD) ;
+   MPI_Barrier(myComm) ;
 
 #if defined(PRINT_PERFORMANCE_DIAGNOSTICS) && defined(LULESH_SHOW_PROGRESS)
    cout << "   finescale_dt_modifier = " << finescale_dt_modifier << endl;
@@ -3295,7 +3295,7 @@ void Lulesh::UpdateStressForElems2(int max_nonlinear_iters)
    cout.flush() ;
 #endif
 
-   MPI_Barrier(MPI_COMM_WORLD) ;
+   MPI_Barrier(myComm) ;
 #endif
 }
 
@@ -3365,7 +3365,7 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
    if (sizeof(Real_t) != 4 && sizeof(Real_t) != 8) {
       printf("MPI operations only support float and double right now...\n");
 #if defined(COEVP_MPI)
-      MPI_Abort(MPI_COMM_WORLD, -1) ;
+      MPI_Abort(myComm, -1) ;
 #else
       exit(-1);
 #endif
@@ -3375,12 +3375,12 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
 #if 0
    if (MAX_FIELDS_PER_MPI_COMM > CACHE_COHERENCE_PAD_REAL) {
       printf("corner element comm buffers too small.  Fix code.\n") ;
-      MPI_Abort(MPI_COMM_WORLD, -1) ;
+      MPI_Abort(myComm, -1) ;
    }
 
    if (numRanks > gheightElems) {
       printf("error -- must have at least one plane per MPI rank\n") ;
-      MPI_Abort(MPI_COMM_WORLD, -1) ;
+      MPI_Abort(myComm, -1) ;
    }
 
 #endif
