@@ -23,8 +23,7 @@ MODS = vpetxt_interface_base.mod vpscvpetxt_interface.mod
 
 all: Taylor modules
 
-Taylor: TaylorFort.f90
-	$(FC) -c TaylorFort.f90
+Taylor: TaylorFort.o
 
 modules: $(MODS) $(OBJS)
 
