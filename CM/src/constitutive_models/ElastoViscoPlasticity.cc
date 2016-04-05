@@ -185,7 +185,7 @@ ElastoViscoPlasticity::advance( const double delta_t, const Tensor2Gen& L_new, c
 {
 #if 1
   int r;
-  for (int i=0; i<1000; i++) {
+  for (int i=0; i<100000; i++) {
     srand(r);
     r = rand();
   }

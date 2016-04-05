@@ -20,7 +20,7 @@
 #include "hiredis.h"
 //  Hacky globals necessary for static libcircle callbacks to get handle to advance() function.
 Domain *circleDomain;
-redisContext *circleDB;
+std::vector<std::string> dbNodePort;
 #endif
 
 //  Command line option parsing (using Sriram code from old days)
@@ -204,17 +204,17 @@ int main(int argc, char *argv[])
      circleDomain = &luleshSystem.domain;  // Set global pointer to this instance's Domain
      //  Move all this out to resource manager at some point.
      //  Separate the hostname from the port (input must be of form "host:nnn")
-     std::vector<std::string> elems;
      std::stringstream ss(circledb);
      std::string item;
      while (std::getline(ss, item, ':')) {
-       elems.push_back(item);
+       dbNodePort.push_back(item);
      }
-     if (elems.size() != 2) {
+     if (dbNodePort.size() != 2) {
        throw std::runtime_error("Invalid circledb host:port (" + std::string(circledb) + ") specified");
      }
+#if 0
      //  Try connecting to the libcircle database
-     circleDB = redisConnect(elems[0].c_str(), std::stoi(elems[1]));
+     circleDB = redisConnect(dbNodePort[0].c_str(), std::stoi(dbNodePort[1]));
      if (circleDB != NULL && circleDB->err) {
        throw std::runtime_error("Error connecting to redis for libcircle, please start one on "
                                 + std::string(circledb));
@@ -237,6 +237,7 @@ int main(int argc, char *argv[])
        freeReplyObject(reply);
      }
      std::cout << "...connected for libcircle" << std::endl;
+#endif
    }
 #endif
    
@@ -264,7 +265,7 @@ int main(int argc, char *argv[])
   
 #if defined(PROTOBUF)
   if (circling) {
-    redisFree(circleDB);
+    //    redisFree(circleDB);
   }
   CIRCLE_finalize();
 #endif
