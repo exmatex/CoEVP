@@ -41,6 +41,7 @@ public:
         int myDomainID;
 	#if defined(COEVP_MPI)
     	MPI_Comm mpi_comm_taskhandler;
+		MPI_Comm mpi_comm_taskpool;
 	    MPI_Comm mpi_intercomm_taskpool;
 		MPI_Comm mpi_intercomm_taskhandler;
 		MPI_Comm myComm;

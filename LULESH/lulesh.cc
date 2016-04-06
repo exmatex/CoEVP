@@ -3055,7 +3055,8 @@ void Lulesh::StartMPIWorkers()
 
 	// let's reprove for rank, just because
     int rank;
-    MPI_Comm_rank (myComm, &rank);
+    MPI_Comm_rank (mpi_comm_taskpool, &rank);
+    
     MPI_Request mpi_request;
 
     while(1)
@@ -3064,9 +3065,10 @@ void Lulesh::StartMPIWorkers()
 		int lulesh_worker_id;
 
         MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_taskhandler);
+        std::cout << "Rank " << rank << " sent work request" << std::endl;
         // If we sent succesfully, then we are ready to discover some work
         MPI_Recv(&lulesh_worker_id, 1, MPI_INT, myHandler, 3, mpi_intercomm_taskhandler, MPI_STATUS_IGNORE);
-
+        std::cout << "Rank " << rank << " received work request " << lulesh_worker_id << std::endl;
 
         MPI_Send(&rank, 1, MPI_INT, lulesh_worker_id, 4, mpi_intercomm_taskhandler);
 
@@ -4431,7 +4433,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
    //if appropriate start task workers
   if (mpi_intercomm_taskhandler != MPI_COMM_NULL)  
   {
-	  std::cout << "Strting workers" << std::endl;
+	  std::cout << "Starting workers" << std::endl;
       StartMPIWorkers();
   }
 #endif
