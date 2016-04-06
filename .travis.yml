@@ -28,17 +28,17 @@ addons:
       
 env:
   matrix: 
-    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no SILODIFF=/bin/true
-    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no SILODIFF=/bin/true
-    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no
-    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no
-    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=no  LOGGER=yes
-    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=yes LOGGER=no
-    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=no  LOGGER=yes
-    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=yes LOGGER=no
-    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=yes
-    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no
-    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no USE_SSL=no
+#    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no SILODIFF=/bin/true
+#    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no SILODIFF=/bin/true
+#    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no
+#    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no
+#    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=no  LOGGER=yes
+#    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=yes LOGGER=no
+#    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=no  LOGGER=yes
+#    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=yes LOGGER=no
+#    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=yes
+#    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no
+#    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no USE_SSL=no
     - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=no  NP=1
     - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes               LOGGER=no  NP=4
     - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes               LOGGER=no  NP=3 NTASKS=1 NHANDLERS=1 
