@@ -26,17 +26,9 @@ int main(int argc, char *argv[])
   
    int numTaskHandlers = 0;
    int numTasks=0;
+   int numCoEVP=0;
 
-   if(std::getenv("NTASKS")!=NULL)
-   {
-	  numTasks = atoi(std::getenv("NTASKS"));
-      if(std::getenv("NHANDLERS")!=NULL)
-      {
-      	  numTaskHandlers = atoi(std::getenv("NHANDLERS"));
-      }
-   }
-
-     int myDomainID = 0;
+   int myDomainID = 0;
    
 #if defined(COEVP_MPI)
    MPI_Init(&argc, &argv) ;
@@ -47,95 +39,216 @@ int main(int argc, char *argv[])
    MPI_Comm_rank(myComm, &myRank) ;
 
 
+   if(std::getenv("NTASKS")!=NULL)
+   {
+	  numTasks = atoi(std::getenv("NTASKS"));
+      if(std::getenv("NHANDLERS")!=NULL)
+      {
+      	  numTaskHandlers = atoi(std::getenv("NHANDLERS"));
+		  numCoEVP = numRanks - numTaskHandlers - numTasks;
+		  if(myRank==0)
+		  {
+		  	std::cout << "Task Pool: CoEVP Ranks: " << numCoEVP << " TaskHandlers: " << numTaskHandlers << " Task Workers: " << numTasks << std::endl;
+		  }
+		  
+		  if(numCoEVP<1 || numTaskHandlers<1 || numTasks<1)
+		  {
+				std::cout << "This clearly isn't going to work is it." << std::endl;
+				exit(1);
+		  }
+
+      }
+	  
+   }
+
+
+
+
 // to avoid initialization headaches, lulesh is both the producer and consumer of work
 // so we have to check if we were instantiated by another mpi process
-  MPI_Comm mpi_intercomm_parent;
-  MPI_Comm_get_parent(&mpi_intercomm_parent);
+  MPI_Comm mpi_intercomm_taskhandler;
   MPI_Comm mpi_comm_taskhandler;
   MPI_Comm mpi_intercomm_taskpool;
+  MPI_Comm mpi_comm_taskpool;
 
 // create a common intercommunicator between the lulesh domains and the task handlers
   int myHandler = 0;
 
 
-  if (mpi_intercomm_parent == MPI_COMM_NULL && numTaskHandlers)  
+  if (numTaskHandlers)  
   {
 
-      MPI_Comm mpi_intercomm_taskhandler;
-      std::cout << "Running CoEVP with MPI in task_pool mode." << std::endl;
-	  int rank, size;
 
-   	  char **command_argv;
+	// this is the refactor for the non comm_spawn implementation
+	// order in ranks is handlers, coevp, task workers
+	// workers and coevp will see this code, not the handlers
+	// let's build our communicators accordingly
+	  MPI_Comm magic;
+	  MPI_Group world_group;
+	  MPI_Comm_group(myComm, &world_group);
 	  
-	  command_argv = (char **)malloc(argc+5 * sizeof(char *));
-   	  for(int i=0;i<argc;i++)
+	  MPI_Group task_group;
+	  MPI_Group taskhandler_group;
+	
+	  int task_range[1][3];
+	  int taskhandler_range[1][3];
+	  
+	  task_range[0][1] = numRanks - 1;
+	  task_range[0][0] = numRanks - numTasks;
+	  task_range[0][2] = 1;
+
+	  taskhandler_range[0][1] = task_range[0][0] - 1;
+	  taskhandler_range[0][0] = 0;
+	  taskhandler_range[0][2] = 1;
+     
+	  MPI_Group_range_incl(world_group, 1, task_range, &task_group);
+	  MPI_Group_range_incl(world_group, 1, taskhandler_range, &taskhandler_group);
+	  
+
+	  MPI_Comm_create_group(myComm, task_group, 0, &mpi_comm_taskpool);
+	  MPI_Comm_create_group(myComm, taskhandler_group, 0, &mpi_comm_taskhandler);
+
+	  // we built two communicators one for task workers and one for everything else
+	  // now let's build the intercommunicators between the groups
+
+	  std::cout << "Tasks: " << task_range[0][0] << ".." << task_range[0][1] << std::endl;
+	  std::cout << "Handler and CoEVP: " << taskhandler_range[0][0] << ".." << taskhandler_range[0][1] << std::endl;
+	  
+
+	  if(myRank > task_range[0][0]-1)
 	  {
-		command_argv[i] = argv[i];
+		// i am a task worker
+		myHandler = (int) (((float) (myRank - task_range[0][0]) / (float)numTasks) * (float)numTaskHandlers);
+
+		std::cout << "I am task worker: " << myRank - task_range[0][0] << ", with global rank: " << myRank << std::endl;
+		MPI_Comm_size(mpi_comm_taskpool, &numRanks);
+		MPI_Comm_rank(mpi_comm_taskpool, &myRank);
+		std::cout << "I am task worker: " << myRank << ", of size: " << numRanks << std::endl;
+
+
+//		MPI_Intercomm_create(mpi_comm_taskpool, 0, mpi_comm_taskhandler, 0, 0, &mpi_intercomm_taskhandler);
+		MPI_Intercomm_create(mpi_comm_taskpool, 0, myComm, 0, 0, &mpi_intercomm_taskhandler);
+//		MPI_Comm_dup(MPI_COMM_NULL, &mpi_comm_taskhandler);
+		// don't want the tasks doing any confused collectives
+//		MPI_Comm_dup(MPI_COMM_SELF, &myComm);
+		myComm = MPI_COMM_SELF;
+
+		printf("Lulesh Task Worker %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
+
+		MPI_Comm_size(myComm, &numRanks);
+		MPI_Comm_rank(myComm, &myRank);
+
+
 	  }
-	  command_argv[argc] = (char *)"-E 4";
-	  command_argv[argc+1] = (char *)"-H 1";
-	  command_argv[argc+2] = (char *)"-v 0";
-	  command_argv[argc+3] = (char *)"-a 0";
-	  command_argv[argc+4] = NULL;
+	  else
+	  {
 
-	  printf("Spawning %d MPI Task Handlers\n", numTaskHandlers);
+		// i am a coevp rank or taskhandler
+        std::cout << "I am taskhandler (or coevp rank): " << myRank << std::endl;
 
-	  string launch_path(argv[0]);
-      const int str_index = launch_path.find_last_of("\\/");
-	  launch_path = launch_path.substr(0, str_index) + "/taskhandler";
-	  char* taskhandler_path = const_cast<char*> (launch_path.c_str());
-	  std::cout << "Taskhandler relative path: " << taskhandler_path << std::endl;	  
+//		MPI_Intercomm_create(mpi_comm_taskhandler, 0, mpi_comm_taskpool, 0, 1, &mpi_intercomm_taskhandler);
+		MPI_Intercomm_create(mpi_comm_taskhandler, 0, myComm, 0, 1, &mpi_intercomm_taskhandler);
+//		MPI_Comm_dup(MPI_COMM_NULL, &mpi_comm_taskpool);
+		
+		// if I am a regular coevp rank we need to clean up the communicator so coevp doesn't get confused
+		if(myRank>numTaskHandlers-1)
+		{
+			MPI_Group CoEVP_group;
+			MPI_Comm CoEVP_comm;
+			MPI_Comm_create_group(myComm, CoEVP_group, 0, &CoEVP_comm);
+			MPI_Comm_dup(CoEVP_comm, &CoEVP_comm);
 
-	  MPI_Comm_spawn(taskhandler_path, command_argv, numTaskHandlers, MPI_INFO_NULL, 0, myComm, &mpi_intercomm_taskhandler, MPI_ERRCODES_IGNORE);
- 
-	  // here it gets complicated. we need to new intracoomunicator including our spawned task handlers, so we can doa collect launch of the lulesh process
-	  MPI_Intercomm_merge(mpi_intercomm_taskhandler, 1, &mpi_comm_taskhandler); 
+			myDomainID = myRank; // this is my rank 
 
-	  MPI_Comm_rank (mpi_comm_taskhandler, &rank);
-	  MPI_Comm_size (mpi_comm_taskhandler, &size);
-	  printf( "View from Lulesh on intracommunicator  %d of %d\n", rank, size );
+			MPI_Comm_size(myComm, &numRanks);
+			MPI_Comm_rank(myComm, &myRank);
 
-	  myDomainID = rank; //this is used to ID me when I request workers
+	  		myHandler = (int) (((float)myRank / (float)numRanks) * (float)numTaskHandlers);
 
-	  // let's tell the task handlers how many tasks we want to spawn
-
-	  MPI_Bcast(&numTasks, 1, MPI_INT, size-1, mpi_comm_taskhandler);
-
-	  // we build a shared intracommunicator, so let's use it to do a collective mpi_spawn on our tasks	
-
-	  printf("LULESH collective spawning %d tasks\n", numTasks);
-	  MPI_Comm_spawn(command_argv[0], (command_argv+1), numTasks, MPI_INFO_NULL, size-1, mpi_comm_taskhandler, &mpi_intercomm_taskpool, MPI_ERRCODES_IGNORE);
-
-	  // we have to take part in the collective bcast cool to let all tasks lnow the number of tasks
-	  MPI_Bcast(&numTaskHandlers, 1, MPI_INT, MPI_PROC_NULL, mpi_intercomm_taskpool);
-
-	  // I had better figure out my priority task scheduler while I'm at it
-
-	  myHandler = (int) (((float)myRank / (float)numRanks) * (float)numTaskHandlers);
-
-	  printf("Lulesh Rank %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
-
-	}
-	else if(mpi_intercomm_parent != MPI_COMM_NULL)
-	{
+			printf("Lulesh Rank %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
 
 
-	  // let's broadcast the number of task handlers why not, this is using an intercommunicator so behaves a little different
- 
-	  MPI_Bcast(&numTaskHandlers, 1, MPI_INT, 0, mpi_intercomm_parent);
-  
-	  myHandler = (int) (((float)myRank / (float)numRanks) * (float)numTaskHandlers);
-	  printf("Lulesh Task Worker %d sees that there are %d task handlers. It is affinitised to Task Handler %d\n", myRank, numTaskHandlers, myHandler);
+		}
+		else
+		{
+			// task handler logic goes here
 
-		// we need to convince the lulesh worker to ignore mpi domain decomposition, hopefully this hack will do it
- 
-      numRanks = 1;
-	  myRank = 0;
-	}
-    else
-    {
-         std::cout << "Running CoEVP with MPI in regular mode." << std::endl;
-    }
+	        int lulesh_work_probe;
+    	    int task_worker_probe;
+        	MPI_Status mpi_status;
+		    MPI_Request mpi_request;
+    	    std::list<int> lulesh_work;
+        	std::list<int> task_worker;
+
+	        while(1)
+    	    {
+
+                MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG, mpi_comm_taskhandler, &lulesh_work_probe, &mpi_status); 
+                if(lulesh_work_probe)
+                {
+                        // there is some incoming work
+    			        int lulesh_work_id;
+                        MPI_Recv(&lulesh_work_id, 1, MPI_INT, MPI_ANY_SOURCE, 1, mpi_comm_taskhandler, &mpi_status);
+                        // do we have any registered idle workers?
+                        if(task_worker.size()>0)
+                        {
+                                // pair up the task_worker with the work
+                                int task_worker_id = task_worker.front();
+                                task_worker.pop_front();
+                		        MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);//, &mpi_request);
+                        }
+                        else if(numTaskHandlers>1)
+                        {
+                                // we received work but we don't have any workers to assign it to so let's round robin to other taskhandlers (if they exist)
+//                              std::cout<<"Load balancing task"<<std::endl;
+                                if(myRank == numTaskHandlers-1)
+                                {
+                                        //we're the last rank, wrap around to handler 0
+                                        MPI_Send(&lulesh_work_id, 1, MPI_INT, 0, 1, mpi_comm_taskhandler);//, &mpi_request);
+                                }
+                                else
+                                {
+                                        //send task to neighbouring handler
+                                        MPI_Send(&lulesh_work_id, 1, MPI_INT, myRank+1, 1, mpi_comm_taskhandler);//, &mpi_request);
+                                }
+                        }
+                        else
+                        {
+                                // we're on our own, so let's queue the work
+                                lulesh_work.push_back(lulesh_work_id);
+                        }
+                }
+
+                MPI_Iprobe(MPI_ANY_SOURCE, MPI_ANY_TAG,  mpi_intercomm_taskpool, &task_worker_probe, &mpi_status);      
+
+                if(task_worker_probe)
+                {
+            			int task_worker_id;
+                        MPI_Recv(&task_worker_id, 1, MPI_INT, MPI_ANY_SOURCE, 2, mpi_intercomm_taskpool, &mpi_status);
+                        if(lulesh_work.size()>0)
+                        {
+                                //imediately pair up with idle task_worker
+                                int lulesh_work_id = lulesh_work.front();
+                                lulesh_work.pop_front();
+                                MPI_Send(&lulesh_work_id, 1, MPI_INT, task_worker_id, 3, mpi_intercomm_taskpool);//, &mpi_request);
+                        }
+                        else
+                        {
+                                task_worker.push_back(task_worker_id);
+//                              std::cout << "Number of queued task workers:" << task_worker.size() << std::endl;       
+                        }
+                }
+
+	        }
+		}
+
+	  }
+  }
+  else
+  {
+	// just a regular mpi run
+	mpi_intercomm_taskhandler = MPI_COMM_NULL;
+  }
 
 #endif
   int  timer = 0;
@@ -166,7 +279,7 @@ int main(int argc, char *argv[])
 
   luleshSystem.mpi_comm_taskhandler=mpi_comm_taskhandler;
   luleshSystem.mpi_intercomm_taskpool = mpi_intercomm_taskpool;
-  luleshSystem.mpi_intercomm_parent = mpi_intercomm_parent;
+  luleshSystem.mpi_intercomm_taskhandler = mpi_intercomm_taskhandler;
   luleshSystem.myHandler = myHandler;
   luleshSystem.myComm = myComm;
 

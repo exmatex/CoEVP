@@ -42,7 +42,7 @@ public:
 	#if defined(COEVP_MPI)
     	MPI_Comm mpi_comm_taskhandler;
 	    MPI_Comm mpi_intercomm_taskpool;
-		MPI_Comm mpi_intercomm_parent;
+		MPI_Comm mpi_intercomm_taskhandler;
 		MPI_Comm myComm;
 		MPI_Status mpi_status;
 //		MPI_Request mpi_request;

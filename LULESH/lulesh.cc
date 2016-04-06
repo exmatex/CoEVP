@@ -3063,17 +3063,17 @@ void Lulesh::StartMPIWorkers()
         Result result;  
 		int lulesh_worker_id;
 
-        MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_parent);
+        MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_taskhandler);
         // If we sent succesfully, then we are ready to discover some work
-        MPI_Recv(&lulesh_worker_id, 1, MPI_INT, myHandler, 3, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+        MPI_Recv(&lulesh_worker_id, 1, MPI_INT, myHandler, 3, mpi_intercomm_taskhandler, MPI_STATUS_IGNORE);
 
 
-        MPI_Send(&rank, 1, MPI_INT, lulesh_worker_id, 4, mpi_intercomm_parent);
+        MPI_Send(&rank, 1, MPI_INT, lulesh_worker_id, 4, mpi_intercomm_taskhandler);
 
         // this is where we receive work from the lulesh domain and ultimately send it back
 
-		MPI_Recv(&task, sizeof(task), MPI_BYTE, lulesh_worker_id, 10, mpi_intercomm_parent,MPI_STATUS_IGNORE);	
-		MPI_Recv(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 11, mpi_intercomm_parent, MPI_STATUS_IGNORE);
+		MPI_Recv(&task, sizeof(task), MPI_BYTE, lulesh_worker_id, 10, mpi_intercomm_taskhandler, MPI_STATUS_IGNORE);	
+		MPI_Recv(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 11, mpi_intercomm_taskhandler, MPI_STATUS_IGNORE);
 		//result.num_samples = domain.cm(0)->getNumSamples();
 		//result.num_successful_interpolations = domain.cm(0)->getNumSuccessfulInterpolations();
 
@@ -3088,8 +3088,8 @@ void Lulesh::StartMPIWorkers()
 	
         // TODO: make this isend 
 		//std::cout << "Size: " << domain.cm(0)->getStateSize() << std::endl;
-		MPI_Send(&result, sizeof(result),  MPI_BYTE, lulesh_worker_id, 20, mpi_intercomm_parent);//, &mpi_request);
-		MPI_Send(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 21, mpi_intercomm_parent);
+		MPI_Send(&result, sizeof(result),  MPI_BYTE, lulesh_worker_id, 20, mpi_intercomm_taskhandler);//, &mpi_request);
+		MPI_Send(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 21, mpi_intercomm_taskhandler);
 
 	}
     
@@ -4429,8 +4429,9 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 
 #if defined(COEVP_MPI)
    //if appropriate start task workers
-  if (mpi_intercomm_parent != MPI_COMM_NULL)  
+  if (mpi_intercomm_taskhandler != MPI_COMM_NULL)  
   {
+	  std::cout << "Strting workers" << std::endl;
       StartMPIWorkers();
   }
 #endif
