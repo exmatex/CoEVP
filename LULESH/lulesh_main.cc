@@ -440,7 +440,7 @@ int main(int argc, char *argv[])
 #endif
   
 #if defined(COEVP_MPI)
-   MPI_Finalize() ;
+//   MPI_Finalize() ;
 #endif
 
   return 0;

@@ -3049,7 +3049,6 @@ void Lulesh::StartMPIWorkers()
 // to avoid initialization headaches, lulesh is both the producer and consumer of work
 // so we have to check if we were instantiated by another mpi process
 
-  Task task;
 
 //    void *cm_state = operator new(domain.cm(0)->getStateSize());
 
@@ -3061,14 +3060,15 @@ void Lulesh::StartMPIWorkers()
 
     while(1)
     {
+	Task task;
         Result result;  
 		int lulesh_worker_id;
 
         MPI_Send(&rank, 1, MPI_INT, myHandler, 2, mpi_intercomm_taskhandler);
-        std::cout << "Rank " << rank << " sent work request" << std::endl;
+//        std::cout << "Rank " << rank << " sent work request" << std::endl;
         // If we sent succesfully, then we are ready to discover some work
         MPI_Recv(&lulesh_worker_id, 1, MPI_INT, myHandler, 3, mpi_intercomm_taskhandler, MPI_STATUS_IGNORE);
-        std::cout << "Rank " << rank << " received work request " << lulesh_worker_id << std::endl;
+//        std::cout << "Rank " << rank << " received work request " << lulesh_worker_id << std::endl;
 
         MPI_Send(&rank, 1, MPI_INT, lulesh_worker_id, 4, mpi_intercomm_taskhandler);
 
@@ -3079,7 +3079,7 @@ void Lulesh::StartMPIWorkers()
 		//result.num_samples = domain.cm(0)->getNumSamples();
 		//result.num_successful_interpolations = domain.cm(0)->getNumSuccessfulInterpolations();
 
-        result.cm_data = domain.cm(0)->advance(task.deltatime,
+	        result.cm_data = domain.cm(0)->advance(task.deltatime,
                                                           task.cm_vel_grad,
                                                           task.cm_vol_chng,
                                                           domain.cm_state(0));		
@@ -3091,7 +3091,7 @@ void Lulesh::StartMPIWorkers()
         // TODO: make this isend 
 		//std::cout << "Size: " << domain.cm(0)->getStateSize() << std::endl;
 		MPI_Send(&result, sizeof(result),  MPI_BYTE, lulesh_worker_id, 20, mpi_intercomm_taskhandler);//, &mpi_request);
-		MPI_Send(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 21, mpi_intercomm_taskhandler);
+//		MPI_Send(domain.cm_state(0), sizeof(size_t)*domain.cm(0)->getStateSize(), MPI_BYTE, lulesh_worker_id, 21, mpi_intercomm_taskhandler);
 
 	}
     
@@ -3113,12 +3113,12 @@ int Lulesh::UpdateStressForElemsTaskPool()
 
 	for (Index_t k=0; k<numElem; ++k) {
        // let us stick our request for a task_worker here
-	    MPI_Send(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler);//, &request);
+	    MPI_Isend(&myDomainID, 1, MPI_INT, myHandler, 1, mpi_comm_taskhandler, &request);
 	}
 
 	Index_t out_cell_count = 0;
     Index_t in_cell_count = 0;
-	while(in_cell_count < numElem)
+	while(in_cell_count < numElem || out_cell_count < numElem)
 	{
 	   // recieve the task/worker for my payload
         Task task;
@@ -3142,12 +3142,12 @@ int Lulesh::UpdateStressForElemsTaskPool()
 		}
 		else
 		{
-            Result result;
+  		          Result result;
 
 		// who tries to communicate first? we'll probe to find out then get all data from them
         // we could post a bunch of irecvs and process them after they have arrived, but let's do this version first.
 			MPI_Recv(&result, sizeof(result), MPI_BYTE, mpi_status.MPI_SOURCE, 20, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
-			MPI_Recv(domain.cm_state(result.lulesh_cell_id), sizeof(size_t)*domain.cm(result.lulesh_cell_id)->getStateSize(), MPI_BYTE, mpi_status.MPI_SOURCE, 21, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
+//			MPI_Recv(domain.cm_state(result.lulesh_cell_id), sizeof(size_t)*domain.cm(result.lulesh_cell_id)->getStateSize(), MPI_BYTE, mpi_status.MPI_SOURCE, 21, mpi_intercomm_taskpool, MPI_STATUS_IGNORE);
 			in_cell_count++;
 
 //			mpi_task_pool_num_samples += result.num_samples;
