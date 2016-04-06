@@ -97,7 +97,7 @@ clean-all: clean
 	${MAKE} -C serverize/protobuf clean
 	${MAKE} -C serverize/circle clean
 
-COEVP_REFERENCE_BRANCH=withFortran
+COEVP_REFERENCE_BRANCH=master
 get_reference:
 	mkdir -p test/reference
 	git clone https://github.com/exmatex/CoEVP_reference.git test/reference
