@@ -1,0 +1,63 @@
+branches:
+  except:
+    
+sudo: false
+
+language: cpp
+
+compiler:
+  - gcc
+
+install:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.9" CC="gcc-4.9"; fi
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - ccache
+      - gfortan #for silo
+      - libhdf5-serial-dev #for silo
+      - liblapack-dev
+      - libblas-dev
+      - libopenmpi-dev
+      - openmpi-bin
+      - gcc-4.9
+      - g++-4.9
+      
+env:
+  matrix: 
+    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no SILODIFF=/bin/true
+    - COEVP_MPI=no  SILO=no  FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no SILODIFF=/bin/true
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=no  LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=no  TWEMPROXY=yes LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=no  LOGGER=yes
+    - COEVP_MPI=no  SILO=yes FLANN=no  REDIS=yes TWEMPROXY=yes LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=no  LOGGER=yes
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=no  TWEMPROXY=yes LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=yes
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no
+    - COEVP_MPI=no  SILO=yes FLANN=yes REDIS=yes TEMPROXY=yes  LOGGER=no USE_SSL=no
+    - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes TWEMPROXY=no  LOGGER=no  NP=1
+    - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes               LOGGER=no  NP=4
+    - COEVP_MPI=yes SILO=yes FLANN=yes REDIS=yes               LOGGER=no  NP=3 NTASKS=1 NHANDLERS=1 
+
+
+before_script:
+  - export PATH="/usr/lib/ccache:$PATH"
+  - export OMPI_CC="gcc-4.9"
+  - export OMPI_CXX="g++-4.9"
+  
+script:
+  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} USE_SSL=${USE_SSL} && 
+    make get_reference &&
+    make test COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} MPIRUN="${NP:+mpirun -np ${NP}}" ${SILODIFF:+SILODIFF=${SILODIFF} LULESH_OPTS=}
+
+cache:
+  directories:
+    - $HOME/.ccache
+
+notifications:
+  email:
+    - tabasco-dev@lanl.gov  
