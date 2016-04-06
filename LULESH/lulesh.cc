@@ -3051,10 +3051,12 @@ int Lulesh::UpdateStressForElemsServer()
     doCircleTasks();   // enqueue and dispatch a bunch of task, wait for completion
     end = std::chrono::system_clock::now();
     std::chrono::duration<double> et = end-start;
+#if 0
     std::cout << "\ncircle work: " << et.count() << "[total] "
               << et.count()/(float)(circleRanks-1) << "[per worker] "
               << et.count()/(float)(circleDomain->numElem()) << "[per cell]"
               << std::endl;
+#endif
     // make sure to get k=numElem results back
     ConstitutiveData  cm_data;
     int numElems = circleDomain->numElem();
@@ -3166,10 +3168,11 @@ int Lulesh::UpdateStressForElemsServer()
     redisFree(circleDBr0);
     end = std::chrono::system_clock::now();
     et = end-start;
+#if 0
     std::cout << "db work: " << et.count() << "[total] "
               << et.count()/(float)(circleDomain->numElem()) << "[per cell]"
               << std::endl;
-
+#endif
     if (max_local_newton_iters > max_nonlinear_iters) {
       max_nonlinear_iters = max_local_newton_iters;
     }
@@ -4362,15 +4365,9 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
    /* timestep to solution */
    int steppypoo = 0;
    //   while((domain.time() < domain.stoptime()) || (steppypoo == 511)) {
-
-   int circleRank, circleRanks;
-     MPI_Comm_rank(MPI_COMM_WORLD, &circleRank);
-     MPI_Comm_size(MPI_COMM_WORLD, &circleRanks);
      
   std::chrono::time_point<std::chrono::system_clock> start, end;
-  if (circleRank == 0) {
-    start = std::chrono::system_clock::now();
-  }
+  start = std::chrono::system_clock::now();
    while(steppypoo < 25) {
      steppypoo++;
 #if defined(LOGGER)
@@ -4441,16 +4438,13 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
    logger.incrTimeStep();
 #endif
    }  /* while */
-   if (circleRank == 0) {
-     end = std::chrono::system_clock::now();
-     std::chrono::duration<double> et = end-start;
-     std::cout << "cells: " << domain.numElem()
-               << " iters: " << steppypoo
-               << " workers: " << circleRanks-1
-               << " et: " << et.count()
-               << " sec/cell: " << et.count() / (float)domain.numElem()
-               << std::endl;
-   }
+   end = std::chrono::system_clock::now();
+   std::chrono::duration<double> et = end-start;
+   std::cout << "cells: " << domain.numElem()
+             << " iters: " << steppypoo
+             << " et: " << et.count()
+             << " sec/cell: " << et.count() / (float)domain.numElem()
+             << std::endl;
 
 #ifdef WRITE_FSM_EVAL_COUNT
    fsm_count_file.close();
