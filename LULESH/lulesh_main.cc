@@ -20,6 +20,7 @@
 #include "hiredis.h"
 //  Hacky globals necessary for static libcircle callbacks to get handle to advance() function.
 Domain *circleDomain;
+redisContext  *circleDB;
 std::vector<std::string> dbNodePort;
 #endif
 
@@ -212,13 +213,13 @@ int main(int argc, char *argv[])
      if (dbNodePort.size() != 2) {
        throw std::runtime_error("Invalid circledb host:port (" + std::string(circledb) + ") specified");
      }
-#if 0
      //  Try connecting to the libcircle database
      circleDB = redisConnect(dbNodePort[0].c_str(), std::stoi(dbNodePort[1]));
      if (circleDB != NULL && circleDB->err) {
-       throw std::runtime_error("Error connecting to redis for libcircle, please start one on "
+       throw std::runtime_error("Error connecting to redis for libcircle in main(), please start one on "
                                 + std::string(circledb));
      }
+#if 0
      int circleRank;
      MPI_Comm_rank(MPI_COMM_WORLD, &circleRank);
      if (circleRank == 0) {
@@ -236,8 +237,8 @@ int main(int argc, char *argv[])
        }
        freeReplyObject(reply);
      }
-     std::cout << "...connected for libcircle" << std::endl;
 #endif
+     std::cout << "...connected for libcircle" << std::endl;
    }
 #endif
    
@@ -265,7 +266,7 @@ int main(int argc, char *argv[])
   
 #if defined(PROTOBUF)
   if (circling) {
-    //    redisFree(circleDB);
+    redisFree(circleDB);
   }
   CIRCLE_finalize();
 #endif

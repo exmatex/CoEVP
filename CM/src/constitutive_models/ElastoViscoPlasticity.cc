@@ -183,9 +183,9 @@ ElastoViscoPlasticity::soundSpeedSquared( const double reference_density,
 ConstitutiveData
 ElastoViscoPlasticity::advance( const double delta_t, const Tensor2Gen& L_new, const double volume_change, void* state )
 {
-#if 1
+#if 0
   int r;
-  for (int i=0; i<100000; i++) {
+  for (int i=0; i<510000; i++) {
     srand(r);
     r = rand();
   }

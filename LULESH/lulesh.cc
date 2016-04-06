@@ -89,6 +89,7 @@ Additional BSD Notice
 #include <libcircle.h>
 #include <mpi.h>
 #include <unistd.h>
+#include <thread>
 #endif
 
 #ifdef _OPENMP
@@ -101,6 +102,7 @@ Additional BSD Notice
 // [HACK] must be some way to avoid libcircle include at this level
 #if defined(PROTOBUF) && defined(REDIS)
 extern  Domain *circleDomain;
+extern  redisContext  *circleDB;
 extern  std::vector<std::string> dbNodePort;
 #endif
 
@@ -2936,17 +2938,6 @@ void  Lulesh::processCircleTasks(CIRCLE_handle *handle) {
   Tensor2Gen  cm_vel_grad;
   double      cm_vol_chng;
 
-  //  Try connecting to the libcircle database
-  redisContext  *circleDB = redisConnect(dbNodePort[0].c_str(), std::stoi(dbNodePort[1]));
-  if (circleDB != NULL && circleDB->err) {
-    if (circleDB) {
-      printf("Error: %s\n", circleDB->errstr);
-    } else {
-      printf("Can't allocate redis context\n");
-    }
-    throw std::runtime_error("Error connecting to redis in processCircleTasks: "
-                             + dbNodePort[0] + ":" + dbNodePort[1]);
-  }
   //  Get packed parameters out of REDIS
   redisReply  *paramReply = (redisReply *)redisCommand(circleDB, "GET %s", taskString);
   if (paramReply->type != REDIS_REPLY_STRING) {
@@ -2982,7 +2973,6 @@ void  Lulesh::processCircleTasks(CIRCLE_handle *handle) {
     std::cerr << "No connection to redis for libcircle in processCircleTasks...continuing" << std::endl;
   }
   freeReplyObject(reply);
-  redisFree(circleDB);
 }
 
 
@@ -2997,12 +2987,6 @@ void Lulesh::buildCircleTasks(CIRCLE_handle *handle) {
                                            circleDomain->cm_vel_grad(k),
                                            circleDomain->cm_vol_chng(k),
                                            circleDomain->cm_state(k));
-    //  Try connecting to the libcircle database
-    redisContext  *circleDB = redisConnect(dbNodePort[0].c_str(), std::stoi(dbNodePort[1]));
-    if (circleDB != NULL && circleDB->err) {
-      throw std::runtime_error("Error connecting to redis in buildCircleTasks: "
-                               + dbNodePort[0] + ":" + dbNodePort[1]);
-    }
     char key[10];
     sprintf(key, "S:%d", k);     // S = send to libcircle
     redisReply *reply = (redisReply *)redisCommand(circleDB, "SET %s %b",
@@ -3011,8 +2995,25 @@ void Lulesh::buildCircleTasks(CIRCLE_handle *handle) {
       std::cerr << "No connection to redis for libcircle...continuing" << std::endl;
     }
     freeReplyObject(reply);
-    redisFree(circleDB);
     handle->enqueue(key);
+  }
+  //  "Barrier" until all key are in database.
+  while (true) {     //  [HACK] could hang
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    redisReply *reply = (redisReply *) redisCommand(circleDB, "DBSIZE");
+    if (!reply) {
+      throw std::runtime_error("No connection to redis server for libcircle in doCircleTasks()");
+    }
+    if (reply->type != REDIS_REPLY_INTEGER){
+      throw std::runtime_error("Wrong redis return type in doCircleTasks()");
+    }
+    if(reply->integer == circleDomain->numElem()) {
+      freeReplyObject(reply);
+      break;
+    } else {
+      std::cout << "-" << reply->integer << std::endl;
+      freeReplyObject(reply);
+    }
   }
 }
 
@@ -3045,7 +3046,7 @@ int Lulesh::UpdateStressForElemsServer()
   if(circleRank != 0) {
     CIRCLE_begin();      // execute the enqueued tasks
   } else {
-    //  So, if not rank 0...receive results
+    //  So, if rank 0...receive results
     start = std::chrono::system_clock::now();
     doCircleTasks();   // enqueue and dispatch a bunch of task, wait for completion
     end = std::chrono::system_clock::now();
@@ -3064,18 +3065,37 @@ int Lulesh::UpdateStressForElemsServer()
     double      cm_vol_chng;
     char        cleanKey[10];
 
-    //  Try connecting to the libcircle database
-    redisContext  *circleDB = redisConnect(dbNodePort[0].c_str(), std::stoi(dbNodePort[1]));
-    if (circleDB != NULL && circleDB->err) {
+    //  Try connecting to the libcircle database (separate from all others).
+    redisContext  *circleDBr0 = redisConnect(dbNodePort[0].c_str(), std::stoi(dbNodePort[1]));
+    if (circleDBr0 != NULL && circleDBr0->err) {
       throw std::runtime_error("Error connecting to redis in UpdateStressForElemsSerever(): "
                                + dbNodePort[0] + ":" + dbNodePort[1]);
+    }
+
+    //  "Barrier" until all key are in database.
+    while (true) {     //  [HACK] could hang
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      redisReply *reply = (redisReply *) redisCommand(circleDBr0, "DBSIZE");
+      if (!reply) {
+        throw std::runtime_error("No connection to redis server for libcircle in UpdateStressForElemsServer()");
+      }
+      if (reply->type != REDIS_REPLY_INTEGER){
+        throw std::runtime_error("Wrong redis return type in UpdateStressForElemsServer()");
+      }
+      if(reply->integer == (2 * circleDomain->numElem())) {
+        freeReplyObject(reply);
+        break;
+      } else {
+        std::cout << "+" << reply->integer << std::endl;
+        freeReplyObject(reply);
+      }
     }
 
     start = std::chrono::system_clock::now();
     for (int j=0; j<numElems; j++) {         // start of "results" loop
       //  Get a reply from a worker
       sprintf(key, "R:%d", j);
-      redisReply  *reply = (redisReply *)redisCommand(circleDB, "GET %s", key);
+      redisReply  *reply = (redisReply *)redisCommand(circleDBr0, "GET %s", key);
       if (reply->type != REDIS_REPLY_STRING) {
         throw std::runtime_error("Wrong redis return type for libcircle getting a key");
       }
@@ -3086,11 +3106,23 @@ int Lulesh::UpdateStressForElemsServer()
       if (kk != j) {
         std::cerr << "Uh oh, key from redis does not match key from processCircleTasks()!" << std::endl;
       }
-      //  Delete the task and reply keys (se we don't need to do a FLUSHDB)
-      reply = (redisReply *)redisCommand(circleDB, "DEL %s", key);            //  'R' key
+      //  Delete the task and reply keys (so we don't need to do a FLUSHDB)
+      reply = (redisReply *)redisCommand(circleDBr0, "DEL %s", key);            //  'R' key
+      if (reply->type != REDIS_REPLY_INTEGER) {
+        throw std::runtime_error("Wrong redis return type for libcircle deleting a key (R)");
+      }
+      if (reply->integer != 1) {
+        std::cout << "REDIS DEL did not delete the right number of keys (R): " << reply->integer << std::endl;
+      }
       freeReplyObject(reply);
       sprintf(key, "S:%d", j);
-      reply = (redisReply *)redisCommand(circleDB, "DEL %s", key);            //  'S' key
+      reply = (redisReply *)redisCommand(circleDBr0, "DEL %s", key);            //  'S' key
+      if (reply->type != REDIS_REPLY_INTEGER) {
+        throw std::runtime_error("Wrong redis return type for libcircle deleting a key (S)");
+      }
+      if (reply->integer != 1) {
+        std::cout << "REDIS DEL did not delete the right number of keys (S): " << reply->integer << std::endl;
+      }
       freeReplyObject(reply);
       
       int num_iters = cm_data.num_Newton_iters;
@@ -3111,9 +3143,27 @@ int Lulesh::UpdateStressForElemsServer()
 #endif
 
     }    //  end of results "loop"
-    redisFree(circleDB);
-    std::cout << "after redisFree()..." << std::endl;
-    
+
+    //  "Barrier" until all key are out of databse
+    while (true) {     //  [HACK] could hang
+      std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      redisReply *reply = (redisReply *) redisCommand(circleDBr0, "DBSIZE");
+      if (!reply) {
+        throw std::runtime_error("No connection to redis server for libcircle in UpdateStressForElemsServer()");
+      }
+      if (reply->type != REDIS_REPLY_INTEGER){
+        throw std::runtime_error("Wrong redis return type in UpdateStressForElemsServer()");
+      }
+      if(reply->integer == 0) {
+        freeReplyObject(reply);
+        break;
+      } else {
+        std::cout << "*" << reply->integer << std::endl;
+        freeReplyObject(reply);
+      }
+    }
+
+    redisFree(circleDBr0);
     end = std::chrono::system_clock::now();
     et = end-start;
     std::cout << "db work: " << et.count() << "[total] "
