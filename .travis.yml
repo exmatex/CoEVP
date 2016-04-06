@@ -49,7 +49,7 @@ before_script:
   - export OMPI_CXX="g++-4.9"
   
 script:
-  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} USE_SSL=${USE_SSL} FFLAGS="-fdefault-real-8 -fdefault-double-8" FORTRAN_LIBS="-lgfortran" FC="${FC}" && 
+  - make -j2 COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} LOGGER=${LOGGER} USE_SSL=${USE_SSL} FC="${FC}" && 
     make get_reference &&
     make test COEVP_MPI=${COEVP_MPI} REDIS=${REDIS} FLANN=${FLANN} SILO=${SILO} MPIRUN="${NP:+mpirun -np ${NP}}" ${SILODIFF:+SILODIFF=${SILODIFF} LULESH_OPTS=}
 
