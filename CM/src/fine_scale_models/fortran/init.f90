@@ -137,13 +137,23 @@ SUBROUTINE vpsc_init(&
    integer :: kgr,i,j,f_eval, iGlobal
    integer :: diagnostics
    real(idp) :: c_scaling
+   real(idp) :: wgtTot(nPhase)
+   character(len=80) :: dataDir
+
+   call get_environment_variable("VPSC_INPUT_PATH", dataDir)
+   if (dataDir == "") then 
+      dataDir = '../CM/src/fine_scale_models/data/'
+   endif
+   
+   !write(*,*) 'Reading data from directory ', dataDir
+
    !
    ! 
    if (diagnostics == 1) then
    write(*,*) 'nPhase passed in = ', nPhase
    endif
 
-   fnameIn='../CM/src/fine_scale_models/data/vpsc_as_try.in'
+   fnameIn=trim(dataDir)//'vpsc_as_try.in'
    open(62,FILE=fnameIn,STATUS='OLD')
    read(62,*) iPhase
 
@@ -168,16 +178,19 @@ SUBROUTINE vpsc_init(&
    read(62,*) (phaseDataList(iPhase)%volfrac, iPhase=1,nPhase)
    close(62)
    !
-   open(55,file='../CM/src/fine_scale_models/data/orient_ph1.in',status='old')
-   open(56,file='../CM/src/fine_scale_models/data/orient_ph2.in',status='old')
+   open(55,file=trim(dataDir)//'orient_ph1.in',status='old')
+   open(56,file=trim(dataDir)//'orient_ph2.in',status='old')
    !
    read(55,*) nGrains(1)
    read(56,*) nGrains(2)
 
    if (diagnostics == 1) then
-   write(*,*) (nGrains(i), i=1,nPhase)
+      write(*,*) (nGrains(i), i=1,nPhase)
    endif
    nGrTot = 0
+   wgtTot(1) = 0.0
+   wgtTot(2) = 0.0
+
    do iPhase = 1, nPhase
       nGrTot = nGrTot + nGrains(iPhase)
       phaseDataList(iPhase)%ngrains=nGrains(iPhase)
@@ -190,13 +203,28 @@ SUBROUTINE vpsc_init(&
    do kgr=1,nGrains(1)
       read(55,*) (phaseDataList(1)%orientations(i,kgr),i=1,3), &
 &           phaseResponseList(1)%weights(kgr)
+      wgtTot(1)=wgtTot(1)+phaseResponseList(1)%weights(kgr)
    enddo
    close(55)
    do kgr=1,nGrains(2)
       read(56,*) (phaseDataList(2)%orientations(i,kgr),i=1,3), &
 &           phaseResponseList(2)%weights(kgr)
+      wgtTot(2)=wgtTot(2)+phaseResponseList(2)%weights(kgr)
    enddo
    close(56)
+   !
+   if (diagnostics == 1) then
+      write(*,*) 'Total of weights per phase:'
+      write(*,*) (wgtTot(i), i=1,2)
+   endif
+
+   !  normalize the weights if needed
+   do iPhase = 1, nPhase
+   do kgr=1,nGrains(iPhase)
+      phaseResponseList(iPhase)%weights(kgr)=phaseResponseList(iPhase)%weights(kgr)/wgtTot(iPhase)
+   enddo
+   enddo
+
    !
 
       f_eval=init_vpsc(it,fnameIn,phaseDataList,MPICommF, c_scaling)

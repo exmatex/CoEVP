@@ -133,6 +133,7 @@ vpsc::vpsc_init_class(const double c_scaling)
    diagnostics = 0;
    char str[1000];
    char fnameIn[80];
+   char dataDir[80];
 
    if(std::getenv("VPSC_INPUT_PATH")==NULL)
    {
@@ -141,7 +142,9 @@ vpsc::vpsc_init_class(const double c_scaling)
    else
    {
 	  strcpy(fnameIn,std::getenv("VPSC_INPUT_PATH"));
+	  strcat(fnameIn,"vpsc_as_try.in");
    }
+   //printf("Opening %s\n", fnameIn);
 
    FILE *inFile=NULL;
    int nPhaseMax = 2;
@@ -240,7 +243,7 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
 {
    Tensor2Sym out;
 
-   double normThreshold = 1.0e-8;
+   double normThreshold = 1.0e-6;
    double inFlat[6];
    double outFlat[6];
 
@@ -292,14 +295,19 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
          out.a[i] = outFlat[i];
       }
    } else {
-      for (int i = 0; i < 6; i++) { 
-         out.a[i] = 0.0;
-      }
       printf("VPSC call bypass\n");
+      for (int i = 0; i < 6; i++) { 
+         //in.a[i] = 0.0; // zero the input also for consistency
+         //out.a[i] = 0.0;
+         out.a[i] = 1.0e2*in.a[i];
+         printf("%g, %g\n", in.a[i], out.a[i]);
+      }
    }
+   /*
    for (int i = 0; i < 6; i++) { 
        printf("%g, %g\n", in.a[i], out.a[i]);
    }
+   */
 
    return out;
 
