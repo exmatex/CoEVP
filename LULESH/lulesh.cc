@@ -3661,8 +3661,11 @@ void Lulesh::Initialize(int myRank, int numRanks, int edgeDim, int heightDim, do
    /* initialize material parameters */
    //   domain.dtfixed() = Real_t(-1.0e-7) ;
    //   domain.deltatime() = Real_t(1.0e-7) ;
-   domain.dtfixed() = Real_t(-1.0e-9) ;
-   domain.deltatime() = Real_t(1.0e-9) ;
+   //domain.dtfixed() = Real_t(-1.0e-9) ;
+   //domain.deltatime() = Real_t(1.0e-9) ;
+
+   domain.dtfixed() = Real_t(-1.0e-6) ;
+   domain.deltatime() = Real_t(1.0e-6) ;
 
    domain.deltatimemultlb() = Real_t(1.1) ;
    domain.deltatimemultub() = Real_t(1.2) ;

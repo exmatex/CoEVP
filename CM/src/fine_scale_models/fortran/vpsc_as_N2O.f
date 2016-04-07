@@ -106,6 +106,14 @@ cass
       dimension ntwinsys(itnphase),nstrengths(itnphase)
 
       real*8 c_scaling
+
+      character(len=80) :: dataDir
+
+      call get_environment_variable("VPSC_INPUT_PATH", dataDir)
+      if (dataDir == "") then 
+         dataDir = '../CM/src/fine_scale_models/data/'
+      endif
+
 cass
       UR0= 20     ! VPSCIN 
       UR1= 21     ! FILECRYS
@@ -207,6 +215,8 @@ cas
 
         READ(UR0,'(a)') PROSA
         READ(UR0,'(a)') FILECRYS
+
+        filecrys = trim(dataDir)//filecrys
 
 C *** READS SLIP AND TWINNING MODES FOR THE PHASE
 
@@ -448,7 +458,7 @@ cas
 cass        WRITE(*,'(''   ITSGR    SIGGR      SIGAV        DAV    ITTAN'',
 cass     #               ''     MTAN    ITSEC     MSEC'',/)')
 cass
-        WRITE(*,'(''   ITSGR    SIGGR      SIGAV        DAV'')')
+!        WRITE(*,'(''   ITSGR    SIGGR      SIGAV        DAV'')')
 cass
 
 C     IRATESENS=0 ALLOWS TO ELIMINATE RATE SENSITIVITY.
@@ -4596,8 +4606,8 @@ C     IF(IT2.GT.20 .AND. CONVDIF.GT.0.) SASTMIX=0.50
 C     IF(IT2.GT.30 .AND. CONVDIF.GT.0.) SASTMIX=0.75
 C     CONVOLD=CONVNEW
 CFEB
-      WRITE(*,'(1H+,I5,3E11.3,I7,E11.3,I7,E11.3)')
-     #      IT2,RELSGR,RELS,RELD
+!      WRITE(*,'(1H+,I5,3E11.3,I7,E11.3,I7,E11.3)')
+!     #      IT2,RELSGR,RELS,RELD
 ccas      WRITE(UW1,'(  I5,3E12.3,I7,E12.3,I7,E12.3)')
 ccas     #      IT2,RELSGR,RELS,RELD
 CFEE
