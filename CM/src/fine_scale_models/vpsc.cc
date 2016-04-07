@@ -164,7 +164,7 @@ vpsc::vpsc_init_class(const double c_scaling)
    int maxStrengthsPerPhase = 10;
    // kluge for now
    nPhase = numPhases;
-   nGrTot = 300;
+   nGrTot = 500;
    nH = 19;
    nTwinSysMax = 12;
 
@@ -242,6 +242,9 @@ Tensor2Sym
 vpsc::tensorFunction(const Tensor2Sym& in) const
 {
    Tensor2Sym out;
+   Tensor2Sym in_dev;
+
+   in_dev=dev(in);
 
    double normThreshold = 1.0e-6;
    double inFlat[6];
@@ -254,9 +257,9 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
    {
       // copy tensor values to flat array
       for (int i = 0; i < 6; i++) { 
-         inFlat[i] = in.a[i];
+         inFlat[i] = in_dev.a[i];
          if (diagnostics > 0)
-         printf("%f, %f\n", in.a[i], inFlat[i]);
+         printf("%f, %f\n", in_dev.a[i], inFlat[i]);
       }
 
       vpsc_run_(
@@ -299,8 +302,8 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
       for (int i = 0; i < 6; i++) { 
          //in.a[i] = 0.0; // zero the input also for consistency
          //out.a[i] = 0.0;
-         out.a[i] = 1.0e2*in.a[i];
-         printf("%g, %g\n", in.a[i], out.a[i]);
+         out.a[i] = 1.0e2*in_dev.a[i];
+         printf("%g, %g\n", in_dev.a[i], out.a[i]);
       }
    }
    /*

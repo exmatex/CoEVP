@@ -177,6 +177,38 @@ SUBROUTINE vpsc_init(&
    !
    read(62,*) (phaseDataList(iPhase)%volfrac, iPhase=1,nPhase)
    close(62)
+
+   ! worst piece of code ever
+   if (nPhase == 1) then 
+   open(55,file=trim(dataDir)//'rand419.tex',status='old')
+   read(55,*) nGrains(1)
+
+   if (diagnostics == 1) then
+      write(*,*) (nGrains(i), i=1,nPhase)
+   endif
+   nGrTot = 0
+   wgtTot(1) = 0.0
+   wgtTot(2) = 0.0
+
+   do iPhase = 1, nPhase
+      nGrTot = nGrTot + nGrains(iPhase)
+      phaseDataList(iPhase)%ngrains=nGrains(iPhase)
+      allocate(phaseDataList(iPhase)%orientations(3,nGrains(iPhase)))
+      allocate(phaseResponseList(iPhase)%weights(nGrains(iPhase)))
+      allocate(phaseResponseList(iPhase)%reorientationRates(3,nGrains(iPhase)))
+      allocate(phaseResponseList(iPhase)%twinVFrates(12,nGrains(iPhase)))
+   enddo
+
+   do kgr=1,nGrains(1)
+      read(55,*) (phaseDataList(1)%orientations(i,kgr),i=1,3), &
+&           phaseResponseList(1)%weights(kgr)
+      wgtTot(1)=wgtTot(1)+phaseResponseList(1)%weights(kgr)
+   enddo
+
+   close(55)
+
+
+   else if (nPhase == 2) then
    !
    open(55,file=trim(dataDir)//'orient_ph1.in',status='old')
    open(56,file=trim(dataDir)//'orient_ph2.in',status='old')
@@ -212,6 +244,7 @@ SUBROUTINE vpsc_init(&
       wgtTot(2)=wgtTot(2)+phaseResponseList(2)%weights(kgr)
    enddo
    close(56)
+   endif
    !
    if (diagnostics == 1) then
       write(*,*) 'Total of weights per phase:'
