@@ -137,7 +137,7 @@ vpsc::vpsc_init_class(const double c_scaling)
 
    if(std::getenv("VPSC_INPUT_PATH")==NULL)
    {
-	   strcpy(fnameIn, "../CM/src/fine_scale_models/data/vpsc_as_try.in");
+	   strcpy(fnameIn, "../CM/src/fine_scale_models/tantalum/vpsc_as_try.in");
    }
    else
    {

@@ -111,7 +111,7 @@ cass
 
       call get_environment_variable("VPSC_INPUT_PATH", dataDir)
       if (dataDir == "") then 
-         dataDir = '../CM/src/fine_scale_models/data/'
+         dataDir = '../CM/src/fine_scale_models/tantalum/'
       endif
 
 cass
