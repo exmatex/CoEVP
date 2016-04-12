@@ -10,18 +10,10 @@ def genTimings(filePtr):
     totalTime = 0.0
     retList = [[0, 0.0]]
     for line in filePtr:
-        if line.startswith('Timer Output Frequency is'):
-            #We are just starting out and need to get the frequency (1)
-            strArr = line.split()
-            scale = int(strArr[4])
-        elif line.startswith('Changing Timer Output Frequency to'):
-            #We are changing the frequency
-            strArr = line.split()
-            scale = int(strArr[5])
-        elif not line.startswith('-1'):
+        strArr = line.split()
+        if strArr[0][0].isdigit():
             #This is a data line
-            strArr = line.split()
-            if len(strArr) == 4:
+            if len(strArr) == 5:
                 #This is not the final line of a successful run
                 index = int(strArr[0])
                 if index == 0:
@@ -39,10 +31,20 @@ def genTimings(filePtr):
 
 def main():
     if len(sys.argv) != 2:
-        print("Error: Pass in a file")
+        print("Error: Pass in a directory")
         return
-    inFile = open(sys.argv[1], 'r')
-    fileArr = genTimings(inFile)
+    inPath = sys.argv[1]
+    resultList = []
+    for root, dirs, files in os.walk(inPath):
+        for fName in files:
+            if fName.endswith('.timer'):
+                fPath =  os.path.join(root, fName)
+                inFile = open(fPath, 'r')
+                fileArr = genTimings(inFile)
+                inFile.close()
+                if fileArr.shape[0] > 1:
+                    resultList.append((fName, fileArr))
+    #print resultList
     return
 
 if __name__ == "__main__":
