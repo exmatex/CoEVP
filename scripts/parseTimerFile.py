@@ -2,7 +2,7 @@ import sys
 import os
 import numpy as np
 import matplotlib
-#matplotlib.use('pdf')
+matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 
 def genTimings(filePtr):
@@ -38,7 +38,7 @@ def plotPrefix(prefixList, resultList):
                 lineLabel = tag + ": " + str(nodeCount) + " nodes"
                 plt.plot(data[:, 0], data[:, 1], label=lineLabel)
     plt.legend()
-    plt.show()
+    plt.savefig("plot.pdf", format='pdf')
     return
 
 def main():
