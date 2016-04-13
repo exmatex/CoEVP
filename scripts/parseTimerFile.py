@@ -5,6 +5,17 @@ import matplotlib
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 
+lineStyles = {}
+lineStyles[1] = '--bo'
+lineStyles[16] = '--gD'
+lineStyles[128] = '--rv'
+lineStyles[256] = '--c^'
+lineStyles[512] = '--bx'
+lineStyles[1024] = '--mh'
+lineStyles[2048] = '--kh'
+lineStyles[416] = '--m*'
+lineStyles[208] = '--m+'
+
 def genTimings(filePtr):
     scale = 0
     totalTime = 0.0
@@ -34,9 +45,9 @@ def plotPrefix(prefixList, resultList):
         for (prefix, tag) in prefixList:
             if name.startswith(prefix) and name[len(prefix)].isdigit():
                 strArr = name.split(prefix)
-                nodeCount = strArr[1].split('.timer')[0]
+                nodeCount = int(strArr[1].split('.timer')[0])
                 lineLabel = tag + ": " + str(nodeCount) + " nodes"
-                plt.plot(data[:, 0], data[:, 1], label=lineLabel)
+                plt.plot(data[:, 0], data[:, 1], lineStyles[int(nodeCount)], label=lineLabel)
     plt.legend()
     plt.savefig("plot.pdf", format='pdf')
     return
