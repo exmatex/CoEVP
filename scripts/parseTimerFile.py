@@ -5,16 +5,18 @@ import matplotlib
 matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 
-lineStyles = {}
-lineStyles[1] = '--bo'
-lineStyles[16] = '--gD'
-lineStyles[128] = '--rv'
-lineStyles[256] = '--c^'
-lineStyles[512] = '--bx'
-lineStyles[1024] = '--mh'
-lineStyles[2048] = '--kh'
-lineStyles[416] = '--m*'
-lineStyles[208] = '--m+'
+lineStyles = ['--', ':', '-', '-.']
+
+markerStyles = {}
+markerStyles[1] = 'bo'
+markerStyles[16] = 'gD'
+markerStyles[128] = 'rv'
+markerStyles[256] = 'c^'
+markerStyles[512] = 'bx'
+markerStyles[1024] = 'mh'
+markerStyles[2048] = 'kh'
+markerStyles[416] = 'm*'
+markerStyles[208] = 'm+'
 
 def genTimings(filePtr):
     scale = 0
@@ -42,12 +44,15 @@ def genTimings(filePtr):
 
 def plotPrefix(prefixList, resultList):
     for (name, data) in resultList:
+        prefCnt = 0
         for (prefix, tag) in prefixList:
             if name.startswith(prefix) and name[len(prefix)].isdigit():
                 strArr = name.split(prefix)
                 nodeCount = int(strArr[1].split('.timer')[0])
                 lineLabel = tag + ": " + str(nodeCount) + " nodes"
-                plt.plot(data[:, 0], data[:, 1], lineStyles[int(nodeCount)], label=lineLabel)
+                lineStyle = lineStyles[prefCnt] + markerStyles[int(nodeCount)]
+                plt.plot(data[:, 0], data[:, 1], lineStyle, label=lineLabel)
+            prefCnt = prefCnt + 1
     plt.legend()
     plt.savefig("plot.pdf", format='pdf')
     return
