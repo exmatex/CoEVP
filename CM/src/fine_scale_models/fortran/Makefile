@@ -14,31 +14,30 @@ FLIBS = -lm -lifcore
 endif
 
 
-FILES = vpEtxt_interface_base.f90 vpscVpETxt_interface.f90 libraryR8.f vpsc_as_N2O.f init.f90 TaylorFort.f90
+FILES = vpetxt_interface_base.f90 vpscvpetxt_interface.f90 libraryR8.f vpsc_as_N2O.f init.f90 TaylorFort.f90
 
 SRCS = $(wildcard $(FILES))
 
-OBJS = vpEtxt_interface_base.o vpscVpETxt_interface.o libraryR8.o vpsc_as_N2O.o init.o
+OBJS = vpetxt_interface_base.o vpscvpetxt_interface.o libraryR8.o vpsc_as_N2O.o init.o
 MODS = vpetxt_interface_base.mod vpscvpetxt_interface.mod
 
 all: Taylor modules
 
-Taylor: TaylorFort.f90
-	$(FC) -c TaylorFort.f90
+Taylor: TaylorFort.o
 
 modules: $(MODS) $(OBJS)
 
-vpetxt_interface_base.mod vpEtxt_interface_base.o: vpEtxt_interface_base.f90
-	$(FC) $(FFLAGS) -c $<
-
-vpscvpetxt_interface.mod vpscVpETxt_interface.o: vpscVpETxt_interface.f90
-	$(FC) $(FFLAGS) -c $<
+vpscvpetxt_interface.o: vpetxt_interface_base.mod
+init.o: vpscvpetxt_interface.mod
+caller.o: vpscvpetxt_interface.mod
 
 %.o : %.f90
 	$(FC) $(FFLAGS) -c $<
 
 %.o : %.f
 	$(FC) $(FFLAGS) -c $<
+
+%.mod: %.o;
 
 clean:
 	rm -f *.mod *.o

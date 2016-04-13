@@ -97,16 +97,17 @@ clean-all: clean
 	${MAKE} -C serverize/protobuf clean
 	${MAKE} -C serverize/circle clean
 
+COEVP_REFERENCE_BRANCH=master
 get_reference:
 	mkdir -p test/reference
 	git clone https://github.com/exmatex/CoEVP_reference.git test/reference
+	git -C test/reference checkout ${COEVP_REFERENCE_BRANCH}
 
 LULESH_OPTS=-p 4 -v 20
 reference: LULESH/lulesh
 	@[ "$(SILO)" = "yes" ] || { echo "make test needs SILO=yes" && exit 1; }
 	mkdir -p test/reference
 	cd test/reference && ../../LULESH/lulesh $(LULESH_OPTS)
-	rm test/reference/*.silo #remove total files
 
 dummy: ;
 
