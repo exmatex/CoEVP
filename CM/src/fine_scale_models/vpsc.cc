@@ -137,7 +137,7 @@ vpsc::vpsc_init_class(const double c_scaling)
 
    if(std::getenv("VPSC_INPUT_PATH")==NULL)
    {
-	   strcpy(fnameIn, "../CM/src/fine_scale_models/tantalum/vpsc_as_try.in");
+	   strcpy(fnameIn, "../../CoEVP/CM/src/fine_scale_models/tantalum/vpsc_as_try.in");
    }
    else
    {
@@ -246,11 +246,11 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
 
    in_dev=dev(in);
 
-   double normThreshold = 1.0e-6;
+   double normThreshold = 1.0e-4;
    double inFlat[6];
    double outFlat[6];
 
-   double normIn = norm(in);
+   double normIn = norm(in_dev);
 
    // bypass vpsc call if stress is too small
    if (normIn > normThreshold) 
