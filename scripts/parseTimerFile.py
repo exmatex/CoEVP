@@ -2,7 +2,7 @@ import sys
 import os
 import numpy as np
 import matplotlib
-matplotlib.use('pdf')
+#matplotlib.use('pdf')
 import matplotlib.pyplot as plt
 
 def genTimings(filePtr):
@@ -29,6 +29,18 @@ def genTimings(filePtr):
     retArr = np.array(retList)
     return retArr
 
+def plotPrefix(prefixList, resultList):
+    for (name, data) in resultList:
+        for (prefix, tag) in prefixList:
+            if name.startswith(prefix) and name[len(prefix)].isdigit():
+                strArr = name.split(prefix)
+                nodeCount = strArr[1].split('.timer')[0]
+                lineLabel = tag + ": " + str(nodeCount) + " nodes"
+                plt.plot(data[:, 0], data[:, 1], label=lineLabel)
+    plt.legend()
+    plt.show()
+    return
+
 def main():
     if len(sys.argv) != 2:
         print("Error: Pass in a directory")
@@ -44,7 +56,13 @@ def main():
                 inFile.close()
                 if fileArr.shape[0] > 1:
                     resultList.append((fName, fileArr))
-    #print resultList
+    #print [i[0] for i in resultList]
+    prefixList = []
+    prefixList.append(("_taylDBSweep_charmpp_adapt_300x256:256_1.0000:0_mtree_local:hashmap_",
+        "Adaptive Hashmap"))
+    prefixList.append(("_taylDBSweep_charmpp_brute_300x256:256_1.0000:0_mtree_local:hashmap_",
+            "Brute Force Hashmap"))
+    plotPrefix(prefixList, resultList)
     return
 
 if __name__ == "__main__":
