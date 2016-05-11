@@ -71,7 +71,7 @@ int main(int argc, char *argv[])
   addArg("distributed_redis", 'R', 0, 'i', &(distributed_redis), 0, "use distributed REDIS via twemproxy");
   addArg("log",      'l', 1, 's',  &(logdb),   sizeof(logdb), "log to REDIS at hostname:port");
   addArg("use_vpsc", 'm', 0, 'i',  &(use_vpsc),            0, "use VPSC fine scale model");
-  addArg("convergence scaling", 'C', 1, 'd',  &(c_scaling), 0, "scaling factor for VPSC convergence"); 
+  addArg("convergence scaling", 'S', 1, 'd',  &(c_scaling), 0, "scaling factor for VPSC convergence"); 
   addArg("Height Elems", 'H', 1, 'i', &(heightElems), 0, "Number of height elements to solve for");
   addArg("Edge Elems", 'E', 1, 'i', &(edgeElems), 0, "Number of height elements to solve for");
   addArg("Domain Stop Cycle", 'C', 1, 'i', &(simStopCycle), 0, "Number of Simulated Cycles to Run For");
