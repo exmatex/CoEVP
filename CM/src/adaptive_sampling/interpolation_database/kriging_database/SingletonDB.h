@@ -17,13 +17,8 @@
 #define uint128_t unsigned __int128
 
 #include "SingletonDB_Backend.h"
+#include "ModelDB_Enums.h"
 
-enum SingletonDBBackendEnum
-{
-  REDIS_DB,
-  HASHMAP_DB,
-  DIST_REDIS_DB
-};
 
 class SingletonDB {
  public:
@@ -42,7 +37,7 @@ class SingletonDB {
 private:
   SingletonDB_Backend * backend;
 
-  SingletonDB(SingletonDBBackendEnum backType);
+  SingletonDB(SingletonDBBackendEnum backType, int nArgs = 0, ...);
   ~SingletonDB();
 
   //  This technique requires C++11 (can do a C++03 version too)

@@ -2,7 +2,8 @@
 #define __LULESH_H__
 
 #include "domain.h"
-
+#include <list>
+#include <chrono>
 #define MAX_NONLINEAR_ITER 5
 #define SEDOV_SYNC_POS_VEL_EARLY 1
 
@@ -14,7 +15,12 @@ public:
   // Factor to be multiply the time step by to compensate
   // for fast time scales in the fine-scale model
   Real_t finescale_dt_modifier;
-
+  int timer;
+  int time_output;
+  std::list<std::chrono::high_resolution_clock::time_point> timings;
+//  std::chrono::duration<double> write_timing;
+//  std::chrono::high_resolution_clock::time_point write_timing;
+  std::ofstream timerfile;
   Domain domain;
 
 Lulesh(){ finescale_dt_modifier = Real_t(1.); }
@@ -154,6 +160,8 @@ void CalcCourantConstraintForElems();
 void CalcHydroConstraintForElems();
 void CalcTimeConstraintsForElems();
 void LagrangeLeapFrog();
+void OutputTiming();
+void FinalTime();
 int UpdateStressForElems();
 void UpdateStressForElems2(int reducedIters);
 /*
@@ -164,8 +172,8 @@ void DumpToVisit(Domain& domain, char *baseName, char *meshName,
 void DumpSAMI(Domain *domain, char *name);
 */
 
-void Initialize(int myRank, int numRanks);
-void ConstructFineScaleModel(bool sampling,ModelDatabase * global_modelDB,ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns);
+void Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime, int simStopCycle, int timerSampleRate);
+void ConstructFineScaleModel(bool sampling,ModelDatabase * global_modelDB,ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns, int use_vpsc, double c_scaling);
 void ExchangeNodalMass();
 void go(int myRank, int numRanks, int sampling, int visit_data_interval,int file_parts, int debug_topology);
 

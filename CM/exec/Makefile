@@ -6,13 +6,16 @@
 # Specify the C++ compiler.  This is also used for linking the executable.
 #
 
-CXX = g++
+#CXX = g++
+#FC = gfortran
 
+#CXX = icc
+#FC = ifort
 #
 # Specify compiler options (optimization level, debugging options, etc.)
 #
 
-CXXFLAGS = -O3 -g
+CXXFLAGS = -O3 # -g
 
 #
 # Specify the location of the BLAS and LAPACK libraries.  Depending upon the
@@ -41,7 +44,10 @@ HDF5_DEFINES = -DH5_USE_16_API
 # ===== Build options end here =====
 #
 
-LIBS =
+
+FORTRAN_LIBS=-lifcore
+LIBS = -lm
+
 ifneq ($(strip $(LAPACK_LOC)),)
 LIBS += -L$(LAPACK_LOC)
 endif
@@ -109,23 +115,33 @@ EOS_DEPS = $(EOS_SRC:.cc=.d)
 # Fine scale models
 
 FS_LOC  = ../src/fine_scale_models
+FS_F_LOC  = ../src/fine_scale_models/fortran
 FS_SRC  = $(shell ls $(FS_LOC)/*.cc)
 FS_INCL = $(FS_SRC:.cc=.h) $(FS_LOC)/FineScale.h
 FS_OBJS = $(FS_SRC:.cc=.o)
-FS_DEPS = $(FS_SRC:.cc=.d)
+FS_F_SRC  = $(shell ls $(FS_F_LOC)/*.f90)
+FS_F_OBJS = $(shell ls $(FS_F_LOC)/*.o)
+#FS_F_OBJS = init.o  libraryR8.o  vpEtxt_interface_base.o  vpscVpETxt_interface.o  vpsc_as_N2O.o TaylorFort.o
+FS_DEPS = $(FS_SRC:.cc=.d) ${FS_F_SRC:.f90=.d}
 
 # Standalone kinematic system test
 
 KINTEST_OBJS = kintest.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
 KINTEST_DEPS = kintest.d
 
+# Standalone kinematic system test
+
+MODTEST_OBJS = modtest.o $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
+MODTEST_F_OBJS = ${FS_F_OBJS}
+MODTEST_DEPS = modtest.d
+
 # Constitutive model library
 
 CMLIB_SRC  = $(CM_SRC) $(EOS_SRC) $(FS_SRC) $(AS_SRC) $(TENSOR_SRC)
-CMLIB_OBJS = $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS)
+CMLIB_OBJS = $(CM_OBJS) $(EOS_OBJS) $(FS_OBJS) $(AS_OBJS) $(TENSOR_OBJS) ${FS_F_OBJS}
 CMLIB_INCL = $(INTERPDB_INCL) $(DB_INCL) $(UTILS_INCL) $(CM_INCL) $(EOS_INCL) $(FS_INCL) $(TENSOR_INCL) $(INTERP_INCL) $(AS_INCL)
 
-CXXFLAGS += -std=c++0x
+CXXFLAGS += -std=c++11
 CXXFLAGS += -I$(AS_LOC) -I$(MTL_LOC) -I$(INTERPDB_LOC) -I$(INTERPDB_LOC)/kriging_database -I$(INTERPDB_LOC)/base -I$(INTERP_LOC) -I$(INTERP_LOC)/base
 CXXFLAGS += -I$(DB_LOC) -I$(DB_LOC)/mtreedb -I$(UTILS_LOC) -I$(UTILS_LOC)/toolbox/base
 CXXFLAGS += -I$(UTILS_LOC)/toolbox/database -I$(UTILS_LOC)/toolbox/stream
@@ -142,12 +158,24 @@ endif
 ifeq ($(FLANN), yes)
 FLANN_LOC = ../../flann/flann/src/cpp
 CXXFLAGS += -DFLANN -I$(FLANN_LOC)
-FLANN_LIBS = $(FLANN_LOC)/../../lib/libflann_s.a
+endif
+
+ifeq ($(HIO), yes)
+CXXFLAGS += -DHIO -I$(LIBHIO_INCLUDE) 
+HIO_LIBS = $(LIBHIO_INCLUDE)/../lib/libhio.a
 endif
 
 ifeq ($(TWEMPROXY), yes)
 TWEMPROXY_SERVER = $(realpath ../../twemproxy/twemproxy-master/src/nutcracker)
 CXXFLAGS += -DNUTCRACKER_SERVER=\"${TWEMPROXY_SERVER}\"
+endif
+
+# LOGGER depends on REDIS=yes
+# IF REDIS=no, logging ends up being a NO OP
+ifeq ($(LOGGER)$(REDIS), yesyes)
+LOGGER_LOC = ../../logger
+LOGGER_LIBS = $(LOGGER_LOC)/liblogger.a
+CXXFLAGS += -DLOGGER -I$(LOGGER_LOC)
 endif
 
 ifeq ($(FSTRACE), yes)
@@ -156,14 +184,18 @@ endif
 
 OPTFLAGS = $(CXXFLAGS) $(CCFLAGS)
 
-MAKEDEPEND = gcc -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
+MAKEDEPEND = $(CC) -MM -MT $*.o $(CXXFLAGS) -o $*.d.tmp $<
 
 default: libcm
 
 libcm: ../lib/libcm.a
 
 kintest: $(KINTEST_OBJS)
-	$(CXX) $(CXXFLAGS) $(KINTEST_OBJS) $(LIBS) -o kintest
+	$(CXX) $(CXXFLAGS) $(KINTEST_OBJS) $(LIBS) $(FORTRAN_LIBS) -o kintest
+
+modtest: $(MODTEST_OBJS) ${MODTEST_F_OBJS}
+	${FC} -c ${FS_F_SRC}
+	$(CXX) $(CXXFLAGS) $(MODTEST_OBJS) ${MODTEST_F_OBJS} $(LIBS) $(FORTRAN_LIBS) -o modtest 
 
 dummy: ;
 
@@ -171,8 +203,8 @@ dummy: ;
 	@[ -f $@ ] || touch $@
 	@echo "CXXFLAGS=$(CXXFLAGS)" | cmp -s $@ - || echo "CXXFLAGS=$(CXXFLAGS)" > $@
 
-../lib/libcm.a:  $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
-	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS) $(FLANN_LIBS)
+../lib/libcm.a:  $(CMLIB_OBJS) $(REDIS_LIBS)  $(HIO_LIBS) $(LOGGER_LIBS)
+	ar crsT libcm.a $(CMLIB_OBJS) $(REDIS_LIBS)  $(HIO_LIBS) $(LOGGER_LIBS)
 	cp $(CMLIB_INCL) ../include
 	mkdir -p ../include/mtl
 	cp $(MTL_INCL) ../include/mtl

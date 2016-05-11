@@ -5,9 +5,9 @@ all: $(SILO_LIB)
 
 silo-${SILO_PV}.tar.gz:
 ifeq (, $(shell which curl))
-	wget -O $@ https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-$(SILO_PV)/silo-$(SILO_PV).tar.gz 
+	wget -O $@ https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-$(SILO_PV)/silo-$(SILO_PV).tar.gz $(WGETFLAG)
 else
-	curl -o $@ -L https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-$(SILO_PV)/silo-$(SILO_PV).tar.gz 
+	curl -o $@ -L https://wci.llnl.gov/content/assets/docs/simulation/computer-codes/silo/silo-$(SILO_PV)/silo-$(SILO_PV).tar.gz $(CURLFLAG)
 endif
 
 $(SILO_LIB): silo-${SILO_PV}.tar.gz

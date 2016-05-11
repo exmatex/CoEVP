@@ -14,7 +14,7 @@ class Taylor
                const double g)
            : m_D_0(D_0), m_m(m), m_g(g) {};
 
-      ~Taylor() {;}
+      ~Taylor() {};
    
       virtual Tensor2Sym tensorFunction( const Tensor2Sym& in ) const;
 
@@ -29,6 +29,7 @@ class Taylor
 
       virtual size_t getStateSize() const {return sizeof(m_D_0) + sizeof(m_m) + sizeof(m_g);}
 
+      double m_dummy;
    private:
 
       double m_D_0;      // Reference strain rate
@@ -36,6 +37,7 @@ class Taylor
       double m_m;        // Sensitivity
 
       double m_g;        // Hardness
+
 };
 
 #endif

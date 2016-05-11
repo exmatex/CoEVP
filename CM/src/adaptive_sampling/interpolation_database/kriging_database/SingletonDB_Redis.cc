@@ -17,23 +17,9 @@
 #include <assert.h>
 #include <stdexcept>
 #include <unistd.h>
+#include <cstdarg>
 
-
-///TODO: Find a way to use to_string_hack() because this is bad
-
-std::string to_string_hack(unsigned long long inVal)
-{
-	char buf[256];
-	sprintf(buf, "%llu", inVal);
-	std::string retString(buf);
-	return buf;
-}
-
-static std::string uint128_to_string(const uint128_t &in){
-   uint64_t *in64 = (uint64_t *)&in; 
-   return to_string_hack((unsigned long long) *in64)+to_string_hack((unsigned long long)*(in64+1));
-}
-
+#include "KeyToString.h"
       
 //  Will eventually be something like add_points
 void  SingletonDB_Redis::push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length) {
@@ -112,7 +98,25 @@ std::vector<double> SingletonDB_Redis::pull_key(const uint128_t &key) {
 //  If the databse is already populated, zero it out.  Existing entries will screw up
 //  CoEVP.
 //
-SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
+//SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
+SingletonDB_Redis::SingletonDB_Redis(int nArgs, ...) {
+  bool distributedRedis = false;
+  bool secondaryClient = false;
+  if(nArgs != 0)
+  {
+    //This is REALLY REALLY hacky and messy
+    va_list vargs;
+    va_start(vargs, nArgs);
+    //First argument is distributedRedis... yup
+    distributedRedis = (va_arg(vargs, int) == 0) ? false : true;
+    //Second argument is secondaryClient
+    if(nArgs >= 2)
+    {
+      secondaryClient = (va_arg(vargs, int) == 0) ? false : true;
+    }
+    ///TODO: Figure out a better solution than basically passing a variable length blob
+    va_end(vargs);
+  }
   int port;
   gethostname(hostBuffer, 256);
   if(distributedRedis)
@@ -128,7 +132,7 @@ SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
   this->nutcrackerServerHandle = nullptr;
   redis = redisConnect(hostBuffer, port);
   
-  if (redis != NULL && redis->err) {
+  if (redis != NULL && redis->err && !secondaryClient) {
     //If needed, spawn nutcracker
     if(distributedRedis)
 	{
@@ -175,6 +179,14 @@ SingletonDB_Redis::SingletonDB_Redis(bool distributedRedis) {
       throw std::runtime_error("Error connecting to redis, please start one on host'"
                              + hostString  + "' and port "
                              + to_string_hack((long long)port));
+    }
+  }
+  //If secondaryClient is true, just keep trying to reconnect
+  if(secondaryClient)
+  {
+    while(redis != NULL && redis->err)
+    {
+      redis=redisConnect(hostBuffer, port);
     }
   }
   if(!distributedRedis)

@@ -1,1 +1,3 @@
-liblogger.a
+*.a
+*.o
+

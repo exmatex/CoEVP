@@ -1,42 +1,70 @@
 //
-//  First attempt at using a global (singleton) redis connections.
-//  This WILL evolve--it's mostly hack code now.  For instance,
-//  we'll likeliy refactor to a base class so that we can suport
-//  many types of databases.
+//  Logging to a REDIS Databases
 //
-// http://stackoverflow.com/questions/1008019/c-singleton-design-pattern
+//  Provides functionality to:
+//    - connect to a logging-specific REDIS database
+//    - log CoEVP-specific events to the database
+//    
+//  Doesn't provide any capability to analyze the collected logs.
+//  Python utility code will be use for that task.
+//
 
-#ifndef included_LoggerDB_h
-#define included_LoggerDB_h
+#ifndef LOGGERDB_H
+#define LOGGERDB_H
+
+#include <string>
+#include <map>
+#include <time.h>
+#include "hiredis.h"
+#include "Logger.h"
 
 
-#include <vector>
-#include <hiredis.h>
-#define uint128_t unsigned __int128
-
-class LoggerDB {
+class LoggerDB : public Logger {
  public:
-  //  Return the single instance that was initialized in the private constructor.
-  static  LoggerDB&  getInstance() {
-    static  LoggerDB   instance;
-    return instance;
-  }
+  LoggerDB(std::string db_node);
+  LoggerDB(std::string db_node, std::string my_node, int my_rank);
 
-  void  push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length);
-  std::vector<double> pull(const uint128_t &key);
-  std::vector<double> pull_key(const uint128_t &key);
+  ~LoggerDB();
+  
+  virtual void  logInfo(std::string txt);
+  //  Timers
+  virtual void  logStartTimer(std::string);
+  virtual void  logIncrTimer(std::string txt);
+  //  Counters
+  virtual void  logIncrCount(std::string, int i=1);
 
- private:
-  redisContext*   redis;
+  virtual void  incrTimeStep(bool writeAtTimestepUpdate=true);
+  
+ protected:
+  std::string   hostname;            //  physical host (perhaps multiple IDs on it)
+  int           id;                  //  e.g. rank if MPI (Charm??)
+  int           step = 1;            //  track current time step
+  bool          isDistributed;       //  if MPI (or Charm?)
+  bool          isLogging = false;   //  this mirrors command line switch
+  redisContext *redis;               //  database connection
 
-  LoggerDB();
- ~LoggerDB();
+  //  Timers
+  struct  TimeVals {
+    timespec  ts_beg;
+    timespec  ts_end;
+    float     et_secs;
+    int       timesIncremented;
+  };
+  std::map<std::string, TimeVals *> timers;
 
-  //  This technique requires C++11 (can do a C++03 version too)
-  LoggerDB(LoggerDB const&)       = delete;
-  void operator=(LoggerDB const&) = delete;
+  //  Counters
+  std::map<std::string, int> counters;
+  
+  //  Tracks how much time we've spent in logging.
+  TimeVals  loggingTimer;
 
-  redisReply *pull_data(const uint128_t &key);
+  void         connectDB(std::string db_name);
+  void         writeAllTimers(void);
+  void         writeAllCounters(void);
+  std::string  makeKey(enum LogKeyword keyword, std::string txt);
+  std::string  makeVal(float et, int c);
+  std::string  makeVal(float et);
+  std::string  makeVal(int i);
 };
 
-#endif // included_LoggerDB_h
+#endif  // LOGGERDB_H

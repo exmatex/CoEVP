@@ -1,0 +1,8 @@
+# these are global
+context base verbose = 100
+[global]
+# these are also global
+#datawarp_stage_mode = immediate
+#data_roots = BB, /ram/tmp
+data_roots = /tmp
+#print_statistics = 1

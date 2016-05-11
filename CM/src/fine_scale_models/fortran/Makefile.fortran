@@ -1,0 +1,28 @@
+FC=mpif90
+FFLAGS=-gdwarf-2 -ffree-line-length-0
+FILES=" caller.f90 vpEtxt_interface_base.f90 vpscVpETxt_interface.f90 libraryR8.f vpsc_as_N2O.f "
+
+SRCS=$(wildcard $(FILES))
+
+OBJS= caller.o vpEtxt_interface_base.o vpscVpETxt_interface.o libraryR8.o vpsc_as_N2O.o
+MODS=vpETxt_interface_base.mod vpscVpETxt_interface.mod
+
+vpsc_as_for: $(MODS) $(OBJS) $(SRCS)
+	$(FC) $(FFLAGS) -o $@ $(OBJS)
+
+vpETxt_interface_base.mod: vpEtxt_interface_base.f90
+	$(FC) $(FFLAGS) -c $<
+
+vpscVpETxt_interface.mod: vpscVpETxt_interface.f90
+	$(FC) $(FFLAGS) -c $<
+
+%.o : %.f90
+	$(FC) $(FFLAGS) -c $<
+
+%.o : %.f
+	$(FC) $(FFLAGS) -c $<
+
+clean:
+	rm vpsc_as_for $(OBJS) $(MODS)
+
+print-%  : ; @echo $* = $($*)

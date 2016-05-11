@@ -123,6 +123,7 @@ main( int   argc,
 
    // Construct the constitutive model
    bool use_adaptive_sampling = false;
+   ModelDatabase * modelDB = nullptr;
    Tensor2Gen L_init;
    setVelocityGradient(0., L_init);
 
@@ -131,7 +132,7 @@ main( int   argc,
 
    ConstitutiveGlobal cm_global;
    size_t state_size;
-   ElastoViscoPlasticity constitutive_model(cm_global, ann, L_init, K, G, eos_model, &plasticity_model, use_adaptive_sampling, state_size);
+   ElastoViscoPlasticity constitutive_model(cm_global, ann, modelDB, L_init, K, G, eos_model, &plasticity_model, use_adaptive_sampling, state_size);
 
    // Allocate an opaque blob to hold the constitutive model state
    void* state = operator new(state_size);

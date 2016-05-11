@@ -1,22 +1,21 @@
 FLANN_PV=1.8.1
 FLANN_DIR=flann-${FLANN_PV}-src
-FLANN_LIB=$(FLANN_DIR)/lib/libflann_cpp.so
+FLANN_HEADER=$(FLANN_DIR)/src/cpp/flann/flann.hpp
 
-all: ${FLANN_LIB}
+all: ${FLANN_HEADER}
 
 $(FLANN_DIR).tar.gz:
 ifeq (, $(shell which curl))
-	wget -O $@ https://github.com/mariusmuja/flann/archive/${FLANN_PV}-src.tar.gz
+	wget -O $@ https://github.com/mariusmuja/flann/archive/${FLANN_PV}-src.tar.gz $(WGETFLAG)
 else
-	curl -o $@ -L https://github.com/mariusmuja/flann/archive/${FLANN_PV}-src.tar.gz
+	curl -o $@ -L https://github.com/mariusmuja/flann/archive/${FLANN_PV}-src.tar.gz $(CURLFLAG)
 endif
 
-$(FLANN_LIB): ${FLANN_DIR}.tar.gz
+$(FLANN_HEADER): ${FLANN_DIR}.tar.gz
 	tar -xzvf $<
-	cd ${FLANN_DIR} && cmake -DPDFLATEX_COMPILER=NOTFOUND .
-	make -C ${FLANN_DIR}
-	ln -s ${FLANN_DIR} flann
-	echo Please use $(FLANN_LIB)
+	ln -sf ${FLANN_DIR} flann
+	touch $(FLANN_HEADER)
+	echo Please use $(FLANN_HEADER)
 
 clean:
 	rm -rf ${FLANN_DIR} flann
