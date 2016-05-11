@@ -63,6 +63,7 @@ Additional BSD Notice
 
 #include "Constitutive.h"
 #include "AdaptiveSampler.h"
+#include <fstream>
 
 Constitutive::~Constitutive()
 {
@@ -123,6 +124,15 @@ Constitutive::sample( const FineScale&           fine_scale_model,
    std::vector<bool> interpolateFlags(InterpolationDataBase::NUMBER_FLAGS);
 
    m_sampler->setVerbose(true);
+  extern std::ofstream logFile;
+#ifdef LAZY_LOGGER
+   logFile << "\tSAMPLE";
+   for(int i = 0; i < point.size(); i++)
+   {
+	logFile << "\t" << point[i];
+   }
+   logFile << std::endl;
+#endif 
 
    m_sampler->sample( value,
                       point,

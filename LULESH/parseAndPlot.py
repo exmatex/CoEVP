@@ -7,13 +7,18 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    argList = [ ("sf", "HashMap + FLANN"),
-                ("sgf", "Global HashMap + FLANN"),
-                ("s", "Hashmap + MTree"),
-                ("sgrf", "Global Redis + FLANN"),
-                ("sg", "Global HashMap + MTree"),
-                ("sgr", "Global Redis + MTree"),
-                ("brute", "No Adaptive Sampling")]
+    argList = [ 
+                ("six", "Max of Six"),
+                ("eight", "Max of Eight"),
+                ("twelve", "Max of Twelve")
+                #("sf", "HashMap + FLANN"),
+                #("sgf", "Global HashMap + FLANN"),
+                #("s", "Hashmap + MTree"),
+                #("sgrf", "Global Redis + FLANN"),
+                #("sg", "Global HashMap + MTree"),
+                #("sgr", "Global Redis + MTree"),
+                #("brute", "No Adaptive Sampling")
+                ]
     #argList = ["sf", "sgf", "s", "sgrf", "sg", "sgr", "brute"]
     #argList = ["sf", "sgf", "s", "sgrf", "brute"]
     cwd = os.getcwd()

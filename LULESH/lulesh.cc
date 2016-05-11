@@ -179,6 +179,8 @@ enum { VolumeError = -1, QStopError = -2 } ;
 //#define SEDOV_SYNC_POS_VEL_EARLY 1
 #endif
 
+std::ofstream logFile;
+
 #if defined(COEVP_MPI)
 /* doRecv flag only works with regular block structure */
 void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t size,
@@ -4072,8 +4074,10 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
 {
 	std::ofstream outFile;
 	outFile.open("runTimes.dat");
+	logFile.open("dbTrace.log");
    /* timestep to solution */
    while(domain.time() < domain.stoptime() ) {
+	   logFile << "ITERATION\t" << domain.cycle() << std::endl;
 	   double startTime = getUnixTime();
 	   outFile << domain.cycle() << "\t" << startTime << "\t";
 #ifdef SILO
@@ -4141,6 +4145,7 @@ void Lulesh::go(int myRank, int numRanks, int sampling, int visit_data_interval,
    }
 
    outFile.close();
+   logFile.close();
 
 #ifdef WRITE_FSM_EVAL_COUNT
    fsm_count_file.close();

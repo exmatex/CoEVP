@@ -39,17 +39,24 @@ static std::string uint128_to_string2(const uint128_t &in){
     
 //  Will eventually be something like add_points
 void  SingletonDB::push(const uint128_t &key, const std::vector<double>& buf, const unsigned long key_length) {
-	logFile << "WRITE\t" << uint128_to_string2(key) << std::endl;
+#ifdef LAZY_LOGGER
+	logFile << "\tWRITE\t" << uint128_to_string2(key) << std::endl;
+#endif 
+	std::cout << "Singleton is of size " << buf.size() << std::endl;
   this->backend->push(key, buf, key_length);
 }
 
 void  SingletonDB::erase(const uint128_t &key){
-	logFile << "ERASE\t" << uint128_to_string2(key) << std::endl;
+#ifdef LAZY_LOGGER
+	logFile << "\tERASE\t" << uint128_to_string2(key) << std::endl;
+#endif 
   this->backend->erase(key);
 }
 
 std::vector<double> SingletonDB::pull(const uint128_t &key) {
-	logFile << "READ\t" << uint128_to_string2(key) << std::endl;
+#ifdef LAZY_LOGGER
+	logFile << "\tREAD\t" << uint128_to_string2(key) << std::endl;
+#endif 
   return this->backend->pull(key);
 }
 
