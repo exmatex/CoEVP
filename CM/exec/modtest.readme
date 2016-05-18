@@ -1,0 +1,5 @@
+In order to get modtest to run, you will need to set the VPSC_INPUT_PATH correctly;
+
+export VPSC_INPUT_PATH="../../../CoEVP/CM/src/fine_scale_models/tantalum/"
+
+You can also replace 'tantalum' with 'data' to get a 2-phase fcc material. 

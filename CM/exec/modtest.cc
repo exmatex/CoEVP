@@ -106,10 +106,11 @@ main( int   argc,
    double g = 2.e-3;
    double D_0 = 1.e-2;
    //Taylor plasticity_model(D_0, m, g);
-   vpsc plasticity_model;
+   //
+   double c_scaling = 1.0;
 
-   plasticity_model.vpsc_init_class();
-   
+   vpsc plasticity_model(c_scaling);
+
    // Construct the equation of state
    EOS* eos_model;
    {

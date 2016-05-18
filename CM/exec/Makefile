@@ -45,7 +45,7 @@ HDF5_DEFINES = -DH5_USE_16_API
 #
 
 
-FORTRAN_LIBS=-lifcore
+FORTRAN_LIBS= -lifcore
 LIBS = -lm
 
 ifneq ($(strip $(LAPACK_LOC)),)
