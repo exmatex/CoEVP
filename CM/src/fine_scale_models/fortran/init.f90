@@ -122,7 +122,7 @@ SUBROUTINE vpsc_init(&
    !
    ! init_vpsc arguments
    !
-   character(len=80) :: fnameIn
+   character(len=255) :: fnameIn
    type (vpETxt_phase_data_type),allocatable :: phaseDataList(:)
    integer :: MPICommF
    !
@@ -138,28 +138,29 @@ SUBROUTINE vpsc_init(&
    integer :: diagnostics
    real(idp) :: c_scaling
    real(idp) :: wgtTot(nPhase)
-   character(len=80) :: dataDir
+   character(len=255) :: dataDir
 
    call get_environment_variable("VPSC_INPUT_PATH", dataDir)
    if (dataDir == "") then 
       dataDir = '../../CoEVP/CM/src/fine_scale_models/tantalum/'
    endif
    
-   !write(*,*) 'Reading data from directory ', dataDir
-
+   
+   
    !
    ! 
    if (diagnostics == 1) then
    write(*,*) 'nPhase passed in = ', nPhase
    endif
 
-   fnameIn=trim(dataDir)//'vpsc_as_try.in'
-   open(62,FILE=fnameIn,STATUS='OLD')
-   read(62,*) iPhase
+   fnameIn=trim(adjustl(dataDir))//'vpsc_as_try.in'
 
+   open(62,FILE=fnameIn,STATUS='OLD')
+
+   read(62,*) iPhase
+   
    if (diagnostics == 1) then
    write(*,*) 'nPhase read in = ', iPhase
-   write(*,*) 'Got to here'
    endif
 
    it%nPhase=nPhase
@@ -177,10 +178,11 @@ SUBROUTINE vpsc_init(&
    !
    read(62,*) (phaseDataList(iPhase)%volfrac, iPhase=1,nPhase)
    close(62)
+   
 
    ! worst piece of code ever
    if (nPhase == 1) then 
-   open(55,file=trim(dataDir)//'rand419.tex',status='old')
+   open(55,FILE=trim(adjustl(dataDir))//'rand419.tex',status='old')
    read(55,*) nGrains(1)
 
    if (diagnostics == 1) then
@@ -250,7 +252,6 @@ SUBROUTINE vpsc_init(&
       write(*,*) 'Total of weights per phase:'
       write(*,*) (wgtTot(i), i=1,2)
    endif
-
    !  normalize the weights if needed
    do iPhase = 1, nPhase
    do kgr=1,nGrains(iPhase)

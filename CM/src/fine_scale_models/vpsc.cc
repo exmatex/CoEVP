@@ -132,8 +132,8 @@ vpsc::vpsc_init_class(const double c_scaling)
 {
    diagnostics = 0;
    char str[1000];
-   char fnameIn[80];
-   char dataDir[80];
+   char fnameIn[255];
+   char dataDir[255];
 
    if(std::getenv("VPSC_INPUT_PATH")==NULL)
    {

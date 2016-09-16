@@ -93,7 +93,7 @@ cas
       INCLUDE 'vpsc_as.dim'
       DIMENSION AUX5(5),AUX55(5,5),AUX3(3),AUX33(3,3),AUX3333(3,3,3,3)
 cas
-      CHARACTER*80 vpscin
+      CHARACTER*255 vpscin
 
 cRL      dimension strengths(:), shapes(:,:), orients(:,:),
 cRL     #          ngrains(:),volfrac(:),ntwinsys(:)
@@ -107,7 +107,7 @@ cass
 
       real*8 c_scaling
 
-      character(len=80) :: dataDir
+      character(len=255) :: dataDir
 
       call get_environment_variable("VPSC_INPUT_PATH", dataDir)
       if (dataDir == "") then 
@@ -119,6 +119,7 @@ cass
       UR1= 21     ! FILECRYS
 
       OPEN(UR0,FILE=vpscin,STATUS='OLD')
+      
 cass      OPEN(UR0,FILE='vpsc_as_try.in',STATUS='OLD')
 cas
 
@@ -214,9 +215,11 @@ cas
         READ(UR0,*)     (EULERPH(I,IPH) ,I=1,3)
 
         READ(UR0,'(a)') PROSA
-        READ(UR0,'(a)') FILECRYS
 
+        READ(UR0,'(a)') FILECRYS
+	
         filecrys = trim(dataDir)//filecrys
+	
 
 C *** READS SLIP AND TWINNING MODES FOR THE PHASE
 
