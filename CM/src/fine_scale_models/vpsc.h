@@ -30,7 +30,7 @@ class vpsc
       virtual size_t getStateSize() const {return 0;}
 
    private:
-
+  
       double   m;
 
       double   g;
@@ -69,8 +69,10 @@ class vpsc
       int      nTwinSysMax;
       int      nStrngthMax;
       int      nGrTot;
-
+      
       int     diagnostics; // due to fortran - c compatibility
+      double   s_threshold; 
+
 };
 
 #endif

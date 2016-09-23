@@ -1,7 +1,6 @@
 #include "vpsc.h"
 #include <stdlib.h>
 #include <string.h>
-
 extern "C"
 {
    // populate all the required data structures 
@@ -134,6 +133,7 @@ vpsc::vpsc_init_class(const double c_scaling)
    char str[1000];
    char fnameIn[255];
    char dataDir[255];
+   char threshold[255];
 
    if(std::getenv("VPSC_INPUT_PATH")==NULL)
    {
@@ -186,7 +186,16 @@ vpsc::vpsc_init_class(const double c_scaling)
    weights     = (double*)malloc(nGrTot * sizeof(double));
    twinVFRates = (double*)malloc(nTwinSysMax*nGrTot * sizeof(double));
    reorientationRates = (double*)malloc(eulerdim_p*nGrTot * sizeof(double));
-
+   // stress threshold for bypass 
+   if(std::getenv("VPSC_S_THRESHOLD") == NULL) { 
+     s_threshold = 1.0e-4; 
+   } else { 
+     strcpy(threshold,std::getenv("VPSC_S_THRESHOLD"));
+     s_threshold  = strtod(threshold, NULL); 
+     if(diagnostics) 
+       std::cout << "VPSC Init: set stress threshold to: " << threshold
+                 << " double value is : " << s_threshold << '\n';
+   }
    for (iPhase = 0; iPhase < nPhase; iPhase++) {
       fscanf(inFile, "%lf", &volFrac[iPhase]);
    if (diagnostics == 1)
@@ -246,7 +255,7 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
 
    in_dev=dev(in);
 
-   double normThreshold = 1.0e-4;
+   double normThreshold =  s_threshold;
    double inFlat[6];
    double outFlat[6];
 
