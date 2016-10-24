@@ -8,7 +8,11 @@ class vpsc
 {
    public:
 
-      vpsc(const double c_scaling) {vpsc_init_class(c_scaling);};
+      vpsc(const double D_0,
+            const double m,
+            const double g,
+            const double c_scaling)
+         : m_D_0(D_0), m_m(m), m_g(g){vpsc_init_class(c_scaling);};
 
       ~vpsc(){;}
 
@@ -30,10 +34,19 @@ class vpsc
       virtual size_t getStateSize() const {return 0;}
 
    private:
-  
+
       double   m;
 
       double   g;
+
+      // Taylor values for matching at the cutoff point
+      //
+      double m_D_0;      // Reference strain rate
+
+      double m_m;        // Sensitivity
+
+      double m_g;        // Hardness
+
 
 
       // phase_data_type
@@ -69,7 +82,7 @@ class vpsc
       int      nTwinSysMax;
       int      nStrngthMax;
       int      nGrTot;
-      
+
       int     diagnostics; // due to fortran - c compatibility
       double   s_threshold; 
 

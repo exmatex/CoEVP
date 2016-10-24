@@ -109,7 +109,7 @@ main( int   argc,
    //
    double c_scaling = 1.0;
 
-   vpsc plasticity_model(c_scaling);
+   vpsc plasticity_model(D_0, m, g, c_scaling);
 
    // Construct the equation of state
    EOS* eos_model;
@@ -164,7 +164,7 @@ main( int   argc,
    double end_time = 2.e-3;
    int num_steps = 100;
    double delta_t = end_time / num_steps;
-   double time = 0.1;
+   double time = 0.0;
    double Lnorm[num_steps];
    double gain[num_steps];
 
@@ -201,6 +201,7 @@ main( int   argc,
 
       cout << "Step " << step << " completed, simulation time is " << time << endl;
       printTensor2Sym(sigma_prime);
+      fflush(stdout);
 
       gain[step] = sigma_prime(1,1)/L_new(1,1);
       Lnorm[step] = norm(L_new);

@@ -137,12 +137,12 @@ vpsc::vpsc_init_class(const double c_scaling)
 
    if(std::getenv("VPSC_INPUT_PATH")==NULL)
    {
-	   strcpy(fnameIn, "../../CoEVP/CM/src/fine_scale_models/tantalum/vpsc_as_try.in");
+      strcpy(fnameIn, "../../CoEVP/CM/src/fine_scale_models/tantalum/vpsc_as_try.in");
    }
    else
    {
-	  strcpy(fnameIn,std::getenv("VPSC_INPUT_PATH"));
-	  strcat(fnameIn,"vpsc_as_try.in");
+      strcpy(fnameIn,std::getenv("VPSC_INPUT_PATH"));
+      strcat(fnameIn,"vpsc_as_try.in");
    }
    //printf("Opening %s\n", fnameIn);
 
@@ -188,18 +188,18 @@ vpsc::vpsc_init_class(const double c_scaling)
    reorientationRates = (double*)malloc(eulerdim_p*nGrTot * sizeof(double));
    // stress threshold for bypass 
    if(std::getenv("VPSC_S_THRESHOLD") == NULL) { 
-     s_threshold = 1.0e-4; 
+      s_threshold = 1.0e-4; 
    } else { 
-     strcpy(threshold,std::getenv("VPSC_S_THRESHOLD"));
-     s_threshold  = strtod(threshold, NULL); 
-     if(diagnostics) 
-       std::cout << "VPSC Init: set stress threshold to: " << threshold
-                 << " double value is : " << s_threshold << '\n';
+      strcpy(threshold,std::getenv("VPSC_S_THRESHOLD"));
+      s_threshold  = strtod(threshold, NULL); 
+      if(diagnostics) 
+         std::cout << "VPSC Init: set stress threshold to: " << threshold
+            << " double value is : " << s_threshold << '\n';
    }
    for (iPhase = 0; iPhase < nPhase; iPhase++) {
       fscanf(inFile, "%lf", &volFrac[iPhase]);
-   if (diagnostics == 1)
-      printf("Phase %d has volume fraction %lf\n", iPhase, volFrac[iPhase]);
+      if (diagnostics == 1)
+         printf("Phase %d has volume fraction %lf\n", iPhase, volFrac[iPhase]);
    }
    fscanf(inFile,"\n");
 
@@ -208,7 +208,7 @@ vpsc::vpsc_init_class(const double c_scaling)
    //printState();
 
    if (diagnostics == 1)
-   printf("Calling vpsc_init_\n");
+      printf("Calling vpsc_init_\n");
 
    // initialize the values using the fortran routines
    vpsc_init_(
@@ -243,7 +243,7 @@ vpsc::vpsc_init_class(const double c_scaling)
    //printState();
 
    if (diagnostics == 1)
-   printf("Finished with vpsc_init_\n");
+      printf("Finished with vpsc_init_\n");
 
 }
 
@@ -261,6 +261,8 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
 
    double normIn = norm(in_dev);
 
+   printf("Input norm = %g\n", normIn);
+
    // bypass vpsc call if stress is too small
    if (normIn > normThreshold) 
    {
@@ -268,7 +270,7 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
       for (int i = 0; i < 6; i++) { 
          inFlat[i] = in_dev.a[i];
          if (diagnostics > 0)
-         printf("%f, %f\n", in_dev.a[i], inFlat[i]);
+            printf("%f, %f\n", in_dev.a[i], inFlat[i]);
       }
 
       vpsc_run_(
@@ -305,21 +307,36 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
       // copy back to output tensor
       for (int i = 0; i < 6; i++) { 
          out.a[i] = outFlat[i];
+         printf("%g, %g, %g\n", in.a[i], in_dev.a[i], out.a[i]);
       }
    } else {
       printf("VPSC call bypass\n");
-      for (int i = 0; i < 6; i++) { 
+      printf("m = D_0 = %g, m = %g, g = %g\n", m_D_0, m_m, m_g);
+
          //in.a[i] = 0.0; // zero the input also for consistency
          //out.a[i] = 0.0;
-         out.a[i] = 1.0e2*in_dev.a[i];
-         printf("%g, %g\n", in_dev.a[i], out.a[i]);
+         // Old stupid (wrong) scaling
+         //out.a[i] = 1.0e2*in_dev.a[i];
+
+         // Fully replicate Taylor model here
+      double norm_tau_dev = norm(in_dev);
+
+      if (norm_tau_dev > 0.0) {
+         out = m_D_0 * in_dev * ( pow((norm_tau_dev/m_g), 1./m_m) / norm_tau_dev );
+      }
+      else {
+         out = 0.0;
+      }
+
+      for (int i = 0; i < 6; i++) { 
+         printf("%g, %g, %g\n", in.a[i], in_dev.a[i], out.a[i]);
       }
    }
    /*
-   for (int i = 0; i < 6; i++) { 
-       printf("%g, %g\n", in.a[i], out.a[i]);
-   }
-   */
+      for (int i = 0; i < 6; i++) { 
+      printf("%g, %g\n", in.a[i], out.a[i]);
+      }
+      */
 
    return out;
 
@@ -332,33 +349,33 @@ vpsc::getScalingsForSampling( vector<double>& input_scaling,
    assert(input_scaling.size() == m_pointDimension);
    assert(output_scaling.size() == m_valueDimension);
 
-   /*
-      if ( m == 1. ) {
+   // this replicates the Taylor model scaling for consistency
+
+   if ( m == 1. ) {
       for (int i=0; i<m_pointDimension; ++i) {
-      input_scaling[i] = 1.e-1;
+         input_scaling[i] = 1.e-1;
       }
       for (int i=0; i<m_valueDimension; ++i) {
-      output_scaling[i] = 1.e3;
+         output_scaling[i] = 1.e3;
       }
-      }
-      else if ( m == 1./2. ) {
+   }
+   else if ( m == 1./2. ) {
       for (int i=0; i<m_pointDimension; ++i) {
-   //         input_scaling[i] = 1.e-2;
-   input_scaling[i] = 1.e-4;
-   }
-   for (int i=0; i<m_valueDimension; ++i) {
-   output_scaling[i] = 1.e1;
-   }
+         //         input_scaling[i] = 1.e-2;
+         input_scaling[i] = 1.e-4;
+      }
+      for (int i=0; i<m_valueDimension; ++i) {
+         output_scaling[i] = 1.e1;
+      }
    }
    else {
-   */
-   for (int i=0; i<m_pointDimension; ++i) {
-      input_scaling[i] = 1.0;
+      for (int i=0; i<m_pointDimension; ++i) {
+         input_scaling[i] = m_g;
+      }
+      for (int i=0; i<m_valueDimension; ++i) {
+         output_scaling[i] = m_D_0;
+      }
    }
-   for (int i=0; i<m_valueDimension; ++i) {
-      output_scaling[i] = 1.0;
-   }
-   //}
 }
 
 

@@ -4079,13 +4079,8 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
 
       Plasticity* plasticity_model;
 
-      if (use_vpsc == 1) {
-         // New vpsc inititialization
-         plasticity_model = (vpsc*) (new vpsc(c_scaling));
-      } else {
-         // Old Taylor initialization
-         //
          // Construct the fine-scale plasticity model
+         // These values are needed for both models now
          double D_0 = 1.e-2;
          double m = 1./20.;
          double g = 2.e-3; // (Mbar)
@@ -4093,6 +4088,13 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
          //      double g = 1.e-4; // (Mbar) Gives a reasonable looking result for m = 1./2.
          //      double m = 1.;
          //      double g = 2.e-6; // (Mbar) Gives a reasonable looking result for m = 1.
+         //
+      if (use_vpsc == 1) {
+         // New vpsc inititialization
+         plasticity_model = (vpsc*) (new vpsc(D_0, m, g, c_scaling));
+      } else {
+         // Old Taylor initialization
+         //
 
          plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
       }
