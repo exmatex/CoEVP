@@ -188,7 +188,8 @@ vpsc::vpsc_init_class(const double c_scaling)
    reorientationRates = (double*)malloc(eulerdim_p*nGrTot * sizeof(double));
    // stress threshold for bypass 
    if(std::getenv("VPSC_S_THRESHOLD") == NULL) { 
-      s_threshold = 1.0e-4; 
+      //s_threshold = 1.0e-4; 
+      s_threshold = 0.0; // new formulation should be stable for all non-zero stress input
    } else { 
       strcpy(threshold,std::getenv("VPSC_S_THRESHOLD"));
       s_threshold  = strtod(threshold, NULL); 
@@ -261,15 +262,21 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
 
    double normIn = norm(in_dev);
 
+
    printf("Input norm = %g\n", normIn);
 
    // bypass vpsc call if stress is too small
    if (normIn > normThreshold) 
    {
+      double in_scale = 2.5*hVecInit[0]/normIn;
+      double out_scale = pow(in_scale, 1.0/m_m); // hard-coded here!
+
+      printf("Scaling factors, %g, %g\n", in_scale, out_scale);
+
       // copy tensor values to flat array
       for (int i = 0; i < 6; i++) { 
-         inFlat[i] = in_dev.a[i];
-         if (diagnostics > 0)
+         inFlat[i] = in_dev.a[i]*in_scale;
+         //if (diagnostics > 0)
             printf("%f, %f\n", in_dev.a[i], inFlat[i]);
       }
 
@@ -306,7 +313,7 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
 
       // copy back to output tensor
       for (int i = 0; i < 6; i++) { 
-         out.a[i] = outFlat[i];
+         out.a[i] = outFlat[i]/out_scale;
          printf("%g, %g, %g\n", in.a[i], in_dev.a[i], out.a[i]);
       }
    } else {
