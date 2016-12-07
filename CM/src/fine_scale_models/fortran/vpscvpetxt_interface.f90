@@ -472,7 +472,11 @@ CONTAINS
     ! part comes out to dRef:
     !L_o(:,:) = L(:,:) * it%dRef / dMag
     ! try returning only the symmetric part to conform to the spec : Jamal
-    L_o(:,:) = D(:,:) * it%dRef / dMag
+
+    ! this is the problem line JAMAL
+    ! L_o(:,:) = D(:,:) * it%dRef / dMag
+    L_o(:,:) = D(:,:) 
+
     !
     ! have 
     !   dMag / dRef = (sMag / g) ** (1/m)
