@@ -226,7 +226,7 @@ void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t s
       int recvCount = size * xferFields ;
       MPI_Irecv(&domain->commDataRecv[pmsg * maxPlaneComm],
             recvCount, baseType, fromRank, msgType,
-            MPI_COMM_WORLD, &domain->recvRequest[pmsg]) ;
+            COARSE_COMM, &domain->recvRequest[pmsg]) ;
       ++pmsg ;
    }
    if (planeMax) {
@@ -235,7 +235,7 @@ void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t s
       int recvCount = size * xferFields ;
       MPI_Irecv(&domain->commDataRecv[pmsg * maxPlaneComm],
             recvCount, baseType, fromRank, msgType,
-            MPI_COMM_WORLD, &domain->recvRequest[pmsg]) ;
+            COARSE_COMM, &domain->recvRequest[pmsg]) ;
       ++pmsg ;
    }
 }
@@ -295,7 +295,7 @@ void Lulesh::CommSend(Domain *domain, int msgType,
 
       MPI_Isend(destAddr, xferFields*size,
             baseType, myRank - 1, msgType,
-            MPI_COMM_WORLD, &domain->sendRequest[pmsg]) ;
+            COARSE_COMM, &domain->sendRequest[pmsg]) ;
       ++pmsg ;
    }
 
@@ -321,7 +321,7 @@ void Lulesh::CommSend(Domain *domain, int msgType,
 
       MPI_Isend(destAddr, xferFields*size,
             baseType, myRank + 1, msgType,
-            MPI_COMM_WORLD, &domain->sendRequest[pmsg]) ;
+            COARSE_COMM, &domain->sendRequest[pmsg]) ;
       ++pmsg ;
    }
 
@@ -573,7 +573,7 @@ void Lulesh::TimeIncrement()
 #if defined(COEVP_MPI)
       MPI_Allreduce(&gnewdt, &newdt, 1,
             ((sizeof(Real_t) == 4) ? MPI_FLOAT : MPI_DOUBLE),
-            MPI_MIN, MPI_COMM_WORLD) ;
+            MPI_MIN, COARSE_COMM) ;
 #else
       newdt = gnewdt ;
 #endif
@@ -3110,7 +3110,7 @@ int Lulesh::UpdateStressForElems()
       int g_max_nonlinear_iters ;
 
       MPI_Allreduce(&max_nonlinear_iters, &g_max_nonlinear_iters, 1,
-            MPI_INT, MPI_MAX, MPI_COMM_WORLD) ;
+            MPI_INT, MPI_MAX, COARSE_COMM) ;
       max_nonlinear_iters = g_max_nonlinear_iters ;
    }
 #endif

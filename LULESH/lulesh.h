@@ -7,6 +7,10 @@
 #define MAX_NONLINEAR_ITER 5
 #define SEDOV_SYNC_POS_VEL_EARLY 1
 
+#if defined(COEVP_MPI)
+extern MPI_Comm COARSE_COMM;
+#endif
+
 class Lulesh {
 
 private:

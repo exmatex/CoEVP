@@ -14,6 +14,13 @@
 #include "Locator.h"
 #endif
 
+#if defined(COEVP_MPI)
+///TODO: Globals may not be good...
+MPI_Comm COARSE_COMM;
+#endif
+
+//More than this many coarse scale solvers lead to a floating point exception
+const int MAX_COARSE_SCALE_SOLVERS = 26;
 
 //  Command line option parsing (using Sriram code from old days)
 #include "cmdLineParser.h"
@@ -24,9 +31,45 @@ int main(int argc, char *argv[])
    int myRank = 0;
 
 #if defined(COEVP_MPI)
+   int numGlobRanks, myGlobRank;
    MPI_Init(&argc, &argv) ;
-   MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;
-   MPI_Comm_rank(MPI_COMM_WORLD, &myRank) ;
+   MPI_Comm_size(MPI_COMM_WORLD, &numGlobRanks) ;
+   MPI_Comm_rank(MPI_COMM_WORLD, &myGlobRank) ;
+   //Create new communicator
+   MPI_Group world_group;
+   MPI_Comm_group(MPI_COMM_WORLD, &world_group);
+   ///TODO: Probably don't just use the first N ranks...
+   int nLulesh = std::min(numGlobRanks, MAX_COARSE_SCALE_SOLVERS);
+   int rankArr[nLulesh];
+   for(int i = 0; i < nLulesh; i++)
+   {
+		rankArr[i] = i;
+   }
+   MPI_Group lulesh_group;
+   MPI_Group_incl(world_group, nLulesh, rankArr, &lulesh_group);
+   MPI_Comm_create_group(MPI_COMM_WORLD, lulesh_group, 0, &COARSE_COMM);
+   //If we are in a whole new world, get our updated ranks
+   if(COARSE_COMM != MPI_COMM_NULL)
+   {
+	   MPI_Comm_size(COARSE_COMM, &numRanks);
+	   MPI_Comm_rank(COARSE_COMM, &myRank);
+   }
+   //Otherwise, set an error flag for safety
+   else
+   {
+		numRanks = -1;
+		myRank = -1;
+   }
+
+   //If myRank == -1, short circuit to the end (later we will be used elsewhere)
+   if(myRank == -1)
+   {
+	   ///TODO: Consider a giant if-statement for cleaner control flow
+	   fprintf(stdout,"Global Rank %d doing nothing\n", myGlobRank);
+	MPI_Barrier(MPI_COMM_WORLD);
+	MPI_Finalize() ;
+	return 0;
+   }
 #endif
   int  timer = 0;
   int  sampling = 0;              //  By default, use adaptive sampling (but compiled in)
@@ -199,7 +242,7 @@ int main(int argc, char *argv[])
    if (logging) {
 #if defined(COEVP_MPI)
      int my_rank;
-     MPI_Comm_rank(MPI_COMM_WORLD, &my_rank);
+     MPI_Comm_rank(COARSE_COMM, &my_rank);
      char my_node[MPI_MAX_PROCESSOR_NAME];
      int name_len;
      MPI_Get_processor_name(my_node, &name_len);
@@ -230,6 +273,7 @@ int main(int argc, char *argv[])
 #endif
   
 #if defined(COEVP_MPI)
+	MPI_Barrier(MPI_COMM_WORLD);
    MPI_Finalize() ;
 #endif
 
