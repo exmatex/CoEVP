@@ -75,7 +75,7 @@ namespace krigalg {
     // add point/value pair to the model
     //
 
-    void addPoint(const Point & point,
+    void addPoint(const CM::Point & point,
 		  const Value & value);
 
     //
@@ -88,13 +88,13 @@ namespace krigalg {
     // interpolate at a point
     //
 
-    Value interpolate(const Point & point) const;
+    Value interpolate(const CM::Point & point) const;
 
     //
     // estimate error at a point
     //
 
-    Value getError(const Point & point) const;
+    Value getError(const CM::Point & point) const;
 
     //
     // output
@@ -112,7 +112,7 @@ namespace krigalg {
     const KrigingModel & operator=(const KrigingModel &);
 
     bool                                  _isValid;
-    std::vector<std::pair<Point, Value> > _pointData;
+    std::vector<std::pair<CM::Point, Value> > _pointData;
 
     Vector                                _Au;
     Vector                                _Bu;

@@ -124,7 +124,7 @@ namespace ellalg {
     //
     EllipsoidRoAModel::EllipsoidRoAModel(
 					 const krigalg::Matrix & GJ,
-					 const krigalg::Point & point, 
+					 const krigalg::CM::Point & point, 
 					 const krigalg::Value & value
 					 )
       : _GJ(GJ),
@@ -221,7 +221,7 @@ namespace ellalg {
     }
 
     krigalg::Value
-    EllipsoidRoAModel::interpolate(const krigalg::Point & point) const
+    EllipsoidRoAModel::interpolate(const krigalg::CM::Point & point) const
     {
 
       const krigalg::Vector inputDiff = point - _point;
@@ -261,7 +261,7 @@ namespace ellalg {
     void
     EllipsoidRoAModel::doEllipsoidGrowth(
 		      const krigalg::Value & valueDiff, // to be enclosed
-		      const krigalg::Point & pointNew, // point at which new evaluation was done
+		      const krigalg::CM::Point & pointNew, // point at which new evaluation was done
 		      const double errorRatio, // ratio of actual to acceptable error
 		      bool & shifted, // whether or not shifted center
 		      double & shiftFactor // amount by which shifted
@@ -372,7 +372,7 @@ namespace ellalg {
 
        void
        EllipsoidRoAModel::testInterpG(
-		   const krigalg::Point & inputPoint,
+		   const krigalg::CM::Point & inputPoint,
 		   bool & canInterp,
 		   bool & hitLimitIDist,
 		   krigalg::Value & estOutputDiff
@@ -406,7 +406,7 @@ namespace ellalg {
     // get current ellipsoid center
     //
 
-    krigalg::Point 
+    krigalg::CM::Point 
     EllipsoidRoAModel::getCenter() const
     {
 

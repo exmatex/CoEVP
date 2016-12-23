@@ -70,7 +70,7 @@ namespace krigalg {
     // add point/value pair to the model
     //
 
-    void addPoint(const Point & point,
+    void addPoint(const CM::Point & point,
 		  const Value & value);
 
     //
@@ -83,7 +83,7 @@ namespace krigalg {
     // get kriging model points
     //
 
-    std::vector<Point> getPoints() const;
+    std::vector<CM::Point> getPoints() const;
 
     //
     // build the model using accumulated points
@@ -95,13 +95,13 @@ namespace krigalg {
     // interpolate at a point
     //
 
-    Value interpolate(const Point & point) const;
+    Value interpolate(const CM::Point & point) const;
 
     //
     // estimate error at a point
     //
 
-    Value getMeanSquaredError(const Point & point) const;
+    Value getMeanSquaredError(const CM::Point & point) const;
 
     //
     // divide the current model to create two smaller models
@@ -126,7 +126,7 @@ namespace krigalg {
 
   private:
     bool                                  _isValid;
-    std::vector<std::pair<Point, Value> > _pointData;
+    std::vector<std::pair<CM::Point, Value> > _pointData;
     
     Vector                                _AZ;
     Vector                                _BZ;

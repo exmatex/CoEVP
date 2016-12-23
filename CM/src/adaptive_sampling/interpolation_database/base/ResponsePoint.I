@@ -93,7 +93,7 @@ inline
 ResponsePoint::ResponsePoint()
 : 
    MTreePoint(), 
-krigalg::Point()
+krigalg::CM::Point()
 {
 }
 
@@ -101,7 +101,7 @@ inline
 ResponsePoint::ResponsePoint(int dimension)
 : 
    MTreePoint(), 
-krigalg::Point(dimension)
+krigalg::CM::Point(dimension)
 {
 }
 
@@ -109,7 +109,7 @@ inline
 ResponsePoint::ResponsePoint(int dimension, double value)
 :
    MTreePoint(),
-krigalg::Point(dimension, value)
+krigalg::CM::Point(dimension, value)
 {
 }
 
@@ -118,7 +118,7 @@ ResponsePoint::ResponsePoint(int            dimension,
                              const double * coordinates)
   :
    MTreePoint(),
-  krigalg::Point(dimension, coordinates)
+  krigalg::CM::Point(dimension, coordinates)
 {
 }
 
@@ -126,7 +126,7 @@ inline
 ResponsePoint::ResponsePoint(const ResponsePoint& response_pt)
 :
    MTreePoint(),
-krigalg::Point(response_pt.size())
+krigalg::CM::Point(response_pt.size())
 {
    mtl::copy(response_pt, *this);
 }
@@ -145,7 +145,7 @@ MTreePointPtr ResponsePoint::makeCopy() const
 inline
 double ResponsePoint::distance(const ResponsePoint& other_pt) const
 {
-   return( krigalg::distance( *this, other_pt ) );
+   return( krigalg::CM::distance( *this, other_pt ) );
 }
 
 inline
@@ -163,7 +163,7 @@ double ResponsePoint::computeDistanceTo(
 inline
 ostream& operator<< (ostream& stream, const ResponsePoint& point)
 {
-   stream << static_cast<krigalg::Point>(point);
+   stream << static_cast<krigalg::CM::Point>(point);
    return( stream );
 }
 

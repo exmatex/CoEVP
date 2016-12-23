@@ -30,7 +30,7 @@ namespace krigcpl {
 
 class ResponsePoint :
    public MTreePoint,
-   public krigalg::Point 
+   public krigalg::CM::Point 
 {
 public:
    /*!

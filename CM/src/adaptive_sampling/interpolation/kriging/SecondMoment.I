@@ -83,7 +83,7 @@ namespace krigalg {
   // get handle to center of mass
   //
   
-  inline const Point & 
+  inline const CM::Point & 
   SecondMoment::getCenterMass() const
   {
 

@@ -83,7 +83,7 @@ Additional BSD Notice
 #endif // DEBUG_NO_INLINE
 
 namespace krigalg {
-    
+  namespace CM{    
     //
     // construction/destruction
     //
@@ -117,6 +117,6 @@ namespace krigalg {
       return outputStream;
 
     }
+  }
 }
-
 

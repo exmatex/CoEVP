@@ -133,7 +133,7 @@
        * @param values Values at Point.
        */
 
-      virtual bool addPoint(const Point              & point,
+      virtual bool addPoint(const CM::Point              & point,
 			    const std::vector<Value> & values);
 
       //
@@ -146,7 +146,7 @@
       // get handle to kriging model points
       //
 
-      virtual const std::vector<Point> & getPoints() const;
+      virtual const std::vector<CM::Point> & getPoints() const;
 
       //
       // get number of values
@@ -192,14 +192,14 @@
       //
 
       virtual Value interpolate(int           valueId,
-				const Point & point) const;
+				const CM::Point & point) const;
 
       //
       // estimate error at a point
       //
 
       virtual Value getMeanSquaredError(int           valueId, 
-					const Point & point) const;
+					const CM::Point & point) const;
 
       //
       // divide the current model to create two smaller models
@@ -214,7 +214,7 @@
       virtual void putToDatabase(toolbox::Database & db) const;
       virtual void getFromDatabase(toolbox::Database & db);
       
-      virtual void pack(const Point& point, std::vector<double> & packedContainer) const;
+      virtual void pack(const CM::Point& point, std::vector<double> & packedContainer) const;
       virtual void unpack(const std::vector<double> & packedContainer);
 
       friend std::ostream & 
@@ -253,7 +253,7 @@
       // points and values
       //
 
-      std::vector<Point>                                      _points;
+      std::vector<CM::Point>                                      _points;
       std::vector<std::vector<Value> >                        _values;
     
       //

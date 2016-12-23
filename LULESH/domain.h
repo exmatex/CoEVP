@@ -120,7 +120,7 @@ inline real10 FABS(real10 arg) { return fabsl(arg) ; }
 /* Allow for flexible data layout experiments by separating */
 /* array interface from underlying implementation.          */
 /************************************************************/
-
+namespace LuleshNS { 
 class Domain {
 
 /* This first implementation allows for runnable code */
@@ -541,7 +541,7 @@ private:
 #endif
 
 };
-
+}
 
 template <typename T>
 T *Allocate(size_t size)
@@ -557,5 +557,4 @@ void Release(T **ptr)
       *ptr = NULL ;
    }
 }
-
 #endif

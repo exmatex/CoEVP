@@ -52,8 +52,8 @@ namespace krigalg {
     // meta-methods
     //
 
-    virtual Matrix getValue(const Point & firstPoint,
-			    const Point & secondPoint) const;
+    virtual Matrix getValue(const CM::Point & firstPoint,
+			    const CM::Point & secondPoint) const;
 
     //
     // Database input/output

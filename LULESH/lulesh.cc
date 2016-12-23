@@ -190,7 +190,7 @@ enum { VolumeError = -1, QStopError = -2 } ;
 
 #if defined(COEVP_MPI)
 /* doRecv flag only works with regular block structure */
-void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t size,
+void Lulesh::CommRecv(LuleshNS::Domain *domain, int msgType, Index_t xferFields, Index_t size,
       bool recvMin = true)
 {
 
@@ -240,7 +240,7 @@ void Lulesh::CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t s
    }
 }
 
-void Lulesh::CommSend(Domain *domain, int msgType,
+void Lulesh::CommSend(LuleshNS::Domain *domain, int msgType,
       Index_t xferFields, Real_t **fieldData,
       Index_t *iset,  Index_t size, Index_t offset,
       bool sendMax = true)
@@ -329,7 +329,7 @@ void Lulesh::CommSend(Domain *domain, int msgType,
 }
 
 
-void Lulesh::CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
+void Lulesh::CommSBN(LuleshNS::Domain *domain, int xferFields, Real_t **fieldData,
       Index_t *iset, Index_t size, Index_t offset) {
 
    if (domain->numSlices() == 1) return ;
@@ -386,7 +386,7 @@ void Lulesh::CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
 }
 
 
-void Lulesh::CommSyncPosVel(Domain *domain,
+void Lulesh::CommSyncPosVel(LuleshNS::Domain *domain,
       Index_t *iset, Index_t size, Index_t offset)
 {
 
@@ -456,7 +456,7 @@ void Lulesh::CommSyncPosVel(Domain *domain,
 
 #if defined(COEVP_MPI)
 
-void Lulesh::CommMonoQ(Domain *domain, Index_t *iset, Index_t size, Index_t offset)
+void Lulesh::CommMonoQ(LuleshNS::Domain *domain, Index_t *iset, Index_t size, Index_t offset)
 {
    if (domain->numSlices() == 1) return ;
 

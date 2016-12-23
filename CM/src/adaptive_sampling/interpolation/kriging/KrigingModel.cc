@@ -137,7 +137,7 @@ namespace krigalg {
     //
 
     Matrix
-    evaluateRegressionModelAtPoints(const std::vector<std::pair<Point, Value> >  & _pointData,
+    evaluateRegressionModelAtPoints(const std::vector<std::pair<CM::Point, Value> >  & _pointData,
 				    const RegressionModel                        & _regressionModel)
     {
       
@@ -151,7 +151,7 @@ namespace krigalg {
       // get the number of points
       //
 
-      const std::vector<std::pair<Point, Value> >::size_type numberPoints = 
+      const std::vector<std::pair<CM::Point, Value> >::size_type numberPoints = 
 	_pointData.size();
 
       //
@@ -178,11 +178,11 @@ namespace krigalg {
       // iterate over points
       //
 
-      std::vector<std::pair<Point, Value> >::const_iterator 
+      std::vector<std::pair<CM::Point, Value> >::const_iterator 
 	pointsDataIter;
-      std::vector<std::pair<Point, Value> >::const_iterator 
+      std::vector<std::pair<CM::Point, Value> >::const_iterator 
 	pointsDataBegin = _pointData.begin();
-      std::vector<std::pair<Point, Value> >::const_iterator 
+      std::vector<std::pair<CM::Point, Value> >::const_iterator 
 	pointsDataEnd = _pointData.end();
       int pointOffset =0;
       
@@ -224,7 +224,7 @@ namespace krigalg {
     //
 
     Matrix
-    evaluateCorrelationModelAtPoints(const std::vector<std::pair<Point, Value> >  & _pointData,
+    evaluateCorrelationModelAtPoints(const std::vector<std::pair<CM::Point, Value> >  & _pointData,
 				     const CorrelationModel                       & _correlationModel)
     {
 
@@ -238,7 +238,7 @@ namespace krigalg {
       // get the number of points
       //
 
-      const std::vector<std::pair<Point, Value> >::size_type numberPoints = 
+      const std::vector<std::pair<CM::Point, Value> >::size_type numberPoints = 
 	_pointData.size();
 
       //
@@ -271,7 +271,7 @@ namespace krigalg {
 
     Vector 
     multiplyArrayAndPointValues(const Matrix & A,
-				const std::vector<std::pair<Point, Value> > & _pointData)
+				const std::vector<std::pair<CM::Point, Value> > & _pointData)
     {
 
       //
@@ -285,8 +285,8 @@ namespace krigalg {
       //
 
       Vector values(_pointData.size());
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataIter;
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataEnd = 
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataIter;
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataEnd = 
 	_pointData.end();
       int valuesOffset = 0;
 
@@ -317,7 +317,7 @@ namespace krigalg {
     //
 
     double 
-    computeSigmaSqr(const std::vector<std::pair<Point, Value> > & _pointData,
+    computeSigmaSqr(const std::vector<std::pair<CM::Point, Value> > & _pointData,
 		    const Matrix                                & P,
 		    const Vector                                & _Au,
 		    const Matrix                                & inverseR)
@@ -329,8 +329,8 @@ namespace krigalg {
 
       Vector values(_pointData.size());
       
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataIter;
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataEnd = 
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataIter;
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataEnd = 
 	_pointData.end();
       int valuesOffset = 0;
 
@@ -389,7 +389,7 @@ namespace krigalg {
   //
 
   void
-  KrigingModel::addPoint(const Point & point,
+  KrigingModel::addPoint(const CM::Point & point,
 			 const Value & value)
   {
 
@@ -516,8 +516,8 @@ namespace krigalg {
     
     outputStream << "_isValid: " << krigingModel._isValid << std::endl;
     
-    std::vector<std::pair<Point, Value> >::const_iterator pointDataIter;
-    std::vector<std::pair<Point, Value> >::const_iterator pointDataEnd = 
+    std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataIter;
+    std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataEnd = 
       krigingModel._pointData.end();
     
     outputStream << "Point data: " << std::endl;

@@ -109,7 +109,7 @@ namespace krigalg {
   //
  
   Matrix
-  LinearRegressionModel::getValues(const Point & point) const
+  LinearRegressionModel::getValues(const CM::Point & point) const
   {
 
     const int pointDimension = point.size();
@@ -157,7 +157,7 @@ namespace krigalg {
   //
 
   Dimension
-  LinearRegressionModel::getDimension(const Point & point) const
+  LinearRegressionModel::getDimension(const CM::Point & point) const
   {
 
     return Dimension(1 + point.size(), 1);

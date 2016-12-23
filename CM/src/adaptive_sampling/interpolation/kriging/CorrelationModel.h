@@ -78,8 +78,8 @@ using namespace std;
     // meta-methods
     //
 
-    virtual Matrix getValue(const Point & firstPoint,
-			    const Point & secondPoint) const = 0;
+    virtual Matrix getValue(const CM::Point & firstPoint,
+			    const CM::Point & secondPoint) const = 0;
     void getThetas(std::vector<double> & thetas) const;
     void setThetas(const std::vector<double> & thetas);
 

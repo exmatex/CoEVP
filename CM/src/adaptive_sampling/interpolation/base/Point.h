@@ -23,7 +23,7 @@
 
 
 namespace krigalg {
-
+  namespace CM { 
   class Point : public Vector {
 
   public:
@@ -76,7 +76,7 @@ namespace krigalg {
 
   std::ostream & operator<<(std::ostream & outputStream,
 			    const Point  & point);
-
+  }
 }
 
 #ifndef DEBUG_NO_INLINE

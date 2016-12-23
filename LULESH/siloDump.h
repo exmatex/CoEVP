@@ -3,6 +3,6 @@
 
 #include "lulesh.h"
 
-void DumpDomain(Domain *domain, int myRank, int numProcs, int fileParts, int sampling, int debug_topology);
+void DumpDomain(LuleshNS::Domain *domain, int myRank, int numProcs, int fileParts, int sampling, int debug_topology);
 
 #endif

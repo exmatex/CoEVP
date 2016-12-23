@@ -108,7 +108,7 @@ namespace krigalg {
       //
 
       Vector 
-      reloadValues(const std::vector<std::pair<Point, Value> > & _pointData)
+      reloadValues(const std::vector<std::pair<CM::Point, Value> > & _pointData)
       {
       
 	//
@@ -141,8 +141,8 @@ namespace krigalg {
 	// insert values data into Z
 	//
 
-	std::vector<std::pair<Point, Value> >::const_iterator pointDataIter;
-	std::vector<std::pair<Point, Value> >::const_iterator pointDataEnd = 
+	std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataIter;
+	std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataEnd = 
 	  _pointData.end();
 	int currentPoint = 0;
 
@@ -175,7 +175,7 @@ namespace krigalg {
       //   
 
       Matrix 
-      createCorrelationMatrix(const std::vector<std::pair<Point, Value> > & _pointData,
+      createCorrelationMatrix(const std::vector<std::pair<CM::Point, Value> > & _pointData,
 			      DerivativeCorrelationModelPointer & _correlationModel)
       {
 
@@ -210,7 +210,7 @@ namespace krigalg {
 	  // get i-point handle 
 	  //
 
-	  const Point & iPoint = _pointData[i].first;
+	  const CM::Point & iPoint = _pointData[i].first;
 
 	  //
 	  // iterate over all points again
@@ -222,7 +222,7 @@ namespace krigalg {
 	    // get j-point handle
 	    //
 
-	    const Point & jPoint = _pointData[j].first;
+	    const CM::Point & jPoint = _pointData[j].first;
 
 	    //
 	    // obtain the correlation Matrix from the
@@ -272,8 +272,8 @@ namespace krigalg {
       //
 
       Matrix
-      computeCorrelation(const std::vector<std::pair<Point, Value> > & _pointData,
-			 const Point                                 & point,
+      computeCorrelation(const std::vector<std::pair<CM::Point, Value> > & _pointData,
+			 const CM::Point                                 & point,
 			 const DerivativeCorrelationModelPointer     & _correlationModel)
       {
 
@@ -301,8 +301,8 @@ namespace krigalg {
 	// iterate over points
 	//
 
-	std::vector<std::pair<Point, Value> >::const_iterator pointDataIter;
-	std::vector<std::pair<Point, Value> >::const_iterator pointDataEnd = 
+	std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataIter;
+	std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataEnd = 
 	  _pointData.end();
 	int currentPoint = 0;
 
@@ -314,7 +314,7 @@ namespace krigalg {
 	  // get handle to point
 	  //
 
-	  const Point & modelPoint = (*pointDataIter).first;
+	  const CM::Point & modelPoint = (*pointDataIter).first;
 	
 	  //
 	  // obtain correlation Matrix from DerivativeCorrelationModel
@@ -344,7 +344,7 @@ namespace krigalg {
       //
     
       Matrix 
-      getRegressionModelValues(const std::vector<std::pair<Point, Value> > & _pointData,
+      getRegressionModelValues(const std::vector<std::pair<CM::Point, Value> > & _pointData,
 			       const DerivativeRegressionModelPointer & _regressionModel)
       {
 
@@ -387,8 +387,8 @@ namespace krigalg {
 	// iterate over points
 	//
 
-	std::vector<std::pair<Point, Value> >::const_iterator pointDataIter;
-	std::vector<std::pair<Point, Value> >::const_iterator pointDataEnd = 
+	std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataIter;
+	std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataEnd = 
 	  _pointData.end();
 	int currentPoint = 0;
       
@@ -400,7 +400,7 @@ namespace krigalg {
 	  // get handle to Point
 	  //
 
-	  const Point & point = (*pointDataIter).first;
+	  const CM::Point & point = (*pointDataIter).first;
 
 	  //
 	  // get regression value corresponding to point
@@ -621,9 +621,9 @@ namespace krigalg {
       //
     
       double 
-      evaluateHyperPlaneEquation(const Point  & point,
+      evaluateHyperPlaneEquation(const CM::Point  & point,
 				 const Vector & normal,
-				 const Point  & point0)
+				 const CM::Point  & point0)
       {
       
 	return mtl::dot(normal, point - point0);
@@ -659,7 +659,7 @@ namespace krigalg {
     //
 
     void
-    DerivativeKrigingModel::addPoint(const Point & point,
+    DerivativeKrigingModel::addPoint(const CM::Point & point,
 				     const Value & value)
     {
 
@@ -704,7 +704,7 @@ namespace krigalg {
     // get all points in the kriging model
     //
 
-    std::vector<krigalg::Point> 
+    std::vector<krigalg::CM::Point> 
     DerivativeKrigingModel::getPoints() const
     {
     
@@ -712,15 +712,15 @@ namespace krigalg {
       // instantiate Point container
       //
 
-      std::vector<krigalg::Point> points;
+      std::vector<krigalg::CM::Point> points;
       points.reserve(_pointData.size());
     
       //
       // iterate over _pointData and copy points
       //
     
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataIter;
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataEnd = 
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataIter;
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataEnd = 
 	_pointData.end();
     
       for (pointDataIter  = _pointData.begin();
@@ -831,7 +831,7 @@ namespace krigalg {
     //
 
     Value
-    DerivativeKrigingModel::interpolate(const Point & point) const
+    DerivativeKrigingModel::interpolate(const CM::Point & point) const
     {
 
       //
@@ -874,7 +874,7 @@ namespace krigalg {
     //
 
     Value
-    DerivativeKrigingModel::getMeanSquaredError(const Point & point) const
+    DerivativeKrigingModel::getMeanSquaredError(const CM::Point & point) const
     {
 
       //
@@ -963,11 +963,11 @@ namespace krigalg {
       // reload points into a container
       //
 
-      std::vector<Point> points;
+      std::vector<CM::Point> points;
       points.reserve(_pointData.size());
     
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataIter;
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataEnd = 
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataIter;
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataEnd = 
 	_pointData.end();
 
       for(pointDataIter  = _pointData.begin();
@@ -995,7 +995,7 @@ namespace krigalg {
       // obtain handle to the center of mass of all points
       //
 
-      const Point & centerMass = secondPointMoment.getCenterMass();    
+      const CM::Point & centerMass = secondPointMoment.getCenterMass();    
 
       //
       // instantiate childKrigingModel
@@ -1013,7 +1013,7 @@ namespace krigalg {
       // n - the eigenvector of the max second moment eigenvalue
       //
     
-      std::vector<std::pair<Point, Value> > pointData;
+      std::vector<std::pair<CM::Point, Value> > pointData;
 
       for(pointDataIter  = _pointData.begin();
 	  pointDataIter != pointDataEnd;
@@ -1023,7 +1023,7 @@ namespace krigalg {
 	// get handle to Point
 	//
 
-	const Point & point = (*pointDataIter).first;
+	const CM::Point & point = (*pointDataIter).first;
 
 	//
 	// get handle to Value
@@ -1088,8 +1088,8 @@ namespace krigalg {
       // point/value pairs
       //
 
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataIter;
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataEnd = 
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataIter;
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataEnd = 
 	krigingModel._pointData.end();
 
       int currentPointId = 0;

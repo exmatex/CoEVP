@@ -73,8 +73,8 @@
     // meta-methods
     //
 
-    virtual Matrix    getValues(const Point & point) const = 0;
-    virtual Dimension getDimension(const Point & point) const = 0;
+    virtual Matrix    getValues(const CM::Point & point) const = 0;
+    virtual Dimension getDimension(const CM::Point & point) const = 0;
     
     //
     // Database input/output

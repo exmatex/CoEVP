@@ -109,7 +109,7 @@ namespace krigalg {
     //
 
     inline Value 
-    KrigingModel::interpolate(const Point & point) const
+    KrigingModel::interpolate(const CM::Point & point) const
     {
 
       //
@@ -146,8 +146,8 @@ namespace krigalg {
       std::vector<double> correlationModelValues;
       correlationModelValues.reserve(_Bu.size());
 
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataIter;
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataEnd =
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataIter;
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataEnd =
 	_pointData.end();
 
       for (pointDataIter  = _pointData.begin();
@@ -186,7 +186,7 @@ namespace krigalg {
     //
 
     inline Value
-    KrigingModel::getError(const Point & point) const
+    KrigingModel::getError(const CM::Point & point) const
     {
 
       //
@@ -202,8 +202,8 @@ namespace krigalg {
 
       Vector r(_pointData.size());
 
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataIter;
-      std::vector<std::pair<Point, Value> >::const_iterator pointDataEnd =
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataIter;
+      std::vector<std::pair<CM::Point, Value> >::const_iterator pointDataEnd =
 	_pointData.end();
       int valuesOffset = 0;
 

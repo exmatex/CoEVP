@@ -47,8 +47,8 @@ namespace krigalg {
     // meta-methods
     //
     
-    virtual Matrix    getValues(const Point & point) const;
-    virtual Dimension getDimension(const Point & point) const;
+    virtual Matrix    getValues(const CM::Point & point) const;
+    virtual Dimension getDimension(const CM::Point & point) const;
 
     //
     // Database input/output

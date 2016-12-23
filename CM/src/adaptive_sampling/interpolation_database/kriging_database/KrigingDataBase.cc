@@ -229,7 +229,7 @@ uint128_t saved_model_key;
 
       double
       compKrigingError(const InterpolationModel & krigingModel,
-		       const Point              & queryPoint,
+		       const CM::Point              & queryPoint,
 		       int                        valueId,
 		       double                     meanErrorFactor)
       {
@@ -269,7 +269,7 @@ uint128_t saved_model_key;
 	  // ONE if we have gradient information
 	  //
       
-	  const std::vector<Point> & points = krigingModel.getPoints();
+	  const std::vector<CM::Point> & points = krigingModel.getPoints();
 	  assert( krigingModel.hasGradient() ? (points.size() == 1) : true );
 
 	  //
@@ -1073,7 +1073,7 @@ uint128_t saved_model_key;
 				     valueDimension);
 
 	//
-	// copy point data into a Point object
+	// copy point data into a CM::Point object
 	//
 	
 	const ResponsePoint point(pointDimension,
@@ -1112,7 +1112,7 @@ uint128_t saved_model_key;
       // compute center of mass for a kriging model
       //
 
-      Point
+      CM::Point
       getModelCenterMass(const InterpolationModel & krigingModel)
       {
 
@@ -1120,7 +1120,7 @@ uint128_t saved_model_key;
 	// get all points in the model
 	//
 
-	const std::vector<Point> & points = krigingModel.getPoints();
+	const std::vector<CM::Point> & points = krigingModel.getPoints();
     
 	//
 	// firewall
@@ -1132,25 +1132,25 @@ uint128_t saved_model_key;
 	// instantiate center od mass
 	//
 
-	Point centerMass(points.front().size(),
+        CM::Point centerMass(points.front().size(),
 			 0.0);
 
 	//
 	// iterate over all points
 	//
     
-	std::vector<Point>::const_iterator pointsIter;
-	std::vector<Point>::const_iterator pointsEnd = points.end();
+	std::vector<CM::Point>::const_iterator pointsIter;
+	std::vector<CM::Point>::const_iterator pointsEnd = points.end();
     
 	for (pointsIter  = points.begin();
 	     pointsIter != pointsEnd;
 	     ++pointsIter) {
       
 	  //
-	  // get Point handle
+	  // get CM::Point handle
 	  //
       
-	  const Point & point = *pointsIter;
+	  const CM::Point & point = *pointsIter;
       
 	  //
 	  // accumulate 
@@ -1321,7 +1321,7 @@ uint128_t saved_model_key;
 	    // get the center of the kriging model
 	    //
 
-	    Point krigingModelCenter = getModelCenterMass(*krigingModelPtr);
+	    CM::Point krigingModelCenter = getModelCenterMass(*krigingModelPtr);
 
 	    //
 	    // copy krigingModelCenter into ResponsePoint
@@ -1474,7 +1474,7 @@ uint128_t saved_model_key;
                   // compute center of the kriging model
                   //
 
-                  const Point modelCenter = getModelCenterMass(*krigingModel);
+                  const CM::Point modelCenter = getModelCenterMass(*krigingModel);
 
                   //
                   // output model center
@@ -1665,7 +1665,7 @@ uint128_t saved_model_key;
                //
                // check the distance between hintKrigingModel and point
                //
-               const Point modelCenter = getModelCenterMass(*hintKrigingModel);
+               const CM::Point modelCenter = getModelCenterMass(*hintKrigingModel);
                const Vector pointRelativePosition = queryPoint - modelCenter;
                const double distanceSqr = krigalg::dot(pointRelativePosition,
                                                        pointRelativePosition);
@@ -1905,7 +1905,7 @@ uint128_t saved_model_key;
 	  //
 	  // check the distance between hintKrigingModel and point
 	  //
-	  const Point modelCenter = getModelCenterMass(*hintKrigingModel);
+	  const CM::Point modelCenter = getModelCenterMass(*hintKrigingModel);
 	  const Vector pointRelativePosition = queryPoint - modelCenter;
 	  const double distanceSqr = krigalg::dot(pointRelativePosition,
 	  					    pointRelativePosition);
@@ -2321,10 +2321,10 @@ uint128_t saved_model_key;
 				       valueDimension);
 	  
 	  //
-	  // copy point data into a Point object
+	  // copy point data into a CM::Point object
 	  //
 	  
-	  const Point pointObject(pointDimension,
+	  const CM::Point pointObject(pointDimension,
 				  point);
 	  
 	  //
@@ -2340,7 +2340,7 @@ uint128_t saved_model_key;
 	    // compute the center of mass for the updated model
 	    //
 	    
-	    const Point centerMass = getModelCenterMass(*krigingModel);
+	    const CM::Point centerMass = getModelCenterMass(*krigingModel);
 
 	    //
 	    // remove old kriging model from the database

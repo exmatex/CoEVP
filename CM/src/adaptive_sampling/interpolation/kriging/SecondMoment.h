@@ -60,14 +60,14 @@ namespace krigalg {
     //
     // construction/destruction
     //
-    SecondMoment(const std::vector<Point> & points);
+    SecondMoment(const std::vector<CM::Point> & points);
     ~SecondMoment();
 
     //
     // get handle to center of mass
     //
 
-    const Point & getCenterMass() const;
+    const CM::Point & getCenterMass() const;
 
     //
     // compute eigensystem
@@ -96,7 +96,7 @@ namespace krigalg {
   public:
 
   private:
-    Point   _centerMass;
+    CM::Point   _centerMass;
     Matrix  _data;       // FIXME: needs to be using symmetric storage
 
   };

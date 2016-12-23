@@ -110,7 +110,7 @@ namespace krigalg {
   //
  
   Matrix
-  ConstantRegressionModel::getValues(const Point & point) const
+  ConstantRegressionModel::getValues(const CM::Point & point) const
   {
  
     return identity(1);
@@ -122,7 +122,7 @@ namespace krigalg {
   //
 
   Dimension
-  ConstantRegressionModel::getDimension(const Point & point) const
+  ConstantRegressionModel::getDimension(const CM::Point & point) const
   {
 
     return Dimension(1, 1);

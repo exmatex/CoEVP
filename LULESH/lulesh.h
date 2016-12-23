@@ -21,22 +21,22 @@ public:
 //  std::chrono::duration<double> write_timing;
 //  std::chrono::high_resolution_clock::time_point write_timing;
   std::ofstream timerfile;
-  Domain domain;
+  LuleshNS::Domain domain;
 
 Lulesh(){ finescale_dt_modifier = Real_t(1.); }
 ~Lulesh(){}
 
-void CommRecv(Domain *domain, int msgType, Index_t xferFields, Index_t size,
+void CommRecv(LuleshNS::Domain *domain, int msgType, Index_t xferFields, Index_t size,
          bool recvMin);
-void CommSend(Domain *domain, int msgType,
+void CommSend(LuleshNS::Domain *domain, int msgType,
          Index_t xferFields, Real_t **fieldData,
          Index_t *iset,  Index_t size, Index_t offset,
          bool sendMax);
-void CommSBN(Domain *domain, int xferFields, Real_t **fieldData,
+void CommSBN(LuleshNS::Domain *domain, int xferFields, Real_t **fieldData,
          Index_t *iset, Index_t size, Index_t offset);
-void CommSyncPosVel(Domain *domain,
+void CommSyncPosVel(LuleshNS::Domain *domain,
          Index_t *iset, Index_t size, Index_t offset);
-void CommMonoQ(Domain *domain, Index_t *iset, Index_t size, Index_t offset);
+void CommMonoQ(LuleshNS::Domain *domain, Index_t *iset, Index_t size, Index_t offset);
 void TimeIncrement();
 void InitStressTermsForElems(Index_t numElem, 
          Real_t *sigxx, Real_t *sigyy, Real_t *sigzz,

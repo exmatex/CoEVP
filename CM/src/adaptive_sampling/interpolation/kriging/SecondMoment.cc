@@ -101,8 +101,8 @@ namespace krigalg {
     // compute the center of mass
     //
 
-    Point 
-    computeCenterOfMass(const std::vector<Point> & points,
+    CM::Point 
+    computeCenterOfMass(const std::vector<CM::Point> & points,
 			int                        spaceDimension)
     {
       
@@ -110,14 +110,14 @@ namespace krigalg {
       // instantiate
       //
 
-      Point centerMass(spaceDimension, 0.0);
+      CM::Point centerMass(spaceDimension, 0.0);
       
       //
       // iterate over all points
       //
       
-      std::vector<Point>::const_iterator pointsIter;
-      std::vector<Point>::const_iterator pointsEnd = points.end();
+      std::vector<CM::Point>::const_iterator pointsIter;
+      std::vector<CM::Point>::const_iterator pointsEnd = points.end();
       
       for (pointsIter  = points.begin();
 	   pointsIter != pointsEnd;
@@ -127,7 +127,7 @@ namespace krigalg {
 	// get Point handle
 	//
 
-	const Point & point = *pointsIter;
+	const CM::Point & point = *pointsIter;
 
 	//
 	// accumulate 
@@ -158,8 +158,8 @@ namespace krigalg {
     //
 
     Matrix
-    computeSecondMoment(const Point              & centerMass,
-			const std::vector<Point> & points,
+    computeSecondMoment(const CM::Point              & centerMass,
+			const std::vector<CM::Point> & points,
 			int                        spaceDimension)
     {
 
@@ -187,8 +187,8 @@ namespace krigalg {
 	  // fill in 
 	  //
 	  
-	  std::vector<Point>::const_iterator pointsIter;
-	  std::vector<Point>::const_iterator pointsEnd = points.end();
+	  std::vector<CM::Point>::const_iterator pointsIter;
+	  std::vector<CM::Point>::const_iterator pointsEnd = points.end();
 	  
 	  for (pointsIter  = points.begin();
 	       pointsIter != pointsEnd;
@@ -198,7 +198,7 @@ namespace krigalg {
 	    // get Point handle
 	    //
 	    
-	    const Point & point = *pointsIter;
+	    const CM::Point & point = *pointsIter;
 
 	    //
 	    // subtract center of mass
@@ -246,7 +246,7 @@ namespace krigalg {
   // construction/destruction
   //
 
-  SecondMoment::SecondMoment(const std::vector<Point> & points)
+  SecondMoment::SecondMoment(const std::vector<CM::Point> & points)
   {
 
     //

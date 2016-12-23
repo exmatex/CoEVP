@@ -120,7 +120,7 @@ namespace krigalg {
       //   
     
       Matrix 
-      createCorrelationMatrix(const std::vector<Point> & _points,
+      createCorrelationMatrix(const std::vector<CM::Point> & _points,
 			      CorrelationModelPointer  & _correlationModel,
 			      int                         pointDimension,
 			      int                         numberPoints)
@@ -150,7 +150,7 @@ namespace krigalg {
 	  // get i-point handle 
 	  //
 
-	  const Point & iPoint = _points[i];
+	  const CM::Point & iPoint = _points[i];
 
 	  //
 	  // iterate over all points again
@@ -162,7 +162,7 @@ namespace krigalg {
 	    // get j-point handle
 	    //
 
-	    const Point & jPoint = _points[j];
+	    const CM::Point & jPoint = _points[j];
 
 	    //
 	    // obtain the value of the correlation from CorrelationModel
@@ -193,7 +193,7 @@ namespace krigalg {
       //
     
       Matrix 
-      getRegressionModelValues(const std::vector<Point>     & _points,
+      getRegressionModelValues(const std::vector<CM::Point>     & _points,
 			       const RegressionModelPointer & _regressionModel,
 			       int                             pointDimension,
 			       int                             numberPoints)
@@ -229,8 +229,8 @@ namespace krigalg {
 	// iterate over points
 	//
 
-	std::vector<Point>::const_iterator pointsIter;
-	std::vector<Point>::const_iterator pointsEnd = _points.end();
+	std::vector<CM::Point>::const_iterator pointsIter;
+	std::vector<CM::Point>::const_iterator pointsEnd = _points.end();
 	int currentPoint = 0;
       
 	for (pointsIter  = _points.begin();
@@ -241,7 +241,7 @@ namespace krigalg {
 	  // get handle to Point
 	  //
 
-	  const Point & point = *pointsIter;
+	  const CM::Point & point = *pointsIter;
 
 	  //
 	  // get regression value corresponding to point
@@ -531,8 +531,8 @@ namespace krigalg {
       //
 
       Vector
-      computeCorrelation(const std::vector<Point>      & _points,
-			 const Point                   & point,
+      computeCorrelation(const std::vector<CM::Point>      & _points,
+			 const CM::Point                   & point,
 			 const CorrelationModelPointer & _correlationModel)
       {
 
@@ -558,8 +558,8 @@ namespace krigalg {
 	// iterate over points
 	//
 
-	std::vector<Point>::const_iterator pointsIter;
-	std::vector<Point>::const_iterator pointsEnd = _points.end();
+	std::vector<CM::Point>::const_iterator pointsIter;
+	std::vector<CM::Point>::const_iterator pointsEnd = _points.end();
 	int currentPoint = 0;
 
 	for (pointsIter  = _points.begin();
@@ -570,7 +570,7 @@ namespace krigalg {
 	  // get handle to point
 	  //
 
-	  const Point & modelPoint = *pointsIter;
+	  const CM::Point & modelPoint = *pointsIter;
 	
 	  //
 	  // obtain correlation Matrix from CorrelationModel
@@ -656,9 +656,9 @@ namespace krigalg {
       //
     
       double 
-      evaluateHyperPlaneEquation(const Point  & point,
+      evaluateHyperPlaneEquation(const CM::Point  & point,
 				 const Vector & normal,
-				 const Point  & point0)
+				 const CM::Point  & point0)
       {
       
 	return dot(normal, point - point0);
@@ -917,8 +917,8 @@ namespace krigalg {
       //
 
       inline bool
-      checkCorrelationMatrixConditionNumber(const Point              & point,
-					    const std::vector<Point> & _points,
+      checkCorrelationMatrixConditionNumber(const CM::Point              & point,
+					    const std::vector<CM::Point> & _points,
 					    CorrelationModelPointer  & _correlationModel,
 					    int pointDimension)
       {
@@ -927,7 +927,7 @@ namespace krigalg {
 	// construct correlation matrix for all points in the model
 	//
     
-	std::vector<Point> pointsCopy(_points.begin(),
+	std::vector<CM::Point> pointsCopy(_points.begin(),
 				      _points.end());
 	pointsCopy.push_back(point);
 
@@ -968,7 +968,7 @@ namespace krigalg {
       }
 
       Vector
-      getPointExtent(const std::vector<Point> & points)
+      getPointExtent(const std::vector<CM::Point> & points)
       {
 
         //
@@ -997,8 +997,8 @@ namespace krigalg {
         // iterate over points
         //
 
-        std::vector<Point>::const_iterator pointsIter;
-        const std::vector<Point>::const_iterator pointsEnd = points.end();
+        std::vector<CM::Point>::const_iterator pointsIter;
+        const std::vector<CM::Point>::const_iterator pointsEnd = points.end();
 
         for (pointsIter  = points.begin();
              pointsIter != pointsEnd;
@@ -1099,7 +1099,7 @@ namespace krigalg {
     //
   
     bool 
-    MultivariateKrigingModel::addPoint(const Point              & point,
+    MultivariateKrigingModel::addPoint(const CM::Point              & point,
 				       const std::vector<Value> & values)
     {
 
@@ -1188,7 +1188,7 @@ namespace krigalg {
     // get handle to kriging model points
     //
 
-    const std::vector<Point> &
+    const std::vector<CM::Point> &
     MultivariateKrigingModel::getPoints() const
     {
 
@@ -1431,7 +1431,7 @@ namespace krigalg {
 
     Value
     MultivariateKrigingModel::interpolate(int           valueId,
-					  const Point & point) const
+					  const CM::Point & point) const
     {
 
       //
@@ -1488,7 +1488,7 @@ namespace krigalg {
 
     Value
     MultivariateKrigingModel::getMeanSquaredError(int           valueId,
-						  const Point & point) const
+						  const CM::Point & point) const
     {
 
       //
@@ -1610,7 +1610,7 @@ namespace krigalg {
       // obtain handle to the center of mass of all points
       //
 
-      const Point & centerMass = secondPointMoment.getCenterMass();    
+      const CM::Point & centerMass = secondPointMoment.getCenterMass();    
 
       //
       // instantiate childKrigingModel
@@ -1628,11 +1628,11 @@ namespace krigalg {
       // n - the eigenvector of the max second moment eigenvalue
       //
     
-      std::vector<Point>               points;
+      std::vector<CM::Point>               points;
       std::vector<std::vector<Value> > values;
 
-      std::vector<Point>::size_type iPoint;
-      std::vector<Point>::size_type numberPoints = _points.size();
+      std::vector<CM::Point>::size_type iPoint;
+      std::vector<CM::Point>::size_type numberPoints = _points.size();
 
       for (iPoint = 0; iPoint < numberPoints; ++iPoint) {
 
@@ -1640,7 +1640,7 @@ namespace krigalg {
 	// get handle to Point
 	//
 
-	const Point & point = _points[iPoint];
+	const CM::Point & point = _points[iPoint];
 
 	//
 	// get handle to Value
@@ -1740,13 +1740,13 @@ namespace krigalg {
       std::vector<double> allValueData;
       
 
-      for(std::vector<Point>::size_type i = 0; i < numberPoints; ++i) {
+      for(std::vector<CM::Point>::size_type i = 0; i < numberPoints; ++i) {
 
 	//
 	// store point
 	//
 
-	const Point & point = _points[i];
+	const CM::Point & point = _points[i];
 
 	allPointData.insert(allPointData.end(),
 			    point.begin(),
@@ -1847,7 +1847,7 @@ namespace krigalg {
 	// instantiate and store point data 
 	//
 	
-	Point point(pointDimension,
+        CM::Point point(pointDimension,
 		    &(allPointData[i*pointDimension]));
 	
 	_points.push_back(point);
@@ -1943,7 +1943,7 @@ namespace krigalg {
     //
 
     void
-    MultivariateKrigingModel::pack(const Point&  point,
+    MultivariateKrigingModel::pack(const CM::Point&  point,
                                    std::vector<double> & packedContainer) const 
     {
 
@@ -1987,13 +1987,13 @@ namespace krigalg {
       // store point/value data
       //
 
-      for(std::vector<Point>::size_type i = 0; i < numberPoints; ++i) {
+      for(std::vector<CM::Point>::size_type i = 0; i < numberPoints; ++i) {
 	
 	//
 	// store point
 	//
 
-	const Point & point = _points[i];
+	const CM::Point & point = _points[i];
 
 	packedContainer.insert(packedContainer.end(),
 			       point.begin(),
@@ -2147,7 +2147,7 @@ namespace krigalg {
 	// instantiate point
 	//
 
-	const Point point(pointDimension,
+	const CM::Point point(pointDimension,
 			  &(packedContainer[currentOffset]));
 
 	currentOffset += pointDimension;
@@ -2309,8 +2309,8 @@ namespace krigalg {
       //
 
 
-      std::vector<Point>::size_type iPoint;
-      const std::vector<Point>::size_type numberPoints = 
+      std::vector<CM::Point>::size_type iPoint;
+      const std::vector<CM::Point>::size_type numberPoints = 
 	krigingModel._points.size();
 
       for (iPoint = 0; iPoint < numberPoints; ++iPoint) {

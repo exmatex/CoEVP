@@ -2,17 +2,17 @@
 
 all: lulesh
 
-FLANN=yes
+FLANN=no
 ifeq ($(FLANN),yes)
 FLANN_LOC=../flann/flann/src/cpp
 libcm: flann
 endif
-REDIS=yes
+REDIS=no
 ifeq ($(REDIS),yes)
 REDIS_LOC=../redis/hiredis
 libcm: redis
 endif
-SILO=yes
+SILO=no
 ifeq ($(SILO),yes)
 SILO_LOC=../silo/silo
 SILODIFF=silo/silo/bin/silodiff

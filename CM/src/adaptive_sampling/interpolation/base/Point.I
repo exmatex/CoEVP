@@ -85,7 +85,7 @@ Additional BSD Notice
 #endif // DEBUG_NO_INLINE
 
 namespace krigalg {
-
+namespace CM { 
     inline
     Point::Point()
     {
@@ -204,6 +204,7 @@ namespace krigalg {
 
     }
 
+}
 }
 
 

@@ -138,7 +138,7 @@ using namespace std;
      * false otherwise.
      */
     
-    virtual bool addPoint(const Point              & point,
+    virtual bool addPoint(const CM::Point              & point,
 			  const std::vector<Value> & values) = 0;
     
     /*!
@@ -155,7 +155,7 @@ using namespace std;
      * @return const reference to an STL vector holding the point data.
      */
  
-    virtual const std::vector<Point> & getPoints() const = 0;
+    virtual const std::vector<CM::Point> & getPoints() const = 0;
 
     /*!
      * Get number of values in the model.
@@ -200,7 +200,7 @@ using namespace std;
      */
     
     virtual Value interpolate(int           valueId,
-			      const Point & point) const = 0;
+			      const CM::Point & point) const = 0;
 
     /*!
      * Estimate error at a point.
@@ -212,7 +212,7 @@ using namespace std;
      */
 
     virtual Value getMeanSquaredError(int           valueId,
-				      const Point & point) const = 0;
+				      const CM::Point & point) const = 0;
     
 
     /*!
@@ -230,7 +230,7 @@ using namespace std;
     virtual void putToDatabase(toolbox::Database & db) const = 0;
     virtual void getFromDatabase(toolbox::Database & db) = 0;
     
-    virtual void pack(const Point& pack, std::vector<double> & packedContainer) const = 0;
+    virtual void pack(const CM::Point& pack, std::vector<double> & packedContainer) const = 0;
     virtual void unpack(const std::vector<double> & packedContainer) = 0;
 
 

@@ -3,6 +3,11 @@
 # Use MPI
 COEVP_MPI =
 
+
+# Use Legion
+COEVP_LEGION = 
+LEGION_LOC = 
+
 # Silo (www.hdfgroup.org/HDF5) and HDF5 (www.hdfgroup.org/HDF5) library
 # locations.  These macros can be left undefined if visualization is not required.
 SILO_LOC = 
@@ -13,8 +18,8 @@ HDF5_LOC =
 
 # BLAS and LAPACK library locations.  It may not be necessary
 # to specify these depending upon the linker defaults
-LAPACK_LOC =
-BLAS_LOC =
+LAPACK_LOC = /usr/lib64
+BLAS_LOC = /usr/lib64
 
 # FLANN library location
 FLANN_LOC =
@@ -50,6 +55,12 @@ ifeq ($(COEVP_MPI), yes)
 CXXFLAGS += -DCOEVP_MPI
 CC= mpicc
 CXX= mpic++
+endif
+
+LEGION_LIB =
+ifeq ($(COEVP_LEGION), yes)
+INCLUDE_DIRS +=  -I $(LEGION_LOC)/include -I$(LEGION_LOC)/include/realm -I $(LEGION_LOC)/include/legion 
+LEGION_LIB += -L $(LEGION_LOC)/lib64 -llegion -lrealm
 endif
 
 ifeq ($(CHARM), yes)
@@ -157,7 +168,7 @@ endif
 # to clock_gettime. Documentation says that -lrt is required, but it was working OK without on Darwin.
 # It does build successfully on Darwin with -lrt too.
 lulesh: $(LULESH_OBJS) $(CM_LIB) $(LOG_LIB)
-	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(PROTOBUF_LIB) $(LAPACK) -lrt -lm $(EXTRA_LIBS) $(FORTRAN_LIBS)
+	$(CXX) $(OPTFLAGS) -o $@ ${LULESH_OBJS} $(CM_LIB) $(SILO_LIB) $(HDF5_LIB) $(LOGGER_LIB) $(PROTOBUF_LIB) $(LEGION_LIB) -L  /usr/lib64 $(LAPACK) -lrt -lm $(EXTRA_LIBS) $(FORTRAN_LIBS)
 
 clean:
 	rm -f *~ lulesh $(LULESH_OBJS) $(PBGENS) $(PBOBJS)

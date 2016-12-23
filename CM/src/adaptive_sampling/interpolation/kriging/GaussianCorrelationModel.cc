@@ -121,8 +121,8 @@ namespace krigalg {
   //
 
   Matrix 
-  GaussianCorrelationModel::getValue(const Point & firstPoint,
-				     const Point & secondPoint) const
+  GaussianCorrelationModel::getValue(const CM::Point & firstPoint,
+				     const CM::Point & secondPoint) const
   {
 
     //

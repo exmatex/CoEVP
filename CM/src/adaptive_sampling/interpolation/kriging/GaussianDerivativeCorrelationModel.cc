@@ -117,8 +117,8 @@ namespace krigalg {
   //
 
   Matrix 
-  GaussianDerivativeCorrelationModel::getValue(const Point & firstPoint,
-					       const Point & secondPoint) const
+  GaussianDerivativeCorrelationModel::getValue(const CM::Point & firstPoint,
+					       const CM::Point & secondPoint) const
   {
 
     //

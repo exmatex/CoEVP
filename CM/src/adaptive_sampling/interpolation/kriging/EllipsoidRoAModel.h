@@ -79,7 +79,7 @@
 
       EllipsoidRoAModel(
 			const krigalg::Matrix & GJ,
-			const krigalg::Point & point, 
+			const krigalg::CM::Point & point, 
 			const krigalg::Value & value
 			);
       ~EllipsoidRoAModel();
@@ -109,7 +109,7 @@
       // interpolate value at a point
       //
 
-      krigalg::Value interpolate(const krigalg::Point & point) const;
+      krigalg::Value interpolate(const krigalg::CM::Point & point) const;
       krigalg::Value interpolate(const krigalg::Value & valueDiff ) const;
 
       //
@@ -117,7 +117,7 @@
       //
       void doEllipsoidGrowth(
 			     const krigalg::Value & valueDiff,
-			     const krigalg::Point & pointNew,
+			     const krigalg::CM::Point & pointNew,
 			     const double errorRatio,
 			     bool & shifted,
 			     double & shiftFactor);
@@ -126,7 +126,7 @@
       // test to see if can interpolate
       //
       void testInterpG(
-		       const krigalg::Point & inputPoint,
+		       const krigalg::CM::Point & inputPoint,
 		       bool & canInterp,
 		       bool & hitLimitIDist,
 		       krigalg::Value & estOutputDiff);
@@ -135,7 +135,7 @@
       // get current ellipsoid center
       //
 
-      krigalg::Point getCenter() const;
+      krigalg::CM::Point getCenter() const;
 
       //
       // get GJ
@@ -175,7 +175,7 @@
 
     private:
     
-      krigalg::Point        _point; // reference input
+      krigalg::CM::Point        _point; // reference input
       krigalg::Value        _value; // reference output
 
       
