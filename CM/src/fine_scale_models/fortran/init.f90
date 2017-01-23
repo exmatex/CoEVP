@@ -182,7 +182,8 @@ SUBROUTINE vpsc_init(&
 
    ! worst piece of code ever
    if (nPhase == 1) then 
-   open(55,FILE=trim(adjustl(dataDir))//'rand419.tex',status='old')
+   !open(55,FILE=trim(adjustl(dataDir))//'rand419.tex',status='old')
+   open(55,FILE=trim(adjustl(dataDir))//'ta419n.tex',status='old')
    read(55,*) nGrains(1)
 
    if (diagnostics == 1) then

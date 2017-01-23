@@ -263,21 +263,21 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
    double normIn = norm(in_dev);
 
 
-   printf("Input norm = %g\n", normIn);
+   printf("Input norm = %e\n", normIn);
 
-   // bypass vpsc call if stress is too small
    if (normIn > normThreshold) 
    {
       double in_scale = 2.5*hVecInit[0]/normIn;
-      double out_scale = pow(in_scale, 1.0/m_m); // hard-coded here!
+      double out_scale = pow(in_scale, 1.0/m_m); 
 
-      printf("Scaling factors, %g, %g\n", in_scale, out_scale);
+      printf("Scaling factors, %e, %e\n", in_scale, out_scale);
 
+      printf("Input stress,                 deviatoric stress,         scaled stress\n");
       // copy tensor values to flat array
       for (int i = 0; i < 6; i++) { 
          inFlat[i] = in_dev.a[i]*in_scale;
          //if (diagnostics > 0)
-            printf("%f, %f\n", in_dev.a[i], inFlat[i]);
+            printf("%24.15e, %24.15e, %24.15e\n", in.a[i], in_dev.a[i], inFlat[i]);
       }
 
       vpsc_run_(
@@ -311,14 +311,16 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
             &diagnostics          
                );
 
+      printf("Input stress,                unscaled VPSC output,         values returned\n");
       // copy back to output tensor
       for (int i = 0; i < 6; i++) { 
          out.a[i] = outFlat[i]/out_scale;
-         printf("%g, %g, %g\n", in.a[i], in_dev.a[i], out.a[i]);
+         printf("%24.15e, %24.15e, %24.15e\n", in.a[i], outFlat[i], out.a[i]);
       }
    } else {
+   // bypass vpsc call if stress is too small
       printf("VPSC call bypass\n");
-      printf("m = D_0 = %g, m = %g, g = %g\n", m_D_0, m_m, m_g);
+      printf("D_0 = %e, m = %e, g = %e\n", m_D_0, m_m, m_g);
 
          //in.a[i] = 0.0; // zero the input also for consistency
          //out.a[i] = 0.0;
@@ -336,7 +338,7 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
       }
 
       for (int i = 0; i < 6; i++) { 
-         printf("%g, %g, %g\n", in.a[i], in_dev.a[i], out.a[i]);
+         printf("%12.5e, %12.5e, %12.5e\n", in.a[i], in_dev.a[i], out.a[i]);
       }
    }
    /*

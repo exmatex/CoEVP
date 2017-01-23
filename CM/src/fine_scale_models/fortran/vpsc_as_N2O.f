@@ -2450,22 +2450,26 @@ C **************************************************************************
 
       INCLUDE 'vpsc_as.dim'
 
+      integer flag
+
       DIMENSION AUXTAN(5,5)
-cas      DBARNORM=TNORM(DBAR,5,1)
+
+      flag = 0
+!as      DBARNORM=TNORM(DBAR,5,1)
       KGX=1
       DO IPH=IPHBOT,IPHTOP
         IPHEL=IPH-IPHBOT+1
         DO KKK=NGR(IPH-1)+1,NGR(IPH)
-cas        IF(STRAIN_CONTROL.EQ.1) THEN
-cas            DO J=1,5
-cas              STRY(J,KGX)=DBAR(J)/DBARNORM
-cas            ENDDO
-cas            CALL GRAIN_STRESS (0,KGX,KKK,IPHEL,IPH)
-cas          ELSE IF(STRAIN_CONTROL.EQ.0) THEN
+!as        IF(STRAIN_CONTROL.EQ.1) THEN
+!as            DO J=1,5
+!as              STRY(J,KGX)=DBAR(J)/DBARNORM
+!as            ENDDO
+!as            CALL GRAIN_STRESS (0,KGX,KKK,IPHEL,IPH)
+!as          ELSE IF(STRAIN_CONTROL.EQ.0) THEN
             DO J=1,5
               SG(J,KKK)=SBAR(J)
             ENDDO
-cas          ENDIF
+!as          ENDIF
           CALL GRAIN_RATE_AND_MODULI (0,1,KGX,KKK,IPHEL,IPH)
           KGX=KGX+1
         ENDDO
@@ -2482,8 +2486,8 @@ cas          ENDIF
         ENDDO
       ENDDO
 
-C     CALCULATE INITIAL GUESS FOR MACROSCOPIC MODULI 'Mtg' AS THE INVERSE
-C     OF THE AVERAGE OF THE GRAIN'S STIFFNESSES
+!     CALCULATE INITIAL GUESS FOR MACROSCOPIC MODULI 'Mtg' AS THE INVERSE
+!     OF THE AVERAGE OF THE GRAIN'S STIFFNESSES
 
       DO I=1,5
         dzero(i)=0.
@@ -2502,7 +2506,15 @@ C     OF THE AVERAGE OF THE GRAIN'S STIFFNESSES
         ENDDO
         KGX=KGX+1
 
-        CALL LU_INVERSE(AUXTAN,5)
+         flag = 0
+         CALL LU_INVERSE(AUXTAN,5,flag)
+         if (flag.eq.1)  then
+            write(*,*) 'AUXTAN is singular'
+            DO I=1,5
+               write(*,*) (AUXTAN(I,J),j=1,5)
+            ENDDO
+            auxtan=0.0
+        endif
 
         DO I=1,5
           dzero(i)=dzero(i)+dczero(i,kgx)*wgt(kkk)
@@ -2519,7 +2531,15 @@ cw
          ENDDO
       ENDDO
 
-      CALL LU_INVERSE(XMTG,5)
+      flag = 0
+      CALL LU_INVERSE(XMTG,5,flag)
+        if (flag.eq.1)  then
+        write(*,*) 'XMTG is singular'
+        DO I=1,5
+          write(*,*) (xmtg(I,J),j=1,5)
+        ENDDO
+        endif
+
 
 c      write( *,*)
 c      write( *,'('' inside initial_state_guess'')')
@@ -2549,9 +2569,11 @@ c
 c
 c------------------------------------------------------------------------------
 c
-      SUBROUTINE LU_INVERSE (A,N)
+      SUBROUTINE LU_INVERSE (A,N,FLAG)
 
       IMPLICIT INTEGER (I-N), REAL*8 (A-H, O-Z)
+      
+      integer flag
 
 C *** INVERTS A MATRIX USING LU DECOMPOSITION
       INTEGER N,ISINGULAR
@@ -2559,7 +2581,7 @@ C *** INVERTS A MATRIX USING LU DECOMPOSITION
 C      DIMENSION A(N,N),Y(N,N),INDX(N)      ! MAY CHOKE SOME COMPILERS
       DIMENSION A(5,5),Y(5,5),INDX(5)
       
-      
+      flag=0
 
 c     write(*,*) 'A(i,j) matrix inside lu_inverse'
 c     write(*,'(5e12.3)') ((a(i,j),j=1,n),i=1,n)
@@ -2569,29 +2591,33 @@ C **************************************************************
 C *** BLOCK ADDED 03/DEC/05 TO AVOID NUMERICALLY SINGULAR MATRIX
       AMAX=0.D0
       DO I=1,N
-      DO J=1,N
-        DUM=ABS(A(I,J))
-        IF(DUM .GT. AMAX) AMAX=DUM
-      ENDDO
+         DO J=1,N
+            DUM=ABS(A(I,J))
+            IF(DUM .GT. AMAX) AMAX=DUM
+         ENDDO
       ENDDO
       DO I=1,N
-      DO J=1,N
-        A(I,J)=A(I,J)/AMAX      ! normalize the matrix
-      ENDDO
+         DO J=1,N
+            A(I,J)=A(I,J)/AMAX      ! normalize the matrix
+         ENDDO
       ENDDO
 C **************************************************************
 
       DO I=1,N
-        DO J=1,N
-          Y(I,J)=0.
-        ENDDO
-        Y(I,I)=1.
+         DO J=1,N
+            Y(I,J)=0.
+         ENDDO
+         Y(I,I)=1.
       ENDDO
 
       CALL LUDCMP(A,N,N,INDX,D,ISINGULAR)
       IF(ISINGULAR.EQ.1) THEN
-        WRITE(*,*) ' *** SINGULAR MATRIX IN LU_INVERSE !!'
-        STOP
+         WRITE(*,*) ' *** SINGULAR MATRIX IN LU_INVERSE !!'
+         write(*,*) 'A(i,j) matrix inside lu_inverse'
+         write(*,'(5e12.3)') ((a(i,j),j=1,n),i=1,n)
+         flag=1
+         return
+        !STOP
       ENDIF
 
       DO J=1,N
@@ -2599,9 +2625,9 @@ C **************************************************************
       ENDDO
 
       DO I=1,N
-      DO J=1,N
-        A(I,J)=Y(I,J) /AMAX      ! renormalize the inverse
-      ENDDO
+         DO J=1,N
+            A(I,J)=Y(I,J) /AMAX      ! renormalize the inverse
+         ENDDO
       ENDDO
 
       RETURN
@@ -2642,7 +2668,7 @@ c      DIMENSION A(N,N),B(N),INDX(N)      ! MAY CHOKE SOME COMPILERS
       CALL LUDCMP(A,N,N,INDX,D,ISINGULAR)
 c
       do j=1,25
-      d=d*a(j,j)
+         d=d*a(j,j)
       enddo
 
 c      write(*,*) 'DET25=',d
@@ -2761,6 +2787,10 @@ cw          endif
           CALL LU_EQSYSTEM (FGRAD,F,5,ISINGULAR)
           IF(ISINGULAR.EQ.1) THEN
             IERROR=1
+            write(*,*) 'Failed here with fGrad ='
+            do i=1,5
+            write(*,'(5f10.5)') (fgrad(i,j),j=1,5)
+            enddo
             RETURN
           ENDIF
 
@@ -4149,8 +4179,24 @@ cw      CALL CHG_BASIS(P5,PSA,AUX55,AUX3333,2,5)
       ENDDO
       ENDDO
 
-      CALL LU_INVERSE(XIMSINV,5)
-      CALL LU_INVERSE(E5INV,5)
+      flag = 0
+      CALL LU_INVERSE(XIMSINV,5,flag)
+        if (flag.eq.1)  then
+        write(*,*) 'XIMSINV is singular'
+        DO I=1,5
+          write(*,*) (ximsinv(I,J),j=1,5)
+        ENDDO
+        endif
+
+      flag = 0
+      CALL LU_INVERSE(E5INV,5,flag)
+        if (flag.eq.1)  then
+        write(*,*) 'E5INV is singular'
+        DO I=1,5
+          write(*,*) (e5inv(I,J),j=1,5)
+        ENDDO
+        endif
+
 
       CALL CHG_BASIS(AUX5,AUX33,E5INV,EINVSA,3,5)
 
@@ -4311,7 +4357,15 @@ CFEE
         ENDDO
         ENDDO
 
-        CALL LU_INVERSE(BC1,5)
+      flag = 0
+        CALL LU_INVERSE(BC1,5,flag)
+        if (flag.eq.1)  then
+        write(*,*) 'BC1 is singular'
+        DO I=1,5
+          write(*,*) (bc1(I,J),j=1,5)
+        ENDDO
+        endif
+
 cc
         DO I=1,5
         DO J=1,5
@@ -4389,7 +4443,15 @@ c
       ENDDO
       ENDDO
 
-      CALL LU_INVERSE(BCINV,5)
+      flag = 0
+      CALL LU_INVERSE(BCINV,5,flag)
+        if (flag.eq.1)  then
+        write(*,*) 'BCINV is singular'
+        DO I=1,5
+          write(*,*) (bcinv(I,J),j=1,5)
+        ENDDO
+        endif
+
 
       DO I=1,5
       DO J=1,5
@@ -4418,7 +4480,15 @@ CFEE
       ENDDO
       ENDDO
 
-      CALL LU_INVERSE(XLTG,5)
+      flag = 0
+      CALL LU_INVERSE(XLTG,5,flag)
+        if (flag.eq.1)  then
+        write(*,*) 'XLTG is singular'
+        DO I=1,5
+          write(*,*) (xltg(I,J),j=1,5)
+        ENDDO
+        endif
+
 
       if(interaction.eq.1.or.interaction.eq.5) then       ! affine or SO
         DO I=1,5
