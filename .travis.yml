@@ -17,7 +17,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - ccache
-      - gfortan #for silo
+      - gfortran #for silo
       - libhdf5-serial-dev #for silo
       - liblapack-dev
       - libblas-dev
