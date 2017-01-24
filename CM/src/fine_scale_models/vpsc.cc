@@ -193,7 +193,7 @@ vpsc::vpsc_init_class(const double c_scaling)
    } else { 
       strcpy(threshold,std::getenv("VPSC_S_THRESHOLD"));
       s_threshold  = strtod(threshold, NULL); 
-      if(diagnostics) 
+      if (diagnostics == 1)
          std::cout << "VPSC Init: set stress threshold to: " << threshold
             << " double value is : " << s_threshold << '\n';
    }
@@ -269,14 +269,15 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
    {
       double in_scale = 2.5*hVecInit[0]/normIn;
       double out_scale = pow(in_scale, 1.0/m_m); 
-
+  
+      if (diagnostics == 1) {
       printf("Scaling factors, %e, %e\n", in_scale, out_scale);
-
       printf("Input stress,                 deviatoric stress,         scaled stress\n");
+      }
       // copy tensor values to flat array
       for (int i = 0; i < 6; i++) { 
          inFlat[i] = in_dev.a[i]*in_scale;
-         //if (diagnostics > 0)
+         if (diagnostics == 1)
             printf("%24.15e, %24.15e, %24.15e\n", in.a[i], in_dev.a[i], inFlat[i]);
       }
 
@@ -311,16 +312,20 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
             &diagnostics          
                );
 
+      if (diagnostics == 1)
       printf("Input stress,                unscaled VPSC output,         values returned\n");
       // copy back to output tensor
       for (int i = 0; i < 6; i++) { 
          out.a[i] = outFlat[i]/out_scale;
+         if (diagnostics == 1)
          printf("%24.15e, %24.15e, %24.15e\n", in.a[i], outFlat[i], out.a[i]);
       }
    } else {
    // bypass vpsc call if stress is too small
+      if (diagnostics == 1) {
       printf("VPSC call bypass\n");
       printf("D_0 = %e, m = %e, g = %e\n", m_D_0, m_m, m_g);
+      }
 
          //in.a[i] = 0.0; // zero the input also for consistency
          //out.a[i] = 0.0;
@@ -337,8 +342,10 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
          out = 0.0;
       }
 
+      if (diagnostics == 1) {
       for (int i = 0; i < 6; i++) { 
          printf("%12.5e, %12.5e, %12.5e\n", in.a[i], in_dev.a[i], out.a[i]);
+      }
       }
    }
    /*
