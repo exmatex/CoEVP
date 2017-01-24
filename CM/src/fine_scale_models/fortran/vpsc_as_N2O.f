@@ -2451,10 +2451,12 @@ C **************************************************************************
       INCLUDE 'vpsc_as.dim'
 
       integer flag
+      integer diagnostics
 
       DIMENSION AUXTAN(5,5)
 
       flag = 0
+      diagnostics = 0
 !as      DBARNORM=TNORM(DBAR,5,1)
       KGX=1
       DO IPH=IPHBOT,IPHTOP
@@ -2507,21 +2509,23 @@ C **************************************************************************
         KGX=KGX+1
 
          flag = 0
-         CALL LU_INVERSE(AUXTAN,5,flag)
+         CALL LU_INVERSE(AUXTAN,5,flag,diagnostics)
          if (flag.eq.1)  then
-            write(*,*) 'AUXTAN is singular'
-            DO I=1,5
-               write(*,*) (AUXTAN(I,J),j=1,5)
-            ENDDO
+            if (diagnostics.eq.1) then 
+               write(*,*) 'AUXTAN is singular'
+               DO I=1,5
+                  write(*,*) (AUXTAN(I,J),j=1,5)
+               ENDDO
+            endif
             auxtan=0.0
-        endif
+         endif
 
-        DO I=1,5
-          dzero(i)=dzero(i)+dczero(i,kgx)*wgt(kkk)
-          DO J=1,5
-            XMTG(I,J)=XMTG(I,J)+AUXTAN(I,J)*WGT(KKK)
-          ENDDO
-        ENDDO
+         DO I=1,5
+            dzero(i)=dzero(i)+dczero(i,kgx)*wgt(kkk)
+            DO J=1,5
+               XMTG(I,J)=XMTG(I,J)+AUXTAN(I,J)*WGT(KKK)
+            ENDDO
+         ENDDO
       ENDDO
       ENDDO
 cw
@@ -2532,12 +2536,14 @@ cw
       ENDDO
 
       flag = 0
-      CALL LU_INVERSE(XMTG,5,flag)
+      CALL LU_INVERSE(XMTG,5,flag,diagnostics)
         if (flag.eq.1)  then
-        write(*,*) 'XMTG is singular'
-        DO I=1,5
-          write(*,*) (xmtg(I,J),j=1,5)
-        ENDDO
+            if (diagnostics.eq.1) then 
+               write(*,*) 'XMTG is singular'
+               DO I=1,5
+                  write(*,*) (xmtg(I,J),j=1,5)
+               ENDDO
+            endif
         endif
 
 
@@ -2569,11 +2575,12 @@ c
 c
 c------------------------------------------------------------------------------
 c
-      SUBROUTINE LU_INVERSE (A,N,FLAG)
+      SUBROUTINE LU_INVERSE (A,N,FLAG,diagnostics)
 
       IMPLICIT INTEGER (I-N), REAL*8 (A-H, O-Z)
       
       integer flag
+      integer diagnostics
 
 C *** INVERTS A MATRIX USING LU DECOMPOSITION
       INTEGER N,ISINGULAR
@@ -2612,9 +2619,11 @@ C **************************************************************
 
       CALL LUDCMP(A,N,N,INDX,D,ISINGULAR)
       IF(ISINGULAR.EQ.1) THEN
-         WRITE(*,*) ' *** SINGULAR MATRIX IN LU_INVERSE !!'
-         write(*,*) 'A(i,j) matrix inside lu_inverse'
-         write(*,'(5e12.3)') ((a(i,j),j=1,n),i=1,n)
+         if (diagnostics.eq.1) then
+            WRITE(*,*) ' *** SINGULAR MATRIX IN LU_INVERSE !!'
+            write(*,*) 'A(i,j) matrix inside lu_inverse'
+            write(*,'(5e12.3)') ((a(i,j),j=1,n),i=1,n)
+         endif
          flag=1
          return
         !STOP
@@ -3940,6 +3949,9 @@ c
       dimension xmcphc(5),xmtphave(5),dsimaux(3,3)
       dimension phave(5),dzero1(5),dznew(5)
 
+      integer diagnostics
+
+      diagnostics = 0
 C *** FOR A TAYLOR CASE (INTERACTION=0) SOLVES VP EQUATION FOR GRAIN STRESS.
 C *** CALCULATE STRAIN-RATE 'DG' AND MODULI 'XMCTG' FOR EVERY GRAIN.
 
@@ -4013,12 +4025,14 @@ c
       ERRASO=2.*ERRSO
       KSO=1
 c
-      write(*,*)
-      IF(INTERACTION.EQ.1) write(*,'(a)') ' AFFINE CALCULATION'
-      IF(INTERACTION.EQ.2) write(*,'(a)') ' SECANT CALCULATION'
-      IF(INTERACTION.EQ.3) write(*,'(a)') ' NEFF=10 CALCULATION'
-      IF(INTERACTION.EQ.4) write(*,'(a)') ' TANGENT CALCULATION'
-      write(*,*)
+      if (diagnostics.eq.1) then
+         write(*,*)
+         IF(INTERACTION.EQ.1) write(*,'(a)') ' AFFINE CALCULATION'
+         IF(INTERACTION.EQ.2) write(*,'(a)') ' SECANT CALCULATION'
+         IF(INTERACTION.EQ.3) write(*,'(a)') ' NEFF=10 CALCULATION'
+         IF(INTERACTION.EQ.4) write(*,'(a)') ' TANGENT CALCULATION'
+         write(*,*)
+      endif
 
       DO WHILE( KSO.EQ.1 .AND.
      #  (ERRESO.GT.ERRSO.OR.ERRASO.GT.ERRSO) .AND. ITSO.LT.ITMAXSO )
@@ -4180,21 +4194,25 @@ cw      CALL CHG_BASIS(P5,PSA,AUX55,AUX3333,2,5)
       ENDDO
 
       flag = 0
-      CALL LU_INVERSE(XIMSINV,5,flag)
+      CALL LU_INVERSE(XIMSINV,5,flag,diagnostics)
         if (flag.eq.1)  then
-        write(*,*) 'XIMSINV is singular'
-        DO I=1,5
-          write(*,*) (ximsinv(I,J),j=1,5)
-        ENDDO
+            if (diagnostics.eq.1) then 
+               write(*,*) 'XIMSINV is singular'
+               DO I=1,5
+                  write(*,*) (ximsinv(I,J),j=1,5)
+               ENDDO
+            endif
         endif
 
       flag = 0
-      CALL LU_INVERSE(E5INV,5,flag)
+      CALL LU_INVERSE(E5INV,5,flag,diagnostics)
         if (flag.eq.1)  then
-        write(*,*) 'E5INV is singular'
-        DO I=1,5
-          write(*,*) (e5inv(I,J),j=1,5)
-        ENDDO
+            if (diagnostics.eq.1) then 
+               write(*,*) 'E5INV is singular'
+               DO I=1,5
+                  write(*,*) (e5inv(I,J),j=1,5)
+               ENDDO
+            endif
         endif
 
 
@@ -4358,12 +4376,14 @@ CFEE
         ENDDO
 
       flag = 0
-        CALL LU_INVERSE(BC1,5,flag)
+        CALL LU_INVERSE(BC1,5,flag,diagnostics)
         if (flag.eq.1)  then
-        write(*,*) 'BC1 is singular'
-        DO I=1,5
-          write(*,*) (bc1(I,J),j=1,5)
-        ENDDO
+            if (diagnostics.eq.1) then 
+               write(*,*) 'BC1 is singular'
+               DO I=1,5
+                  write(*,*) (bc1(I,J),j=1,5)
+               ENDDO
+            endif
         endif
 
 cc
@@ -4444,12 +4464,14 @@ c
       ENDDO
 
       flag = 0
-      CALL LU_INVERSE(BCINV,5,flag)
+      CALL LU_INVERSE(BCINV,5,flag,diagnostics)
         if (flag.eq.1)  then
-        write(*,*) 'BCINV is singular'
-        DO I=1,5
-          write(*,*) (bcinv(I,J),j=1,5)
-        ENDDO
+            if (diagnostics.eq.1) then 
+               write(*,*) 'BCINV is singular'
+               DO I=1,5
+                  write(*,*) (bcinv(I,J),j=1,5)
+               ENDDO
+            endif
         endif
 
 
@@ -4481,12 +4503,14 @@ CFEE
       ENDDO
 
       flag = 0
-      CALL LU_INVERSE(XLTG,5,flag)
+      CALL LU_INVERSE(XLTG,5,flag,diagnostics)
         if (flag.eq.1)  then
-        write(*,*) 'XLTG is singular'
-        DO I=1,5
-          write(*,*) (xltg(I,J),j=1,5)
-        ENDDO
+            if (diagnostics.eq.1) then 
+               write(*,*) 'XLTG is singular'
+               DO I=1,5
+                  write(*,*) (xltg(I,J),j=1,5)
+               ENDDO
+            endif
         endif
 
 

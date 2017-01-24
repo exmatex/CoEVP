@@ -262,17 +262,17 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
 
    double normIn = norm(in_dev);
 
-
-   printf("Input norm = %e\n", normIn);
+   if (diagnostics == 1)
+      printf("Input norm = %e\n", normIn);
 
    if (normIn > normThreshold) 
    {
       double in_scale = 2.5*hVecInit[0]/normIn;
       double out_scale = pow(in_scale, 1.0/m_m); 
-  
+
       if (diagnostics == 1) {
-      printf("Scaling factors, %e, %e\n", in_scale, out_scale);
-      printf("Input stress,                 deviatoric stress,         scaled stress\n");
+         printf("Scaling factors, %e, %e\n", in_scale, out_scale);
+         printf("Input stress,                 deviatoric stress,         scaled stress\n");
       }
       // copy tensor values to flat array
       for (int i = 0; i < 6; i++) { 
@@ -313,26 +313,26 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
                );
 
       if (diagnostics == 1)
-      printf("Input stress,                unscaled VPSC output,         values returned\n");
+         printf("Input stress,                unscaled VPSC output,         values returned\n");
       // copy back to output tensor
       for (int i = 0; i < 6; i++) { 
          out.a[i] = outFlat[i]/out_scale;
          if (diagnostics == 1)
-         printf("%24.15e, %24.15e, %24.15e\n", in.a[i], outFlat[i], out.a[i]);
+            printf("%24.15e, %24.15e, %24.15e\n", in.a[i], outFlat[i], out.a[i]);
       }
    } else {
-   // bypass vpsc call if stress is too small
+      // bypass vpsc call if stress is too small
       if (diagnostics == 1) {
-      printf("VPSC call bypass\n");
-      printf("D_0 = %e, m = %e, g = %e\n", m_D_0, m_m, m_g);
+         printf("VPSC call bypass\n");
+         printf("D_0 = %e, m = %e, g = %e\n", m_D_0, m_m, m_g);
       }
 
-         //in.a[i] = 0.0; // zero the input also for consistency
-         //out.a[i] = 0.0;
-         // Old stupid (wrong) scaling
-         //out.a[i] = 1.0e2*in_dev.a[i];
+      //in.a[i] = 0.0; // zero the input also for consistency
+      //out.a[i] = 0.0;
+      // Old stupid (wrong) scaling
+      //out.a[i] = 1.0e2*in_dev.a[i];
 
-         // Fully replicate Taylor model here
+      // Fully replicate Taylor model here
       double norm_tau_dev = norm(in_dev);
 
       if (norm_tau_dev > 0.0) {
@@ -343,9 +343,9 @@ vpsc::tensorFunction(const Tensor2Sym& in) const
       }
 
       if (diagnostics == 1) {
-      for (int i = 0; i < 6; i++) { 
-         printf("%12.5e, %12.5e, %12.5e\n", in.a[i], in_dev.a[i], out.a[i]);
-      }
+         for (int i = 0; i < 6; i++) { 
+            printf("%12.5e, %12.5e, %12.5e\n", in.a[i], in_dev.a[i], out.a[i]);
+         }
       }
    }
    /*
