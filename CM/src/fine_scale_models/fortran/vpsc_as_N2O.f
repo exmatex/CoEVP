@@ -217,9 +217,9 @@ cas
         READ(UR0,'(a)') PROSA
 
         READ(UR0,'(a)') FILECRYS
-	
+
         filecrys = trim(dataDir)//filecrys
-	
+
 
 C *** READS SLIP AND TWINNING MODES FOR THE PHASE
 
@@ -2946,7 +2946,7 @@ C     SHIFTS KNOWN COMPONENTS TO INDEPENDENT TERM, CALCULATES COEFFICIENTS
 C     FOR UNKNOWN COMPONENTS AND INVERTS THE LINEAR SYSTEM.
 C *****************************************************************************
 c
-      subroutine state_6x6 (ibc_d,AUX_D,ibc_s,AUX_S,AUX_MS)
+      subroutine state_6x6 (ibc_d,AUX_D,ibc_s,AUX_S,AUX_MS,flag)
 c
       IMPLICIT INTEGER (I-N), REAL*8 (A-H, O-Z)
 
@@ -2955,6 +2955,10 @@ c
       dimension ibc_d(6),bc_d(6),ibc_s(6),bc_s(6)
       dimension profac(6)
       dimension aux5(5),aux33(3,3)
+
+      integer flag
+
+      flag = 0
 c
       do i=1,6
         profac(i)=1.d0+(i/4)
@@ -2978,8 +2982,14 @@ C *** PUTS b-BASIS 'MS' IN VOIGT.
       CALL LU_EQSYSTEM(AUX21,AUX11,6,IER)
 
       if(ier.eq.1) then
-      write(*,*) 'SINGULAR SYSTEM IN STATE_6X6'
-      stop
+         write(*,*) 'SINGULAR SYSTEM IN STATE_6X6'
+         flag = 1
+         write(*,*) 'aux11 ='
+         write(*,'(6e12.3)') (aux11(j),j=1,6)
+         write(*,*) 'aux21 ='
+         write(*,'(6e12.3)') ((aux21(i,j),j=1,6),i=1,6)
+         return
+         !stop
       endif
 
       do i=1,6
@@ -3950,6 +3960,7 @@ c
       dimension phave(5),dzero1(5),dznew(5)
 
       integer diagnostics
+      integer flag
 
       diagnostics = 0
 C *** FOR A TAYLOR CASE (INTERACTION=0) SOLVES VP EQUATION FOR GRAIN STRESS.
@@ -4586,7 +4597,31 @@ cw      pause
       ELSE
 
         CALL CHG_BASIS (DBAUX,DSIMAUX,AUX55,AUX3333,1,5)
-        CALL STATE_6x6 (IDSIM,DSIMAUX,ISCAU,SCAUCHY,XMTG)
+        CALL STATE_6x6 (IDSIM,DSIMAUX,ISCAU,SCAUCHY,XMTG, flag)
+         if (flag.eq.1) then
+            write(*,*) 'idsim = '
+            write(*,*) (idsim(J),j=1,6)
+            
+            write(*,*) 'dsimaux = '
+            DO I=1,3
+               write(*,*) (dsimaux(I,J),j=1,3)
+            ENDDO
+            
+            write(*,*) 'iscau = '
+            write(*,*) (iscau(J),j=1,6)
+            
+            write(*,*) 'scauchy = '
+            DO I=1,3
+               write(*,*) (scauchy(I,J),j=1,3)
+            ENDDO
+
+            write(*,*) 'xmtg = '
+            DO I=1,5
+               write(*,*) (xmtg(I,J),j=1,5)
+            ENDDO
+
+         endif
+         
 c
         PREMAC=1./3.*(SCAUCHY(1,1)+SCAUCHY(2,2)+SCAUCHY(3,3))
 c
