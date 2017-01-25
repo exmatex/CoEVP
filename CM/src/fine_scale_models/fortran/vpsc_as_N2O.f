@@ -2656,7 +2656,14 @@ C *** SOLVES A*X=B USING LU DECOMPOSITION
 
       CALL LUDCMP(A,N,N,INDX,D,ISINGULAR)
 
-      IF(ISINGULAR.EQ.1) RETURN
+      IF(ISINGULAR.EQ.1) then 
+        write(*,*) 'In LU_EQSYSTEM '
+        write(*,*) 'a = '
+        write(*,*) ((a(i,j),j=1,n),i=1,n)
+        write(*,*) 'b = '
+        write(*,*) (b(i),i=1,n)
+      RETURN
+      endif
 
       CALL LUBKSB(A,N,N,INDX,B)
 
