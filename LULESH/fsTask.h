@@ -9,17 +9,23 @@ const size_t MAX_CM_STATE_SIZE = 256;
 //Input for a NotTaylor call that is also the input of a VPSC call (for now)
 struct TaylorInput
 {
-	///TODO: Figure out what these are
-	int dummyVal;
-	//Looks like args for advance
+	double deltatime;
+	//Tensor2Gen is a pointer to a class
+	double tensor_a[9];
+	double cm_vol_chng;
 	//Big issue is "state size", but we can hackily set a max for now
+	char cm_state[MAX_CM_STATE_SIZE];
 };
 
 //Output for a NotTaylor call that is also the output of a VPSC call (for now)
 struct TaylorOutput
 {
-	///TODO: Figure out what these are
-	int dummyVal;
+	double tensor_a[6];
+	int num_models;
+	int num_point_value_pairs;
+	int num_Newton_iters;
+	//Looks like Constitutive_Data and state
+	char cm_state[MAX_CM_STATE_SIZE];
 };
 
 //Initialize CM to perform FS Call. Optimally we don't do this every time

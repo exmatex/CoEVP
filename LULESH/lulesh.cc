@@ -127,6 +127,8 @@ int showMeMonoQ = 0 ;
 #include "Taylor.h"        // the fine-scale plasticity model
 #include "vpsc.h"
 
+#include "fsTask.h"
+
 enum { VolumeError = -1, QStopError = -2 } ;
 
 
@@ -3053,6 +3055,7 @@ int Lulesh::UpdateStressForElems()
 #ifdef _OPENMP
 #pragma omp for
 #endif
+	  ///TODO: Probably set up the distribution here across the k loop
       for (Index_t k=0; k<numElem; ++k) {
 
 #ifdef FSTRACE
@@ -3064,10 +3067,58 @@ int Lulesh::UpdateStressForElems()
          ConstitutiveData cm_data = *(wrap_ret->cm_data);
          delete wrap_ret;
 #else
+		 //This is the FS call, effectively
+		 //
+		 // Arguments are mostly the same
+		 // Need to extract stack info and args for TaylorInput
+		 TaylorInput fsIn;
+		 double D[6];
+		 double W[3];
+
+         Real_t xd_local[8] ;
+         Real_t yd_local[8] ;
+         Real_t zd_local[8] ;
+         Real_t detJ = Real_t(0.0) ;
+         Real_t B[3][8] ; /** shape function derivatives */
+         // get nodal velocities from global array and copy into local arrays.
+         const Index_t* const elemToNode = domain.nodelist(k) ;
+         for( Index_t lnode=0 ; lnode<8 ; ++lnode )
+         {
+            Index_t gnode = elemToNode[lnode];
+            xd_local[lnode] = domain.xd(gnode);
+            yd_local[lnode] = domain.yd(gnode);
+            zd_local[lnode] = domain.zd(gnode);
+         }
+		///TODO: Verify no side effects
+         CalcElemVelocityGradient( xd_local,
+               yd_local,
+               zd_local,
+               B, detJ, D, W );
+
+
+		 for(int i = 0; i < 9; i++)
+		 {
+			fsIn.tensor_a[i] = domain.cm_vel_grad(k).a[i];
+		 }
+		fsIn.deltatime = domain.deltatime();
+		fsIn.cm_vol_chng = domain.cm_vol_chng(k);
+		///TODO: Copy in state
+		 TaylorOutput fsOut = initAndPerformFSCall(fsIn, false, D, W);
+		 ///TODO: Copy out state
+		 ConstitutiveData cm_data;
+		 cm_data.num_models = fsOut.num_models;
+		cm_data.num_point_value_pairs = fsOut.num_point_value_pairs;
+		 cm_data.num_Newton_iters = fsOut.num_Newton_iters;
+		 for(int i = 0; i < 6; i++)
+		 {
+			cm_data.sigma_prime.a[i] = fsOut.tensor_a[i];
+		 }
+		 /*
          ConstitutiveData cm_data = domain.cm(k)->advance(domain.deltatime(),
                                                           domain.cm_vel_grad(k),
                                                           domain.cm_vol_chng(k),
                                                           domain.cm_state(k));
+		*/
 #endif
          int num_iters = cm_data.num_Newton_iters;
          if (num_iters > max_local_newton_iters) max_local_newton_iters = num_iters;
@@ -4220,6 +4271,7 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
             global_ann=ann; 
          }
 
+		 ///TODO: This is the portion that instantiates the CM/solver
          size_t state_size;
          domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, modelDB, L, bulk_modulus, shear_modulus, eos_model,
                   plasticity_model, sampling, state_size));

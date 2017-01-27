@@ -10,8 +10,25 @@
 
 TaylorOutput performFSCall(TaylorInput &input, Constitutive * cm)
 {
+	//Get inputs
 	TaylorOutput output;
-	///TODO: Do this
+	Tensor2Gen tempTensor;
+	for(int i = 0; i < 9; i++)
+	{
+		tempTensor.a[i] = input.tensor_a[i];
+	}
+	//Advance models
+	ConstitutiveData dat = cm->advance(input.deltatime, tempTensor, input.cm_vol_chng, input.cm_state);
+	//Copy outputs out
+	output.num_models = dat.num_models;
+	output.num_point_value_pairs = dat.num_point_value_pairs;
+	output.num_Newton_iters = dat.num_Newton_iters;
+	for(int i = 0; i < 6; i++)
+	{
+		output.tensor_a[i] = dat.sigma_prime.a[i];
+	}
+	//Copy the state out
+	std::memcpy(&output.cm_state, &input.cm_state, MAX_CM_STATE_SIZE);
 
 	return output;
 }
