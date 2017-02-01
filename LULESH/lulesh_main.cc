@@ -119,7 +119,7 @@ void top_level_task(const Task *task,
   MPI_Comm_size(MPI_COMM_WORLD, &size);
   // Do a must epoch launch to align with the number of MPI ranks
   MustEpochLauncher must_epoch_launcher;
-  Rect<1> launch_bounds( LegionRuntime::Arrays::Point<1>(0), LegionRuntime::Arrays::Point<1>(size - 1));
+  LegionRuntime::Arrays::Rect<1> launch_bounds( LegionRuntime::Arrays::Point<1>(0), LegionRuntime::Arrays::Point<1>(size - 1));
   Domain launch_domain = Domain::from_rect<1>(launch_bounds);
   ArgumentMap args_map;
   IndexLauncher index_launcher(MPI_INTEROP_TASK_ID, launch_domain, 
