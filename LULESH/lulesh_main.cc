@@ -136,11 +136,13 @@ int main(int argc, char *argv[])
    int myRank = 0;
 
 #if defined(COEVP_MPI)
-#ifdef GASNET_CONDUIT_MPI
+#if defined(GASNET_CONDUIT_MPI)
   // The GASNet MPI conduit requires special start-up
   // in order to handle MPI calls from multiple threads
   int provided;
   MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
+  printf("initializing MPI with thread multiple\n");
+  
   // If you fail this assertion, then your version of MPI
   // does not support calls from multiple threads and you 
   // cannot use the GASNet MPI conduit
@@ -152,6 +154,7 @@ int main(int argc, char *argv[])
 #else
   // Perform MPI start-up like normal for most GASNet conduits
   MPI_Init(&argc, &argv);
+  printf("initializing MPI without thread  multiple\n");
 #endif
 
    MPI_Comm_size(MPI_COMM_WORLD, &numRanks) ;

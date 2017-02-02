@@ -7,7 +7,7 @@ COEVP_MPI =
 # Use Legion
 COEVP_LEGION = 
 LEGION_LOC = 
-
+GASNET_CONDUIT_MPI = 
 # Silo (www.hdfgroup.org/HDF5) and HDF5 (www.hdfgroup.org/HDF5) library
 # locations.  These macros can be left undefined if visualization is not required.
 SILO_LOC = 
@@ -61,6 +61,10 @@ LEGION_LIB =
 ifeq ($(COEVP_LEGION), yes)
 INCLUDE_DIRS +=  -I $(LEGION_LOC)/include -I$(LEGION_LOC)/include/realm -I $(LEGION_LOC)/include/legion 
 LEGION_LIB += -L $(LEGION_LOC)/lib64 -llegion -lrealm
+CXXFLAGS += -DCOEVP_LEGION
+ifeq ($(GASNET_CONDUIT_MPI), yes)
+CXXFLAGS += -DGASNET_CONDUIT_MPI
+endif 
 endif
 
 ifeq ($(CHARM), yes)
