@@ -23,6 +23,14 @@ class ElastoViscoPlasticity
                              const bool              use_adaptive_sampling,
                              size_t&                 state_size );
 
+      ElastoViscoPlasticity( ConstitutiveGlobal&     global,
+                             const Tensor2Gen&       L,
+                             const double            bulk_modulus,
+                             const double            shear_modulus,
+                             const EOS*              eos,
+                             Plasticity*             fine_scale_model,
+                             size_t&                 state_size );
+
       ~ElastoViscoPlasticity();
 
       virtual Tensor2Sym stress( const double compression,

@@ -7,11 +7,31 @@
 #define MAX_NONLINEAR_ITER 5
 #define SEDOV_SYNC_POS_VEL_EARLY 1
 
+#include "legion.h"
+
+enum TaskID
+{
+  TOP_LEVEL_TASK_ID,
+  MPI_INTEROP_TASK_ID,
+  WORKER_TASK_ID,
+  CM_INIT_TASK_ID,
+  CM_RUN_TASK_ID
+};
+
+
 class Lulesh {
 
 private:
 
+  static Lulesh * s_instance;
 public:
+  // Here is our global MPI-Legion handshake
+// You can have as many of these as you 
+// want but the common case is just to
+// have one per Legion-MPI rank pair
+  Legion::MPILegionHandshake handshake;
+  bool legion_shutdown = 0;
+  unsigned int legion_task_id = -1; 
   // Factor to be multiply the time step by to compensate
   // for fast time scales in the fine-scale model
   Real_t finescale_dt_modifier;
@@ -23,7 +43,9 @@ public:
   std::ofstream timerfile;
   LuleshNS::Domain domain;
 
-Lulesh(){ finescale_dt_modifier = Real_t(1.); }
+  static Lulesh *instance();
+    
+  Lulesh();
 ~Lulesh(){}
 
 void CommRecv(LuleshNS::Domain *domain, int msgType, Index_t xferFields, Index_t size,
@@ -174,7 +196,9 @@ void DumpSAMI(Domain *domain, char *name);
 
 void Initialize(int myRank, int numRanks, int edgeDim, int heightDim, double domainStopTime, int simStopCycle, int timerSampleRate);
 void ConstructFineScaleModel(bool sampling,ModelDatabase * global_modelDB,ApproxNearestNeighbors* global_ann, int flanning, int flann_n_trees, int flann_n_checks, int global_ns, int use_vpsc, double c_scaling);
-void ExchangeNodalMass();
+  void ConstructFineScaleModel(int use_vpsc, double c_scaling);
+
+  void ExchangeNodalMass();
 void go(int myRank, int numRanks, int sampling, int visit_data_interval,int file_parts, int debug_topology);
 
 };

@@ -95,6 +95,7 @@
 #include "siloDump.h"
 #endif
 
+
 int showMeMonoQ = 0 ;
 
 #define PRINT_PERFORMANCE_DIAGNOSTICS
@@ -104,6 +105,7 @@ int showMeMonoQ = 0 ;
 
 // Domain
 #include "lulesh.h"
+Lulesh * Lulesh::s_instance = NULL; 
 
 // EOS options
 #include "BulkPressure.h"
@@ -184,6 +186,28 @@ enum { VolumeError = -1, QStopError = -2 } ;
  *    SEDOV_SYNC_POS_VEL_EARLY
  *    SEDOV_SYNC_POS_VEL_LATE
  */
+
+
+Lulesh::Lulesh() {
+  
+  // Create a handshake for passing control between Legion and MPI
+  // Indicate that MPI has initial control and that there is one
+  // participant on each side
+  handshake = Legion::Runtime::create_handshake(true/*MPI initial control*/,
+                                        1/*MPI participants*/,
+                                        1/*Legion participants*/);
+  finescale_dt_modifier = Real_t(1.);
+}
+  
+Lulesh* Lulesh::instance() { 
+  if(s_instance) {
+    return s_instance;
+  } else {
+    s_instance = new Lulesh;
+    
+    return s_instance;      
+  }
+}
 
 //#define SEDOV_SYNC_POS_VEL_EARLY 1
 #endif
@@ -4221,13 +4245,28 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
          }
 
          size_t state_size;
+#if 0
          domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, modelDB, L, bulk_modulus, shear_modulus, eos_model,
                   plasticity_model, sampling, state_size));
+
+#else
+
+         Lulesh::instance()->legion_task_id = CM_INIT_TASK_ID; 
+         handshake.mpi_handoff_to_legion();
+         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, L, bulk_modulus, shear_modulus, eos_model,
+                                                                  plasticity_model, state_size));
+         handshake.mpi_wait_on_legion();
+         
+#endif
+
+         
          domain.cm_state(i) = operator new(state_size);
          domain.cm(i)->getState(domain.cm_state(i));
       }
    }
 
+
+   
 #ifdef WRITE_FSM_EVAL_COUNT
    // Set the element number at which the fine-scale model evaluation count is recorded
    Index_t fsm_count_elem = 0;
@@ -4262,6 +4301,132 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
    Int_t cumulative_fsm_count = 0;
 #endif   
 
+}
+
+        
+void Lulesh::ConstructFineScaleModel(int use_vpsc, double c_scaling)
+{
+   Index_t domElems = domain.numElem();
+
+   ConstitutiveGlobal cm_global;
+   for (Index_t i=0; i<domElems; ++i) {
+
+      Plasticity* plasticity_model;
+
+         // Construct the fine-scale plasticity model
+         // These values are needed for both models now
+         double D_0 = 1.e-2;
+         double m = 1./20.;
+         double g = 2.e-3; // (Mbar)
+         //      double m = 1./2.;
+         //      double g = 1.e-4; // (Mbar) Gives a reasonable looking result for m = 1./2.
+         //      double m = 1.;
+         //      double g = 2.e-6; // (Mbar) Gives a reasonable looking result for m = 1.
+         //
+      if (use_vpsc == 1) {
+         // New vpsc inititialization
+         plasticity_model = (vpsc*) (new vpsc(D_0, m, g, c_scaling));
+      } else {
+         // Old Taylor initialization
+         //
+
+         plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
+      }
+
+      // Construct the equation of state
+      EOS* eos_model;
+      {
+         /* From Table 1 (converted from GPa to Mbar) in P. J. Maudlin et al.,
+            "On the modeling of the Taylor cylinder impact test for orthotropic
+            textured materials: experiments and simulations", Inter. J.
+            Plasticity 15 (1999), pp. 139-166.
+            */
+         double k1 = 1.968;  // Mbar
+         double k2 = 2.598;  // Mbar
+         double k3 = 2.566;  // Mbar
+         double Gamma = 1.60;  // dimensionless
+         eos_model = (EOS*)(new MieGruneisen(k1, k2, k3, Gamma));
+      }
+
+      // Construct the constitutive model
+      double bulk_modulus = 1.94; // Tantallum (Mbar)
+      double shear_modulus = 6.9e-1; // Tantallum (Mbar)
+      {
+         Real_t B[3][8] ; /** shape function derivatives */
+         Real_t D[6] ;
+         Real_t W[3] ;
+         Real_t x_local[8] ;
+         Real_t y_local[8] ;
+         Real_t z_local[8] ;
+         Real_t xd_local[8] ;
+         Real_t yd_local[8] ;
+         Real_t zd_local[8] ;
+         Real_t detJ = Real_t(0.0) ;
+
+         const Index_t* const elemToNode = domain.nodelist(i) ;
+
+         // get nodal coordinates from global arrays and copy into local arrays.
+         for( Index_t lnode=0 ; lnode<8 ; ++lnode )
+         {
+            Index_t gnode = elemToNode[lnode];
+            x_local[lnode] = domain.x(gnode);
+            y_local[lnode] = domain.y(gnode);
+            z_local[lnode] = domain.z(gnode);
+         }
+
+         // get nodal velocities from global array and copy into local arrays.
+         for( Index_t lnode=0 ; lnode<8 ; ++lnode )
+         {
+            Index_t gnode = elemToNode[lnode];
+            xd_local[lnode] = domain.xd(gnode);
+            yd_local[lnode] = domain.yd(gnode);
+            zd_local[lnode] = domain.zd(gnode);
+         }
+
+         // compute the velocity gradient at the new time (i.e., before the
+         // nodal positions get backed up a half step below).  Question:
+         // where are the velocities centered at this point?
+
+         CalcElemShapeFunctionDerivatives( x_local,
+               y_local,
+               z_local,
+               B, &detJ );
+
+         CalcElemVelocityGradient( xd_local,
+               yd_local,
+               zd_local,
+               B, detJ, D, W );
+
+         Tensor2Gen L;
+
+         L(1,1) = D[0];         // dxddx
+         L(1,2) = D[5] - W[2];  // dyddx
+         L(1,3) = D[4] + W[1];  // dzddx
+         L(2,1) = D[5] + W[2];  // dxddy 
+         L(2,2) = D[1];         // dyddy
+         L(2,3) = D[3] - W[0];  // dzddy
+         L(3,1) = D[4] - W[1];  // dxddz
+         L(3,2) = D[3] + W[0];  // dyddz
+         L(3,3) = D[2];         // dzddz
+
+         int point_dimension = plasticity_model->pointDimension();
+         ApproxNearestNeighbors* ann;
+         ModelDatabase *modelDB;
+ 
+
+         size_t state_size;
+
+//         Lulesh::instance()->legion_task_id = CM_INIT_TASK_ID; 
+///         handshake.mpi_handoff_to_legion();
+         domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, L, bulk_modulus, shear_modulus, eos_model,
+                                                                  plasticity_model, state_size));
+//         handshake.mpi_wait_on_legion();
+         
+         
+         domain.cm_state(i) = operator new(state_size);
+         domain.cm(i)->getState(domain.cm_state(i));
+      }
+   }
 }
 
 void Lulesh::ExchangeNodalMass()

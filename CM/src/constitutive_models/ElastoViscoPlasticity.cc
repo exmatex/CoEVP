@@ -122,6 +122,35 @@ ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&           glob
    state_size = getStateSize();
 }
 
+ElastoViscoPlasticity::ElastoViscoPlasticity( ConstitutiveGlobal&     global,
+                                              const Tensor2Gen&       L,
+                                              const double            bulk_modulus,
+                                              const double            shear_modulus,
+                                              const EOS*              eos_model,
+                                              Plasticity*             plasticity_model,
+                                              size_t&                 state_size )
+   : Constitutive(global),
+     m_D_old(sym(L)),
+     m_W_old(skew(L)),
+     m_R(1),
+     m_J(1.),
+     m_Vbar_prime(0),
+     m_Vbar_prime_dot(0),
+     m_Dbar_prime(0),
+     m_Wbar(0),
+     m_K(bulk_modulus),
+     m_G(shear_modulus),
+     m_eos_model(eos_model),
+     m_plasticity_model(plasticity_model),
+     m_Delta_max(1.e-2),
+     m_Delta(0.99*m_Delta_max)
+{
+   assert(eos_model != NULL);
+   assert(plasticity_model != NULL);
+
+   state_size = getStateSize();
+}
+
 
 ElastoViscoPlasticity::~ElastoViscoPlasticity()
 {
