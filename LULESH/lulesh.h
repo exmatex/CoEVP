@@ -19,6 +19,14 @@ enum TaskID
 };
 
 
+struct CM_Args {
+  int use_vpsc;
+  double c_scaling;
+  Index_t domElems;
+  
+};
+
+
 class Lulesh {
 
 private:
@@ -29,6 +37,7 @@ public:
 // You can have as many of these as you 
 // want but the common case is just to
 // have one per Legion-MPI rank pair
+  CM_Args legion_cm_args;
   Legion::MPILegionHandshake handshake;
   bool legion_shutdown = 0;
   unsigned int legion_task_id = -1; 

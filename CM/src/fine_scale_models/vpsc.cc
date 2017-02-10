@@ -143,6 +143,7 @@ vpsc::vpsc_init_class(const double c_scaling)
    {
       strcpy(fnameIn,std::getenv("VPSC_INPUT_PATH"));
       strcat(fnameIn,"vpsc_as_try.in");
+      //std::cout << "using file " << fnameIn << " for input" << std::endl;
    }
    //printf("Opening %s\n", fnameIn);
 
@@ -170,7 +171,8 @@ vpsc::vpsc_init_class(const double c_scaling)
 
    // allocate space for the materials
    // interface data
-   hVecInit = (double*)malloc(nH * sizeof(double));
+   //std::cout << "GALEN: allocating hVecInit array of size: " << nH << std::endl;
+   hVecInit = (double*)malloc((nH + 2) * sizeof(double));
 
    // phase data
    nGrains     = (int*)malloc(nPhase * sizeof(int));

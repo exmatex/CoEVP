@@ -34,6 +34,7 @@ CXX ?= g++
 CC = gcc
 #CXXFLAGS = -std=c++0x -g -O3 -fopenmp
 CXXFLAGS = -std=c++11 -g -O3
+#-O3
 FORTRAN_LIBS = -lgfortran -lquadmath
 # intel compiler
 ifeq ($(COMPILER),intel)

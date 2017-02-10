@@ -4306,9 +4306,15 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
         
 void Lulesh::ConstructFineScaleModel(int use_vpsc, double c_scaling)
 {
-   Index_t domElems = domain.numElem();
+   Lulesh::instance()->legion_cm_args.domElems = domain.numElem();
+   Lulesh::instance()->legion_cm_args.use_vpsc = use_vpsc;
+   Lulesh::instance()->legion_cm_args.c_scaling = c_scaling; 
+   Lulesh::instance()->legion_task_id = CM_INIT_TASK_ID;
+   handshake.mpi_handoff_to_legion();
+   handshake.mpi_wait_on_legion();
+   
+#if 0       
 
-   ConstitutiveGlobal cm_global;
    for (Index_t i=0; i<domElems; ++i) {
 
       Plasticity* plasticity_model;
@@ -4427,6 +4433,7 @@ void Lulesh::ConstructFineScaleModel(int use_vpsc, double c_scaling)
          domain.cm(i)->getState(domain.cm_state(i));
       }
    }
+#endif 
 }
 
 void Lulesh::ExchangeNodalMass()

@@ -213,6 +213,7 @@ CONTAINS
       it%porosityIHVUB = -1
     END IF
 
+!    WRITE(*,*) 'GALEN about to allocate hVecInit with nH = ', it%nH
     ALLOCATE( &
          & it%hVecInit(it%nH), &
          & STAT=status)

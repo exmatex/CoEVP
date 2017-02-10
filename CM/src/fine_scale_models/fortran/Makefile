@@ -2,7 +2,8 @@
 #ifeq ($(CC), gcc)
 FC ?= gfortran 
 CXX ?= g++
-FFLAGS = -ffree-line-length-none -O3 -fdefault-real-8
+#FFLAGS = -ffree-line-length-none -O3 -fdefault-real-8
+FFLAGS = -ffree-line-length-none -O3 -g -fdefault-real-8
 FLIBS = -lm -lgfortran -lquadmath
 #endif
 # flags for intel
