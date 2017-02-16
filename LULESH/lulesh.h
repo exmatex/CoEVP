@@ -9,7 +9,7 @@
 
 #include "legion.h"
 
-enum TaskID
+enum TaskIDs
 {
   TOP_LEVEL_TASK_ID,
   MPI_INTEROP_TASK_ID,
@@ -18,14 +18,32 @@ enum TaskID
   CM_RUN_TASK_ID
 };
 
+enum FieldIDs
+{
+  FID_VPSC_X_LOCAL,
+  FID_VPSC_Y_LOCAL,
+  FID_VPSC_Z_LOCAL,
+  FID_VPSC_XD_LOCAL,
+  FID_VPSC_YD_LOCAL,
+  FID_VPSC_ZD_LOCAL,
+  
+ 
+};
+
 
 struct CM_Args {
   int use_vpsc;
   double c_scaling;
   Index_t domElems;
+ 
   
 };
 
+
+struct Real_t8 {
+  Real_t data[8];
+};
+  
 
 class Lulesh {
 

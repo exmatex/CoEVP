@@ -172,7 +172,7 @@ vpsc::vpsc_init_class(const double c_scaling)
    // allocate space for the materials
    // interface data
    //std::cout << "GALEN: allocating hVecInit array of size: " << nH << std::endl;
-   hVecInit = (double*)malloc((nH + 2) * sizeof(double));
+   hVecInit = (double*)malloc(nH * sizeof(double));
 
    // phase data
    nGrains     = (int*)malloc(nPhase * sizeof(int));
@@ -244,6 +244,7 @@ vpsc::vpsc_init_class(const double c_scaling)
             ); // populate all the required data structures 
 
    //printState();
+   hVecInit = (double*)realloc(hVecInit, (nH * sizeof(double)));
 
    if (diagnostics == 1)
       printf("Finished with vpsc_init_\n");

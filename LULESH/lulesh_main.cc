@@ -25,7 +25,9 @@
 
 
 using namespace Legion;
-
+using namespace LegionRuntime;
+using namespace LegionRuntime::Accessor;
+using namespace LegionRuntime::Arrays;
 
 // Have a global static number of iterations for
 // this example, but you can easily configure it
@@ -41,6 +43,7 @@ void worker_task(const Task *task,
           task->parent_task->index_point[0]);
 }
 
+
 void cm_init_task(const Task *task, 
                   const std::vector<PhysicalRegion> &regions,
                   Context ctx, Runtime *runtime)
@@ -52,7 +55,52 @@ void cm_init_task(const Task *task,
   int use_vpsc = args.use_vpsc;
   double c_scaling = args.c_scaling;
   Index_t domElems = args.domElems;
+  LegionRuntime::Arrays::Rect<1> rect(LegionRuntime::Arrays::Point<1>(0),
+                                      LegionRuntime::Arrays::Point<1>(domElems-1));
+  IndexSpace vpsc_is = runtime->create_index_space(ctx, 
+                                 Domain::from_rect<1>(rect));
+  FieldSpace vpsc_fs = runtime->create_field_space(ctx);
+  FieldAllocator vpsc_allocator = runtime->create_field_allocator(ctx, vpsc_fs);
+  FieldID fid_vpsc_x_local = vpsc_allocator.allocate_field(sizeof(Real_t8), FID_VPSC_X_LOCAL);
+  FieldID fid_vpsc_y_local = vpsc_allocator.allocate_field(sizeof(Real_t8), FID_VPSC_Y_LOCAL);
+  FieldID fid_vpsc_z_local = vpsc_allocator.allocate_field(sizeof(Real_t8), FID_VPSC_Z_LOCAL);
   
+  FieldID fid_vpsc_xd_local = vpsc_allocator.allocate_field(sizeof(Real_t8), FID_VPSC_XD_LOCAL);
+  FieldID fid_vpsc_yd_local = vpsc_allocator.allocate_field(sizeof(Real_t8), FID_VPSC_YD_LOCAL);
+  FieldID fid_vpsc_zd_local = vpsc_allocator.allocate_field(sizeof(Real_t8), FID_VPSC_ZD_LOCAL);
+  
+  LogicalRegion vpsc_lr =
+    runtime->create_logical_region(ctx, vpsc_is, vpsc_fs);
+
+  RegionRequirement vpsc_req(vpsc_lr, READ_WRITE, EXCLUSIVE, vpsc_lr);
+  vpsc_req.add_field(FID_VPSC_X_LOCAL);
+  vpsc_req.add_field(FID_VPSC_Y_LOCAL);
+  vpsc_req.add_field(FID_VPSC_Z_LOCAL);
+  vpsc_req.add_field(FID_VPSC_XD_LOCAL);
+  vpsc_req.add_field(FID_VPSC_YD_LOCAL);
+  vpsc_req.add_field(FID_VPSC_ZD_LOCAL);
+  InlineLauncher input_launcher(vpsc_req);
+  PhysicalRegion input_region = runtime->map_region(ctx, input_launcher);
+  input_region.wait_until_valid();
+  
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_x_local = 
+    input_region.get_field_accessor(FID_VPSC_X_LOCAL).typeify<Real_t8>();
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_y_local = 
+    input_region.get_field_accessor(FID_VPSC_Y_LOCAL).typeify<Real_t8>();
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_z_local = 
+    input_region.get_field_accessor(FID_VPSC_Z_LOCAL).typeify<Real_t8>();
+  
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_xd_local = 
+    input_region.get_field_accessor(FID_VPSC_XD_LOCAL).typeify<Real_t8>();
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_yd_local = 
+    input_region.get_field_accessor(FID_VPSC_YD_LOCAL).typeify<Real_t8>();
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_zd_local = 
+    input_region.get_field_accessor(FID_VPSC_ZD_LOCAL).typeify<Real_t8>();
+ 
+
+
+  
+  GenericPointInRectIterator<1> pir(rect); 
   for (Index_t i=0; i<domElems; ++i) {
     
     Plasticity* plasticity_model;
@@ -99,46 +147,203 @@ void cm_init_task(const Task *task,
       Real_t B[3][8] ; /** shape function derivatives */
       Real_t D[6] ;
       Real_t W[3] ;
-      Real_t x_local[8] ;
-      Real_t y_local[8] ;
-      Real_t z_local[8] ;
-      Real_t xd_local[8] ;
-      Real_t yd_local[8] ;
-      Real_t zd_local[8] ;
+      Real_t8 x_local ;
+      Real_t8 y_local ;
+      Real_t8 z_local ;
+      Real_t8 xd_local ;
+      Real_t8 yd_local ;
+      Real_t8 zd_local ;
       Real_t detJ = Real_t(0.0) ;
       
       const Index_t* const elemToNode = Lulesh::instance()->domain.nodelist(i) ;
       
       // get nodal coordinates from global arrays and copy into local arrays.
+      
       for( Index_t lnode=0 ; lnode<8 ; ++lnode )
       {
         Index_t gnode = elemToNode[lnode];
-        x_local[lnode] = Lulesh::instance()->domain.x(gnode);
-        y_local[lnode] = Lulesh::instance()->domain.y(gnode);
-        z_local[lnode] = Lulesh::instance()->domain.z(gnode);
+        x_local.data[lnode] = Lulesh::instance()->domain.x(gnode);
+        y_local.data[lnode] = Lulesh::instance()->domain.y(gnode);
+        z_local.data[lnode] = Lulesh::instance()->domain.z(gnode);
       }
+      acc_x_local.write(DomainPoint::from_point<1>(pir.p), x_local);
+      acc_y_local.write(DomainPoint::from_point<1>(pir.p), y_local);
+      acc_z_local.write(DomainPoint::from_point<1>(pir.p), z_local);
+      
       
       // get nodal velocities from global array and copy into local arrays.
       for( Index_t lnode=0 ; lnode<8 ; ++lnode )
       {
         Index_t gnode = elemToNode[lnode];
-        xd_local[lnode] = Lulesh::instance()->domain.xd(gnode);
-        yd_local[lnode] = Lulesh::instance()->domain.yd(gnode);
-        zd_local[lnode] = Lulesh::instance()->domain.zd(gnode);
+        xd_local.data[lnode] = Lulesh::instance()->domain.xd(gnode);
+        yd_local.data[lnode] = Lulesh::instance()->domain.yd(gnode);
+        zd_local.data[lnode] = Lulesh::instance()->domain.zd(gnode);
       }
+      acc_xd_local.write(DomainPoint::from_point<1>(pir.p), xd_local);
+      acc_yd_local.write(DomainPoint::from_point<1>(pir.p), yd_local);
+      acc_zd_local.write(DomainPoint::from_point<1>(pir.p), zd_local);
+
+      // compute the velocity gradient at the new time (i.e., before the
+      // nodal positions get backed up a half step below).  Question:
+      // where are the velocities centered at this point?
+      
+      Lulesh::instance()->CalcElemShapeFunctionDerivatives( x_local.data,
+                                        y_local.data,
+                                        z_local.data,
+                                        B, &detJ );
+      
+      Lulesh::instance()->CalcElemVelocityGradient( xd_local.data,
+                                yd_local.data,
+                                zd_local.data,
+                                B, detJ, D, W );
+      
+      Tensor2Gen L;
+      
+      L(1,1) = D[0];         // dxddx
+      L(1,2) = D[5] - W[2];  // dyddx
+      L(1,3) = D[4] + W[1];  // dzddx
+      L(2,1) = D[5] + W[2];  // dxddy 
+      L(2,2) = D[1];         // dyddy
+      L(2,3) = D[3] - W[0];  // dzddy
+      L(3,1) = D[4] - W[1];  // dxddz
+      L(3,2) = D[3] + W[0];  // dyddz
+      L(3,3) = D[2];         // dzddz
+      
+      int point_dimension = plasticity_model->pointDimension();
+      
+      size_t state_size;
+      
+//         Lulesh::instance()->legion_task_id = CM_INIT_TASK_ID; 
+///         handshake.mpi_handoff_to_legion();
+      Lulesh::instance()->domain.cm(i) =
+        (Constitutive*)(new ElastoViscoPlasticity(cm_global, L, bulk_modulus, shear_modulus, eos_model,
+                                                  plasticity_model, state_size));
+//         handshake.mpi_wait_on_legion();
+      
+      
+      Lulesh::instance()->domain.cm_state(i) = operator new(state_size);
+      Lulesh::instance()->domain.cm(i)->getState(Lulesh::instance()->domain.cm_state(i));
+      pir++;
+    }
+  }
+  
+  
+  printf("Legion CM task in Rank %lld, Lulesh::timer says %d\n", 
+         task->parent_task->index_point[0], Lulesh::instance()->timer);
+}
+
+
+
+void cm_init_worker_task(const Task *task, 
+                         const std::vector<PhysicalRegion> &regions,
+                         Context ctx, Runtime *runtime)
+{
+
+  const CM_Args args = *(const CM_Args *)(task->args);
+  ConstitutiveGlobal cm_global;
+
+  int use_vpsc = args.use_vpsc;
+  double c_scaling = args.c_scaling;
+  Index_t domElems = args.domElems;
+
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_x_local = 
+    regions[0].get_field_accessor(FID_VPSC_X_LOCAL).typeify<Real_t8>();
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_y_local = 
+    input_region.get_field_accessor(FID_VPSC_Y_LOCAL).typeify<Real_t8>();
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_z_local = 
+    input_region.get_field_accessor(FID_VPSC_Z_LOCAL).typeify<Real_t8>();
+  
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_xd_local = 
+    input_region.get_field_accessor(FID_VPSC_XD_LOCAL).typeify<Real_t8>();
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_yd_local = 
+    input_region.get_field_accessor(FID_VPSC_YD_LOCAL).typeify<Real_t8>();
+  RegionAccessor<AccessorType::Generic, Real_t8> acc_zd_local = 
+    input_region.get_field_accessor(FID_VPSC_ZD_LOCAL).typeify<Real_t8>();
+ 
+
+  
+  GenericPointInRectIterator<1> pir(rect); 
+  for (Index_t i=0; i<domElems; ++i) {
+    
+    Plasticity* plasticity_model;
+    
+    // Construct the fine-scale plasticity model
+    // These values are needed for both models now
+    double D_0 = 1.e-2;
+    double m = 1./20.;
+    double g = 2.e-3; // (Mbar)
+    //      double m = 1./2.;
+    //      double g = 1.e-4; // (Mbar) Gives a reasonable looking result for m = 1./2.
+    //      double m = 1.;
+    //      double g = 2.e-6; // (Mbar) Gives a reasonable looking result for m = 1.
+    //
+    if (use_vpsc == 1) {
+      // New vpsc inititialization
+      plasticity_model = (vpsc*) (new vpsc(D_0, m, g, c_scaling));
+    } else {
+      // Old Taylor initialization
+      //
+      
+      plasticity_model = (Plasticity*)(new Taylor(D_0, m, g));
+    }
+    
+    // Construct the equation of state
+    EOS* eos_model;
+    {
+      /* From Table 1 (converted from GPa to Mbar) in P. J. Maudlin et al.,
+         "On the modeling of the Taylor cylinder impact test for orthotropic
+         textured materials: experiments and simulations", Inter. J.
+         Plasticity 15 (1999), pp. 139-166.
+      */
+      double k1 = 1.968;  // Mbar
+      double k2 = 2.598;  // Mbar
+      double k3 = 2.566;  // Mbar
+      double Gamma = 1.60;  // dimensionless
+      eos_model = (EOS*)(new MieGruneisen(k1, k2, k3, Gamma));
+    }
+    
+    // Construct the constitutive model
+    double bulk_modulus = 1.94; // Tantallum (Mbar)
+    double shear_modulus = 6.9e-1; // Tantallum (Mbar)
+    {
+      Real_t B[3][8] ; /** shape function derivatives */
+      Real_t D[6] ;
+      Real_t W[3] ;
+      Real_t8 x_local ;
+      Real_t8 y_local ;
+      Real_t8 z_local ;
+      Real_t8 xd_local ;
+      Real_t8 yd_local ;
+      Real_t8 zd_local ;
+      Real_t detJ = Real_t(0.0) ;
+      
+      const Index_t* const elemToNode = Lulesh::instance()->domain.nodelist(i) ;
+      
+      // get nodal coordinates from global arrays and copy into local arrays.
+      
+      x_local = acc_x_local.read(DomainPoint::from_point<1>(pir.p));
+      y_local = acc_y_local.read(DomainPoint::from_point<1>(pir.p));
+      z_local = acc_z_local.read(DomainPoint::from_point<1>(pir.p));      
+      
+
+      xd_local = acc_xd_local.read(DomainPoint::from_point<1>(pir.p));
+      yd_local = acc_yd_local.read(DomainPoint::from_point<1>(pir.p));
+      zd_local = acc_zd_local.read(DomainPoint::from_point<1>(pir.p));      
+      
+
       
       // compute the velocity gradient at the new time (i.e., before the
       // nodal positions get backed up a half step below).  Question:
       // where are the velocities centered at this point?
       
-      Lulesh::instance()->CalcElemShapeFunctionDerivatives( x_local,
-                                        y_local,
-                                        z_local,
+      Lulesh::instance()->CalcElemShapeFunctionDerivatives( x_local.data,
+                                        y_local.data,
+                                        z_local.data,
                                         B, &detJ );
       
-      Lulesh::instance()->CalcElemVelocityGradient( xd_local,
-                                yd_local,
-                                zd_local,
+      Lulesh::instance()->CalcElemVelocityGradient( xd_local.data,
+                                yd_local.data,
+                                zd_local.data,
                                 B, detJ, D, W );
       
       Tensor2Gen L;
@@ -174,6 +379,7 @@ void cm_init_task(const Task *task,
   printf("Legion CM task in Rank %lld, Lulesh::timer says %d\n", 
          task->parent_task->index_point[0], Lulesh::instance()->timer);
 }
+
 
 
 void mpi_interop_task(const Task *task, 

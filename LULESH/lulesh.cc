@@ -4312,9 +4312,15 @@ void Lulesh::ConstructFineScaleModel(int use_vpsc, double c_scaling)
    Lulesh::instance()->legion_task_id = CM_INIT_TASK_ID;
    handshake.mpi_handoff_to_legion();
    handshake.mpi_wait_on_legion();
-   
-#if 0       
 
+   std::cout << "GALEN: In ConstructFineScaleModel" << std::endl; 
+
+#if 0
+   Index_t domElems = domain.numElem();
+
+   ConstitutiveGlobal cm_global;
+
+   
    for (Index_t i=0; i<domElems; ++i) {
 
       Plasticity* plasticity_model;
