@@ -1,6 +1,9 @@
 SILO_PV=4.10.2
 SILO_LIB=silo/lib/libsiloh5.a
 
+# Conditionally set defaults for --with-hdf5 if COEVP_SILO_WITH_HDF5 is not already set.
+COEVP_SILO_WITH_HDF5 ?= "/usr/include,/usr/lib"
+
 all: $(SILO_LIB)
 
 silo-${SILO_PV}.tar.gz:
@@ -12,7 +15,7 @@ endif
 
 $(SILO_LIB): silo-${SILO_PV}.tar.gz
 	tar -xzvf $<
-	cd silo-${SILO_PV} && ./configure --prefix=$(CURDIR)/silo --with-hdf5=/usr/include,/usr/lib --enable-shared --disable-fortran
+	cd silo-${SILO_PV} && ./configure --prefix=$(CURDIR)/silo --with-hdf5=$(COEVP_SILO_WITH_HDF5) --enable-shared --disable-fortran
 	make -C silo-${SILO_PV}
 	make -C silo-${SILO_PV} install
 
