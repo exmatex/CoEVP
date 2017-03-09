@@ -18,7 +18,7 @@ TaylorOutput performFSCall(TaylorInput &input, Constitutive * cm)
 		tempTensor.a[i] = input.tensor_a[i];
 	}
 	//Advance models
-	ConstitutiveData dat = cm->advance(input.deltatime, tempTensor, input.cm_vol_chng, input.cm_state);
+	ConstitutiveData dat = cm->advance(input.deltatime, tempTensor, input.cm_vol_chng, &input.cm_state);
 	//Copy outputs out
 	output.num_models = dat.num_models;
 	output.num_point_value_pairs = dat.num_point_value_pairs;
@@ -33,8 +33,9 @@ TaylorOutput performFSCall(TaylorInput &input, Constitutive * cm)
 	return output;
 }
 
-void initCM(Constitutive * cm, bool use_vpsc, double D[6], double W[3])
+Constitutive *  initCM(bool use_vpsc, double D[6], double W[3], void * cm_state)
 {
+    Constitutive * cm;
 	///TODO: Make this more robust and able to handle adaptive sampling
 	// Current version doesn't support adaptive sampling as that is far more to consider than just an FS call
 	
@@ -110,13 +111,15 @@ void initCM(Constitutive * cm, bool use_vpsc, double D[6], double W[3])
 */
 	size_t state_size;
 	cm = (Constitutive*)new ElastoViscoPlasticity(cm_global, nullptr, nullptr, L, bulk_modulus, shear_modulus, eos_model, plasticity_model, false, state_size);
+    cm->setState(cm_state);
+
+    return cm;
 }
 
 TaylorOutput initAndPerformFSCall(TaylorInput &input, bool use_vpsc, double D[6], double W[3])
 {
 	//Call initCM and use the resulting model to call performFSCall
-	Constitutive * cm = nullptr;
-	initCM(cm, use_vpsc, D, W);
+	Constitutive * cm = initCM(use_vpsc, D, W, &(input.cm_state));
 	TaylorOutput output = performFSCall(input, cm);
 	return output;
 }

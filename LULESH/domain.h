@@ -197,6 +197,7 @@ public:
 
       m_cm.resize(size);
       m_cm_state.resize(size);
+      m_state_size.resize(size);
       m_cm_vel_grad.resize(size);
       m_cm_vol_chng.resize(size);
    }
@@ -322,6 +323,7 @@ public:
    Real_t& mises(Index_t idx)      { return m_mises[idx] ; }
 
    Constitutive*& cm(Index_t idx)  { return m_cm[idx] ; }
+   size_t& state_size(Index_t idx) { return m_state_size[idx] ;}
    void*& cm_state(Index_t idx)     { return m_cm_state[idx] ; }
    Tensor2Gen& cm_vel_grad(Index_t idx)  { return m_cm_vel_grad[idx] ; }
    double& cm_vol_chng(Index_t idx)  { return m_cm_vol_chng[idx] ; }
@@ -485,6 +487,7 @@ private:
 
    std::vector<Constitutive*> m_cm ;  /* constitutive model */
    std::vector<void*> m_cm_state ;  /* constitutive model state */
+   std::vector<size_t> m_state_size ;  /* constitutive model state size */
    std::vector<Tensor2Gen> m_cm_vel_grad ;  /* constitutive model velocity gradient */
    std::vector<double> m_cm_vol_chng ;  /* constitutive model volume change */
 

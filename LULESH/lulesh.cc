@@ -3102,9 +3102,11 @@ int Lulesh::UpdateStressForElems()
 		 }
 		fsIn.deltatime = domain.deltatime();
 		fsIn.cm_vol_chng = domain.cm_vol_chng(k);
-		///TODO: Copy in state
+		//Copy in state: domain.cm_state(k)
+		std::memcpy(fsIn.cm_state, domain.cm_state(k), domain.state_size(k)); 
 		 TaylorOutput fsOut = initAndPerformFSCall(fsIn, false, D, W);
-		 ///TODO: Copy out state
+		//Copy out state: domain.cm_state(k)
+		 std::memcpy(domain.cm_state(k), fsOut.cm_state, domain.state_size(k));
 		 ConstitutiveData cm_data;
 		 cm_data.num_models = fsOut.num_models;
 		cm_data.num_point_value_pairs = fsOut.num_point_value_pairs;
@@ -4275,6 +4277,7 @@ void Lulesh::ConstructFineScaleModel(bool sampling, ModelDatabase * global_model
          size_t state_size;
          domain.cm(i) = (Constitutive*)(new ElastoViscoPlasticity(cm_global, ann, modelDB, L, bulk_modulus, shear_modulus, eos_model,
                   plasticity_model, sampling, state_size));
+         domain.state_size(i) = state_size;
          domain.cm_state(i) = operator new(state_size);
          domain.cm(i)->getState(domain.cm_state(i));
       }

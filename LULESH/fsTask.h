@@ -4,7 +4,7 @@
 #include "ElastoViscoPlasticity.h"
 
 ///TODO: Get some data to figure out what max state size shoudl be...
-const size_t MAX_CM_STATE_SIZE = 256;
+const size_t MAX_CM_STATE_SIZE = 2048;
 
 //Input for a NotTaylor call that is also the input of a VPSC call (for now)
 struct TaylorInput
@@ -29,7 +29,7 @@ struct TaylorOutput
 };
 
 //Initialize CM to perform FS Call. Optimally we don't do this every time
-void initCM(Constitutive * cm, bool use_vpsc, double D[6], double W[3]);
+Constitutive *  initCM(bool use_vpsc, double D[6], double W[3], void * cm_state);
 
 TaylorOutput performFSCall(TaylorInput &input, Constitutive * cm);
 
