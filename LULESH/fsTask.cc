@@ -121,6 +121,7 @@ TaylorOutput initAndPerformFSCall(TaylorInput &input, bool use_vpsc, double D[6]
 	//Call initCM and use the resulting model to call performFSCall
 	Constitutive * cm = initCM(use_vpsc, D, W, &(input.cm_state));
 	TaylorOutput output = performFSCall(input, cm);
+    cleanUpCM(cm);
 	return output;
 }
 
