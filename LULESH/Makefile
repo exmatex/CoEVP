@@ -104,7 +104,8 @@ ifneq ($(strip $(HDF5_LOC)),)
 HDF5_LIB += -Wl,-rpath,$(HDF5_LOC)/lib -L $(HDF5_LOC)/lib -lhdf5
 endif
 
-LAPACK = $(shell pkg-config --silence-errors --libs lapack blas || true)
+PKG_CONFIG=pkg-config
+LAPACK = $(shell $(PKG_CONFIG) --silence-errors --libs lapack blas || true)
 ifeq ($(strip $(LAPACK)),)
 ifneq ($(strip $(LAPACK_LOC)),)
 LAPACK += -L$(LAPACK_LOC)
