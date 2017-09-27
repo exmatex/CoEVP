@@ -5,18 +5,21 @@ all: lulesh
 FLANN=yes
 ifeq ($(FLANN),yes)
 FLANN_LOC=../flann/flann/src/cpp
-libcm: flann
+FLANN_TARGET=flann
+libcm: $(FLANN_TARGET)
 endif
 REDIS=yes
 ifeq ($(REDIS),yes)
 REDIS_LOC=../redis/hiredis
-libcm: redis
+REDIS_TARGET=redis
+libcm: $(REDIS_TARGET)
 endif
 SILO=yes
 ifeq ($(SILO),yes)
 SILO_LOC=../silo/silo
 SILODIFF=silo/silo/bin/silodiff
-libcm: silo
+SILO_TARGET=silo
+libcm: $(SILO_TARGET)
 endif
 TWEMPROXY=yes
 ifeq ($(TWEMPROXY),yes)
@@ -36,7 +39,8 @@ PROTOBUF=no
 ifeq ($(PROTOBUF),yes)
 PROTOBUF_LOC=../serverize/protobuf
 CIRCLE_LOC=../serverize/circle
-libcm: protobuf
+PROTOBUF_TARGET=protobuf
+libcm: $(PROTOBUF_TARGET)
 endif
 FSTRACE=no
 USE_SSL=yes
